@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 3 * * *'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: sql-lms-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Provenance (sourced drills carried correctly, bank coherent)
+        run: npm run check:provenance
+      - name: Lint (structure + quotas)
+        run: npm run lint
+      - name: Inline scripts resolve on every page
+        run: npm run check:pages
+      - name: Full build (sync + verify + 36 artifacts + index)
+        run: npm run build
+      - name: Link rot (report-only — failures are informational)
+        run: node renderer/check-links.mjs
+        continue-on-error: true

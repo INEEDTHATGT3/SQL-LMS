@@ -346,7 +346,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnbi" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnbi">CREATE EXTENSION hll; hll_add_agg()</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ubi" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ubi">CREATE EXTENSION hll; hll_add_agg()</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -356,7 +356,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Compute p50, p95, p99 latency from 10M requests using TDigest.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnbj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnbj">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtyemuxnbl" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxnbl">percentile(t, 0.99)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ubj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ubj">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtyet76ubl" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ubl">percentile(t, 0.99)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -366,7 +366,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnbm" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnbm">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtyemuxnbo" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxnbo">add_continuous_aggregate_policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ubm" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ubm">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtyet76ubo" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ubo">add_continuous_aggregate_policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -376,7 +376,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Find 10 nearest coffee shops to user location using <-> operator.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnbp" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnbp">geom <-> point</div><button class="reveal-btn" data-target="umtyemuxnbr" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxnbr">LIMIT 5</div><button class="reveal-btn" data-target="umtyemuxnbt" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyemuxnbt">GiST index</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ubp" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ubp">geom <-> point</div><button class="reveal-btn" data-target="umtyet76ubr" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ubr">LIMIT 5</div><button class="reveal-btn" data-target="umtyet76ubt" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76ubt">GiST index</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -386,7 +386,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Aggregate 1M GPS points into H3 resolution 8 hexagons, count per hex.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnbu" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnbu">h3_lat_lng_to_cell(lat, lng, 8)</div><button class="reveal-btn" data-target="umtyemuxnbw" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxnbw">GROUP BY h3_cell</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ubu" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ubu">h3_lat_lng_to_cell(lat, lng, 8)</div><button class="reveal-btn" data-target="umtyet76ubw" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ubw">GROUP BY h3_cell</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -396,7 +396,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Create PipelineDB continuous view for per-minute page views per site.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnbx" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnbx">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtyemuxnbz" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxnbz">time_bucket('1 minute', ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ubx" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ubx">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtyet76ubz" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ubz">time_bucket('1 minute', ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -406,7 +406,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Join 10M buildings with 500k parcels using parallel spatial join.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnc0" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnc0">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtyemuxnc2" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxnc2">enable_parallel_append</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76uc0" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76uc0">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtyet76uc2" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76uc2">enable_parallel_append</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -416,7 +416,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Maintain streaming p99 latency using TDigest sketch updated per request.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxnc3" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxnc3">tdigest_agg</div><button class="reveal-btn" data-target="umtyemuxnc5" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxnc5">tdigest_union</div><button class="reveal-btn" data-target="umtyemuxnc7" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyemuxnc7">percentile(t, 0.99)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76uc3" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76uc3">tdigest_agg</div><button class="reveal-btn" data-target="umtyet76uc5" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76uc5">tdigest_union</div><button class="reveal-btn" data-target="umtyet76uc7" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76uc7">percentile(t, 0.99)</div></div>
     </div></li></ul>
   </section>
   

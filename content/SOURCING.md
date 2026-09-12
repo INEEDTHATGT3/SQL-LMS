@@ -15,10 +15,10 @@ rules that keep it from drifting.
 |---|---|---|---|---|---|
 | [LeetCode SQL 50](https://leetcode.com/studyplan/top-sql-50/) | **Spine** — order + L1/L2 boundary | 50 | Free | Yes | Striver A2Z |
 | [HackerRank SQL](https://www.hackerrank.com/domains/sql) | Volume overlay (L1) | 58 | Free | Yes | Babbar FINAL450 |
-| [LeetCode Advanced SQL 50](https://leetcode.com/studyplan/premium-sql-50/) | Spine extension (L3/L4) | 50 | Premium | **No — blocked** | Striver SDE Sheet |
+| [LeetCode Advanced SQL 50](https://leetcode.com/studyplan/premium-sql-50/) | Spine extension (L3/L4) | 50 | Premium | **Yes — 50/50 since 2.2.0** | Striver SDE Sheet |
 | [DataLemur](https://datalemur.com/questions) | Company realism (L3/L4) | ~80+ free | Freemium | No | company-tagged LC problems |
 | [StrataScratch](https://platform.stratascratch.com/coding) | Company realism (L3/L4) | large | Freemium | No | — |
-| [PGExercises](https://pgexercises.com/) | Postgres-native + recursive (L2/L3) | 7 categories | Free | No | — |
+| [PGExercises](https://pgexercises.com/) | Postgres-native + recursive (L2/L3) | 12 | Free | Partial (12) | — |
 | [Ankit Bansal](https://www.youtube.com/@ankitbansal6) | **Reference only** | — | Free | n/a | Striver's videos |
 | [techTFQ](https://www.youtube.com/@techTFQ) | **Reference only** | — | Free | n/a | Babbar's videos |
 
@@ -69,12 +69,15 @@ Four honest gaps, recorded in `problems.json.gaps`:
    plan. Nothing on LeetCode or HackerRank can test "did you read the EXPLAIN correctly".
    This module stays synthesised, graded against a seeded local Postgres by plan shape.
    Reference text: [Use The Index, Luke](https://use-the-index-luke.com/).
-2. **`timeseries-geo` has zero sourced problems.** Gap filling, interpolation, PostGIS and
-   H3 appear in no interview sheet. Deliberately off-spine.
-3. **`window-functions` has only 6.** SQL 50 touches windows in five places. Target is 20+;
-   the fill is Advanced SQL 50 plus DataLemur's window-function tag.
-4. **L4 has only 3 sourced problems** across the entire bank. L4 is constraint-driven and
-   internals-heavy by design — it should stay predominantly synthesised. Do not force it.
+2. **`timeseries-geo` is thin at L2 only** (6 date-arithmetic problems from PGExercises).
+   Gap filling, interpolation, PostGIS and H3 appear in no interview sheet. Deliberately
+   off-spine; stays synthesised unless a real spatial sheet appears.
+3. **`window-functions` was closed in 2.2.0.** The Advanced SQL 50 fill took it from 6 to 23
+   sourced problems (17 landed in window-functions, L2–L4). DataLemur's window tag remains
+   the sanctioned overlay if more reps are ever wanted.
+4. **L4 has only 6 sourced problems** across the entire bank (X4 ×3, W4 ×1, S4 ×2). L4 is
+   constraint-driven and internals-heavy by design — it should stay predominantly
+   synthesised. Do not force it.
 
 ## Precedence rules
 
@@ -91,11 +94,11 @@ Four honest gaps, recorded in `problems.json.gaps`:
 
 ## Unblocking Advanced SQL 50
 
-It is paywalled, so enumeration is an account task, not a research task. When available:
-open the study plan, list the 50 problems and their sections, append them to
-`problems.json` with `"sheet": "leetcode-advanced-sql-50"` and the same ID scheme
-(`<LETTER><TIER>-LC<num>`), then set `sources["leetcode-advanced-sql-50"].enumerated = true`.
-That single step closes most of gap 3 and roughly half of gap 4.
+It is paywalled, but enumeration was completed for 2.2.0 against the public listing of the
+study plan (50 problems; zero collisions with the SQL 50 rows already in the bank). All 50
+carry `"sheet": "leetcode-advanced-sql-50"` with the standard ID scheme
+(`<LETTER><TIER>-LC<num>`), and `sources["leetcode-advanced-sql-50"].enumerated = true`.
+Status before enumeration: this was an account task, not a research task.
 
 ## ID scheme
 

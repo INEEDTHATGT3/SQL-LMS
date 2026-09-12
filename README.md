@@ -24,14 +24,14 @@ at four tiers.
 
 | # | Module | Focus | Spine position |
 |---|---|---|---|
-| 01 | SQL Fundamentals | SELECT, WHERE, ORDER BY, LIMIT, string functions | LC50 §1 Select |
-| 02 | Filtering & Conditionals | IN, BETWEEN, LIKE, REGEXP, CASE, NULL handling | LC50 §1 / §7 |
+| 01 | SQL Fundamentals | SELECT, types & casting, NULL/3VL, WHERE, ORDER BY, LIMIT, DML & transactions | LC50 §1 Select |
+| 02 | Filtering & Conditionals | IN, BETWEEN, LIKE, REGEXP, CASE, NULL handling, evaluation order | LC50 §1 / §7 |
 | 03 | Joins & Set Operations | INNER/LEFT/RIGHT/FULL, self-join, semi/anti, UNION, EXCEPT | LC50 §2 Basic Joins |
 | 04 | Aggregation & Grouping | GROUP BY, HAVING, conditional agg, rollup, cube, grouping sets | LC50 §3 / §4 |
 | 05 | Window Functions | ROW_NUMBER, RANK/DENSE_RANK, LAG/LEAD, frames, running totals | LC50 §5 |
 | 06 | Subqueries & CTEs | Correlated, recursive CTEs, materialization | LC50 §6 Subqueries |
-| 07 | Performance & Indexing | EXPLAIN, indexes, statistics, tuning, stored procedures | off-spine |
-| 08 | Advanced Analytics | Pivot, lateral, advanced frames, sampling, triggers | off-spine |
+| 07 | Performance & Indexing | EXPLAIN, planner cost, indexes, statistics, storage internals, PL/pgSQL | off-spine |
+| 08 | Advanced Analytics | Metrics & grain, rollups, time intelligence, cohort & funnel, pivot, triggers | off-spine |
 | 09 | Time-Series & Geospatial | Gap filling, interpolation, PostGIS basics, H3 | off-spine |
 
 ## Problem sourcing
@@ -39,15 +39,15 @@ at four tiers.
 SQL has no single Striver-equivalent, so the curriculum uses a **spine plus overlays**.
 Full rationale, precedence rules and the gap list live in
 [`content/SOURCING.md`](content/SOURCING.md); the mapped bank is
-[`content/problems.json`](content/problems.json) — **108 sourced problems** across 9 modules.
+[`content/problems.json`](content/problems.json) — **170 sourced problems** across 9 modules.
 
 | Source | Role | Count | Access |
 |---|---|---|---|
 | [LeetCode SQL 50](https://leetcode.com/studyplan/top-sql-50/) | **Spine** — fixes order and the L1/L2 boundary | 50 | Free |
 | [HackerRank SQL](https://www.hackerrank.com/domains/sql) | Volume overlay (L1) | 58 | Free |
-| [LeetCode Advanced SQL 50](https://leetcode.com/studyplan/premium-sql-50/) | L3/L4 spine extension — *not yet enumerated* | 50 | Premium |
+| [LeetCode Advanced SQL 50](https://leetcode.com/studyplan/premium-sql-50/) | L3/L4 spine extension — enumerated 50/50 | 50 | Premium |
 | [DataLemur](https://datalemur.com/questions) · [StrataScratch](https://platform.stratascratch.com/coding) | Company realism (L3/L4) | — | Freemium |
-| [PGExercises](https://pgexercises.com/) | Postgres-native + recursive (L2/L3) | — | Free |
+| [PGExercises](https://pgexercises.com/) | Postgres-native (L2/L3) — 12 enumerated | 12 | Free |
 | [Ankit Bansal](https://www.youtube.com/@ankitbansal6) · [techTFQ](https://www.youtube.com/@techTFQ) | Explanation reference only | — | Free |
 
 Every problem is either **sourced** (carries `platform` + `ref` + `url`) or **synthesised**

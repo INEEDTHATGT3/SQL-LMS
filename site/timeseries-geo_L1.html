@@ -208,7 +208,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       From a TIMESTAMPTZ column, extract year, month, day, hour, and day-of-week.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxb98" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxb98">EXTRACT(field FROM timestamp)</div><button class="reveal-btn" data-target="umtyemuxb9a" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxb9a">date_trunc('unit', timestamp)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76p98" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76p98">EXTRACT(field FROM timestamp)</div><button class="reveal-btn" data-target="umtyet76p9a" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76p9a">date_trunc('unit', timestamp)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -218,7 +218,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Create a POINT geometry from longitude -122.4194 and latitude 37.7749 with SRID 4326.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxb9b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxb9b">ST_MakePoint(lon, lat)</div><button class="reveal-btn" data-target="umtyemuxb9d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxb9d">ST_SetSRID(geom, 4326)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76p9b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76p9b">ST_MakePoint(lon, lat)</div><button class="reveal-btn" data-target="umtyet76p9d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76p9d">ST_SetSRID(geom, 4326)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -228,7 +228,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Calculate distance in meters between two WGS84 points.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxb9e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxb9e">ST_Transform to 3857</div><button class="reveal-btn" data-target="umtyemuxb9g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxb9g">ST_Distance on geography type</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76p9e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76p9e">ST_Transform to 3857</div><button class="reveal-btn" data-target="umtyet76p9g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76p9g">ST_Distance on geography type</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -238,7 +238,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Find all POIs within 500m of a given location.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxb9h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxb9h">ST_DWithin with geography or ST_Transform to 3857</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76p9h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76p9h">ST_DWithin with geography or ST_Transform to 3857</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -248,7 +248,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Count events per hour for the last 7 days.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxb9i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxb9i">date_trunc('hour', ts)</div><button class="reveal-btn" data-target="umtyemuxb9k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuxb9k">GROUP BY hour_bucket</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76p9i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76p9i">date_trunc('hour', ts)</div><button class="reveal-btn" data-target="umtyet76p9k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76p9k">GROUP BY hour_bucket</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -258,7 +258,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Create a LINESTRING trajectory from GPS points ordered by timestamp.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuxb9l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuxb9l">ST_MakeLine(geom ORDER BY ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76p9l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76p9l">ST_MakeLine(geom ORDER BY ts)</div></div>
     </div></li></ul>
   </section>
   

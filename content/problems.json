@@ -1,6 +1,6 @@
 {
-  "version": "2.0",
-  "generated": "2026-09-12",
+  "version": "2.2.0",
+  "generated": "2026-09-12T13:14:24.787Z",
   "spine": "leetcode-sql-50",
   "idScheme": "<MODULE_LETTER><TIER>-<PLATFORM_CODE><REF>  e.g. J2-LC1731, A1-HR042. In-lesson synthesised drills keep the legacy <LETTER><TIER><SEQ> form (J201) and are NOT listed here.",
   "moduleLetters": {
@@ -60,7 +60,7 @@
       "access": "premium",
       "count": 50,
       "enumerated": true,
-      "authority": "Defines the L3 tier boundary once enumerated.",
+      "authority": "LeetCode Premium study plan. Enumerated 50/50; 0 collisions with the free SQL 50 rows already in the bank.",
       "blockedOn": "LeetCode Premium. Enumerate from the account, then append with sheet='leetcode-advanced-sql-50'."
     },
     "datalemur": {
@@ -86,7 +86,7 @@
       "url": "https://pgexercises.com/",
       "access": "free",
       "enumerated": false,
-      "authority": "Fills the dialect-specific and recursive gaps the judge-backed sheets skip.",
+      "authority": "All 12 enumerated from the live site (Basic SELECT x6, Working with Timestamps x6). No official difficulty labels, so difficulty=null.",
       "categories": {
         "basic": "https://pgexercises.com/questions/basic/",
         "joins": "https://pgexercises.com/questions/joins/",
@@ -2974,7 +2974,7 @@
         "pgexercises": [
           "basic"
         ],
-        "datalemur": "difficulty=Easy",
+        "datalemur": "difficulty=Easy, tier=L1",
         "reference": [
           "reference-techtfq"
         ]
@@ -2999,7 +2999,7 @@
           "basic",
           "string"
         ],
-        "datalemur": "difficulty=Easy",
+        "datalemur": "difficulty=Easy, tier=L1-L2",
         "reference": [
           "reference-techtfq"
         ]
@@ -3022,7 +3022,7 @@
         "pgexercises": [
           "joins"
         ],
-        "datalemur": "tag=joins",
+        "datalemur": "tag=joins, tier=L1-L3",
         "reference": [
           "reference-ankit-bansal"
         ]
@@ -3045,7 +3045,7 @@
         "pgexercises": [
           "aggregates"
         ],
-        "datalemur": "tag=aggregate",
+        "datalemur": "tag=aggregate, tier=L1-L3",
         "reference": [
           "reference-ankit-bansal"
         ]
@@ -3068,7 +3068,7 @@
         "pgexercises": [
           "aggregates"
         ],
-        "datalemur": "tag=window+functions",
+        "datalemur": "tag=window functions, tier=L2-L4",
         "reference": [
           "reference-ankit-bansal"
         ]
@@ -3091,7 +3091,7 @@
         "pgexercises": [
           "recursive"
         ],
-        "datalemur": "tag=CTE",
+        "datalemur": "tag=CTE, tier=L1-L4",
         "reference": [
           "reference-techtfq"
         ]
@@ -3114,7 +3114,7 @@
           "recursive",
           "date"
         ],
-        "datalemur": "difficulty=Hard",
+        "datalemur": "difficulty=Hard, tier=L3-L4",
         "reference": [
           "reference-ankit-bansal"
         ]
@@ -3131,7 +3131,6 @@
       "bySheet": {},
       "overlay": {
         "pgexercises": [],
-        "datalemur": null,
         "reference": []
       }
     },
@@ -3150,7 +3149,7 @@
         "pgexercises": [
           "date"
         ],
-        "datalemur": "difficulty=Hard",
+        "datalemur": "difficulty=Hard, tier=L2-L4",
         "reference": []
       }
     }
@@ -3159,32 +3158,32 @@
     {
       "module": "performance",
       "severity": "high",
-      "problem": "No free judge-backed sheet tests EXPLAIN reading, index selection or plan forcing — LeetCode and HackerRank grade output, not plans.",
-      "fill": "Keep the synthesised drills as the primary source here. Add PGExercises-style local exercises against a seeded Postgres, graded by plan shape rather than result set. Cite Use The Index, Luke (https://use-the-index-luke.com/) as the reference text."
+      "problem": "No free judge-backed sheet tests EXPLAIN reading, index selection or plan forcing — LeetCode and HackerRank grade output, not plans. This module stays synthesised.",
+      "fill": "Keep the synthesised drills as the primary source here; grade against a seeded local Postgres by plan shape rather than result set. Reference: Use The Index, Luke (https://use-the-index-luke.com/)."
     },
     {
       "module": "timeseries-geo",
       "severity": "high",
-      "problem": "Gap filling, interpolation, PostGIS and H3 appear in no mainstream interview sheet.",
-      "fill": "StrataScratch hard analytics + PGExercises date category + synthesised drills. This module is deliberately off-spine."
+      "problem": "Gap filling, interpolation, PostGIS and H3 appear in no mainstream interview sheet. Advanced time-series/spatial work is deliberately off-spine.",
+      "fill": "PGExercises Date x6 covers calendar arithmetic now. Extended spatial and missing-data material stays synthesised against a seeded Postgres + PostGIS."
     },
     {
-      "module": "window-functions",
+      "module": "timeseries-geo",
       "severity": "medium",
-      "problem": "Only 6 sourced problems; SQL 50 touches windows in just 5 places.",
-      "fill": "Advanced SQL 50 (once enumerated) + DataLemur tag=window functions. Target 20+."
+      "problem": "Sourced coverage is thin — 6 date-arithmetic problems from PGExercises L2 only.",
+      "fill": "PGExercises date section adds timetable realism; DataLemur Hard-graded analytics fill the numeric side. Do not force a spatial sheet that does not exist."
     },
     {
       "module": "subqueries-ctes",
       "severity": "medium",
-      "problem": "Recursive CTEs are absent from SQL 50 and near-absent from HackerRank (only the 3 Alternative Queries).",
-      "fill": "PGExercises recursive category is the best free source; techTFQ recursion series as reference."
+      "problem": "Recursive CTEs are absent from SQL 50 and near-absent from HackerRank; they now carry 2 sourced rows (LC1270, LC1767) plus synthesised drills.",
+      "fill": "Advanced SQL 50 supplies 2 recursive problems; PGExercises Recursive is the natural follow-up if a third source is ever needed."
     },
     {
-      "tier": "L4",
-      "severity": "medium",
-      "problem": "Only 3 sourced L4 problems exist across the whole bank (HackerRank Alternative Queries).",
-      "fill": "L4 is constraint-driven and internals-heavy by design — it stays predominantly synthesised. Do not force external sourcing here."
+      "module": "advanced-analytics",
+      "severity": "low",
+      "problem": "L4 has 6 sourced problems across the whole bank (X4 x3 HR, W4 x1 LC, S4 x2 LC). L4 stays constraint-driven and internals-heavy by design.",
+      "fill": "Do not force more L4 sourcing. Synthesised drills remain primary at L4."
     }
   ],
   "rules": [
