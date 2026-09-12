@@ -1,0 +1,407 @@
+{
+  "level": 2,
+  "title": "Performance & Indexing",
+  "tagline": "join algorithms, index tuning, statistics, query optimization",
+  "placementQuiz": [
+    {
+      "q": "Nested Loop Join is best when:",
+      "options": [
+        "Both tables are large",
+        "One table is small, other has index on join key",
+        "No indexes exist",
+        "Joining on non-equality condition"
+      ],
+      "answer": 1,
+      "explain": "NLJ: for each outer row, probe inner index. Best when outer is small and inner has index."
+    },
+    {
+      "q": "Hash Join builds hash table on:",
+      "options": [
+        "Smaller table (build side)",
+        "Larger table",
+        "Both tables",
+        "Primary key only"
+      ],
+      "answer": 0,
+      "explain": "Hash Join: build hash on smaller (build) table, probe with larger. Memory-intensive."
+    },
+    {
+      "q": "Merge Join requires:",
+      "options": [
+        "Both tables sorted on join key",
+        "Hash indexes",
+        "No indexes",
+        "Foreign keys"
+      ],
+      "answer": 0,
+      "explain": "Merge Join: both inputs sorted on join key, then merged like merge sort. O(N+M)."
+    },
+    {
+      "q": "work_mem affects:",
+      "options": [
+        "Only sort operations",
+        "Hash joins, sorts, materialization",
+        "Only index creation",
+        "Network buffers"
+      ],
+      "answer": 1,
+      "explain": "work_mem controls memory for sorts, hashes, and materialization. Spills to disk if exceeded."
+    },
+    {
+      "q": "ANALYZE updates:",
+      "options": [
+        "Indexes",
+        "Table statistics (pg_statistic)",
+        "Query cache",
+        "Query plans"
+      ],
+      "answer": 1,
+      "explain": "ANALYZE collects table statistics (n_distinct, most_common_vals, histograms) for planner."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Join Algorithms — How the Planner Joins",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Planner picks algorithm: Nested Loop (small + index), Hash Join (large, no index), Merge Join (pre-sorted). EXPLAIN shows which. You can influence with indexes, stats, enable_* settings."
+        },
+        {
+          "type": "code",
+          "label": "join algorithms in EXPLAIN",
+          "code": "-- Nested Loop: outer rows × index probe\nEXPLAIN SELECT * FROM small s JOIN big b ON s.id = b.sid;\n-- Nested Loop (big has index on sid)\n\n-- Hash Join: build hash on smaller, probe larger\nEXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;\n-- Hash Join (no useful indexes, both large)\n\n-- Merge Join: both sorted\nEXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;\n-- Merge Join (both have indexes on id, or pre-sorted)",
+          "pg": "-- Disable to test others\nSET enable_nestloop = off;\nSET enable_hashjoin = off;\nSET enable_mergejoin = off;",
+          "mysql": "-- MySQL: primarily Nested Loop\n-- Hash Join: 8.0.18+ (hash_join optimizer hint)\n-- Merge Join: not directly controllable",
+          "py-pandas": "# No planner, but merge = merge sort join:\npd.merge(a, b, on='key', how='inner', sort=True)  # uses sort-merge"
+        },
+        {
+          "type": "query-plan",
+          "title": "Hash Join vs Nested Loop",
+          "plan": {
+            "Plan": {
+              "Node Type": "Hash Join",
+              "Startup Cost": 100.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 10000,
+              "Plan Width": 120,
+              "Hash Cond": "(a.id = b.id)",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "a",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 100.00,
+                  "Plan Rows": 10000
+                },
+                {
+                  "Node Type": "Hash",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 50.00,
+                  "Plan Rows": 5000
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "**Hash Join:** Build side (5000 rows) → hash table in memory. Probe side (10000 rows) → hash probe. If hash table > work_mem → spills to disk (slow). Increase work_mem for big joins."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Hash Join spills to disk when:",
+              "options": [
+                "Hash table > work_mem",
+                "Table > 1GB",
+                "No index on join key",
+                "Join is FULL OUTER"
+              ],
+              "answer": 0,
+              "explain": "work_mem controls hash table memory. Spill = massive slowdown. Increase work_mem or use indexes."
+            },
+            {
+              "q": "Merge Join is chosen when:",
+              "options": [
+                "Tables already sorted on join key",
+                "Indexes exist on join key",
+                "Both tables have ORDER BY on join key",
+                "All of the above"
+              ],
+              "answer": 3,
+              "explain": "Merge Join requires sorted input. Index scan or explicit sort provides ordering."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Statistics & ANALYZE — Teaching the Planner",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "How Planner Estimates Selectivity"
+        },
+        {
+          "type": "prose",
+          "md": "Planner uses: histogram (most common values), n_distinct, null_frac, correlation. For range: histogram bounds + linear interpolation. For equality: MCV list + 1/n_distinct for non-MCV. For correlated columns: independence assumption (wrong) unless extended stats exist."
+        },
+        {
+          "type": "code",
+          "label": "viewing statistics",
+          "code": "-- View column statistics\nSELECT * FROM pg_stats WHERE tablename = 'employees';\n\n-- Key columns:\n-- null_frac, avg_width, n_distinct, most_common_vals, most_common_freqs\n-- histogram_bounds, correlation\n\n-- Increase stats target for better estimates\nALTER TABLE employees ALTER COLUMN salary SET STATISTICS 1000;\nANALYZE employees;",
+          "pg": "-- pg_stats is the window into planner's mind",
+          "mysql": "-- MySQL: SHOW INDEX, ANALYZE TABLE\n-- No pg_stats equivalent",
+          "py-pandas": "# Manual selectivity estimation\ndef selectivity(df, col, val):\n    return (df[col] == val).mean()\n\n# For range\ndef range_sel(df, col, lo, hi):\n    return ((df[col] >= lo) & (df[col] <= hi)).mean()"
+        },
+        {
+          "type": "query-plan",
+          "title": "Bitmap Index Scan — Multiple Indexes Combined",
+          "plan": {
+            "Plan": {
+              "Node Type": "Bitmap Heap Scan",
+              "Relation Name": "employees",
+              "Recheck Cond": "((dept_id = 1) AND (salary > 50000))",
+              "Startup Cost": 10.00,
+              "Total Cost": 150.00,
+              "Plan Rows": 50,
+              "Plan Width": 72,
+              "Plans": [
+                {
+                  "Node Type": "BitmapAnd",
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Index Name": "idx_emp_dept",
+                      "Index Cond": "(dept_id = 1)"
+                    },
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Index Name": "idx_emp_salary",
+                      "Index Cond": "(salary > 50000)"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "**Bitmap Index Scan:** Combines multiple indexes in memory (bitmap), then single heap fetch. Great for AND/OR combinations where no composite index exists. Recheck Cond means heap tuple rechecked (lossy pages)."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Bitmap Index Scan is chosen when:",
+              "options": [
+                "Single index matches",
+                "Multiple indexes can be combined for AND/OR",
+                "Table is tiny",
+                "Index is corrupted"
+              ],
+              "answer": 1,
+              "explain": "BitmapAnd/BitmapOr combines multiple index scans in memory before heap access."
+            },
+            {
+              "q": "\"Recheck Cond\" in Bitmap Heap Scan means:",
+              "options": [
+                "Index is corrupted",
+                "Heap tuple rechecked due to lossy bitmap pages",
+                "Predicate pushed to storage",
+                "Statistics outdated"
+              ],
+              "answer": 1,
+              "explain": "Lossy bitmap pages store page-level not tuple-level. Must recheck each tuple."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Advanced Indexing — Partial, Expression, Concurrent",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Partial Indexes — Index Only What You Query"
+        },
+        {
+          "type": "code",
+          "label": "partial index",
+          "code": "-- 90% queries: WHERE status = 'active'\nCREATE INDEX idx_emp_active ON employees (salary) WHERE status = 'active';\n\n-- Size: fraction of full index\n-- Query uses it:\nSELECT * FROM employees WHERE status = 'active' AND salary > 50000;\n-- Index Scan on idx_emp_active\n\n-- Partial unique: one 'active' per email\nCREATE UNIQUE INDEX idx_email_active ON users (email) WHERE status = 'active';\n-- Allows 'alice@x.com' in 'inactive' + 'active'",
+          "pg": "-- Partial index (PostgreSQL native)\nCREATE INDEX idx ON t (col) WHERE status = 'active';",
+          "mysql": "-- MySQL: no native partial index\n-- Workaround: partitioned table or generated column",
+          "py-pandas": "# Filter first, then operate\nactive = employees[employees['status'] == 'active']\n# Then operate on smaller DataFrame"
+        },
+        {
+          "type": "heading",
+          "text": "Expression Indexes & Collation"
+        },
+        {
+          "type": "code",
+          "label": "expression indexes & collation",
+          "code": "-- Case-insensitive unique constraint\nCREATE UNIQUE INDEX idx_users_email_lower ON users (LOWER(email));\n\n-- Custom collation (PostgreSQL 12+)\nCREATE COLLATION case_insensitive (provider = icu, locale = 'und-u-ks-level2', deterministic = false);\nCREATE TABLE users (email TEXT COLLATE case_insensitive UNIQUE);\n\n-- JSONB path index\nCREATE INDEX idx_data_tags ON events USING GIN ((data->'tags'));\n-- Query: data->'tags' @> '[\"urgent\"]'",
+          "pg": "-- Expression index (PostgreSQL)\nCREATE INDEX idx ON t ((col1 + col2));\n-- Requires IMMUTABLE functions only",
+          "mysql": "-- Functional index (MySQL 8.0+)\nCREATE INDEX idx ON t ((col1 + col2));\n-- Double parentheses!",
+          "py-pandas": "# Pre-compute expressions\ndf['full_name'] = df['first_name'] + ' ' + df['last_name']\nevents['year_month'] = events['created_at'].dt.to_period('M')"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Expression must be IMMUTABLE.** No NOW(), random(), volatile functions. Expression index stores computed value — if function isn't immutable, index becomes inconsistent."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Partial index WHERE status='active' helps query:",
+              "options": [
+                "WHERE status = 'inactive'",
+                "WHERE status = 'active' AND salary > 50k",
+                "WHERE salary > 50k (no status filter)",
+                "All of the above"
+              ],
+              "answer": 1,
+              "explain": "Partial index only contains 'active' rows. Predicate must include status='active' to match."
+            },
+            {
+              "q": "Functional index on (salary * 12) supports query:",
+              "options": [
+                "WHERE salary > 50000",
+                "WHERE salary * 12 > 600000",
+                "WHERE salary < 50000",
+                "None"
+              ],
+              "answer": 1,
+              "explain": "Expression must match exactly. Index on (salary * 12) helps WHERE salary * 12 > 600000."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Mastery — Enterprise Indexing",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "CREATE INDEX idx ON t (LOWER(name));",
+          "pg": "CREATE INDEX idx ON t (LOWER(name));",
+          "mysql": "CREATE INDEX idx ON t ((LOWER(name))); -- double parens",
+          "py-pandas": "df['name_lower'] = df['name'].str.lower()"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "CREATE INDEX idx ON t (col) WHERE status = 'active';",
+          "pg": "CREATE INDEX idx ON t (col) WHERE status = 'active';",
+          "mysql": "-- No native partial index\n-- Workaround: filtered index via generated column",
+          "py-pandas": "active = df[df['status'] == 'active']"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "P201",
+              "tier": 2,
+              "title": "Hash Join vs Nested Loop Decision",
+              "platform": "drill",
+              "patterns": ["join-algorithm"],
+              "statement": "Query joins large_table (1M rows) with small_table (100 rows) on id. Which algorithm? Why?",
+              "hints": ["Hash Join — small table builds hash, large probes"]
+            },
+            {
+              "id": "P202",
+              "tier": 2,
+              "title": "Composite Index for Multi-Column Query",
+              "platform": "drill",
+              "patterns": ["composite-index"],
+              "statement": "Query: WHERE user_id = 123 AND created_at > '2024-01-01'. Design index.",
+              "hints": ["Column order: equality first (user_id), then range (created_at)"]
+            },
+            {
+              "id": "P202",
+              "tier": 2,
+              "title": "Partial Index for Soft Delete",
+              "platform": "drill",
+              "patterns": ["partial-index"],
+              "statement": "99% queries filter deleted=false. Create partial index on orders(user_id, created_at).",
+              "hints": ["WHERE deleted = false"]
+            },
+            {
+              "id": "P204",
+              "tier": 2,
+              "title": "Covering Index to Avoid Heap Fetch",
+              "platform": "drill",
+              "patterns": ["covering-index"],
+              "statement": "Query: SELECT name, email FROM users WHERE status='active'. Create covering index.",
+              "hints": ["INCLUDE (name, email) or (status, name, email)"]
+            },
+            {
+              "id": "P205",
+              "tier": 2,
+              "title": "Fix Non-Sargable: YEAR(created_at) = 2024",
+              "platform": "drill",
+              "patterns": ["sargability-fix"],
+              "statement": "Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.",
+              "hints": ["created_at >= '2024-01-01' AND created_at < '2025-01-01'"]
+            },
+            {
+              "id": "P206",
+              "tier": 2,
+              "title": "Bitmap Index Scan for Multiple Conditions",
+              "platform": "drill",
+              "patterns": ["bitmap-scan"],
+              "statement": "Query: WHERE dept_id = 1 AND salary > 50000. No composite index. Explain plan.",
+              "hints": ["BitmapAnd combines idx_dept and idx_salary"]
+            },
+            {
+              "id": "P207",
+              "tier": 2,
+              "title": "Expression Index for Annual Salary",
+              "platform": "drill",
+              "patterns": ["expression-index"],
+              "statement": "Query: WHERE salary * 12 > 120000. Create functional index.",
+              "hints": ["CREATE INDEX ON employees ((salary * 12))"]
+            },
+            {
+              "id": "P208",
+              "tier": 2,
+              "title": "Fix Non-Sargable: salary * 1.1 > 55000",
+              "platform": "drill",
+              "patterns": ["sargability-fix"],
+              "statement": "Rewrite to use index on salary.",
+              "hints": ["salary > 50000"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Nested Loop: small outer + indexed inner; Hash: large both, build hash on smaller; Merge: pre-sorted",
+    "Composite index: equality first, then range; (a,b) works for a=1 and a=1,b=2",
+    "Partial index: WHERE clause on index — smaller, faster for skewed access",
+    "Covering index (INCLUDE): index-only scan, avoids heap fetch",
+    "Sargable: column naked on left, constant on right. No functions/math/casts on column",
+    "Bitmap Index Scan: combines multiple indexes in memory; Recheck Cond = lossy pages"
+  ],
+  "glossary": [
+    { "term": "nested loop join", "def": "For each outer row, probe inner index. Best: small outer + indexed inner." },
+    { "term": "hash join", "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem." },
+    { "term": "merge join", "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input." },
+    { "term": "partial index", "def": "Index with WHERE clause — only indexes subset of rows matching condition." },
+    { "term": "covering index", "def": "Index with INCLUDE columns — satisfies query without heap lookup." },
+    { "term": "sargable", "def": "Search ARGument ABLE — predicate that can use index seek (e.g., col = 5)." }
+  ]
+}

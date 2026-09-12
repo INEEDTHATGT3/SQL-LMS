@@ -1,0 +1,35 @@
+{
+  "skillName": "SQL",
+  "watermark": "SQL",
+  "levels": [
+    {
+      "level": 1,
+      "name": "BEGINNER",
+      "color": "#00b4d8",
+      "promise": "Zero-assumption mental models. Everyday analogies only."
+    },
+    {
+      "level": 2,
+      "name": "INTERVIEW READY",
+      "color": "#90e0ef",
+      "promise": "Standard patterns. Formal complexity."
+    },
+    {
+      "level": 3,
+      "name": "ADVANCED",
+      "color": "#caf0f8",
+      "promise": "Optimization trade-offs. Internals."
+    },
+    {
+      "level": 4,
+      "name": "EXPERT",
+      "color": "#0077b6",
+      "promise": "Constraint-driven techniques. Heavy machinery."
+    }
+  ],
+  "palette": {
+    "accent": "#00b4d8",
+    "accent2": "#90e0ef",
+    "accent3": "#caf0f8"
+  }
+}

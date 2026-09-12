@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filtering & Conditionals — L4 EXPERT</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="4" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 02</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">expression indexes, predicate optimization, statistics, extended statistics</span></div>
+  <h1>Filtering & Conditionals</h1>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="filtering_L1" href="filtering_L1.html">BEGINNER</a><a class="level-pill " data-lesson="filtering_L2" href="filtering_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="filtering_L3" href="filtering_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="filtering_L4" href="filtering_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Extended Statistics — Correlated Columns</a><a href="#sec-1">02 · Expression Indexes — Complex Expressions</a><a href="#sec-2">03 · Predicate Optimization — Planner Internals</a><a href="#sec-3">04 · Dialect Mastery — Advanced Predicates</a><a href="#sec-4">05 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q79" data-answer="1">
+      <div class="quiz-q">Extended statistics (CREATE STATISTICS) helps with:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Single column selectivity</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Correlated columns (e.g., city + zip_code)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Index creation speed</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>VACUUM performance</span></div></div>
+      <div class="quiz-explain">Extended stats capture correlation between columns (functional dependency, n-distinct).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q80" data-answer="0">
+      <div class="quiz-q">Expression index on (a + b) supports query:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE a + b > 100</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE a > 100 AND b > 100</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE a > 100 OR b > 100</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>None</span></div></div>
+      <div class="quiz-explain">Expression must match exactly. Index on (a+b) helps WHERE a+b > 100.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q81" data-answer="1">
+      <div class="quiz-q">When planner underestimates rows for correlated columns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Run ANALYZE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CREATE STATISTICS ... DEPENDENCIES</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Increase default_statistics_target</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Drop and recreate index</span></div></div>
+      <div class="quiz-explain">Extended statistics with DEPENDENCIES captures functional dependency between columns.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q82" data-answer="0">
+      <div class="quiz-q">Partial index predicate must be:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Immutable (no volatile functions)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Any valid WHERE clause</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only equality checks</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Referencing indexed columns only</span></div></div>
+      <div class="quiz-explain">Partial index predicate must use immutable functions only (no NOW(), random()).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q83" data-answer="1">
+      <div class="quiz-q">Bitmap Index Scan vs Index Scan:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Bitmap is always faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Bitmap combines multiple indexes; Index Scan single index</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Bitmap only for PRIMARY KEY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index Scan deprecated</span></div></div>
+      <div class="quiz-explain">Bitmap Index Scan builds in-memory bitmap from multiple indexes, then heap fetch. Good for multiple conditions.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Extended Statistics — Correlated Columns</h2></div>
+    <div class="mantra"><strong>Planner assumes column independence. city='NYC' AND zip='10001' → estimates selectivity as product. But they're correlated! Extended statistics (CREATE STATISTICS) teaches planner the truth.</strong></div>
+<div><div class="code-label"><span>create statistics</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Capture correlation between city and zip_code
+CREATE STATISTICS st_city_zip (DEPENDENCIES) ON city, zip_code FROM users;
+ANALYZE users;
+
+-- Now planner knows city → zip_code dependency
+EXPLAIN SELECT * FROM users WHERE city = <span class="st">'NYC' AND zip_code = '10001'</span>;
+-- Better row estimate, better plan
+
+-- N-distinct <span class="kw">for</span> GROUP BY
+CREATE STATISTICS st_dept_role (NDISTINCT) ON dept_id, role FROM employees;
+ANALYZE employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL 10+: CREATE STATISTICS</span>
+<span class="cm">-- Types: DEPENDENCIES, NDISTINCT, MCV (Most Common Values)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no extended statistics</span>
+<span class="cm">-- Workaround: composite index or generated column</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Before Extended Stats — Independence Assumption</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>users</code>
+        <span class="plan-node-meta"> cost=0..1250 rows=5 width=120 actual rows=500</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (city = 'NYC' AND zip_code = '10001')</div></div></div>
+</div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>After Extended Stats — Correlation Known</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Index Scan</span> on <code>users</code>
+        <span class="plan-node-meta"> cost=0.29..42.15 rows=480 width=120 actual rows=500</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (city = 'NYC' AND zip_code = '10001')</div></div></div>
+</div>
+<div class="callout green"><strong>Plan rows: 5 → 480 (actual 500).</strong> Planner now knows city/zip correlation. Chooses Index Scan over Seq Scan. Extended stats are free (just ANALYZE) and transform plans for correlated columns.</div>
+<div class="quiz-card" data-quiz-key="s0-q84" data-answer="1">
+      <div class="quiz-q">CREATE STATISTICS s (MCV) ON a, b FROM t; captures:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Most common single values</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Most common value combinations</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Null fraction</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Histogram bounds</span></div></div>
+      <div class="quiz-explain">MCV = Most Common Values — stores frequent (a,b) pairs for better selectivity estimates.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q85" data-answer="1">
+      <div class="quiz-q">After CREATE STATISTICS, you must run:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>VACUUM</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ANALYZE</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>REINDEX</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Nothing — automatic</span></div></div>
+      <div class="quiz-explain">Statistics object populated during ANALYZE.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Expression Indexes — Complex Expressions</h2></div>
+    <h3>Multi-Column Expression Indexes</h3>
+<div><div class="code-label"><span>expression index patterns</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Concatenated search
+CREATE INDEX idx_full_name ON users ((first_name || <span class="st">' '</span> || last_name));
+-- WHERE first_name || <span class="st">' ' || last_name = 'John Doe'</span>
+
+-- JSONB path
+CREATE INDEX idx_tags ON events USING GIN ((data-><span class="st">'tags'</span>));
+-- WHERE data-><span class="st">'tags' @> '["urgent"]'</span>
+
+-- Date math
+CREATE INDEX idx_year_month ON events ((date_trunc(<span class="st">'month'</span>, created_at)));
+-- WHERE date_trunc(<span class="st">'month', created_at) = '2024-01-01'</span>
+
+-- Math expression
+CREATE INDEX idx_annual_sal ON employees ((salary * <span class="num">12</span>));
+-- WHERE salary * <span class="num">12</span> > <span class="num">120000</span></code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Expression index (PostgreSQL)</span>
+CREATE INDEX idx ON t ((col1 + col2));
+<span class="cm">-- Requires IMMUTABLE functions only</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: expression index</span>
+CREATE INDEX idx ON t ((col1 + col2));
+<span class="cm">-- Double parentheses!</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn"><strong>Expression must be IMMUTABLE.</strong> No NOW(), random(), volatile functions. Expression index stores computed value — if function isn't immutable, index becomes inconsistent.</div>
+<div class="quiz-card" data-quiz-key="s1-q86" data-answer="1">
+      <div class="quiz-q">Index on (date_trunc('month', created_at)) helps query:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE created_at >= '2024-01-01'</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE date_trunc('month', created_at) = '2024-01-01'</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE created_at > '2024-01-01'</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All of the above</span></div></div>
+      <div class="quiz-explain">Expression index only matches queries using the exact same expression.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q87" data-answer="1">
+      <div class="quiz-q">Why must expression index functions be IMMUTABLE?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Performance</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Index consistency — same input must always give same output</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Storage efficiency</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Parallel query support</span></div></div>
+      <div class="quiz-explain">If function returns different values for same input, index entries become wrong.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Predicate Optimization — Planner Internals</h2></div>
+    <h3>How Planner Estimates Selectivity</h3>
+<p>Planner uses: histogram (most common values), n_distinct, null_frac, correlation. For range: histogram bounds + linear interpolation. For equality: MCV list + 1/n_distinct for non-MCV. For correlated columns: independence assumption (wrong) unless extended stats exist.</p>
+<div><div class="code-label"><span>viewing statistics</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- View column statistics
+SELECT * FROM pg_stats WHERE tablename = <span class="st">'employees'</span>;
+
+-- Key columns:
+-- null_frac, avg_width, n_distinct, most_common_vals, most_common_freqs
+-- histogram_bounds, correlation
+
+-- Increase stats target <span class="kw">for</span> better estimates
+ALTER TABLE employees ALTER COLUMN salary SET STATISTICS <span class="num">1000</span>;
+ANALYZE employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- pg_stats is the window into planner's mind</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: SHOW INDEX, ANALYZE TABLE</span>
+<span class="cm">-- No pg_stats equivalent</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Bitmap Index Scan — Multiple Indexes Combined</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Bitmap Heap Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=10..150 rows=50 width=72</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Recheck Cond: ((dept_id = 1) AND (salary > 50000))</div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">BitmapAnd</span>
+        <span class="plan-node-meta"></span>
+      </div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Bitmap Index Scan</span>
+        <span class="plan-node-meta"></span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (dept_id = 1)</div></div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Bitmap Index Scan</span>
+        <span class="plan-node-meta"></span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (salary > 50000)</div></div></div></div></div>
+</div>
+<div class="callout blue"><strong>Bitmap Index Scan:</strong> Combines multiple indexes in memory (bitmap), then single heap fetch. Great for AND/OR combinations where no composite index exists. Recheck Cond means heap tuple rechecked (lossy pages).</div>
+<div class="quiz-card" data-quiz-key="s2-q88" data-answer="1">
+      <div class="quiz-q">Bitmap Index Scan is chosen when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Single index matches</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Multiple indexes can be combined for AND/OR</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Table is tiny</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index is corrupted</span></div></div>
+      <div class="quiz-explain">BitmapAnd/BitmapOr combines multiple index scans in memory before heap access.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q89" data-answer="1">
+      <div class="quiz-q">"Recheck Cond" in Bitmap Heap Scan means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Index is corrupted</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Heap tuple rechecked due to lossy bitmap pages</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Predicate pushed to storage</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Statistics outdated</span></div></div>
+      <div class="quiz-explain">Lossy bitmap pages store page-level, not tuple-level. Must recheck each tuple.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Mastery — Advanced Predicates</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE STATISTICS s (DEPENDENCIES) ON city, zip FROM users;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE STATISTICS s (DEPENDENCIES) ON city, zip FROM users;
+ANALYZE users;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- No extended statistics
+-- Use composite index or generated column</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df[['city', 'zip']].corr()</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">DDL('CREATE STATISTICS...')</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE INDEX idx ON t ((a + b));</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE INDEX idx ON t ((a + b));</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE INDEX idx ON t ((a + b)); -- 8.0+</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df['sum_ab'] = df['a'] + df['b']</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">Index('idx', T.a + T.b)</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L4 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Extended Stats for Correlated Columns</div>
+        <div class="prob-meta">drill · extended-statistics</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F401"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Table users(city, zip_code) — queries filter both. Create extended stats for dependency.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnh1j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnh1j">CREATE STATISTICS s (DEPENDENCIES) ON city, zip_code FROM users;</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Expression Index for Full-Text Search</div>
+        <div class="prob-meta">drill · expression-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F402"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create index for WHERE first_name || ' ' || last_name ILIKE 'john%'.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnh1k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnh1k">CREATE INDEX ON users ((first_name || ' ' || last_name))</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Partial Index with Immutable Predicate</div>
+        <div class="prob-meta">drill · partial-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F403"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create partial index on orders(created_at) WHERE status IN ('shipped','delivered'). Why can't we use NOW()?
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnh1l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnh1l">Predicate must be immutable; NOW() is volatile</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">MCV Statistics for Skewed Data</div>
+        <div class="prob-meta">drill · extended-statistics + mcv</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F404"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      status column has 3 values but 90%='active'. Create MCV stats for better estimates.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnh1m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnh1m">CREATE STATISTICS s (MCV) ON status FROM users;</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">NDISTINCT for GROUP BY Accuracy</div>
+        <div class="prob-meta">drill · extended-statistics + ndistinct</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F405"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      GROUP BY dept_id, role — planner underestimates groups. Create NDISTINCT stats.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnh1n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnh1n">CREATE STATISTICS s (NDISTINCT) ON dept_id, role FROM employees;</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Extended stats: DEPENDENCIES (correlation), NDISTINCT (group count), MCV (value combos)</li><li>CREATE STATISTICS + ANALYZE teaches planner truth about correlated columns</li><li>Expression index: exact expression match required; functions must be IMMUTABLE</li><li>Bitmap Index Scan: combines multiple indexes in memory; Recheck Cond = lossy pages</li><li>Planner assumes independence; extended stats fix correlation blindness</li><li>Statistics target: ALTER TABLE ... SET STATISTICS N — more histogram buckets</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>extended statistics</code></td><td>CREATE STATISTICS object capturing cross-column correlation (DEPENDENCIES, NDISTINCT, MCV).</td></tr><tr><td style="width:220px;"><code>functional dependency</code></td><td>Column A determines column B (e.g., zip_code → city). Planner learns via DEPENDENCIES stats.</td></tr><tr><td style="width:220px;"><code>n-distinct</code></td><td>Estimated distinct value count for GROUP BY accuracy. Extended stats improve this.</td></tr><tr><td style="width:220px;"><code>MCV (Most Common Values)</code></td><td>List of frequent value combinations for multi-column selectivity estimates.</td></tr><tr><td style="width:220px;"><code>lossy bitmap</code></td><td>Bitmap page stores page-level not tuple-level; requires Recheck Cond on heap.</td></tr><tr><td style="width:220px;"><code>immutable function</code></td><td>Same input → same output, forever. Required for expression indexes.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: next MODULE</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 02 · L4/EXPERT · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('filtering_L4');</script>
+</body></html>

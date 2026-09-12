@@ -1,0 +1,408 @@
+{
+  "level": 4,
+  "title": "Aggregation & Grouping",
+  "tagline": "streaming aggregates, continuous aggregates, materialized views, parallel aggregation",
+  "placementQuiz": [
+    {
+      "q": "Continuous aggregate (TimescaleDB) automatically:",
+      "options": [
+        "Refreshes on schedule",
+        "Maintains real-time view via background workers",
+        "Only works with time-series",
+        "Replaces materialized views"
+      ],
+      "answer": 1,
+      "explain": "Continuous aggregates incrementally maintain pre-computed aggregates as new data arrives."
+    },
+    {
+      "q": "Streaming aggregate in PostgreSQL (pg_streaming):",
+      "options": [
+        "Aggregates over infinite stream",
+        "Incremental aggregate on append-only table",
+        "Real-time dashboard only",
+        "Requires TimescaleDB"
+      ],
+      "answer": 1,
+      "explain": "Streaming aggregates maintain running aggregates as rows are inserted, without full recomputation."
+    },
+    {
+      "q": "Parallel aggregate (PostgreSQL) splits:",
+      "options": [
+        "GROUP BY keys across workers",
+        "Input scan across workers, each does partial aggregate, then combine",
+        "Aggregate functions across workers",
+        "Output rows across workers"
+      ],
+      "answer": 1,
+      "explain": "Parallel aggregate: each worker scans partition, computes partial aggregate, leader combines."
+    },
+    {
+      "q": "Materialized view refresh CONCURRENTLY:",
+      "options": [
+        "Locks table for duration",
+        "No exclusive lock; allows reads during refresh",
+        "Only works with fast refresh",
+        "Requires primary key"
+      ],
+      "answer": 1,
+      "explain": "CONCURRENTLY builds new version, swaps atomically — zero-downtime refresh."
+    },
+    {
+      "q": "Incremental aggregate vs full recompute:",
+      "options": [
+        "Same result, incremental faster",
+        "Incremental may drift over time",
+        "Full recompute always faster",
+        "Incremental only for COUNT"
+      ],
+      "answer": 0,
+      "explain": "Incremental applies delta (new/changed rows) to existing aggregate. Correct if logic handles updates/deletes."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Parallel Aggregation — Multi-Core GROUP BY",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Parallel aggregate = scan partitions in parallel → partial aggregates per worker → combine at leader. Key params: max_parallel_workers_per_gather, min_parallel_table_scan_size, parallel_tuple_cost. Enable for large tables."
+        },
+        {
+          "type": "code",
+          "label": "parallel aggregate config",
+          "code": "-- Enable parallel query\nSET max_parallel_workers_per_gather = 4;\nSET min_parallel_table_scan_size = '8MB';\nSET parallel_tuple_cost = 0.1;\nSET parallel_setup_cost = 1000;\n\n-- Force parallel for testing\nSET force_parallel_mode = on;\n\n-- Check if parallel used\nEXPLAIN ANALYZE SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;\n-- Look for: Parallel Seq Scan, Partial Aggregate, Gather Merge",
+          "pg": "-- Parallel aggregate (PG 10+)\n-- Partial Aggregate on workers → Gather Merge at leader",
+          "mysql": "-- MySQL: no native parallel GROUP BY\n-- Use partitioning + UNION ALL manually",
+          "py-pandas": "# No parallel; but can use Dask / Polars for parallel groupby\nimport dask.dataframe as dd\nddf = dd.from_pandas(df, npartitions=4)\nresult = ddf.groupby('dept_id').size().compute()"
+        },
+        {
+          "type": "query-plan",
+          "title": "Parallel Aggregate Plan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Gather Merge",
+              "Workers Planned": 4,
+              "Startup Cost": 1000.00,
+              "Total Cost": 50000.00,
+              "Plan Rows": 1000000,
+              "Plan Width": 120,
+              "Plans": [
+                {
+                  "Node Type": "Parallel Hash Join",
+                  "Startup Cost": 5000.00,
+                  "Total Cost": 40000.00,
+                  "Plan Rows": 250000,
+                  "Plan Width": 120,
+                  "Hash Cond": "(a.id = b.id)",
+                  "Worker 0": { "Actual Rows": 250123 },
+                  "Worker 1": { "Actual Rows": 249876 },
+                  "Worker 2": { "Actual Rows": 250045 },
+                  "Worker 3": { "Actual Rows": 249956 }
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Partial Aggregate in parallel query means:",
+              "options": [
+                "Incomplete result",
+                "Each worker computes aggregate on its partition",
+                "Aggregate stopped early",
+                "Error state"
+              ],
+              "answer": 1,
+              "explain": "Each worker builds partial aggregate on its data partition; leader combines via Gather Merge."
+            },
+            {
+              "q": "Gather Merge vs Gather:",
+              "options": [
+                "Same",
+                "Gather Merge preserves ORDER BY; Gather does not",
+                "Gather Merge faster",
+                "Gather for Hash Join only"
+              ],
+              "answer": 1,
+              "explain": "Gather Merge merges sorted worker outputs; Gather just concatenates unordered."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Materialized Views & Continuous Aggregates",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Materialized Views — Pre-computed Snapshots"
+        },
+        {
+          "type": "code",
+          "label": "materialized view",
+          "code": "-- Create materialized view\nCREATE MATERIALIZED VIEW dept_stats AS\nSELECT dept_id,\n  COUNT(*) AS emp_count,\n  AVG(salary) AS avg_salary,\n  SUM(salary) AS total_salary\nFROM employees\nGROUP BY dept_id;\n\n-- Refresh (full rebuild)\nREFRESH MATERIALIZED VIEW dept_stats;\n\n-- Refresh CONCURRENTLY (zero-downtime)\nREFRESH MATERIALIZED VIEW CONCURRENTLY dept_stats;\n-- Requires: unique index on materialized view\nCREATE UNIQUE INDEX idx_dept_stats_dept ON dept_stats (dept_id);",
+          "pg": "-- MATERIALIZED VIEW + REFRESH CONCURRENTLY (zero downtime)",
+          "mysql": "-- MySQL: no native materialized view\n-- Workaround: table + trigger / scheduled refresh",
+          "py-pandas": "# No native MV; use scheduled job\nimport schedule\nschedule.every().hour.do(refresh_dept_stats)"
+        },
+        {
+          "type": "heading",
+          "text": "Continuous Aggregates (TimescaleDB)"
+        },
+        {
+          "type": "code",
+          "label": "continuous aggregate",
+          "code": "-- TimescaleDB continuous aggregate\nCREATE MATERIALIZED VIEW hourly_events\nWITH (timescaledb.continuous) AS\nSELECT time_bucket('1 hour', time) AS bucket,\n  device_id,\n  COUNT(*) AS event_count,\n  AVG(value) AS avg_value\nFROM events\nGROUP BY bucket, device_id;\n\n-- Automatic refresh (background)\n-- Add refresh policy\nSELECT add_continuous_aggregate_policy('hourly_events',\n  start_offset => INTERVAL '3 hours',\n  end_offset => INTERVAL '1 hour',\n  schedule_interval => INTERVAL '1 hour');\n\n-- Real-time view (combines materialized + raw)\nSELECT * FROM hourly_events WHERE bucket > now() - INTERVAL '1 day';",
+          "pg": "-- TimescaleDB: continuous aggregates + real-time views",
+          "mysql": "-- MySQL: no native continuous aggregates",
+          "py-pandas": "# Scheduled incremental refresh\ndef refresh_hourly():\n    new_data = get_new_events()\n    incremental_update(hourly_agg, new_data)"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"type": "Materialized View", "refresh": "Manual / scheduled", "latency": "Stale until refresh", "storage": "Full copy"},
+              {"type": "Continuous Aggregate", "refresh": "Automatic incremental", "latency": "Near real-time (configurable)", "storage": "Incremental + raw"},
+              {"type": "View", "refresh": "Always real-time", "latency": "Zero", "storage": "None (query rewrite)"},
+              {"type": "Table + Trigger", "refresh": "Per-row (sync)", "latency": "Real-time", "storage": "Full copy + overhead"}
+            ],
+            "after": [],
+            "highlight": ["refresh", "latency"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "REFRESH MATERIALIZED VIEW CONCURRENTLY requires:",
+              "options": [
+                "Primary key on base table",
+                "Unique index on materialized view",
+                "No indexes",
+                "TimescaleDB"
+              ],
+              "answer": 1,
+              "explain": "Unique index on MV enables atomic swap without blocking reads."
+            },
+            {
+              "q": "Continuous aggregate lag (end_offset) means:",
+              "options": [
+                "How far behind real-time",
+                "How often to refresh",
+                "How much history to keep",
+                "Max query latency"
+              ],
+              "answer": 0,
+              "explain": "end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Advanced Patterns — Incremental, Streaming, Parallel",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Incremental Aggregate Maintenance"
+        },
+        {
+          "type": "code",
+          "label": "incremental aggregate pattern",
+          "code": "-- Table for incremental aggregates\nCREATE TABLE daily_sales_agg (\n  sale_date DATE PRIMARY KEY,\n  total_sales NUMERIC,\n  order_count BIGINT\n);\n\n-- Incremental refresh (daily)\nINSERT INTO daily_sales_agg (sale_date, total_sales, order_count)\nSELECT sale_date, SUM(amount), COUNT(*)\nFROM orders\nWHERE sale_date = CURRENT_DATE - 1\nGROUP BY sale_date\nON CONFLICT (sale_date) DO UPDATE SET\n  total_sales = EXCLUDED.total_sales,\n  order_count = EXCLUDED.order_count;\n\n-- Handle updates/deletes (complex)\n-- Use CDC (Change Data Capture) or triggers for true incremental",
+          "pg": "-- UPSERT pattern for incremental aggregates\n-- For true CDC: pgoutput + logical replication",
+          "mysql": "-- ON DUPLICATE KEY UPDATE\nALTER TABLE daily_sales_agg ADD COLUMN total_sales NUMERIC;\nALTER TABLE daily_sales_agg ADD COLUMN order_count BIGINT;\nINSERT INTO daily_sales_agg (sale_date, total_sales, order_count) VALUES (...)\nON DUPLICATE KEY UPDATE total_sales = VALUES(total_sales), order_count = VALUES(order_count);",
+          "py-pandas": "# Incremental update\ndef incremental_agg(existing, new_data, date_col):\n    combined = pd.concat([existing, new_data])\n    return combined.groupby(date_col).agg({'amount': 'sum', 'id': 'count'})"
+        },
+        {
+          "type": "heading",
+          "text": "Streaming Aggregation (pg_streaming / PipelineDB)"
+        },
+        {
+          "type": "code",
+          "label": "streaming aggregate concept",
+          "code": "-- Concept: aggregate as data flows in\n-- PipelineDB (PostgreSQL extension) / pg_streaming\n\n-- Continuous view\nCREATE CONTINUOUS VIEW page_views_1min AS\nSELECT site_id, COUNT(*) AS views\nFROM page_views\nGROUP BY site_id, time_bucket('1 minute', ts);\n\n-- Query continuous view (always up-to-date)\nSELECT * FROM page_views_1min WHERE site_id = 123;\n\n-- Combines: materialized (historical) + streaming (recent)",
+          "pg": "-- PipelineDB / pg_streaming for streaming SQL",
+          "mysql": "-- No native streaming SQL",
+          "py-pandas": "# Streaming: use Faust, Bytewax, or Kafka Streams\n# Not native SQL"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "Real-world: TimescaleDB continuous aggregates = 99% of streaming use cases. PipelineDB deprecated. For custom: Kafka + Flink/Spark Streaming + sink to DB."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "REFRESH MATERIALIZED VIEW CONCURRENTLY blocks:",
+              "options": [
+                "Writes to base tables",
+                "Reads from materialized view",
+                "Nothing (except brief schema lock)",
+                "All queries"
+              ],
+              "answer": 2,
+              "explain": "CONCURRENTLY builds new version, swaps with brief AccessExclusive lock — reads never blocked."
+            },
+            {
+              "q": "Incremental aggregate challenge:",
+              "options": [
+                "Inserts only",
+                "Handling UPDATE/DELETE in base data",
+                "Memory usage",
+                "Index maintenance"
+              ],
+              "answer": 1,
+              "explain": "Updates/deletes in source require reverse aggregation (subtract old, add new). Hard without CDC."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "EXPLAIN — Incremental Aggregate Upsert",
+      "blocks": [
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Incremental Aggregate Upsert",
+          "plan": {
+            "Plan": {
+              "Node Type": "Insert",
+              "Startup Cost": 0.00,
+              "Total Cost": 100.00,
+              "Plan Rows": 1,
+              "Plan Width": 48,
+              "Conflict Resolution": "ON CONFLICT DO UPDATE",
+              "Plans": [
+                {
+                  "Node Type": "Subquery Scan",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 50.00,
+                  "Plan Rows": 1,
+                  "Plan Width": 48,
+                  "Plans": [
+                    {
+                      "Node Type": "Aggregate",
+                      "Strategy": "Hashed",
+                      "Group Key": ["sale_date"],
+                      "Startup Cost": 0.00,
+                      "Total Cost": 50.00,
+                      "Plan Rows": 1,
+                      "Plan Width": 48,
+                      "Plans": [
+                        {
+                          "Node Type": "Seq Scan",
+                          "Relation Name": "orders",
+                          "Startup Cost": 0.00,
+                          "Total Cost": 40.00,
+                          "Plan Rows": 1000,
+                          "Plan Width": 24,
+                          "Filter": "(sale_date = (CURRENT_DATE - 1))"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Dialect Mastery — Enterprise Aggregation",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "CREATE MATERIALIZED VIEW mv AS SELECT ...; REFRESH MATERIALIZED VIEW CONCURRENTLY mv;",
+          "pg": "CREATE MATERIALIZED VIEW mv AS ...;\nREFRESH MATERIALIZED VIEW CONCURRENTLY mv; -- requires unique index",
+          "mysql": "-- No MV. Use table + scheduled event:\nCREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO\n  REPLACE INTO mv SELECT ...;",
+          "py-pandas": "# APScheduler / cron job to refresh pandas aggregation"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;",
+          "pg": "SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;",
+          "mysql": "SELECT dept_id, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id; -- 8.0+",
+          "py-pandas": "df.groupby('dept_id')['salary'].quantile(0.5)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L4 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "A401",
+              "tier": 4,
+              "title": "Parallel Aggregate Tuning",
+              "platform": "drill",
+              "patterns": ["parallel-aggregate"],
+              "statement": "Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.",
+              "hints": ["max_parallel_workers_per_gather", "work_mem", "min_parallel_table_scan_size"]
+            },
+            {
+              "id": "A402",
+              "tier": 4,
+              "title": "Materialized View with Concurrent Refresh",
+              "platform": "drill",
+              "patterns": ["materialized-view"],
+              "statement": "Create MV for daily sales by region with zero-downtime refresh.",
+              "hints": ["CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)"]
+            },
+            {
+              "id": "A403",
+              "tier": 4,
+              "title": "Continuous Aggregate for Real-Time Dashboard",
+              "platform": "drill",
+              "patterns": ["continuous-aggregate"],
+              "statement": "Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.",
+              "hints": ["time_bucket('5 min', ts)", "add_continuous_aggregate_policy"]
+            },
+            {
+              "id": "A404",
+              "tier": 4,
+              "title": "Incremental Aggregate with CDC",
+              "platform": "drill",
+              "patterns": ["incremental-aggregate", "cdc"],
+              "statement": "Design incremental daily sales agg using pgoutput logical replication for CDC.",
+              "hints": ["CREATE PUBLICATION", "pgoutput plugin", "apply delta to agg table"]
+            },
+            {
+              "id": "A405",
+              "tier": 4,
+              "title": "Right-Deep Tree for Parallel Hash Aggregate",
+              "platform": "drill",
+              "patterns": ["join-tree", "parallel-aggregate"],
+              "statement": "Explain when right-deep join tree enables better parallel aggregate distribution.",
+              "hints": ["Build side on right (smaller), probe on left"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Parallel aggregate: workers do Partial Aggregate → Gather Merge combines",
+    "Materialized view + CONCURRENTLY = zero-downtime refresh (needs unique index)",
+    "Continuous aggregates (TimescaleDB): incremental, automatic, near real-time",
+    "Incremental aggregates: apply delta (INSERT/UPDATE/DELETE) to existing aggregate",
+    "Streaming aggregates: continuous view = materialized + raw tail; PipelineDB/pg_streaming",
+    "REFRESH CONCURRENTLY = brief lock swap; requires unique index on MV"
+  ],
+  "glossary": [
+    { "term": "partial aggregate", "def": "Per-worker aggregate on data partition; combined at leader via Gather Merge." },
+    { "term": "continuous aggregate", "def": "TimescaleDB: automatically maintained materialized view with incremental refresh." },
+    { "term": "materialized view", "def": "Pre-computed query result stored as table; refreshed manually or scheduled." },
+    { "term": "incremental aggregate", "def": "Aggregate updated by applying delta (new/changed rows) instead of full recompute." },
+    { "term": "CDC (Change Data Capture)", "def": "Capture INSERT/UPDATE/DELETE from WAL for real-time incremental processing." }
+  ]
+}

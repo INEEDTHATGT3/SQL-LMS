@@ -1,0 +1,45 @@
+{
+  "name": "@layered-study/core",
+  "version": "1.0.0",
+  "description": "Core runtime for layered study system - renderer, lint, theme compiler, progress tracking",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "layered-study-build": "./build/build.js",
+    "layered-study-lint": "./bin/lint.js",
+    "layered-study-new-module": "./bin/new-module.js"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./renderer/render.js": "./renderer/render.js",
+    "./renderer/lint.js": "./renderer/lint.js",
+    "./renderer/new-module.js": "./renderer/new-module.js",
+    "./renderer/blocks/index.js": "./renderer/blocks/index.js",
+    "./js/language-switcher.js": "./js/language-switcher.js",
+    "./js/progress-tracker.js": "./js/progress-tracker.js",
+    "./js/recall-core.js": "./js/recall-core.js",
+    "./css/theme-compiler.js": "./css/theme-compiler.js",
+    "./build/build.js": "./build/build.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "build:theme": "node css/theme-compiler.js"
+  },
+  "dependencies": {
+    "mustache": "^4.2.0",
+    "fs-extra": "^11.2.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "glob": "^11.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "keywords": [
+    "layered-study",
+    "renderer",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT"
+}

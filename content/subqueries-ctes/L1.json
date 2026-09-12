@@ -1,0 +1,421 @@
+{
+  "level": 1,
+  "title": "Subqueries & CTEs",
+  "tagline": "queries within queries — the nesting doll of SQL",
+  "placementQuiz": [
+    {
+      "q": "A subquery is:",
+      "options": [
+        "A query inside another query",
+        "A query that runs after the main query",
+        "A query that replaces JOIN",
+        "A query that runs before the main query"
+      ],
+      "answer": 0,
+      "explain": "A subquery (inner query) is nested inside another query (outer query)."
+    },
+    {
+      "q": "WHERE id IN (SELECT id FROM table) — this subquery:",
+      "options": [
+        "Returns multiple rows, used with IN",
+        "Returns single value, used with =",
+        "Must return exactly one column",
+        "Both A and C"
+      ],
+      "answer": 3,
+      "explain": "IN expects multiple rows/values; subquery must return single column."
+    },
+    {
+      "q": "A CTE (Common Table Expression) is defined with:",
+      "options": [
+        "CREATE TABLE ... AS SELECT",
+        "WITH name AS (SELECT ...) SELECT ...",
+        "DEFINE name AS SELECT ...",
+        "LET name = SELECT ..."
+      ],
+      "answer": 1,
+      "explain": "CTE syntax: WITH cte_name AS (SELECT ...) SELECT ... FROM cte_name;"
+    },
+    {
+      "q": "A scalar subquery returns:",
+      "options": [
+        "Multiple rows, multiple columns",
+        "One row, one column (single value)",
+        "Multiple rows, one column",
+        "One row, multiple columns"
+      ],
+      "answer": 1,
+      "explain": "Scalar subquery = exactly one row, one column. Used with =, >, <, etc."
+    },
+    {
+      "q": "A correlated subquery:",
+      "options": [
+        "Runs independently of outer query",
+        "References columns from outer query",
+        "Always uses CTE",
+        "Runs only once"
+      ],
+      "answer": 1,
+      "explain": "Correlated subquery references outer query columns, executes once per outer row."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — The Nested Box",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "A subquery is a query inside another query. Think of it as a nested box: the inner box produces a value (or list of values) that the outer box uses. CTEs are named boxes you can reuse."
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"type": "Scalar Subquery", "returns": "1 row, 1 col", "use": "WHERE col = (SELECT ...)", "example": "salary > (SELECT AVG(salary))"},
+              {"type": "Row Subquery", "returns": "1 row, N cols", "use": "WHERE (a,b) = (SELECT ...)", "example": "(id, name) = (SELECT id, name ...)"},
+              {"type": "Table Subquery", "returns": "M rows, N cols", "use": "IN, EXISTS, FROM", "example": "WHERE id IN (SELECT id ...)"},
+              {"type": "CTE", "returns": "Named result set", "use": "WITH cte AS (...) SELECT ...", "example": "WITH top AS (...) SELECT *"}
+            ],
+            "after": [],
+            "highlight": ["returns"]
+          }
+        },
+        {
+          "type": "list",
+          "items": [
+            "Scalar subquery: exactly 1 row, 1 column — use with =, >, <, etc.",
+            "Row subquery: exactly 1 row, multiple columns — use with row constructors",
+            "Table subquery: multiple rows — use with IN, EXISTS, NOT IN, FROM",
+            "Correlated subquery: references outer query columns — runs per outer row",
+            "CTE: named temporary result — reusable, readable, can be recursive"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Scalar & Row Subqueries",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Scalar Subquery — Single Value"
+        },
+        {
+          "type": "code",
+          "label": "scalar subquery",
+          "code": "-- Average salary as scalar\nSELECT name, salary\nFROM employees\nWHERE salary > (SELECT AVG(salary) FROM employees);\n\n-- Scalar in SELECT (per row)\nSELECT \n  name,\n  salary,\n  (SELECT AVG(salary) FROM employees) AS company_avg\nFROM employees;\n\n-- Scalar in expression\nSELECT \n  name,\n  salary - (SELECT AVG(salary) FROM employees) AS diff_from_avg\nFROM employees;",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Scalar subquery equivalent\ndf['company_avg'] = df['salary'].mean()\ndf['diff'] = df['salary'] - df['salary'].mean()"
+        },
+        {
+          "type": "heading",
+          "text": "Row Subquery — Row Constructor"
+        },
+        {
+          "type": "code",
+          "label": "row subquery",
+          "code": "-- Find employee with exact (dept, status) match\nSELECT * FROM employees\nWHERE (dept_id, status) = (\n  SELECT dept_id, status FROM departments WHERE name = 'Engineering'\n);\n\n-- Multiple columns in IN\nSELECT * FROM employees\nWHERE (dept_id, status) IN (\n  SELECT dept_id, status FROM departments WHERE location = 'NYC'\n);",
+          "pg": "-- Row constructors: (a, b) = (SELECT a, b ...)",
+          "mysql": "-- MySQL: row constructors supported 8.0+",
+          "py-pandas": "# Multi-column merge\ndf.merge(depts[['dept_id', 'status']].drop_duplicates(), on=['dept_id', 'status'])"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "SELECT * FROM t WHERE x = (SELECT MAX(y) FROM t2) — subquery type:",
+              "options": [
+                "Scalar (1 row, 1 col)",
+                "Row (1 row, N cols)",
+                "Table (M rows, N cols)",
+                "Correlated"
+              ],
+              "answer": 0,
+              "explain": "MAX returns single value → scalar subquery."
+            },
+            {
+              "q": "Row subquery (SELECT a, b ...) can be used with:",
+              "options": [
+                "IN",
+                "=",
+                "EXISTS",
+                "All of the above"
+              ],
+              "answer": 1,
+              "explain": "Row subquery returns exactly 1 row, N cols — use with = or IN."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Table Subqueries — IN, EXISTS, NOT IN",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Table Subquery — Multiple Rows"
+        },
+        {
+          "type": "code",
+          "label": "in / exists / not in",
+          "code": "-- IN: value in subquery result\nSELECT * FROM employees\nWHERE dept_id IN (SELECT id FROM departments WHERE location = 'NYC');\n\n-- EXISTS: correlated, stops at first match\nSELECT * FROM employees e\nWHERE EXISTS (\n  SELECT 1 FROM orders o WHERE o.emp_id = e.id\n);\n\n-- NOT IN: watch for NULLs!\nSELECT * FROM employees\nWHERE dept_id NOT IN (SELECT id FROM departments WHERE active = true);\n-- If subquery returns ANY NULL → zero rows!\n\n-- NOT EXISTS: safe alternative\nSELECT * FROM employees e\nWHERE NOT EXISTS (\n  SELECT 1 FROM departments d \n  WHERE d.id = e.dept_id AND d.active = false\n);",
+          "pg": "-- Same semantics",
+          "mysql": "-- Same semantics",
+          "py-pandas": "# IN\ndf[df['dept_id'].isin(nyc_depts['id'])]\n\n# EXISTS (merge)\nmerged = df.merge(orders[['emp_id']].drop_duplicates(), left_on='id', right_on='emp_id', how='inner')\n\n# NOT EXISTS (anti-join)\nmerged = df.merge(orders[['emp_id']].drop_duplicates(), left_on='id', right_on='emp_id', how='left', indicator=True)\nresult = merged[merged['_merge'] == 'left_only']"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**NOT IN + subquery with NULL = zero rows.** If subquery returns any NULL, entire NOT IN evaluates to UNKNOWN. Always use NOT EXISTS or filter NULLs: `NOT IN (SELECT ... WHERE col IS NOT NULL)`."
+        },
+        {
+          "type": "code",
+          "label": "subquery in FROM (derived table)",
+          "code": "-- Derived table in FROM\nSELECT dept_id, avg_sal\nFROM (\n  SELECT dept_id, AVG(salary) AS avg_sal\n  FROM employees\n  GROUP BY dept_id\n) dept_avg\nWHERE avg_sal > 50000;\n\n-- Lateral join (PG) - subquery references outer columns\nSELECT e.name, latest.order_date\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT order_date FROM orders o\n  WHERE o.emp_id = e.id\n  ORDER BY order_date DESC LIMIT 1\n) latest ON true;",
+          "pg": "-- LATERAL allows subquery to reference columns from preceding FROM items",
+          "mysql": "-- MySQL 8.0.14+: LATERAL supported",
+          "py-pandas": "# Groupby + merge\ndept_avg = df.groupby('dept_id')['salary'].mean().reset_index()\nmerged = dept_avg[dept_avg['salary'] > 50000]"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "NOT IN (subquery) with NULL in subquery returns:",
+              "options": [
+                "All rows",
+                "No rows",
+                "Rows matching non-NULL values",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "NOT IN with NULL → UNKNOWN for all rows → zero rows. Use NOT EXISTS instead."
+            },
+            {
+              "q": "EXISTS vs IN for 'has orders' query:",
+              "options": [
+                "EXISTS always faster",
+                "IN always faster",
+                "EXISTS stops at first match; IN may scan all",
+                "Same performance"
+              ],
+              "answer": 2,
+              "explain": "EXISTS is semi-join: stops at first match per outer row. IN may scan entire subquery."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "CTEs — Common Table Expressions",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CTE Syntax & Benefits"
+        },
+        {
+          "type": "code",
+          "label": "basic cte",
+          "code": "-- Single CTE\nWITH high_paid AS (\n  SELECT * FROM employees WHERE salary > 100000\n)\nSELECT * FROM high_paid WHERE dept_id = 1;\n\n-- Multiple CTEs\nWITH \n  active AS (SELECT * FROM employees WHERE status = 'active'),\n  dept_avg AS (SELECT dept_id, AVG(salary) AS avg_sal FROM employees GROUP BY dept_id)\nSELECT a.name, d.avg_sal\nFROM active a\nJOIN dept_avg d ON a.dept_id = d.dept_id;\n\n-- CTE in subquery\nSELECT * FROM (\n  WITH cte AS (SELECT * FROM employees WHERE salary > 50000)\n  SELECT * FROM cte\n) t WHERE dept_id = 1;",
+          "pg": "-- CTEs are optimization fences (materialized) in PG < 12\n-- PG 12+: can inline with NOT MATERIALIZED",
+          "mysql": "-- MySQL 8.0+: CTEs supported",
+          "py-pandas": "# CTE equivalent = intermediate variable\nhigh_paid = df[df['salary'] > 100000]\nresult = high_paid[high_paid['dept_id'] == 1]"
+        },
+        {
+          "type": "heading",
+          "text": "Recursive CTE — Hierarchical Data"
+        },
+        {
+          "type": "code",
+          "label": "recursive cte",
+          "code": "-- Employee hierarchy: find all reports under manager\nWITH RECURSIVE org_chart AS (\n  -- Anchor: top-level manager\n  SELECT id, name, manager_id, 0 AS level\n  FROM employees\n  WHERE manager_id IS NULL\n\n  UNION ALL\n\n  -- Recursive: find direct reports\n  SELECT e.id, e.name, e.manager_id, oc.level + 1\n  FROM employees e\n  JOIN org_chart oc ON e.manager_id = oc.id\n  WHERE oc.level < 10  -- prevent infinite recursion\n)\nSELECT * FROM org_chart ORDER BY level, name;",
+          "pg": "-- RECURSIVE keyword required in PostgreSQL",
+          "mysql": "-- MySQL 8.0+: WITH RECURSIVE supported",
+          "py-pandas": "# No native recursive; use loop or graph library\nimport networkx as nx\ng = nx.DiGraph()\nfor _, row in df.iterrows():\n    if pd.notna(row['manager_id']):\n        g.add_edge(row['manager_id'], row['id'])\nnx.descendants(g, root_id)"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "Recursive CTE = anchor + recursive part. Always include termination condition (level limit or WHERE NOT EXISTS) to prevent infinite loops."
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Recursive CTE Execution",
+          "plan": {
+            "Plan": {
+              "Node Type": "CTE Scan",
+              "CTE Name": "org_chart",
+              "Startup Cost": 100.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Recursive Union",
+                  "Startup Cost": 100.00,
+                  "Total Cost": 5000.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 48,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 100.00,
+                      "Plan Rows": 100,
+                      "Plan Width": 24
+                    },
+                    {
+                      "Node Type": "WorkTable Scan",
+                      "Relation Name": "org_chart",
+                      "Startup Cost": 100.00,
+                      "Total Cost": 4900.00,
+                      "Plan Rows": 8400,
+                      "Plan Width": 48,
+                      "Plans": [
+                        {
+                          "Node Type": "Hash Join",
+                          "Startup Cost": 100.00,
+                          "Total Cost": 4900.00,
+                          "Plan Rows": 8400,
+                          "Plan Width": 48,
+                          "Hash Cond": "(employees.manager_id = org_chart.id)",
+                          "Plans": [
+                            {
+                              "Node Type": "Seq Scan",
+                              "Relation Name": "employees",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 100.00,
+                              "Plan Rows": 1000,
+                              "Plan Width": 24
+                            },
+                            {
+                              "Node Type": "WorkTable Scan",
+                              "Relation Name": "org_chart",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 0.00,
+                              "Plan Rows": 100,
+                              "Plan Width": 24
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "CTE vs subquery — CTE advantage:",
+              "options": [
+                "Always faster",
+                "Reusable, readable, can be recursive",
+                "Uses less memory",
+                "Auto-optimizes"
+              ],
+              "answer": 1,
+              "explain": "CTE = named, reusable, readable, supports recursion. Subquery = inline, single-use."
+            },
+            {
+              "q": "Recursive CTE requires:",
+              "options": [
+                "RECURSIVE keyword + anchor + recursive part + termination",
+                "Only RECURSIVE keyword",
+                "Only anchor + recursive part",
+                "Only termination condition"
+              ],
+              "answer": 0,
+              "explain": "All four components required: RECURSIVE keyword, anchor query, recursive part (UNION ALL), termination condition."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S101",
+              "tier": 1,
+              "title": "Employees Above Average Salary",
+              "platform": "drill",
+              "patterns": ["scalar-subquery"],
+              "statement": "Find employees earning more than the company average salary.",
+              "hints": ["WHERE salary > (SELECT AVG(salary) FROM employees)"]
+            },
+            {
+              "id": "S102",
+              "tier": 1,
+              "title": "Departments with Employees",
+              "platform": "drill",
+              "patterns": ["exists"],
+              "statement": "Find departments that have at least one employee.",
+              "hints": ["EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)"]
+            },
+            {
+              "id": "S103",
+              "tier": 1,
+              "title": "Employees Without Orders",
+              "platform": "drill",
+              "patterns": ["not-exists"],
+              "statement": "Find employees who have never placed an order.",
+              "hints": ["NOT EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id)"]
+            },
+            {
+              "id": "S104",
+              "tier": 1,
+              "title": "Top Paid per Department (Scalar)",
+              "platform": "drill",
+              "patterns": ["scalar-subquery"],
+              "statement": "Show employees who earn the maximum salary in their department.",
+              "hints": ["WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)"]
+            },
+            {
+              "id": "S105",
+              "tier": 1,
+              "title": "Simple CTE for Department Stats",
+              "platform": "drill",
+              "patterns": ["cte"],
+              "statement": "Use CTE to compute avg salary per department, then show departments above 75000.",
+              "hints": ["WITH dept_avg AS (...) SELECT * FROM dept_avg WHERE avg_sal > 75000"]
+            },
+            {
+              "id": "S106",
+              "tier": 1,
+              "title": "Employees in Active Departments",
+              "platform": "drill",
+              "patterns": ["in-subquery"],
+              "statement": "Employees whose department is active (status='active' in departments).",
+              "hints": ["WHERE dept_id IN (SELECT id FROM departments WHERE status = 'active')"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Subquery types: scalar (1x1), row (1xN), table (MxN) — each with specific operators",
+    "Scalar subquery = single value; use with =, >, <, in expressions",
+    "Table subquery: IN, EXISTS, NOT IN, NOT EXISTS, FROM",
+    "NOT IN + NULL = disaster; use NOT EXISTS instead",
+    "CTE: WITH name AS (...) — reusable, readable, recursive capable",
+    "Recursive CTE: anchor + UNION ALL + recursive part + termination"
+  ],
+  "glossary": [
+    { "term": "scalar subquery", "def": "Subquery returning exactly one row and one column (single value)." },
+    { "term": "correlated subquery", "def": "Subquery that references columns from the outer query; executes once per outer row." },
+    { "term": "CTE", "def": "Common Table Expression — named temporary result set defined with WITH clause." },
+    { "term": "recursive CTE", "def": "CTE with RECURSIVE keyword that references itself to traverse hierarchies." },
+    { "term": "semi-join", "def": "EXISTS/IN pattern — returns left rows with at least one match; stops at first match." },
+    { "term": "anti-join", "def": "NOT EXISTS pattern — returns left rows with NO match in right." }
+  ]
+}

@@ -1,0 +1,427 @@
+{
+  "level": 4,
+  "title": "Advanced Analytics",
+  "tagline": "custom aggregates, hypothetical sets, window function internals, extensibility",
+  "placementQuiz": [
+    {
+      "q": "Custom window aggregate in PostgreSQL:",
+      "options": [
+        "Not possible",
+        "CREATE AGGREGATE ... WINDOW",
+        "Only via C extension",
+        "Only via PL/pgSQL"
+      ],
+      "answer": 1,
+      "explain": "CREATE AGGREGATE ... WINDOW (PostgreSQL 14+) defines custom window aggregate with moving window support."
+    },
+    {
+      "q": "Hypothetical set functions (RANK, DENSE_RANK with hypothetical value):",
+      "options": [
+        "Standard SQL feature",
+        "PostgreSQL extension only",
+        "Not implemented anywhere",
+        "Only in Oracle"
+      ],
+      "answer": 0,
+      "explain": "Standard SQL: RANK(x) WITHIN GROUP (ORDER BY col) — rank of hypothetical value x in existing data."
+    },
+    {
+      "q": "Window function internal execution in PostgreSQL:",
+      "options": [
+        "Separate executor node per function",
+        "Single WindowAgg node, multiple passes for same partition/order",
+        "Separate process per window",
+        "Compiled to bytecode"
+      ],
+      "answer": 1,
+      "explain": "WindowAgg node processes partition. Multiple functions with same PARTITION+ORDER share sort, multiple passes."
+    },
+    {
+      "q": "IGNORE NULLS in window functions:",
+      "options": [
+        "PostgreSQL only",
+        "Standard SQL (Oracle, PostgreSQL 15+, others)",
+        "MySQL only",
+        "Not implemented"
+      ],
+      "answer": 1,
+      "explain": "IGNORE NULLS / RESPECT NULLS for LAG/LEAD/FIRST_VALUE/LAST_VALUE. Standard SQL, PG 15+."
+    },
+    {
+      "q": "Window function on expression vs column:",
+      "options": [
+        "Same performance",
+        "Expression may prevent index use",
+        "Expression faster",
+        "Expression not allowed"
+      ],
+      "answer": 1,
+      "explain": "Expression in ORDER BY (e.g., salary + bonus) prevents index use. Consider computed column or expression index."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Custom Window Aggregates (PostgreSQL 14+)",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "CREATE AGGREGATE ... WINDOW enables custom window aggregates with moving window support. Define state transition, final function, and optional moving window functions (msfunc, minvfunc) for O(1) sliding."
+        },
+        {
+          "type": "code",
+          "label": "custom window aggregate",
+          "code": "-- Custom moving average aggregate\nCREATE FUNCTION mov_avg_sfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE FUNCTION mov_avg_final(state internal)\nRETURNS numeric LANGUAGE C AS '...';\n\n-- Moving window functions for O(1) sliding\nCREATE FUNCTION mov_avg_msfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE FUNCTION mov_avg_minvfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE AGGREGATE mov_avg(numeric) (\n  SFUNC = mov_avg_sfunc,\n  STYPE = internal,\n  FINALFUNC = mov_avg_final,\n  MSFUNC = mov_avg_msfunc,\n  MINVFUNC = mov_avg_minvfunc,\n  WINDOW = true\n);\n\n-- Usage\nSELECT mov_avg(salary) OVER (ORDER BY hire_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)\nFROM employees;",
+          "pg": "-- CREATE AGGREGATE ... WINDOW (PostgreSQL 14+)\n-- Requires C implementation for performance",
+          "mysql": "-- Not supported",
+          "py-pandas": "# Rolling apply\ndf['salary'].rolling(3).apply(custom_func)"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "Moving window functions (msfunc/minvfunc) enable O(1) sliding window instead of O(k) recompute. Critical for high-frequency streaming aggregates. Must be implemented in C for performance."
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Custom Window Aggregate",
+          "plan": {
+            "Plan": {
+              "Node Type": "WindowAgg",
+              "Startup Cost": 60.00,
+              "Total Cost": 550.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Startup Cost": 60.00,
+                  "Total Cost": 220.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 40,
+                  "Sort Key": ["hire_date"],
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 185.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 40
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Moving window functions (msfunc/minvfunc) enable:",
+              "options": [
+                "O(k) per row",
+                "O(1) sliding window update",
+                "Parallel execution",
+                "Parallel aggregation"
+              ],
+              "answer": 1,
+              "explain": "msfunc adds new value, minvfunc removes old value — O(1) per slide vs O(k) recompute."
+            },
+            {
+              "q": "Custom window aggregates require:",
+              "options": [
+                "PL/pgSQL only",
+                "C implementation for performance",
+                "Python extension",
+                "No special requirements"
+              ],
+              "answer": 1,
+              "explain": "State transition functions must be IMMUTABLE and fast. C implementation required for msfunc/minvfunc performance."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Hypothetical Set Functions",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "RANK / DENSE_RANK / PERCENT_RANK WITHIN GROUP"
+        },
+        {
+          "type": "code",
+          "label": "hypothetical rank",
+          "code": "-- Rank of hypothetical value 100000 in salary distribution\nSELECT \n  RANK(100000) WITHIN GROUP (ORDER BY salary) AS rank_of_100k,\n  DENSE_RANK(100000) WITHIN GROUP (ORDER BY salary) AS dense_rank_of_100k,\n  PERCENT_RANK(100000) WITHIN GROUP (ORDER BY salary) AS pct_rank_of_100k\nFROM employees;\n\n-- Multiple hypothetical values\nSELECT \n  RANK(50000) WITHIN GROUP (ORDER BY salary) AS rank_50k,\n  RANK(100000) WITHIN GROUP (ORDER BY salary) AS rank_100k,\n  RANK(200000) WITHIN GROUP (ORDER BY salary) AS rank_200k\nFROM employees;",
+          "pg": "-- Standard SQL: RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP",
+          "mysql": "-- MySQL 8.0+: not supported",
+          "py-pandas": "# Manual: (df['salary'] < val).sum() + 1"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "Hypothetical set functions = 'where would this value rank?' Single scan of data. No need to insert temp row. Standard SQL feature."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "RANK(100000) WITHIN GROUP (ORDER BY salary) returns:",
+              "options": [
+                "Rank of existing row with salary=100000",
+                "Rank that value 100000 WOULD have if inserted",
+                "Error",
+                "Count of salaries < 100000"
+              ],
+              "answer": 1,
+              "explain": "Hypothetical set function: rank of hypothetical value in existing distribution."
+            },
+            {
+              "q": "PERCENT_RANK(100000) WITHIN GROUP returns:",
+              "options": [
+                "0 to 1",
+                "0 to 100",
+                "Rank integer",
+                "Count"
+              ],
+              "answer": 0,
+              "explain": "PERCENT_RANK returns relative rank 0.0 to 1.0."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "IGNORE NULLS & Advanced NULL Handling",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "IGNORE NULLS / RESPECT NULLS (PostgreSQL 15+)"
+        },
+        {
+          "type": "code",
+          "label": "ignore nulls",
+          "code": "-- LAG/LEAD with IGNORE NULLS\nSELECT \n  sale_date,\n  amount,\n  LAG(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS prev_non_null,\n  LEAD(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS next_non_null\nFROM daily_sales;\n\n-- FIRST_VALUE / LAST_VALUE with IGNORE NULLS\nSELECT \n  sale_date,\n  amount,\n  FIRST_VALUE(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS first_sale,\n  LAST_VALUE(amount) IGNORE NULLS OVER (\n    ORDER BY sale_date\n    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n  ) AS last_sale\nFROM daily_sales;\n\n-- RESPECT NULLS (default)\nLAG(amount) RESPECT NULLS OVER (ORDER BY sale_date)",
+          "pg": "-- PostgreSQL 15+: IGNORE NULLS / RESPECT NULLS",
+          "mysql": "-- MySQL: no IGNORE NULLS",
+          "py-pandas": "# Forward/backward fill\ndf['amount'].ffill()  # forward fill (LAG IGNORE NULLS)\ndf['amount'].bfill()  # backward fill (LEAD IGNORE NULLS)"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LAG(x) IGNORE NULLS returns:",
+              "options": [
+                "Previous row value (even if NULL)",
+                "Previous non-NULL value",
+                "Error if NULL encountered",
+                "0 instead of NULL"
+              ],
+              "answer": 1,
+              "explain": "IGNORE NULLS skips NULLs and finds previous non-NULL value."
+            },
+            {
+              "q": "LAST_VALUE IGNORE NULLS with default frame:",
+              "options": [
+                "Returns last non-NULL in partition",
+                "Returns current row value",
+                "Error",
+                "Returns NULL"
+              ],
+              "answer": 1,
+              "explain": "Default frame = CURRENT ROW. Need explicit frame for true last non-NULL."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Window Function Internals — WindowAgg, Sort, Spilling",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "WindowAgg Execution Model"
+        },
+        {
+          "type": "prose",
+          "md": "PostgreSQL WindowAgg node: 1) Sort input by PARTITION BY + ORDER BY, 2) For each partition, evaluate window functions in sequence, 3) For each row, compute frame boundaries and evaluate functions. Multiple functions with same PARTITION+ORDER share sort and single WindowAgg pass."
+        },
+        {
+          "type": "code",
+          "label": "windowagg internals",
+          "code": "-- EXPLAIN shows WindowAgg node\nEXPLAIN SELECT \n  ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary),\n  RANK() OVER (PARTITION BY dept ORDER BY salary),\n  SUM(salary) OVER (PARTITION BY dept ORDER BY salary)\nFROM employees;\n\n-- Single WindowAgg node with multiple functions\n-- Plan shows:\n--   -> WindowAgg\n--       -> Sort (partition by dept, order by salary)\n--             -> Seq Scan on employees",
+          "pg": "-- Single WindowAgg for same PARTITION+ORDER\n-- Different PARTITION/ORDER = multiple WindowAgg nodes",
+          "mysql": "-- MySQL: similar window function execution",
+          "py-pandas": "# No direct equivalent; pandas uses groupby + transform"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"functions": "Same PARTITION+ORDER", "sorts": 1, "windowagg_passes": "N (one per function)", "note": "Shared sort"},
+              {"functions": "Different PARTITION", "sorts": "N", "windowagg_passes": "N", "note": "Separate sorts"},
+              {"functions": "Same PARTITION, different ORDER", "sorts": "N", "windowagg_passes": "N", "note": "Separate sorts"},
+              {"functions": "Same PARTITION+ORDER, diff frames", "sorts": 1, "windowagg_passes": "N", "note": "Frames evaluated per row"}
+            ],
+            "after": [],
+            "highlight": ["sorts", "windowagg_passes"]
+          }
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — WindowAgg Shared Sort",
+          "plan": {
+            "Plan": {
+              "Node Type": "WindowAgg",
+              "Startup Cost": 50.00,
+              "Total Cost": 500.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 200.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 40,
+                  "Sort Key": ["dept", "salary"],
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 185.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 40
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Two window functions: ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) and SUM(salary) OVER (PARTITION BY dept ORDER BY salary). Execution:",
+              "options": [
+                "Two sorts, two WindowAgg",
+                "One sort, two WindowAgg passes",
+                "One sort, one WindowAgg (both functions)",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "Same PARTITION+ORDER = shared sort. Each function = separate WindowAgg pass over sorted data."
+            },
+            {
+              "q": "Frame evaluation per row:",
+              "options": [
+                "Pre-computed for all rows",
+                "Computed on-the-fly per row during WindowAgg pass",
+                "Cached in memory",
+                "Delegated to storage engine"
+              ],
+              "answer": 1,
+              "explain": "WindowAgg iterates rows, computes frame boundaries per row, evaluates aggregate over frame."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Mastery — Window Function Gaps",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SUM(x) OVER (PARTITION BY y ORDER BY z RANGE BETWEEN 1 PRECEDING AND 1 FOLLOWING)",
+          "pg": "Full RANGE frame support with numeric/date ORDER BY",
+          "mysql": "MySQL 8.0+: RANGE supported for numeric/date. No GROUPS frame.",
+          "py-pandas": "df.groupby('y')['x'].transform(lambda x: x.rolling(window=3, center=True).sum())",
+          "py-sqlalchemy": "func.sum(Emp.x).over(partition_by=Emp.y, order_by=Emp.z, range=(-1, 1))"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) FROM emp QUALIFY rn <= 3;",
+          "pg": "-- QUALIFY not in PostgreSQL\n-- Use CTE: WITH cte AS (...) SELECT * FROM cte WHERE rn <= 3",
+          "mysql": "-- MySQL 8.0+: QUALIFY supported\nSELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) <= 3;",
+          "py-pandas": "df[df['rn'] <= 3]"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L4 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "X401",
+              "tier": 4,
+              "title": "Custom Window Aggregate (C)",
+              "platform": "drill",
+              "patterns": ["custom-aggregate"],
+              "statement": "Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.",
+              "hints": ["msfunc adds, minvfunc removes, state = running sum + count"]
+            },
+            {
+              "id": "X402",
+              "tier": 4,
+              "title": "Hypothetical Rank for Salary Bands",
+              "platform": "drill",
+              "patterns": ["hypothetical-rank"],
+              "statement": "Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.",
+              "hints": ["RANK(150000) WITHIN GROUP (ORDER BY salary)"]
+            },
+            {
+              "id": "X403",
+              "tier": 4,
+              "title": "IGNORE NULLS for Sparse Data",
+              "platform": "drill",
+              "patterns": ["ignore-nulls"],
+              "statement": "Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.",
+              "hints": ["LAG(reading) IGNORE NULLS OVER (ORDER BY ts)"]
+            },
+            {
+              "id": "X404",
+              "tier": 4,
+              "title": "Expression Index for Window ORDER BY",
+              "platform": "drill",
+              "patterns": ["expression-index"],
+              "statement": "Window function uses ORDER BY salary + bonus. Create expression index.",
+              "hints": ["CREATE INDEX ON employees ((salary + bonus) DESC)"]
+            },
+            {
+              "id": "X405",
+              "tier": 4,
+              "title": "Window Function Pushdown (PG 17+)",
+              "platform": "drill",
+              "patterns": ["optimization"],
+              "statement": "Explain how PostgreSQL 17+ pushes predicates below window functions.",
+              "hints": ["Predicate pushdown through WindowAgg when safe"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Custom aggregates: CREATE AGGREGATE ... WINDOW (PG14+), msfunc/minvfunc for O(1) sliding",
+    "Hypothetical sets: RANK(x) WITHIN GROUP — where would x rank?",
+    "IGNORE NULLS (PG15): skip NULLs in LAG/LEAD/FIRST/LAST_VALUE",
+    "WindowAgg: shared sort for same PARTITION+ORDER, multiple passes per function",
+    "Expression in ORDER BY kills index use → expression index or computed column",
+    "QUALIFY (MySQL/Snowflake) vs CTE (PostgreSQL) for filtering window results"
+  ],
+  "glossary": [
+    { "term": "custom window aggregate", "def": "CREATE AGGREGATE ... WINDOW with msfunc/minvfunc for O(1) sliding window." },
+    { "term": "hypothetical set function", "def": "RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP — rank of hypothetical value in distribution." },
+    { "term": "IGNORE NULLS", "def": "Skip NULLs in window frame; find previous/next non-NULL." },
+    { "term": "WindowAgg passes", "def": "Each window function with same PARTITION+ORDER gets separate pass over sorted data." },
+    { "term": "expression index", "def": "Index on expression (e.g., salary+bonus) to support window ORDER BY on expression." },
+    { "term": "QUALIFY", "def": "MySQL/Snowflake clause to filter window function results without CTE." }
+  ]
+}

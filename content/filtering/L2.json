@@ -1,0 +1,373 @@
+{
+  "level": 2,
+  "title": "Filtering & Conditionals",
+  "tagline": "compound predicates, precedence, subquery IN, CASE tricks",
+  "placementQuiz": [
+    {
+      "q": "A AND B OR C is evaluated as:",
+      "options": [
+        "A AND (B OR C)",
+        "(A AND B) OR C",
+        "(A OR C) AND B",
+        "Error — ambiguous"
+      ],
+      "answer": 1,
+      "explain": "AND binds tighter than OR. Use parentheses to be explicit."
+    },
+    {
+      "q": "NOT (A OR B) is equivalent to:",
+      "options": [
+        "NOT A OR NOT B",
+        "NOT A AND NOT B",
+        "A AND B",
+        "A OR B"
+      ],
+      "answer": 1,
+      "explain": "De Morgan's law: NOT (A OR B) = NOT A AND NOT B."
+    },
+    {
+      "q": "WHERE status IN (SELECT 'active') with subquery returning NULL:",
+      "options": [
+        "Matches 'active' rows",
+        "Matches no rows (UNKNOWN)",
+        "Errors",
+        "Matches all rows"
+      ],
+      "answer": 1,
+      "explain": "IN with NULL in subquery returns UNKNOWN for all rows — no matches! Use EXISTS instead."
+    },
+    {
+      "q": "CASE WHEN x > 10 THEN 'high' WHEN x > 5 THEN 'mid' ELSE 'low' END for x=8:",
+      "options": [
+        "high",
+        "mid",
+        "low",
+        "NULL"
+      ],
+      "answer": 1,
+      "explain": "First matching WHEN wins. 8 > 5 but not > 10."
+    },
+    {
+      "q": "COALESCE(NULL, NULLIF('', ''), 'fallback') returns:",
+      "options": [
+        "NULL",
+        "''",
+        "'fallback'",
+        "Error"
+      ],
+      "answer": 2,
+      "explain": "NULLIF('', '') = NULL; COALESCE skips NULLs, returns 'fallback'."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Compound Predicates — AND, OR, NOT, Precedence",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**AND before OR — always. Parentheses are documentation that the optimizer respects. Write (A AND B) OR C, not A AND B OR C.**"
+        },
+        {
+          "type": "code",
+          "label": "boolean logic",
+          "code": "-- Precedence: NOT > AND > OR\n-- A AND B OR C  means  (A AND B) OR C\n\n-- Be explicit\nSELECT * FROM employees \nWHERE (salary > 50000 AND dept_id = 1) \n   OR (salary > 60000 AND dept_id = 2);\n\n-- NOT distributes (De Morgan)\nSELECT * FROM employees WHERE NOT (dept_id = 3 OR salary < 30000);\n-- Equivalent:\nSELECT * FROM employees WHERE dept_id <> 3 AND salary >= 30000;",
+          "py-pandas": "# Parentheses for precedence\ne = employees[\n    ((employees['salary'] > 50000) & (employees['dept_id'] == 1)) |\n    ((employees['salary'] > 60000) & (employees['dept_id'] == 2))\n]\n\n# NOT\ne = employees[~((employees['dept_id'] == 3) | (employees['salary'] < 30000))]",
+          "py-sqlalchemy": "# Parentheses\nfrom sqlalchemy import or_, and_\nsession.query(Employee).filter(\n    or_(\n        and_(Employee.salary > 50000, Employee.dept_id == 1),\n        and_(Employee.salary > 60000, Employee.dept_id == 2)\n    )\n).all()\n\n# NOT\nsession.query(Employee).filter(\n    ~or_(Employee.dept_id == 3, Employee.salary < 30000)\n).all()"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"predicate": "A AND B OR C", "interpretation": "(A AND B) OR C", "example": "dept=1 AND salary>50k OR dept=2"},
+              {"predicate": "A AND (B OR C)", "interpretation": "A AND (B OR C)", "example": "dept=1 AND (salary>50k OR bonus>1k)"},
+              {"predicate": "NOT (A OR B)", "interpretation": "NOT A AND NOT B", "example": "NOT (dept=3 OR salary<30k)"},
+              {"predicate": "NOT A OR NOT B", "interpretation": "(NOT A) OR (NOT B)", "example": "dept<>3 OR salary>=30k"}
+            ],
+            "after": [],
+            "highlight": ["interpretation"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "NOT A AND NOT B is equivalent to:",
+              "options": [
+                "NOT (A AND B)",
+                "NOT (A OR B)",
+                "A OR B",
+                "A AND B"
+              ],
+              "answer": 1,
+              "explain": "De Morgan: NOT A AND NOT B = NOT (A OR B)."
+            },
+            {
+              "q": "x > 5 AND y > 5 OR z > 5 with x=10,y=1,z=10 returns:",
+              "options": [
+                "TRUE",
+                "FALSE",
+                "UNKNOWN",
+                "Error"
+              ],
+              "answer": 0,
+              "explain": "(x>5 AND y>5) = FALSE; FALSE OR (z>5=TRUE) = TRUE."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Subquery IN / EXISTS — The NULL Trap",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "IN vs EXISTS with Subqueries"
+        },
+        {
+          "type": "code",
+          "label": "in with subquery",
+          "code": "-- IN subquery\nSELECT * FROM employees \nWHERE dept_id IN (SELECT id FROM departments WHERE location = 'NYC');\n\n-- Equivalent EXISTS (often better)\nSELECT * FROM employees e\nWHERE EXISTS (\n  SELECT 1 FROM departments d \n  WHERE d.id = e.dept_id AND d.location = 'NYC'\n);\n\n-- NOT IN trap: if subquery returns ANY NULL, whole thing is UNKNOWN\nSELECT * FROM employees WHERE dept_id NOT IN (SELECT id FROM departments WHERE location = 'NYC');\n-- If subquery has NULL → ZERO rows returned!\n\n-- Safe: NOT EXISTS\nSELECT * FROM employees e\nWHERE NOT EXISTS (\n  SELECT 1 FROM departments d \n  WHERE d.id = e.dept_id AND d.location = 'NYC'\n);",
+          "pg": "-- Same semantics",
+          "mysql": "-- MySQL: NOT IN (subquery) also has NULL trap",
+          "py-pandas": "# IN subquery\nnyc_depts = departments[departments['location'] == 'NYC']['id']\ne = employees[employees['dept_id'].isin(nyc_depts)]\n\n# NOT IN - watch for NaN!\nnyc_depts = departments[departments['location'] == 'NYC']['id'].dropna()\ne = employees[~employees['dept_id'].isin(nyc_depts)]\n\n# Anti-join (NOT EXISTS equivalent)\nmerged = employees.merge(departments[departments['location']=='NYC'][['id']], \n                         left_on='dept_id', right_on='id', how='left', indicator=True)\ne = merged[merged['_merge'] == 'left_only']",
+          "py-sqlalchemy": "# EXISTS\nsession.query(Employee).filter(\n    Employee.dept_id.in_(\n        session.query(Department.id).filter(Department.location == 'NYC')\n    )\n).all()\n\n# NOT EXISTS\nsession.query(Employee).filter(\n    ~Employee.dept_id.in_(\n        session.query(Department.id).filter(Department.location == 'NYC')\n    )\n).all()"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**NOT IN + subquery with NULL = zero rows.** The predicate becomes UNKNOWN for every row. Always use NOT EXISTS or filter NULLs from subquery. This is a classic interview gotcha."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Subquery returns (1, 2, NULL). WHERE x IN (subquery) with x=1 returns:",
+              "options": [
+                "TRUE",
+                "FALSE",
+                "UNKNOWN",
+                "Error"
+              ],
+              "answer": 0,
+              "explain": "x=1 matches 1 in list → TRUE. NULL in list doesn't affect positive match."
+            },
+            {
+              "q": "Same subquery. WHERE x NOT IN (subquery) with x=5 returns:",
+              "options": [
+                "TRUE",
+                "FALSE",
+                "UNKNOWN",
+                "Error"
+              ],
+              "answer": 2,
+              "explain": "x=5 not equal to 1, not equal to 2, but '5 <> NULL' is UNKNOWN → whole NOT IN is UNKNOWN."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — NOT IN vs NOT EXISTS",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "employees",
+              "Filter": "(NOT (SubPlan 1))",
+              "Startup Cost": 0.00,
+              "Total Cost": 1250.00,
+              "Plan Rows": 50,
+              "Plan Width": 72,
+              "Subplans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "departments",
+                  "Filter": "(location = 'NYC')",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 1.20,
+                  "Plan Rows": 1,
+                  "Plan Width": 4
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Advanced CASE — Expression, Nesting, Pivot Prep",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Searched CASE for Complex Logic"
+        },
+        {
+          "type": "code",
+          "label": "searched case patterns",
+          "code": "-- Multiple conditions, first match wins\nSELECT name, salary,\n  CASE\n    WHEN salary >= 100000 AND dept_id = 1 THEN 'Eng Senior'\n    WHEN salary >= 100000 THEN 'Senior'\n    WHEN salary >= 70000 THEN 'Mid'\n    ELSE 'Junior'\n  END AS level\nFROM employees;\n\n-- CASE in WHERE (filter by derived category)\nSELECT * FROM (\n  SELECT *, \n    CASE WHEN salary >= 100000 THEN 'high' ELSE 'normal' END AS pay_band\n  FROM employees\n) t WHERE pay_band = 'high';\n\n-- CASE in ORDER BY (custom sort)\nSELECT * FROM employees\nORDER BY \n  CASE status WHEN 'active' THEN 1 WHEN 'pending' THEN 2 ELSE 3 END,\n  salary DESC;",
+          "py-pandas": "# Multiple conditions\nconditions = [\n    (e['salary'] >= 100000) & (e['dept_id'] == 1),\n    (e['salary'] >= 100000),\n    (e['salary'] >= 70000)\n]\nchoices = ['Eng Senior', 'Senior', 'Mid']\ne['level'] = np.select(conditions, choices, default='Junior')\n\n# Custom sort\ne['status_rank'] = e['status'].map({'active': 1, 'pending': 2}).fillna(3)\ne = e.sort_values(['status_rank', 'salary'], ascending=[True, False])",
+          "py-sqlalchemy": "# CASE in ORDER BY\nfrom sqlalchemy import case\nsession.query(Employee).order_by(\n    case(\n        (Employee.status == 'active', 1),\n        (Employee.status == 'pending', 2),\n        else_=3\n    ),\n    Employee.salary.desc()\n).all()"
+        },
+        {
+          "type": "heading",
+          "text": "CASE for Pivot/Crosstab Preparation"
+        },
+        {
+          "type": "code",
+          "label": "conditional aggregation (pivot prep)",
+          "code": "-- Count by status per department\nSELECT dept_id,\n  COUNT(*) FILTER (WHERE status = 'active') AS active_cnt,\n  COUNT(*) FILTER (WHERE status = 'pending') AS pending_cnt,\n  COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_cnt\nFROM employees\nGROUP BY dept_id;\n\n-- Same with CASE (portable)\nSELECT dept_id,\n  SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active_cnt,\n  SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_cnt,\n  SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) AS inactive_cnt\nFROM employees\nGROUP BY dept_id;",
+          "pg": "-- FILTER clause (PostgreSQL) — cleaner, index-friendly\nSELECT dept_id,\n  COUNT(*) FILTER (WHERE status = 'active') AS active_cnt\nFROM employees GROUP BY dept_id;",
+          "mysql": "-- No FILTER; use CASE\nSELECT dept_id,\n  SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active_cnt\nFROM employees GROUP BY dept_id;",
+          "py-pandas": "# Pivot table\ne.pivot_table(index='dept_id', columns='status', values='id', aggfunc='count', fill_value=0)",
+          "py-sqlalchemy": "# Conditional aggregation\nfrom sqlalchemy import func, case\nsession.query(\n    Employee.dept_id,\n    func.sum(case((Employee.status == 'active', 1), else_=0)).label('active_cnt'),\n    func.sum(case((Employee.status == 'pending', 1), else_=0)).label('pending_cnt')\n).group_by(Employee.dept_id).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "CASE WHEN a THEN 1 WHEN b THEN 2 ELSE 3 END with a=TRUE,b=TRUE returns:",
+              "options": [
+                "1",
+                "2",
+                "3",
+                "Error"
+              ],
+              "answer": 0,
+              "explain": "First matching WHEN wins. a is TRUE, so returns 1."
+            },
+            {
+              "q": "COUNT(*) FILTER (WHERE status='active') vs SUM(CASE WHEN status='active' THEN 1 ELSE 0 END):",
+              "options": [
+                "Different results",
+                "Same result, FILTER is PostgreSQL-only",
+                "FILTER slower",
+                "CASE is not portable"
+              ],
+              "answer": 1,
+              "explain": "FILTER is PostgreSQL syntactic sugar; both produce same count."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Differences — Boolean & String",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM t WHERE a AND b OR c;",
+          "pg": "SELECT * FROM t WHERE a AND b OR c; -- (a AND b) OR c",
+          "mysql": "SELECT * FROM t WHERE a AND b OR c; -- Same precedence",
+          "py-pandas": "df[(df['a'] & df['b']) | df['c']]  # & before |",
+          "py-sqlalchemy": "session.query(T).filter(or_(and_(T.a, T.b), T.c)).all()"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM t WHERE name LIKE 'A%'; -- case-sensitive",
+          "pg": "SELECT * FROM t WHERE name ILIKE 'A%'; -- case-insensitive",
+          "mysql": "SELECT * FROM t WHERE name LIKE 'A%'; -- case-insensitive (default collation)",
+          "py-pandas": "df[df['name'].str.startswith('A', case=False)]",
+          "py-sqlalchemy": "session.query(T).filter(T.name.ilike('A%')).all()"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "F201",
+              "tier": 2,
+              "title": "High Salary in Dept 1 OR Mid Salary in Dept 2",
+              "platform": "drill",
+              "patterns": ["compound-predicate"],
+              "statement": "Employees with (salary > 100000 AND dept_id = 1) OR (salary > 70000 AND dept_id = 2).",
+              "hints": ["Parenthesize each AND group"]
+            },
+            {
+              "id": "F202",
+              "tier": 2,
+              "title": "Not in NYC Departments (Safe)",
+              "platform": "drill",
+              "patterns": ["not-exists"],
+              "statement": "Employees NOT in departments located in 'NYC'. Use NOT EXISTS.",
+              "hints": ["NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')"]
+            },
+            {
+              "id": "F203",
+              "tier": 2,
+              "title": "Salary Band via CASE",
+              "platform": "drill",
+              "patterns": ["case-expression"],
+              "statement": "Add column 'band': salary>=100k='high', >=70k='mid', else 'standard'.",
+              "hints": ["CASE WHEN salary >= 100000 THEN 'high' ..."]
+            },
+            {
+              "id": "F204",
+              "tier": 2,
+              "title": "Custom Sort: Active First, Then Salary DESC",
+              "platform": "drill",
+              "patterns": ["case-order-by"],
+              "statement": "Order by status (active first, pending second, inactive last), then salary DESC.",
+              "hints": ["CASE status WHEN 'active' THEN 1 ..."]
+            },
+            {
+              "id": "F205",
+              "tier": 2,
+              "title": "Conditional Count: Active/Pending per Dept",
+              "platform": "drill",
+              "patterns": ["conditional-aggregation"],
+              "statement": "Per department: count of active and pending employees.",
+              "hints": ["SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)"]
+            },
+            {
+              "id": "F206",
+              "tier": 2,
+              "title": "NULL-Safe NOT IN Subquery",
+              "platform": "drill",
+              "patterns": ["not-in-null-trap"],
+              "statement": "Departments without employees. Show NOT IN fails with NULL; fix with NOT EXISTS.",
+              "hints": ["Subquery with NULL breaks NOT IN; use NOT EXISTS"]
+            },
+            {
+              "id": "F207",
+              "tier": 2,
+              "title": "COALESCE Chain for Display Name",
+              "platform": "drill",
+              "patterns": ["coalesce"],
+              "statement": "Display name: prefer nickname, then first_name, then 'Anonymous'.",
+              "hints": ["COALESCE(nickname, first_name, 'Anonymous')"]
+            },
+            {
+              "id": "F208",
+              "tier": 2,
+              "title": "Normalize Status: Empty String → 'unknown'",
+              "platform": "drill",
+              "patterns": ["nullif-coalesce"],
+              "statement": "Replace empty status with 'unknown', NULL with 'unknown'.",
+              "hints": ["COALESCE(NULLIF(TRIM(status), ''), 'unknown')"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Precedence: NOT > AND > OR. Parenthesize: (A AND B) OR C",
+    "De Morgan: NOT (A OR B) = NOT A AND NOT B; NOT (A AND B) = NOT A OR NOT B",
+    "NOT IN (subquery) + NULL = zero rows. Use NOT EXISTS or filter NULLs",
+    "EXISTS stops at first match; IN scans all. EXISTS often faster for NOT",
+    "CASE: first WHEN wins; use in SELECT, WHERE, ORDER BY",
+    "FILTER (PostgreSQL) = portable CASE SUM for conditional aggregation"
+  ],
+  "glossary": [
+    { "term": "short-circuit evaluation", "def": "AND stops at first FALSE; OR stops at first TRUE. ORDER BY CASE leverages this." },
+    { "term": "anti-join", "def": "NOT EXISTS pattern — returns rows with no match in subquery." },
+    { "term": "semi-join", "def": "EXISTS / IN pattern — returns rows with at least one match; stops at first." },
+    { "term": "three-valued logic", "def": "TRUE, FALSE, UNKNOWN. WHERE keeps TRUE only; CHECK constraint rejects FALSE only." },
+    { "term": "conditional aggregation", "def": "CASE inside SUM/COUNT to pivot rows into columns per group." },
+    { "term": "FILTER clause", "def": "PostgreSQL: aggregate FILTER (WHERE cond) — cleaner than CASE, index-friendly." }
+  ]
+}

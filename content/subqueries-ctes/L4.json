@@ -1,0 +1,515 @@
+{
+  "level": 4,
+  "title": "Subqueries & CTEs",
+  "tagline": "lateral optimization, recursive internals, cte scan cost, extensibility",
+  "placementQuiz": [
+    {
+      "q": "LATERAL join execution model in PostgreSQL:",
+      "options": [
+        "Right side executes once, cached",
+        "Right side executes per left row",
+        "Right side executes in parallel",
+        "Right side merged into left scan"
+      ],
+      "answer": 1,
+      "explain": "LATERAL executes right subquery once per left row, with left row values as parameters."
+    },
+    {
+      "q": "Recursive CTE execution in PostgreSQL:",
+      "options": [
+        "Iterative: working table → recursive table → repeat",
+        "Recursive function calls",
+        "Single pass with stack",
+        "Materialized path expansion"
+      ],
+      "answer": 0,
+      "explain": "PostgreSQL uses working table / recursive table iteration: each iteration processes working table, produces next working table."
+    },
+    {
+      "q": "CTE scan cost in EXPLAIN:",
+      "options": [
+        "Always 0",
+        "Cost of materialization + scan",
+        "Only scan cost",
+        "Hidden in parent node"
+      ],
+      "answer": 1,
+      "explain": "CTE Scan node shows startup cost (materialization) + run cost (scan). NOT MATERIALIZED removes CTE Scan node."
+    },
+    {
+      "q": "Custom aggregate for window function (PG 14+):",
+      "options": [
+        "Not possible",
+        "CREATE AGGREGATE ... WINDOW",
+        "Only via C extension",
+        "Only via PL/pgSQL"
+      ],
+      "answer": 1,
+      "explain": "CREATE AGGREGATE ... WINDOW (PostgreSQL 14+) defines custom window aggregate with moving window support."
+    },
+    {
+      "q": "Predicate pushdown through CTE in PG 17+:",
+      "options": [
+        "Never",
+        "Always",
+        "When CTE is NOT MATERIALIZED and safe",
+        "Only for simple CTEs"
+      ],
+      "answer": 2,
+      "explain": "PG 17+ can push predicates through NOT MATERIALIZED CTEs when safe (no volatile, no LIMIT, etc.)."
+    }
+  ],
+  "sections": [
+    {
+      "title": "LATERAL Join Internals & Optimization",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "LATERAL = correlated subquery in FROM. Execution: for each left row, evaluate right subquery with left row's values as parameters. Index on (partition_col, order_col) enables index seek + LIMIT per left row."
+        },
+        {
+          "type": "code",
+          "label": "lateral execution model",
+          "code": "-- For each employee, get latest order\nSELECT e.name, o.order_date, o.total\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT order_date, total\n  FROM orders o\n  WHERE o.emp_id = e.id\n  ORDER BY o.order_date DESC\n  LIMIT 1\n) o ON true;\n\n-- Equivalent correlated subquery (harder to optimize)\nSELECT e.name,\n  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_date,\n  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_total\nFROM employees e;",
+          "pg": "-- LATERAL is PostgreSQL standard\n-- Execution: nested loop with parameterized subquery",
+          "mysql": "-- MySQL 8.0.14+: LATERAL supported\n-- Same execution model",
+          "py-pandas": "# GroupBy + head(1)\nlatest = orders.sort_values('order_date').groupby('emp_id').head(1)\nmerged = employees.merge(latest, left_on='id', right_on='emp_id', how='left')"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — LATERAL Join",
+          "plan": {
+            "Plan": {
+              "Node Type": "Nested Loop Left Join",
+              "Startup Cost": 0.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 8500,
+              "Plan Width": 120,
+              "Join Filter": "true",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "employees",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 185.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 72
+                },
+                {
+                  "Node Type": "Subquery Scan",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 0.55,
+                  "Plan Rows": 1,
+                  "Plan Width": 48,
+                  "SubPlan": {
+                    "Node Type": "Limit",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 0.55,
+                    "Plan Rows": 1,
+                    "Plan Width": 48,
+                    "Plans": [
+                      {
+                        "Node Type": "Index Scan",
+                        "Relation Name": "orders",
+                        "Index Name": "idx_orders_emp_date",
+                        "Startup Cost": 0.29,
+                        "Total Cost": 0.55,
+                        "Plan Rows": 1,
+                        "Plan Width": 48,
+                        "Index Cond": "(emp_id = employees.id)",
+                        "Order By": "order_date DESC"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "LATERAL with LIMIT 1 + index on (emp_id, order_date DESC) = index seek per employee. Without index: seq scan per employee = O(N*M) disaster."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LATERAL subquery executes:",
+              "options": [
+                "Once for entire query",
+                "Once per left row",
+                "Once per partition",
+                "Once per distinct left value"
+              ],
+              "answer": 1,
+              "explain": "LATERAL executes right subquery once per left row, with left row values as parameters."
+            },
+            {
+              "q": "LATERAL + ORDER BY + LIMIT 1 with index on (emp_id, order_date DESC) — cost per left row:",
+              "options": [
+                "O(N) seq scan",
+                "O(log N) index seek",
+                "O(1) hash lookup",
+                "O(N log N) sort"
+              ],
+              "answer": 1,
+              "explain": "Index seek on (emp_id, order_date DESC) with LIMIT 1 = single index lookup per left row."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Recursive CTE Internals — Working Table Iteration",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Recursive CTE Execution Model"
+        },
+        {
+          "type": "prose",
+          "md": "PostgreSQL recursive CTE uses working table / recursive table iteration:\n1. Evaluate anchor query → initial working table\n2. While working table not empty:\n   a. Run recursive query using working table as input\n   b. Result → next working table\n   c. Append to recursive table\n   d. Working table = next working table\n3. Return recursive table\nEach iteration processes one 'level' of recursion."
+        },
+        {
+          "type": "code",
+          "label": "recursive cte execution",
+          "code": "-- WITH RECURSIVE paths AS (\n--   SELECT id, ARRAY[id] AS path FROM nodes WHERE parent_id IS NULL\n--   UNION ALL\n--   SELECT n.id, p.path || n.id FROM nodes n JOIN paths p ON n.parent_id = p.id\n-- )\n-- EXPLAIN shows:\n-- CTE Scan on paths\n--   -> WorkTable Scan on paths\n--       -> CTE paths\n--           -> Recursive Union\n--               -> Seq Scan on nodes (anchor)\n--               -> WorkTable Scan on paths (recursive)\n--                   -> Hash Join (nodes ⋈ paths)\n\n-- Monitor with: EXPLAIN ANALYZE",
+          "pg": "-- Recursive CTE uses WorkTable / Recursive Table iteration",
+          "mysql": "-- MySQL 8.0+: similar recursive CTE execution",
+          "py-pandas": "# Iterative approach in Python\ndef recursive_cte(anchor, recursive_fn, max_iter=100):\n    working = anchor\n    results = anchor.copy()\n    for _ in range(max_iter):\n        if working.empty: break\n        next_working = recursive_fn(working)\n        if next_working.empty: break\n        results = pd.concat([results, next_working])\n        working = next_working\n    return results"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Recursive CTE Execution",
+          "plan": {
+            "Plan": {
+              "Node Type": "CTE Scan",
+              "CTE Name": "paths",
+              "Startup Cost": 100.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Recursive Union",
+                  "Startup Cost": 100.00,
+                  "Total Cost": 5000.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 48,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "nodes",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 100.00,
+                      "Plan Rows": 100,
+                      "Plan Width": 24
+                    },
+                    {
+                      "Node Type": "WorkTable Scan",
+                      "Relation Name": "paths",
+                      "Startup Cost": 100.00,
+                      "Total Cost": 4900.00,
+                      "Plan Rows": 8400,
+                      "Plan Width": 48,
+                      "Plans": [
+                        {
+                          "Node Type": "Hash Join",
+                          "Startup Cost": 100.00,
+                          "Total Cost": 4900.00,
+                          "Plan Rows": 8400,
+                          "Plan Width": 48,
+                          "Hash Cond": "(nodes.parent_id = paths.id)",
+                          "Plans": [
+                            {
+                              "Node Type": "Seq Scan",
+                              "Relation Name": "nodes",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 100.00,
+                              "Plan Rows": 1000,
+                              "Plan Width": 24
+                            },
+                            {
+                              "Node Type": "WorkTable Scan",
+                              "Relation Name": "paths",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 0.00,
+                              "Plan Rows": 100,
+                              "Plan Width": 24
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Recursive CTE working table contains:",
+              "options": [
+                "All rows from all iterations",
+                "Only rows from previous iteration",
+                "All rows from anchor + recursive",
+                "Only anchor rows"
+              ],
+              "answer": 1,
+              "explain": "Working table = rows produced in previous iteration only. Recursive table accumulates all results."
+            },
+            {
+              "q": "Recursive CTE terminates when:",
+              "options": [
+                "Working table is empty",
+                "Recursive table reaches max rows",
+                "Max iterations reached",
+                "Both A and C"
+              ],
+              "answer": 0,
+              "explain": "Iteration stops when working table is empty (no new rows generated). Max depth is safety."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "CTE Scan Cost Model & Materialization",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CTE Scan Cost = Materialization + Scan"
+        },
+        {
+          "type": "code",
+          "label": "cte cost model",
+          "code": "-- CTE Scan cost = materialization startup + scan cost\n-- EXPLAIN ANALYZE shows:\n--   CTE Scan on cte\n--     -> CTE cte\n--         -> Seq Scan on table (startup=0, total=100)\n-- Startup cost = materialization cost\n-- Run cost = scan cost of materialized results\n\n-- NOT MATERIALIZED removes CTE Scan node entirely:\n--   -> Seq Scan on table (with pushed predicates)\n-- No materialization overhead\n\n-- Cost parameters:\nSET cte_materialization_cost = 0.0;  -- not real param, conceptual\n-- Actual: startup_cost = cost to materialize",
+          "pg": "-- CTE Scan node shows startup_cost = materialization cost",
+          "mysql": "-- MySQL: no CTE Scan node; CTE always materialized",
+          "py-pandas": "# No query planner; measure with %timeit"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Materialized CTE Scan",
+          "plan": {
+            "Plan": {
+              "Node Type": "CTE Scan",
+              "CTE Name": "active_users",
+              "Startup Cost": 1000.00,
+              "Total Cost": 1500.00,
+              "Plan Rows": 10000,
+              "Plan Width": 120,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "users",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 1000.00,
+                  "Plan Rows": 10000,
+                  "Plan Width": 120,
+                  "Filter": "(status = 'active')"
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — NOT MATERIALIZED CTE",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "users",
+              "Startup Cost": 0.00,
+              "Total Cost": 100.00,
+              "Plan Rows": 1000,
+              "Plan Width": 120,
+              "Filter": "(status = 'active' AND dept_id = 5)"
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "CTE Scan startup cost represents:",
+              "options": [
+                "Time to scan CTE results",
+                "Time to materialize CTE",
+                "Time to parse CTE",
+                "Time to plan CTE"
+              ],
+              "answer": 1,
+              "explain": "Startup cost = cost to materialize (build) the CTE. Run cost = scan the materialized results."
+            },
+            {
+              "q": "NOT MATERIALIZED CTE removes CTE Scan node:",
+              "options": [
+                "Always",
+                "When safe to inline (no volatile, no LIMIT, single ref)",
+                "Only with EXPLAIN ANALYZE",
+                "Never"
+              ],
+              "answer": 1,
+              "explain": "NOT MATERIALIZED inlines CTE into outer query when safe (no volatile, no LIMIT, single reference, no side effects)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Custom Subquery/CTE Extensions",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Custom Functions for Subqueries"
+        },
+        {
+          "type": "code",
+          "label": "custom functions in subqueries",
+          "code": "-- Custom function in subquery\nCREATE FUNCTION dept_avg_salary(dept_id int) RETURNS numeric AS $$\n  SELECT AVG(salary) FROM employees WHERE dept_id = $1;\n$$ LANGUAGE sql STABLE;\n\n-- Usage\nSELECT e.name, dept_avg_salary(e.dept_id) AS dept_avg\nFROM employees e;\n\n-- LATERAL with custom function\nSELECT e.*, fn_latest_order(e.id)\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT * FROM fn_latest_order(e.id)\n) o ON true;",
+          "pg": "-- SQL functions in subqueries: STABLE/IMMUTABLE for optimization\n-- VOLATILE functions block optimization",
+          "mysql": "-- MySQL: stored functions in subqueries",
+          "py-pandas": "# Apply custom function\ndef dept_avg(dept_id): return df[df['dept_id']==dept_id]['salary'].mean()\ndf['dept_avg'] = df['dept_id'].apply(dept_avg)"
+        },
+        {
+          "type": "heading",
+          "text": "Qualify Clause (MySQL/Snowflake) vs CTE (PostgreSQL)"
+        },
+        {
+          "type": "code",
+          "label": "qualify vs cte",
+          "code": "-- MySQL / Snowflake: QUALIFY filters window results\nSELECT * FROM (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) AS rn\n  FROM employees\n) WHERE rn <= 3;\n-- With QUALIFY:\nSELECT *, ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) AS rn\nFROM employees\nQUALIFY rn <= 3;\n\n-- PostgreSQL: CTE required\nWITH ranked AS (\n  SELECT *, ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) AS rn\n  FROM employees\n)\nSELECT * FROM ranked WHERE rn <= 3;",
+          "pg": "-- No QUALIFY; use CTE",
+          "mysql": "-- MySQL 8.0+: QUALIFY supported",
+          "py-pandas": "# CTE equivalent\ndf['rn'] = df.groupby('dept')['salary'].rank(ascending=False, method='first').astype(int)\ndf[df['rn'] <= 3]"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "QUALIFY clause (MySQL/Snowflake) replaces:",
+              "options": [
+                "WHERE clause",
+                "CTE for filtering window functions",
+                "HAVING clause",
+                "ORDER BY clause"
+              ],
+              "answer": 1,
+              "explain": "QUALIFY filters window function results without CTE. PostgreSQL uses CTE pattern."
+            },
+            {
+              "q": "VOLATILE function in CTE prevents:",
+              "options": [
+                "Materialization",
+                "NOT MATERIALIZED inlining",
+                "Recursive queries",
+                "Parallel execution"
+              ],
+              "answer": 1,
+              "explain": "VOLATILE functions force materialization to ensure consistent results per execution."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Mastery — Subquery/CTE Gaps",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "WITH cte AS NOT MATERIALIZED (SELECT * FROM t WHERE x > 5) SELECT * FROM cte WHERE y = 1;",
+          "pg": "WITH cte AS NOT MATERIALIZED (SELECT * FROM t WHERE x > 5) SELECT * FROM cte WHERE y = 1; -- PG 12+",
+          "mysql": "-- No NOT MATERIALIZED; CTE always materialized. Use subquery for pushdown:\nSELECT * FROM (SELECT * FROM t WHERE x > 5) AS cte WHERE y = 1;",
+          "py-pandas": "# No CTE; filter chain\ncte = df[df['x'] > 5]\nresult = cte[cte['y'] == 1]"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM t1 LEFT JOIN LATERAL (SELECT * FROM t2 WHERE t2.id = t1.id LIMIT 1) t2 ON true;",
+          "pg": "SELECT * FROM t1 LEFT JOIN LATERAL (SELECT * FROM t2 WHERE t2.id = t1.id LIMIT 1) t2 ON true;",
+          "mysql": "SELECT * FROM t1 LEFT JOIN LATERAL (SELECT * FROM t2 WHERE t2.id = t1.id LIMIT 1) t2 ON true; -- 8.0.14+",
+          "py-pandas": "t1.merge(t2.groupby('id').head(1), left_on='id', right_on='t2_id', how='left')"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L4 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S401",
+              "tier": 4,
+              "title": "LATERAL Optimization with Index",
+              "platform": "drill",
+              "patterns": ["lateral-optimization"],
+              "statement": "LATERAL join on orders table with LIMIT 1. Design index for optimal performance.",
+              "hints": ["CREATE INDEX ON orders (emp_id, order_date DESC)"]
+            },
+            {
+              "id": "S402",
+              "tier": 4,
+              "title": "Recursive CTE WorkTable Iteration",
+              "platform": "drill",
+              "patterns": ["recursive-cte-internals"],
+              "statement": "Explain Working Table vs Recursive Table in PostgreSQL recursive CTE execution.",
+              "hints": ["Working table = previous iteration; Recursive table = accumulated results"]
+            },
+            {
+              "id": "S403",
+              "tier": 4,
+              "title": "CTE Scan Cost Breakdown",
+              "platform": "drill",
+              "patterns": ["cte-cost-model"],
+              "statement": "EXPLAIN shows CTE Scan startup=1000, total=1500. Explain components.",
+              "hints": ["Startup = materialization; Run = scan of materialized results"]
+            },
+            {
+              "id": "S404",
+              "tier": 4,
+              "title": "NOT MATERIALIZED Pushdown in PG 17+",
+              "platform": "drill",
+              "patterns": ["predicate-pushdown", "pg17"],
+              "statement": "CTE with NOT MATERIALIZED + outer WHERE. Explain pushdown conditions.",
+              "hints": ["No volatile, no LIMIT, single ref, safe to inline"]
+            },
+            {
+              "id": "S405",
+              "tier": 4,
+              "title": "QUALIFY vs CTE for Window Filtering",
+              "platform": "drill",
+              "patterns": ["qualify", "cte"],
+              "statement": "Compare MySQL QUALIFY vs PostgreSQL CTE for filtering ROW_NUMBER() results.",
+              "hints": ["QUALIFY filters without CTE; CTE required in PG"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "LATERAL: correlated subquery in FROM; index on (partition, order) + LIMIT = O(log N) per left row",
+    "Recursive CTE: working table (prev iter) → recursive table (accumulated); WorkTable Scan in EXPLAIN",
+    "CTE Scan cost: startup = materialization; run = scan; NOT MATERIALIZED removes CTE Scan",
+    "PG 17+: predicate pushdown through NOT MATERIALIZED CTEs when safe",
+    "VOLATILE functions force materialization; NOT MATERIALIZED blocked by volatile/LIMIT/multi-ref",
+    "QUALIFY (MySQL/Snowflake) = CTE filter for window functions; PG uses CTE pattern"
+  ],
+  "glossary": [
+    { "term": "LATERAL join", "def": "Right subquery references left columns; executes once per left row." },
+    { "term": "working table", "def": "Recursive CTE table holding rows from previous iteration only." },
+    { "term": "recursive table", "def": "Recursive CTE table accumulating all results across iterations." },
+    { "term": "CTE Scan", "def": "PostgreSQL executor node for scanning materialized CTE results." },
+    { "term": "NOT MATERIALIZED", "def": "PG 12+ hint to inline CTE, enabling predicate pushdown." },
+    { "term": "QUALIFY", "def": "MySQL/Snowflake clause to filter window function results without CTE." }
+  ]
+}

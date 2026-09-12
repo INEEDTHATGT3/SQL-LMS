@@ -1,0 +1,360 @@
+{
+  "level": 2,
+  "title": "SQL Fundamentals",
+  "tagline": "filter, sort, limit — the WHERE-ORDER-LIMIT triad",
+  "placementQuiz": [
+    {
+      "q": "Which query finds employees with salary > 50000 AND dept_id = 3?",
+      "options": [
+        "SELECT * FROM employees WHERE salary > 50000, dept_id = 3;",
+        "SELECT * FROM employees WHERE salary > 50000 AND dept_id = 3;",
+        "SELECT * FROM employees WHERE salary > 50000 OR dept_id = 3;",
+        "SELECT * FROM employees HAVING salary > 50000 AND dept_id = 3;"
+      ],
+      "answer": 1,
+      "explain": "AND combines conditions; both must be true. Comma is not valid in WHERE."
+    },
+    {
+      "q": "ORDER BY hire_date ASC LIMIT 1 returns:",
+      "options": [
+        "Most recently hired employee",
+        "First employee ever hired",
+        "Employee with highest ID",
+        "Random employee"
+      ],
+      "answer": 1,
+      "explain": "ASC = oldest first (earliest date). LIMIT 1 takes the first."
+    },
+    {
+      "q": "WHERE name LIKE 'J%' matches:",
+      "options": [
+        "Names starting with J",
+        "Names ending with J",
+        "Names containing J anywhere",
+        "Only the name 'J'"
+      ],
+      "answer": 0,
+      "explain": "% is wildcard for any characters. 'J%' = starts with J."
+    },
+    {
+      "q": "What does OFFSET 5 LIMIT 10 do?",
+      "options": [
+        "Skips 5 rows, returns next 10",
+        "Returns rows 5-10",
+        "Returns first 5 rows, then 10 more",
+        "Errors — wrong order"
+      ],
+      "answer": 0,
+      "explain": "OFFSET skips N rows; LIMIT caps result. Standard pagination pattern."
+    },
+    {
+      "q": "NULL = NULL evaluates to:",
+      "options": [
+        "TRUE",
+        "FALSE",
+        "UNKNOWN (NULL)",
+        "Error"
+      ],
+      "answer": 2,
+      "explain": "NULL = NULL is UNKNOWN, not TRUE. Use IS NULL instead."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Advanced Filtering — IN, NOT IN, LIKE, BETWEEN",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**WHERE is your precision tool. IN for lists, LIKE for patterns, BETWEEN for ranges. Chain with AND/OR — parentheses control precedence.**"
+        },
+        {
+          "type": "code",
+          "label": "IN / NOT IN",
+          "code": "-- Multiple values\nSELECT * FROM employees WHERE dept_id IN (1, 3, 5);\n\n-- Exclude\nSELECT * FROM employees WHERE dept_id NOT IN (2, 4);\n\n-- Subquery (preview)\nSELECT * FROM employees WHERE dept_id IN (SELECT id FROM departments WHERE location = 'NYC');",
+          "py-pandas": "# IN\ne = employees[employees['dept_id'].isin([1, 3, 5])]\n\n# NOT IN\ne = employees[~employees['dept_id'].isin([2, 4])]\n\n# Subquery\nyc_depts = departments[departments['location'] == 'NYC']['id']\ne = employees[employees['dept_id'].isin(yc_depts)]",
+          "py-sqlalchemy": "# IN\nsession.query(Employee).filter(Employee.dept_id.in_([1, 3, 5])).all()\n\n# NOT IN\nsession.query(Employee).filter(~Employee.dept_id.in_([2, 4])).all()\n\n# Subquery\nnyc_subq = session.query(Department.id).filter(Department.location == 'NYC')\nsession.query(Employee).filter(Employee.dept_id.in_(nyc_subq)).all()"
+        },
+        {
+          "type": "code",
+          "label": "LIKE patterns",
+          "code": "-- Starts with\nSELECT * FROM employees WHERE name LIKE 'A%';\n\n-- Ends with\nSELECT * FROM employees WHERE email LIKE '%@company.com';\n\n-- Contains\nSELECT * FROM employees WHERE name LIKE '%son%';\n\n-- Single char wildcard: _\nSELECT * FROM employees WHERE name LIKE 'J_n';  -- Jan, Jon, Jun\n\n-- Case-insensitive (PostgreSQL)\nSELECT * FROM employees WHERE name ILIKE 'a%';",
+          "pg": "-- Case-insensitive\nSELECT * FROM employees WHERE name ILIKE 'a%';",
+          "mysql": "-- Case-insensitive (default in MySQL)\nSELECT * FROM employees WHERE name LIKE 'a%';",
+          "py-pandas": "# Starts with\ne = employees[employees['name'].str.startswith('A')]\n\n# Ends with\ne = employees[employees['email'].str.endswith('@company.com')]\n\n# Contains\ne = employees[employees['name'].str.contains('son')]\n\n# Regex for single char\ne = employees[employees['name'].str.match(r'^J.n$')]",
+          "py-sqlalchemy": "# Starts with\nsession.query(Employee).filter(Employee.name.like('A%')).all()\n\n# Ends with\nsession.query(Employee).filter(Employee.email.like('%@company.com')).all()\n\n# Contains\nsession.query(Employee).filter(Employee.name.like('%son%')).all()\n\n# Case-insensitive\nsession.query(Employee).filter(Employee.name.ilike('a%')).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "WHERE status IN ('active', 'pending') is equivalent to:",
+              "options": [
+                "status = 'active' AND status = 'pending'",
+                "status = 'active' OR status = 'pending'",
+                "status BETWEEN 'active' AND 'pending'",
+                "status LIKE 'active%'"
+              ],
+              "answer": 1,
+              "explain": "IN is shorthand for multiple OR conditions. A row can't be both values simultaneously."
+            },
+            {
+              "q": "LIKE '%test_' matches:",
+              "options": [
+                "Any string containing 'test'",
+                "Strings ending with 'test' plus one char",
+                "Strings starting with 'test'",
+                "Exactly 'test_'"
+              ],
+              "answer": 1,
+              "explain": "% = any chars, _ = exactly one char. '%test_' = ends with 'test' + 1 char."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Compound Conditions — AND, OR, NOT, Precedence",
+      "blocks": [
+        {
+          "type": "code",
+          "label": "boolean logic",
+          "code": "-- AND has higher precedence than OR\n-- This: salary > 50000 AND dept = 1 OR dept = 2\n-- Means: (salary > 50000 AND dept = 1) OR dept = 2\n\n-- Use parentheses for clarity\nSELECT * FROM employees \nWHERE (salary > 50000 AND dept_id = 1) \n   OR (salary > 60000 AND dept_id = 2);\n\n-- NOT\nSELECT * FROM employees WHERE NOT (dept_id = 3 OR salary < 30000);",
+          "py-pandas": "# Parentheses for precedence\ne = employees[\n    ((employees['salary'] > 50000) & (employees['dept_id'] == 1)) |\n    ((employees['salary'] > 60000) & (employees['dept_id'] == 2))\n]\n\n# NOT\ne = employees[~((employees['dept_id'] == 3) | (employees['salary'] < 30000))]",
+          "py-sqlalchemy": "# Parentheses\nfrom sqlalchemy import or_, and_\nsession.query(Employee).filter(\n    or_(\n        and_(Employee.salary > 50000, Employee.dept_id == 1),\n        and_(Employee.salary > 60000, Employee.dept_id == 2)\n    )\n).all()\n\n# NOT\nsession.query(Employee).filter(\n    ~or_(Employee.dept_id == 3, Employee.salary < 30000)\n).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "A AND B OR C is evaluated as:",
+              "options": [
+                "A AND (B OR C)",
+                "(A AND B) OR C",
+                "(A OR C) AND B",
+                "Error — ambiguous"
+              ],
+              "answer": 1,
+              "explain": "AND binds tighter than OR. Use parentheses to be explicit."
+            },
+            {
+              "q": "NOT (A OR B) is equivalent to:",
+              "options": [
+                "NOT A OR NOT B",
+                "NOT A AND NOT B",
+                "A AND B",
+                "A OR B"
+              ],
+              "answer": 1,
+              "explain": "De Morgan's law: NOT (A OR B) = NOT A AND NOT B."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Query Plans — Reading EXPLAIN",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "What is a Query Plan?"
+        },
+        {
+          "type": "prose",
+          "md": "EXPLAIN shows how the database *will* execute your query. It reveals: scan type (Seq Scan vs Index Scan), join method, estimated cost, and row counts. At L2, focus on: **Seq Scan = full table read (slow for large tables), Index Scan = targeted lookup (fast)**."
+        },
+        {
+          "type": "query-plan",
+          "title": "Seq Scan vs Index Scan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "employees",
+              "Alias": "e",
+              "Startup Cost": 0.00,
+              "Total Cost": 185.00,
+              "Plan Rows": 8500,
+              "Plan Width": 72,
+              "Filter": "(salary > 50000)",
+              "Actual Startup Time": 0.024,
+              "Actual Total Time": 12.45,
+              "Actual Rows": 3200,
+              "Actual Loops": 1
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "query-plan",
+          "title": "With Index on salary",
+          "plan": {
+            "Plan": {
+              "Node Type": "Index Scan",
+              "Scan Direction": "Forward",
+              "Index Name": "idx_employees_salary",
+              "Relation Name": "employees",
+              "Alias": "e",
+              "Startup Cost": 0.29,
+              "Total Cost": 42.15,
+              "Plan Rows": 3200,
+              "Plan Width": 72,
+              "Index Cond": "(salary > 50000)",
+              "Actual Startup Time": 0.018,
+              "Actual Total Time": 3.12,
+              "Actual Rows": 3200,
+              "Actual Loops": 1
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "**Cost dropped from 185 → 42. Time from 12ms → 3ms.** Index Scan reads only matching rows; Seq Scan reads entire table. At L3 you'll learn when indexes *don't* help."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "A Seq Scan reads:",
+              "options": [
+                "Only indexed columns",
+                "Every row in the table",
+                "Only the first 100 rows",
+                "Rows in index order"
+              ],
+              "answer": 1,
+              "explain": "Sequential Scan = full table scan. Reads all pages sequentially."
+            },
+            {
+              "q": "Index Cond in EXPLAIN means:",
+              "options": [
+                "Index is corrupted",
+                "Index is being used for filtering",
+                "Index needs rebuilding",
+                "Full index scan"
+              ],
+              "answer": 1,
+              "explain": "Index Cond shows the condition applied during index lookup."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Differences — String Concatenation",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT first_name || ' ' || last_name AS full_name FROM employees;",
+          "pg": "SELECT first_name || ' ' || last_name AS full_name FROM employees;",
+          "mysql": "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employees;",
+          "py-pandas": "employees['full_name'] = employees['first_name'] + ' ' + employees['last_name']",
+          "py-sqlalchemy": "session.query((Employee.first_name + ' ' + Employee.last_name).label('full_name')).all()"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "**ANSI & PostgreSQL use ||. MySQL uses CONCAT().** In MySQL, || is logical OR unless PIPES_AS_CONCAT mode enabled."
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "B201",
+              "tier": 2,
+              "title": "Employees in Dept 1, 3, or 5",
+              "platform": "drill",
+              "patterns": ["where-in"],
+              "statement": "List all employees in departments 1, 3, or 5.",
+              "hints": ["Use IN (1, 3, 5)"]
+            },
+            {
+              "id": "B202",
+              "tier": 2,
+              "title": "Names Starting with 'A' or 'B'",
+              "platform": "drill",
+              "patterns": ["where-like"],
+              "statement": "Find employees whose name starts with A or B.",
+              "hints": ["Use LIKE 'A%' OR LIKE 'B%' or SIMILAR TO"]
+            },
+            {
+              "id": "B203",
+              "tier": 2,
+              "title": "Salary 60k-80k in Dept 2",
+              "platform": "drill",
+              "patterns": ["where-compound"],
+              "statement": "Employees in department 2 with salary between 60000 and 80000.",
+              "hints": ["WHERE dept_id = 2 AND salary BETWEEN 60000 AND 80000"]
+            },
+            {
+              "id": "B204",
+              "tier": 2,
+              "title": "Recent Hires (Last 2 Years)",
+              "platform": "drill",
+              "patterns": ["where-date"],
+              "statement": "Employees hired after January 1, 2023.",
+              "hints": ["WHERE hire_date > '2023-01-01'"]
+            },
+            {
+              "id": "B205",
+              "tier": 2,
+              "title": "Top 3 by Salary in Each Dept (Conceptual)",
+              "platform": "drill",
+              "patterns": ["order-by", "limit"],
+              "statement": "Write the query pattern to get top 3 salaries. (Full solution at L3 with window functions)",
+              "hints": ["ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept"]
+            },
+            {
+              "id": "B206",
+              "tier": 2,
+              "title": "Pagination: Page 2 (20 per page)",
+              "platform": "drill",
+              "patterns": ["limit-offset"],
+              "statement": "Get the second page of employees ordered by hire_date, 20 per page.",
+              "hints": ["OFFSET 20 LIMIT 20"]
+            },
+            {
+              "id": "B207",
+              "tier": 2,
+              "title": "Exclude Departments 4 and 6",
+              "platform": "drill",
+              "patterns": ["where-not-in"],
+              "statement": "All employees NOT in departments 4 or 6.",
+              "hints": ["NOT IN (4, 6)"]
+            },
+            {
+              "id": "B208",
+              "tier": 2,
+              "title": "Email Domain Filter",
+              "platform": "drill",
+              "patterns": ["where-like"],
+              "statement": "Employees with company email (@company.com).",
+              "hints": ["LIKE '%@company.com'"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "IN / NOT IN — clean list filtering; subquery preview",
+    "LIKE patterns: % = any chars, _ = one char; ILIKE for case-insensitive",
+    "AND before OR — use parentheses: (A AND B) OR C",
+    "Seq Scan = full table read; Index Scan = targeted lookup (faster)",
+    "EXPLAIN shows cost, rows, scan type — learn to spot Seq Scan",
+    "Dialect diff: || (ANSI/PG) vs CONCAT() (MySQL)"
+  ],
+  "glossary": [
+    { "term": "Seq Scan", "def": "Sequential scan — reads every table page; O(N) cost." },
+    { "term": "Index Scan", "def": "Uses B-tree index to jump directly to matching rows; O(log N) + matches." },
+    { "term": "wildcard", "def": "% (any chars) and _ (one char) in LIKE patterns." },
+    { "term": "precedence", "def": "Order of operations: NOT > AND > OR. Parentheses override." },
+    { "term": "pagination", "def": "LIMIT n OFFSET m — skip m rows, take n. Page k = OFFSET k*page_size." },
+    { "term": "cost", "def": "Planner's estimated resource units (not milliseconds). Lower = better." }
+  ]
+}

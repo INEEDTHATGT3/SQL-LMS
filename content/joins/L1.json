@@ -1,0 +1,412 @@
+{
+  "level": 1,
+  "title": "Joins & Set Operations",
+  "tagline": "tables connecting — the Venn diagram of data",
+  "placementQuiz": [
+    {
+      "q": "INNER JOIN returns rows where:",
+      "options": [
+        "Only left table has match",
+        "Only right table has match",
+        "Both tables have matching rows",
+        "No matches at all"
+      ],
+      "answer": 2,
+      "explain": "INNER JOIN = intersection. Only rows with matches in both tables."
+    },
+    {
+      "q": "LEFT JOIN returns:",
+      "options": [
+        "All left rows, matching right rows (NULL if no match)",
+        "Only left rows with no match",
+        "Only matching rows",
+        "All right rows"
+      ],
+      "answer": 0,
+      "explain": "LEFT JOIN preserves all left table rows. Unmatched right columns become NULL."
+    },
+    {
+      "q": "SELECT * FROM a JOIN b ON a.id = b.id is equivalent to:",
+      "options": [
+        "SELECT * FROM a, b WHERE a.id = b.id",
+        "SELECT * FROM a LEFT JOIN b ON a.id = b.id",
+        "SELECT * FROM a FULL JOIN b ON a.id = b.id",
+        "SELECT * FROM a CROSS JOIN b"
+      ],
+      "answer": 0,
+      "explain": "Comma join with WHERE = INNER JOIN. Explicit JOIN syntax preferred."
+    },
+    {
+      "q": "UNION vs UNION ALL:",
+      "options": [
+        "Same thing",
+        "UNION removes duplicates; UNION ALL keeps all",
+        "UNION ALL removes duplicates",
+        "UNION is faster"
+      ],
+      "answer": 1,
+      "explain": "UNION = distinct (sorts/removes dups). UNION ALL = all rows, faster."
+    },
+    {
+      "q": "JOIN condition in WHERE vs ON for LEFT JOIN:",
+      "options": [
+        "Same result",
+        "WHERE filters after join (can turn LEFT into INNER)",
+        "ON filters after join",
+        "No difference"
+      ],
+      "answer": 1,
+      "explain": "ON filters before preserving left rows. WHERE filters after — can eliminate NULL-extended rows."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — The Venn Diagram",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "A JOIN connects two tables on a common column. Think Venn diagrams: INNER = intersection, LEFT = left circle + overlap, FULL = both circles."
+        },
+        {
+          "type": "visual",
+          "kind": "schema-diagram",
+          "spec": {
+            "tables": [
+              {
+                "name": "employees",
+                "columns": [
+                  { "name": "id", "type": "INTEGER", "pk": true },
+                  { "name": "name", "type": "VARCHAR(100)" },
+                  { "name": "dept_id", "type": "INTEGER" }
+                ]
+              },
+              {
+                "name": "departments",
+                "columns": [
+                  { "name": "id", "type": "INTEGER", "pk": true },
+                  { "name": "name", "type": "VARCHAR(100)" },
+                  { "name": "location", "type": "VARCHAR(100)" }
+                ]
+              }
+            ],
+            "relationships": [
+              { "from": "employees", "to": "departments", "label": "dept_id", "cardinality": "}o--||" }
+            ]
+          }
+        },
+        {
+          "type": "prose",
+          "md": "Every row in employees has a dept_id pointing to departments. JOIN follows that pointer to bring department info into the employee row. It's like looking up a phone number in a directory."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Primary key (PK) = unique identifier in parent table (departments.id)",
+            "Foreign key (FK) = pointer in child table (employees.dept_id)",
+            "JOIN condition = FK = PK",
+            "One department → many employees (one-to-many)"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Inner & Left Joins — The Core Two",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "INNER JOIN — Intersection"
+        },
+        {
+          "type": "code",
+          "label": "inner join",
+          "code": "-- Explicit syntax (preferred)\nSELECT e.name, d.name AS department\nFROM employees e\nINNER JOIN departments d ON e.dept_id = d.id;\n\n-- Implicit (old style, avoid)\nSELECT e.name, d.name\nFROM employees e, departments d\nWHERE e.dept_id = d.id;",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Inner join (default)\nmerged = employees.merge(departments, left_on='dept_id', right_on='id', how='inner')\n\n# Suffixes for overlapping columns\nmerged = employees.merge(departments, left_on='dept_id', right_on='id', \n                         how='inner', suffixes=('_emp', '_dept'))",
+          "py-sqlalchemy": "# Explicit join\nsession.query(Employee.name, Department.name.label('department'))\n    .join(Department, Employee.dept_id == Department.id).all()"
+        },
+        {
+          "type": "heading",
+          "text": "LEFT JOIN — Preserve Left"
+        },
+        {
+          "type": "code",
+          "label": "left join",
+          "code": "-- All employees, even those without department\nSELECT e.name, d.name AS department\nFROM employees e\nLEFT JOIN departments d ON e.dept_id = d.id;\n-- Employees with no dept: d.name = NULL\n\n-- Find employees WITHOUT department\nSELECT e.name\nFROM employees e\nLEFT JOIN departments d ON e.dept_id = d.id\nWHERE d.id IS NULL;",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Left join\nmerged = employees.merge(departments, left_on='dept_id', right_on='id', how='left')\n\n# Find NULLs (no match)\nno_dept = merged[merged['name_dept'].isna()]['name_emp']",
+          "py-sqlalchemy": "# Left join\nsession.query(Employee.name, Department.name.label('department'))\n    .outerjoin(Department, Employee.dept_id == Department.id).all()\n\n# No match\nsession.query(Employee.name).outerjoin(Department)\n    .filter(Department.id.is_(None)).all()"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"join_type": "INNER", "left_rows": "only matched", "right_rows": "only matched", "nulls": "never"},
+              {"join_type": "LEFT", "left_rows": "all", "right_rows": "matched + NULLs", "nulls": "right side"},
+              {"join_type": "RIGHT", "left_rows": "matched + NULLs", "right_rows": "all", "nulls": "left side"},
+              {"join_type": "FULL", "left_rows": "all", "right_rows": "all", "nulls": "both sides"}
+            ],
+            "after": [],
+            "highlight": ["nulls"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LEFT JOIN with 10 left rows, 3 matches → result rows:",
+              "options": [
+                "3",
+                "7",
+                "10",
+                "13"
+              ],
+              "answer": 2,
+              "explain": "LEFT JOIN returns all left rows (10). 3 matched, 7 NULL-extended."
+            },
+            {
+              "q": "WHERE d.id IS NULL after LEFT JOIN finds:",
+              "options": [
+                "Matched rows",
+                "Left rows with no match",
+                "Right rows with no match",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "NULL-extended rows = no match in right table. Classic anti-join pattern."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — LEFT JOIN Anti-Pattern",
+          "plan": {
+            "Plan": {
+              "Node Type": "Hash Right Join",
+              "Startup Cost": 10.00,
+              "Total Cost": 45.00,
+              "Plan Rows": 50,
+              "Plan Width": 120,
+              "Hash Cond": "(e.dept_id = d.id)",
+              "Filter": "(d.id IS NULL)",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "departments",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 1.20,
+                  "Plan Rows": 10
+                },
+                {
+                  "Node Type": "Hash",
+                  "Startup Cost": 8.50,
+                  "Total Cost": 8.50,
+                  "Plan Rows": 850
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Right, Full & Self Joins",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "RIGHT JOIN — Mirror of LEFT"
+        },
+        {
+          "type": "code",
+          "label": "right join",
+          "code": "-- All departments, even those with no employees\nSELECT d.name, e.name AS employee\nFROM employees e\nRIGHT JOIN departments d ON e.dept_id = d.id;\n-- Departments with no employees: e.name = NULL",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Right join\nmerged = employees.merge(departments, left_on='dept_id', right_on='id', how='right')",
+          "py-sqlalchemy": "# Right join\nsession.query(Department.name, Employee.name)\n    .join(Employee, Department.id == Employee.dept_id, isouter=True).all()"
+        },
+        {
+          "type": "heading",
+          "text": "FULL JOIN — Union of Both"
+        },
+        {
+          "type": "code",
+          "label": "full join",
+          "code": "-- All employees AND all departments\nSELECT e.name, d.name\nFROM employees e\nFULL JOIN departments d ON e.dept_id = d.id;\n-- Matched rows + NULL-extended left + NULL-extended right",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL: no FULL JOIN\n-- Workaround: LEFT UNION RIGHT\nSELECT * FROM employees e LEFT JOIN departments d ON ...\nUNION\nSELECT * FROM employees e RIGHT JOIN departments d ON ...;",
+          "py-pandas": "# Full outer join\nmerged = employees.merge(departments, left_on='dept_id', right_on='id', how='outer')",
+          "py-sqlalchemy": "# Full outer join\nsession.query(Employee.name, Department.name)\n    .outerjoin(Department, Employee.dept_id == Department.id, full=True).all()"
+        },
+        {
+          "type": "heading",
+          "text": "SELF JOIN — Table Joins Itself"
+        },
+        {
+          "type": "code",
+          "label": "self join (manager lookup)",
+          "code": "-- Employee + their manager name\nSELECT e.name AS employee, m.name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.id;\n-- Same table, different aliases (e and m)",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Self merge\nmerged = employees.merge(employees, left_on='manager_id', right_on='id', \n                         how='left', suffixes=('_emp', '_mgr'))",
+          "py-sqlalchemy": "# Self join\nm = aliased(Employee)\nsession.query(Employee.name, m.name.label('manager'))\n    .outerjoin(m, Employee.manager_id == m.id).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "FULL JOIN = LEFT JOIN UNION RIGHT JOIN? (ignoring duplicates)",
+              "options": [
+                "Yes, exactly",
+                "No, different",
+                "Only if no NULLs",
+                "Only in PostgreSQL"
+              ],
+              "answer": 0,
+              "explain": "FULL JOIN = all left + all right. LEFT UNION RIGHT = same (UNION removes dups)."
+            },
+            {
+              "q": "Self join requires:",
+              "options": [
+                "Two identical tables",
+                "Table aliases",
+                "Foreign key to itself",
+                "Both B and C"
+              ],
+              "answer": 3,
+              "explain": "Aliases distinguish the two instances; FK to itself (manager_id → id) is the join condition."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Set Operations — UNION, INTERSECT, EXCEPT",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Set Theory in SQL"
+        },
+        {
+          "type": "code",
+          "label": "union / intersect / except",
+          "code": "-- UNION: all distinct rows from both\nSELECT name FROM employees\nUNION\nSELECT name FROM contractors;\n-- Removes duplicates\n\n-- UNION ALL: all rows, keep duplicates\nSELECT name FROM employees\nUNION ALL\nSELECT name FROM contractors;\n-- Faster, no dedup\n\n-- INTERSECT: common rows\nSELECT dept_id FROM employees\nINTERSECT\nSELECT id FROM departments;\n\n-- EXCEPT: in first, not in second\nSELECT dept_id FROM departments\nEXCEPT\nSELECT dept_id FROM employees;\n-- Departments with NO employees",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: INTERSECT, EXCEPT supported\n-- Older: use EXISTS/NOT EXISTS",
+          "py-pandas": "# Union\npd.concat([employees['name'], contractors['name']]).drop_duplicates()\n\n# Union all\npd.concat([employees['name'], contractors['name']])\n\n# Intersect\nset(employees['dept_id']) & set(departments['id'])\n\n# Except\nset(departments['id']) - set(employees['dept_id'])",
+          "py-sqlalchemy": "# Union\nfrom sqlalchemy import union, union_all\nq1 = session.query(Employee.name)\nq2 = session.query(Contractor.name)\nsession.query(union(q1, q2)).all()\n\n# Intersect/Except\nfrom sqlalchemy import intersect, except_\nsession.query(intersect(...)).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "UNION vs UNION ALL performance:",
+              "options": [
+                "UNION faster",
+                "UNION ALL faster (no dedup)",
+                "Same",
+                "Depends on data"
+              ],
+              "answer": 1,
+              "explain": "UNION ALL skips sort/unique. Use when duplicates OK or impossible."
+            },
+            {
+              "q": "EXCEPT is to NOT IN as INTERSECT is to:",
+              "options": [
+                "IN",
+                "UNION",
+                "JOIN",
+                "EXISTS"
+              ],
+              "answer": 0,
+              "explain": "EXCEPT = in first not in second. INTERSECT = in both = IN logic."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "J101",
+              "tier": 1,
+              "title": "Employee + Department Name",
+              "platform": "drill",
+              "patterns": ["inner-join"],
+              "statement": "List employee name and their department name.",
+              "hints": ["INNER JOIN employees e ON e.dept_id = d.id"]
+            },
+            {
+              "id": "J102",
+              "tier": 1,
+              "title": "All Employees + Department (Include No Dept)",
+              "platform": "drill",
+              "patterns": ["left-join"],
+              "statement": "List all employees with department name. Show NULL for employees without department.",
+              "hints": ["LEFT JOIN departments"]
+            },
+            {
+              "id": "J103",
+              "tier": 1,
+              "title": "Departments Without Employees",
+              "platform": "drill",
+              "patterns": ["left-join-anti"],
+              "statement": "Find departments that have no employees.",
+              "hints": ["LEFT JOIN employees ... WHERE e.id IS NULL"]
+            },
+            {
+              "id": "J104",
+              "tier": 1,
+              "title": "Employee + Manager Name",
+              "platform": "drill",
+              "patterns": ["self-join"],
+              "statement": "List each employee with their manager's name.",
+              "hints": ["Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id"]
+            },
+            {
+              "id": "J105",
+              "tier": 1,
+              "title": "All Names: Employees + Contractors",
+              "platform": "drill",
+              "patterns": ["union"],
+              "statement": "Combine employee and contractor names, remove duplicates.",
+              "hints": ["UNION (not UNION ALL)"]
+            },
+            {
+              "id": "J106",
+              "tier": 1,
+              "title": "Departments With No Employees (RIGHT JOIN)",
+              "platform": "drill",
+              "patterns": ["right-join"],
+              "statement": "Same as J103 but using RIGHT JOIN.",
+              "hints": ["RIGHT JOIN employees ON ... WHERE e.id IS NULL"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "INNER = intersection; LEFT = all left + match; RIGHT = all right + match; FULL = both",
+    "LEFT JOIN + WHERE right.id IS NULL = anti-join (left rows with no match)",
+    "JOIN condition in ON, not WHERE (especially for LEFT — WHERE filters after join)",
+    "Self join = table aliases + FK to same table (manager_id → id)",
+    "UNION = distinct (slow); UNION ALL = all rows (fast); use ALL when possible",
+    "INTERSECT = common; EXCEPT = in first not second"
+  ],
+  "glossary": [
+    { "term": "inner join", "def": "Returns only rows with matches in both tables (intersection)." },
+    { "term": "left join", "def": "All left rows; matched right rows or NULL (left circle + overlap)." },
+    { "term": "right join", "def": "All right rows; matched left rows or NULL (right circle + overlap)." },
+    { "term": "full join", "def": "All rows from both tables; NULLs where no match (union of circles)." },
+    { "term": "self join", "def": "Table joined to itself using aliases; FK references same table PK." },
+    { "term": "anti-join", "def": "LEFT JOIN + WHERE right.key IS NULL — finds rows with no match." }
+  ]
+}

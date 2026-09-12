@@ -1,0 +1,462 @@
+{
+  "level": 2,
+  "title": "Subqueries & CTEs",
+  "tagline": "correlated subqueries, lateral joins, predicate pushdown, optimization",
+  "placementQuiz": [
+    {
+      "q": "A correlated subquery references outer query columns and:",
+      "options": [
+        "Runs once for the entire query",
+        "Runs once per outer row",
+        "Runs once per inner row",
+        "Runs only if outer query returns rows"
+      ],
+      "answer": 1,
+      "explain": "Correlated subquery executes once per outer row, using outer row's values."
+    },
+    {
+      "q": "LATERAL join allows the right side to:",
+      "options": [
+        "Reference columns from left side",
+        "Run independently of left side",
+        "Only work with LEFT JOIN",
+        "Replace CTE"
+      ],
+      "answer": 0,
+      "explain": "LATERAL allows right subquery to reference columns from left side of join."
+    },
+    {
+      "q": "EXISTS vs IN for correlated subquery — which stops at first match?",
+      "options": [
+        "IN",
+        "EXISTS",
+        "Both",
+        "Neither"
+      ],
+      "answer": 1,
+      "explain": "EXISTS is semi-join: stops at first match per outer row. IN may evaluate all."
+    },
+    {
+      "q": "CTE in PostgreSQL 12+ can be inlined with:",
+      "options": [
+        "MATERIALIZED",
+        "NOT MATERIALIZED",
+        "INLINE",
+        "NO_MATERIALIZE"
+      ],
+      "answer": 1,
+      "explain": "NOT MATERIALIZED hint allows predicate pushdown into CTE."
+    },
+    {
+      "q": "Recursive CTE max depth is controlled by:",
+      "options": [
+        "MAX_RECURSION_DEPTH setting",
+        "WHERE level < N in recursive part",
+        "MAX_RECURSIVE_ITERATIONS",
+        "RECURSION_LIMIT hint"
+      ],
+      "answer": 1,
+      "explain": "Termination condition in recursive part (e.g., WHERE level < 10) controls depth."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Correlated Subqueries — Per-Row Evaluation",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Correlated subquery = parameterized inner query. For each outer row, inner query runs with outer row's values as parameters. Powerful but can be slow — consider JOIN or LATERAL for performance."
+        },
+        {
+          "type": "code",
+          "label": "correlated subquery patterns",
+          "code": "-- Correlated in WHERE\nSELECT * FROM employees e\nWHERE salary > (\n  SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id\n);\n\n-- Correlated in SELECT (per row)\nSELECT \n  e.name,\n  e.salary,\n  (SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id) AS dept_avg\nFROM employees e;\n\n-- Correlated with EXISTS (semi-join)\nSELECT * FROM employees e\nWHERE EXISTS (\n  SELECT 1 FROM orders o WHERE o.emp_id = e.id AND o.total > 1000\n);",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Vectorized equivalent\ndept_avg = df.groupby('dept_id')['salary'].transform('mean')\ndf['above_avg'] = df['salary'] > dept_avg\n\n# EXISTS = semi-join\nhas_order = df['id'].isin(orders[orders['total'] > 1000]['emp_id'])"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"pattern": "Correlated in WHERE", "execution": "Per outer row", "use_case": "Filter outer rows", "performance": "Can be slow"},
+              {"pattern": "Correlated in SELECT", "execution": "Per outer row", "use_case": "Add computed column", "performance": "Can be slow"},
+              {"pattern": "Correlated EXISTS", "execution": "Per outer row, stops at first match", "use_case": "Semi-join", "performance": "Often better than IN"},
+              {"pattern": "Correlated LATERAL", "execution": "Per outer row, returns set", "use_case": "Top-N per group", "performance": "Good with indexes"}
+            ],
+            "after": [],
+            "highlight": ["execution"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Correlated subquery in SELECT with 10,000 outer rows executes inner query:",
+              "options": [
+                "1 time",
+                "10,000 times",
+                "Depends on data",
+                "0 times (optimized away)"
+              ],
+              "answer": 1,
+              "explain": "Correlated subquery in SELECT executes once per outer row. 10,000 rows = 10,000 executions."
+            },
+            {
+              "q": "EXISTS (SELECT 1 FROM ...) vs IN (SELECT ...) for correlated:",
+              "options": [
+                "Same performance",
+                "EXISTS often faster (stops at first match)",
+                "IN often faster",
+                "IN always faster"
+              ],
+              "answer": 1,
+              "explain": "EXISTS stops at first match per outer row (semi-join). IN may evaluate all matching rows."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "LATERAL Joins — Correlated Subquery in FROM",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "LATERAL — The Powerful Correlated Subquery"
+        },
+        {
+          "type": "code",
+          "label": "lateral basics",
+          "code": "-- For each employee, get latest order\nSELECT e.name, o.order_date, o.total\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT order_date, total\n  FROM orders o\n  WHERE o.emp_id = e.id\n  ORDER BY o.order_date DESC\n  LIMIT 1\n) o ON true;\n\n-- Equivalent correlated subquery (less readable)\nSELECT e.name,\n  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_date,\n  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_total\nFROM employees e;",
+          "pg": "-- LATERAL is PostgreSQL standard",
+          "mysql": "-- MySQL 8.0.14+: LATERAL supported",
+          "py-pandas": "# GroupBy + head(1)\nlatest = orders.sort_values('order_date').groupby('emp_id').head(1)\nmerged = employees.merge(latest, left_on='id', right_on='emp_id', how='left')"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"pattern": "LATERAL", "readability": "High — looks like join", "performance": "Same as correlated subquery", "use_case": "Top-N per group, complex per-row logic"},
+              {"pattern": "Correlated Subquery in SELECT", "readability": "Low — nested in SELECT", "performance": "Same", "use_case": "Single column, simple"},
+              {"pattern": "Window Function", "readability": "Medium", "performance": "Better for full scan", "use_case": "All rows need rank/row_number"}
+            ],
+            "after": [],
+            "highlight": ["readability", "performance"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LATERAL subquery can reference:",
+              "options": [
+                "Only tables in same FROM",
+                "Columns from LEFT side of join",
+                "Only columns from same subquery",
+                "Global variables only"
+              ],
+              "answer": 1,
+              "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
+            },
+            {
+              "q": "CROSS JOIN LATERAL vs LEFT JOIN LATERAL:",
+              "options": [
+                "Same",
+                "CROSS = inner (drops left rows with no match), LEFT = preserves left",
+                "LEFT not allowed with LATERAL",
+                "CROSS not allowed"
+              ],
+              "answer": 1,
+              "explain": "CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "CTE Optimization — Materialization & Pushdown",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CTE Materialization & Inlining"
+        },
+        {
+          "type": "code",
+          "label": "cte materialization control",
+          "code": "-- PostgreSQL 12+: control materialization\nWITH cte AS NOT MATERIALIZED (\n  SELECT * FROM large_table WHERE status = 'active'\n)\nSELECT * FROM cte WHERE dept_id = 5;\n-- Predicate dept_id=5 pushed into CTE scan\n\n-- Force materialization (default for recursive, volatile functions)\nWITH cte AS MATERIALIZED (\n  SELECT * FROM large_table WHERE status = 'active'\n)\nSELECT * FROM cte WHERE dept_id = 5;\n\n-- Default: materialized if referenced multiple times, or has volatile functions",
+          "pg": "-- PG 12+: NOT MATERIALIZED / MATERIALIZED hints",
+          "mysql": "-- MySQL: no materialization hints; CTEs always materialized",
+          "py-pandas": "# No CTE concept; filter first then process\nactive = df[df['status'] == 'active']\nresult = active[active['dept_id'] == 5]"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "CTE = optimization fence (materialized) by default in PG < 12. NOT MATERIALIZED allows predicate pushdown but may recompute. Use wisely!"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "NOT MATERIALIZED CTE allows:",
+              "options": [
+                "Predicate pushdown into CTE",
+                "Faster materialization",
+                "Recursive queries",
+                "Parallel execution"
+              ],
+              "answer": 0,
+              "explain": "NOT MATERIALIZED = inline CTE, allowing outer predicates to push into CTE scan."
+            },
+            {
+              "q": "CTE with volatile function (random()) is:",
+              "options": [
+                "Always materialized",
+                "Never materialized",
+                "Inlined by default",
+                "Error"
+              ],
+              "answer": 0,
+              "explain": "Volatile functions force materialization to ensure consistent results per execution."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Recursive CTE Patterns — Graphs, Trees, Paths",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Recursive CTE Patterns"
+        },
+        {
+          "type": "code",
+          "label": "recursive patterns",
+          "code": "-- Path enumeration: find path from A to B\nWITH RECURSIVE paths AS (\n  SELECT id, name, ARRAY[id] AS path, 1 AS depth\n  FROM nodes WHERE id = 'A'\n\n  UNION ALL\n\n  SELECT n.id, n.name, p.path || n.id, p.depth + 1\n  FROM nodes n\n  JOIN paths p ON n.parent_id = p.id\n  WHERE n.id != ALL(p.path)  -- prevent cycles\n  AND p.depth < 10\n)\nSELECT * FROM paths WHERE id = 'B';\n\n-- Level-order traversal (breadth-first)\nWITH RECURSIVE bfs AS (\n  SELECT id, name, 0 AS level\n  FROM employees WHERE manager_id IS NULL\n\n  UNION ALL\n\n  SELECT e.id, e.name, b.level + 1\n  FROM employees e\n  JOIN bfs b ON e.manager_id = b.id\n)\nSELECT * FROM bfs ORDER BY level;",
+          "pg": "-- Array path tracking with || operator",
+          "mysql": "-- MySQL: JSON_ARRAY_APPEND for path, CTE depth limit",
+          "py-pandas": "# NetworkX for graph traversal\nimport networkx as nx\ng = nx.DiGraph()\nfor _, r in df.iterrows():\n    if pd.notna(r['manager_id']): g.add_edge(r['manager_id'], r['id'])\nlist(nx.all_simple_paths(g, 'A', 'B'))"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "Always include cycle detection (visited set) and max depth limit. Infinite recursion = hung query."
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Recursive CTE Breadth-First Search",
+          "plan": {
+            "Plan": {
+              "Node Type": "CTE Scan",
+              "CTE Name": "bfs",
+              "Startup Cost": 100.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Recursive Union",
+                  "Startup Cost": 100.00,
+                  "Total Cost": 5000.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 48,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 100.00,
+                      "Plan Rows": 100
+                    },
+                    {
+                      "Node Type": "WorkTable Scan",
+                      "Relation Name": "bfs",
+                      "Startup Cost": 100.00,
+                      "Total Cost": 4900.00,
+                      "Plan Rows": 8400,
+                      "Plan Width": 48,
+                      "Plans": [
+                        {
+                          "Node Type": "Hash Join",
+                          "Startup Cost": 100.00,
+                          "Total Cost": 4900.00,
+                          "Plan Rows": 8400,
+                          "Plan Width": 48,
+                          "Hash Cond": "(e.manager_id = bfs.id)",
+                          "Plans": [
+                            {
+                              "Node Type": "Seq Scan",
+                              "Relation Name": "employees",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 100.00,
+                              "Plan Rows": 1000
+                            },
+                            {
+                              "Node Type": "WorkTable Scan",
+                              "Relation Name": "bfs",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 0.00,
+                              "Plan Rows": 100,
+                              "Plan Width": 24
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Recursive CTE cycle prevention:",
+              "options": [
+                "Automatic in all databases",
+                "WHERE id NOT IN (SELECT id FROM cte)",
+                "WHERE id != ALL(path_array)",
+                "Automatic with RECURSIVE keyword"
+              ],
+              "answer": 2,
+              "explain": "Track visited nodes in array/path column. Check `WHERE id != ALL(path)` before recursing."
+            },
+            {
+              "q": "Recursive CTE for breadth-first search uses:",
+              "options": [
+                "ORDER BY depth in outer query",
+                "Recursive part adds level+1",
+                "Both A and B",
+                "Neither"
+              ],
+              "answer": 2,
+              "explain": "Recursive part increments level; outer ORDER BY level gives breadth-first."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Differences — CTEs & Subqueries",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "WITH cte AS (SELECT * FROM t WHERE x > 5) SELECT * FROM cte;",
+          "pg": "WITH cte AS (SELECT * FROM t WHERE x > 5) SELECT * FROM cte;",
+          "mysql": "WITH cte AS (SELECT * FROM t WHERE x > 5) SELECT * FROM cte; -- 8.0+",
+          "py-pandas": "cte = df[df['x'] > 5]"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte;",
+          "pg": "WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte;",
+          "mysql": "WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte; -- 8.0+",
+          "py-pandas": "# Iterative approach\nresults = [1]\nwhile results[-1] < 5: results.append(results[-1] + 1)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S201",
+              "tier": 2,
+              "title": "Correlated Avg Salary per Dept",
+              "platform": "drill",
+              "patterns": ["correlated-subquery"],
+              "statement": "Each employee with their department's average salary.",
+              "hints": ["SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id"]
+            },
+            {
+              "id": "S202",
+              "tier": 2,
+              "title": "Latest Order per Customer (LATERAL)",
+              "platform": "drill",
+              "patterns": ["lateral"],
+              "statement": "For each customer, show their most recent order date and total.",
+              "hints": ["LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)"]
+            },
+            {
+              "id": "S203",
+              "tier": 2,
+              "title": "Customers with Orders > $1000 (EXISTS)",
+              "platform": "drill",
+              "patterns": ["correlated-exists"],
+              "statement": "Customers who placed at least one order over $1000.",
+              "hints": ["EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)"]
+            },
+            {
+              "id": "S204",
+              "tier": 2,
+              "title": "Non-Materialized CTE for Pushdown",
+              "platform": "drill",
+              "patterns": ["not-materialized"],
+              "statement": "CTE filters status='active', outer query adds dept_id=5. Use NOT MATERIALIZED.",
+              "hints": ["WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5"]
+            },
+            {
+              "id": "S205",
+              "tier": 2,
+              "title": "Recursive CTE: All Subordinates",
+              "platform": "drill",
+              "patterns": ["recursive-cte"],
+              "statement": "Find all subordinates (direct + indirect) of manager_id = 5.",
+              "hints": ["WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)"]
+            },
+            {
+              "id": "S206",
+              "tier": 2,
+              "title": "Path Finding: A to B",
+              "platform": "drill",
+              "patterns": ["recursive-cte", "path"],
+              "statement": "Find path from node 'A' to 'B' in graph edges table.",
+              "hints": ["Track path in array: path || next_node"]
+            },
+            {
+              "id": "S207",
+              "tier": 2,
+              "title": "Safe NOT IN (avoid NULL trap)",
+              "platform": "drill",
+              "patterns": ["not-in-null-trap"],
+              "statement": "Departments without employees. Fix NOT IN NULL trap.",
+              "hints": ["NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)"]
+            },
+            {
+              "id": "S208",
+              "tier": 2,
+              "title": "LATERAL: Top 3 Products per Category",
+              "platform": "drill",
+              "patterns": ["lateral", "top-n"],
+              "statement": "For each category, list top 3 products by sales.",
+              "hints": ["LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Correlated subquery: runs per outer row; use EXISTS for semi-join, LATERAL for set results",
+    "LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer",
+    "EXISTS stops at first match; IN may scan all. Use EXISTS for correlated semi/anti joins",
+    "CTE: NOT MATERIALIZED for pushdown, MATERIALIZED to force; recursive = anchor + UNION ALL + recurse",
+    "Recursive CTE: track visited (path array), limit depth, prevent cycles",
+    "NOT IN + NULL = zero rows; always NOT EXISTS for anti-join"
+  ],
+  "glossary": [
+    { "term": "correlated subquery", "def": "Subquery referencing outer query columns; executes once per outer row." },
+    { "term": "LATERAL join", "def": "Right subquery references left-side columns. Like correlated subquery in FROM." },
+    { "term": "NOT MATERIALIZED", "def": "PostgreSQL hint to inline CTE, enabling predicate pushdown." },
+    { "term": "recursive CTE", "def": "CTE with RECURSIVE keyword: anchor + UNION ALL + recursive part referencing itself." },
+    { "term": "cycle detection", "def": "Tracking visited nodes in recursive CTE to prevent infinite loops (path array check)." },
+    { "term": "semi-join", "def": "EXISTS/IN pattern — returns left rows with match; stops at first match per row." }
+  ]
+}

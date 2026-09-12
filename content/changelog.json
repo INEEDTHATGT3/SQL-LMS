@@ -1,0 +1,52 @@
+{
+  "changelog": [
+    {
+      "date": "2026-09-03",
+      "type": "module",
+      "title": "Module 08 Advanced Analytics live",
+      "detail": "Pivot, lateral, advanced frames, sampling"
+    },
+    {
+      "date": "2026-09-03",
+      "type": "module",
+      "title": "Module 07 Performance & Indexing live",
+      "detail": "EXPLAIN, indexes, statistics, tuning"
+    },
+    {
+      "date": "2026-09-03",
+      "type": "module",
+      "title": "Module 06 Subqueries & CTEs live",
+      "detail": "Correlated, recursive CTEs, materialization"
+    },
+    {
+      "date": "2026-09-03",
+      "type": "module",
+      "title": "Module 05 Window Functions live",
+      "detail": "ROW_NUMBER, RANK, LAG/LEAD, frames"
+    },
+    {
+      "date": "2026-09-03",
+      "type": "module",
+      "title": "Module 04 Aggregation & Grouping live",
+      "detail": "GROUP BY, HAVING, rollup, cube, grouping sets"
+    },
+    {
+      "date": "2026-09-03",
+      "type": "module",
+      "title": "Module 03 Joins & Set Operations live",
+      "detail": "INNER/LEFT/RIGHT/FULL, UNION, EXCEPT, INTERSECT"
+    },
+    {
+      "date": "2026-09-02",
+      "type": "module",
+      "title": "Module 02 Filtering & Conditionals live",
+      "detail": "IN, BETWEEN, LIKE, CASE, NULL handling"
+    },
+    {
+      "date": "2026-09-02",
+      "type": "module",
+      "title": "Module 01 SQL Fundamentals live",
+      "detail": "SELECT, WHERE, ORDER BY, LIMIT"
+    }
+  ]
+}

@@ -1,0 +1,371 @@
+{
+  "level": 4,
+  "title": "Joins & Set Operations",
+  "tagline": "join internals, cost model, parallel hash join, join ordering DP",
+  "placementQuiz": [
+    {
+      "q": "Dynamic Programming join ordering (DP) evaluates:",
+      "options": [
+        "All possible join orders (N!)",
+        "Subsets of joins via DP (O(3^N))",
+        "Only left-deep trees",
+        "Only right-deep trees"
+      ],
+      "answer": 1,
+      "explain": "DP join ordering: considers all subsets (O(2^N)) and partitions. Default for < 12 joins (join_collapse_limit)."
+    },
+    {
+      "q": "GEQO (Genetic Query Optimizer) activates when:",
+      "options": [
+        "Joins > 12 (geqo_threshold)",
+        "Tables > 1GB",
+        "No statistics",
+        "Parallel query enabled"
+      ],
+      "answer": 0,
+      "explain": "GEQO kicks in for > geqo_threshold joins (default 12). Uses genetic algorithm instead of DP."
+    },
+    {
+      "q": "Parallel Hash Join (PostgreSQL) builds hash table:",
+      "options": [
+        "In leader process only",
+        "In each worker independently",
+        "Shared across workers",
+        "In temporary table"
+      ],
+      "answer": 1,
+      "answer": 1,
+      "explain": "Each worker builds own hash table on its partition of build side. No shared memory."
+    },
+    {
+      "q": "Join path cost = startup_cost + run_cost. run_cost includes:",
+      "options": [
+        "CPU only",
+        "I/O only",
+        "CPU + I/O (seq_page_cost, random_page_cost, cpu_tuple_cost)",
+        "Network only"
+      ],
+      "answer": 2,
+      "explain": "Cost model: seq_page_cost (1.0), random_page_cost (4.0), cpu_tuple_cost (0.01), cpu_operator_cost (0.0025)."
+    },
+    {
+      "q": "Unique inner join optimization:",
+      "options": [
+        "When inner side has unique join key, planner can stop after first match",
+        "Always uses Nested Loop",
+        "Disables Hash Join",
+        "Requires PRIMARY KEY on inner"
+      ],
+      "answer": 0,
+      "explain": "Unique inner: planner knows at most 1 match per outer row → stops after first. Semi-join like."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Join Cost Model — Inside the Planner's Brain",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Planner cost = startup + run. seq_page_cost=1.0, random_page_cost=4.0, cpu_tuple_cost=0.01. Hash Join cost = build + probe. Merge Join = sort + merge. Understanding cost model = predicting plans."
+        },
+        {
+          "type": "code",
+          "label": "cost parameters",
+          "code": "-- View cost parameters\nSHOW seq_page_cost;      -- 1.0 (sequential I/O)\nSHOW random_page_cost;  -- 4.0 (random I/O)\nSHOW cpu_tuple_cost;    -- 0.01 (per tuple CPU)\nSHOW cpu_operator_cost; -- 0.0025 (per operator)\nSHOW parallel_tuple_cost; -- 0.1\n\n-- Override for session\nSET random_page_cost = 2.0;  -- SSD: random cheaper\nSET seq_page_cost = 1.0;\n\n-- Hash Join cost = build_cost + probe_cost\n-- build = seq_scan_build + cpu_hash * rows\n-- probe = seq_scan_probe + cpu_hash * rows",
+          "pg": "-- Cost model is the heart of planner\n-- Adjust for hardware: SSD → random_page_cost=1.1",
+          "mysql": "-- MySQL cost model different\n-- optimizer_switch controls features",
+          "py-pandas": "# No cost model, but similar concepts:\n# Sequential scan = full DataFrame scan\n# Index lookup = .loc[] on indexed column\n# Hash join = merge on non-indexed columns"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"join_type": "Nested Loop", "startup": "Low", "run": "outer_rows × (index_probe_cost)", "best_for": "Small outer + indexed inner"},
+              {"join_type": "Hash Join", "startup": "High (build hash)", "run": "probe_cost × outer_rows", "best_for": "Large, no index, equality"},
+              {"join_type": "Merge Join", "startup": "High (sort)", "run": "Low (linear merge)", "best_for": "Pre-sorted, large, equality"},
+              {"join_type": "Adaptive", "startup": "NLJ startup", "run": "Switches at threshold", "best_for": "Uncertain row counts"}
+            ],
+            "after": [],
+            "highlight": ["startup", "run"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "random_page_cost = 4.0 means:",
+              "options": [
+                "Random I/O is 4x more expensive than sequential",
+                "4 random pages per second",
+                "4x CPU cost",
+                "4 pages cached"
+              ],
+              "answer": 0,
+              "explain": "Planner assumes random I/O 4x slower than sequential. On SSD, lower to 1.1-2.0."
+            },
+            {
+              "q": "Hash Join startup cost includes:",
+              "options": [
+                "Sort cost",
+                "Hash table build cost",
+                "Index scan cost",
+                "Network cost"
+              ],
+              "answer": 1,
+              "explain": "Startup = build hash table on build side. Run = probe cost per outer row."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dynamic Programming & GEQO — Join Ordering at Scale",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "DP Join Ordering (Default)"
+        },
+        {
+          "type": "prose",
+          "md": "PostgreSQL uses Dynamic Programming for join ordering up to `join_collapse_limit` (default 8) or `from_collapse_limit` (default 8). DP considers all left-deep trees. Complexity O(3^N) — exponential but manageable for N ≤ 12."
+        },
+        {
+          "type": "code",
+          "label": "dp vs geqo",
+          "code": "-- DP join ordering (default for ≤ 12 joins)\nSET join_collapse_limit = 8;  -- default\nSET from_collapse_limit = 8;\n\n-- GEQO (Genetic Query Optimizer) for > 12 joins\nSET geqo_threshold = 12;  -- default\nSET geqo = on;            -- default\nSET geqo_effort = 5;      -- 1-10, higher = more search\n\n-- Force GEQO off\nSET geqo = off;\nSET join_collapse_limit = 20;  -- extend DP",
+          "pg": "-- DP: exhaustive for small N, guaranteed optimal\n-- GEQO: genetic algorithm, probabilistic, for large N",
+          "mysql": "-- MySQL: no DP/GEQO distinction\n-- Optimizer uses greedy search + dynamic programming (limited)",
+          "py-pandas": "# No optimizer; merge order = written"
+        },
+{
+          "type": "callout",
+          "tone": "blue",
+          "md": "DP guarantees optimal for small N. GEQO is probabilistic — may find different plans on re-plan. For reproducible plans with large N: increase geqo_threshold or use pg_hint_plan."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "DP join ordering complexity:",
+              "options": [
+                "O(N!)",
+                "O(2^N)",
+                "O(3^N)",
+                "O(N^2)"
+              ],
+              "answer": 2,
+              "explain": "DP considers all subsets and partitions. O(3^N) for left-deep trees."
+            },
+            {
+              "q": "GEQO activates when:",
+              "options": [
+                "Joins > geqo_threshold (default 12)",
+                "Tables > 100M rows",
+                "No indexes exist",
+                "Parallel query"
+              ],
+              "answer": 0,
+              "explain": "geqo_threshold (default 12) controls switch from DP to genetic algorithm."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Parallel Hash Join & Advanced Parallelism",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Parallel Hash Join (PostgreSQL 11+)"
+        },
+        {
+          "type": "code",
+          "label": "parallel hash join",
+          "code": "-- Enable parallel hash join\nSET max_parallel_workers_per_gather = 4;\nSET enable_parallel_hash = on;\n\n-- Query\nSELECT * FROM large_a a JOIN large_b b ON a.id = b.id;\n\n-- Plan: Parallel Hash Join\n-- Leader: coordinates, gathers results\n-- Workers: each builds hash on its build partition, probes\n\n-- Control:\nSET parallel_setup_cost = 1000;\nSET parallel_tuple_cost = 0.1;\nSET min_parallel_table_scan_size = '8MB';",
+          "pg": "-- Parallel Hash Join (PG 11+)\n-- Each worker builds independent hash table\n-- No shared memory between workers\n-- Gather Merge if output ordered",
+          "mysql": "-- MySQL: no parallel hash join\n-- Use multiple connections manually",
+          "py-pandas": "# Manual parallel: split, merge in parallel\nimport multiprocessing\ndef join_chunk(a_chunk): return a_chunk.merge(b, on='id')\nwith Pool(4) as p: results = p.map(join_chunk, np.array_split(a, 4))\npd.concat(results)"
+        },
+        {
+          "type": "query-plan",
+          "title": "Parallel Hash Join Plan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Gather Merge",
+              "Workers Planned": 4,
+              "Startup Cost": 10000.00,
+              "Total Cost": 50000.00,
+              "Plan Rows": 1000000,
+              "Plan Width": 120,
+              "Plans": [
+                {
+                  "Node Type": "Parallel Hash Join",
+                  "Startup Cost": 5000.00,
+                  "Total Cost": 40000.00,
+                  "Plan Rows": 250000,
+                  "Plan Width": 120,
+                  "Hash Cond": "(a.id = b.id)",
+                  "Worker 0": { "Actual Rows": 250123 },
+                  "Worker 1": { "Actual Rows": 249876 },
+                  "Worker 2": { "Actual Rows": 250045 },
+                  "Worker 3": { "Actual Rows": 249956 }
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Right-Deep Hash Join",
+          "plan": {
+            "Plan": {
+              "Node Type": "Hash Join",
+              "Startup Cost": 100.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 100000,
+              "Plan Width": 120,
+              "Hash Cond": "(a.id = b.id)",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "large_a",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 1000.00,
+                  "Plan Rows": 100000
+                },
+                {
+                  "Node Type": "Hash",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 50.00,
+                  "Plan Rows": 5000
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Parallel Hash Join workers each build:",
+              "options": [
+                "Full hash table on entire build side",
+                "Hash table on their partition of build side",
+                "Shared hash table in shared memory",
+                "No hash table — use NLJ"
+              ],
+              "answer": 1,
+              "explain": "Each worker builds hash on its partition of build side. No shared memory — independent."
+            },
+            {
+              "q": "Gather vs Gather Merge:",
+              "options": [
+                "Same thing",
+                "Gather = unordered collect; Gather Merge = ordered merge",
+                "Gather Merge faster",
+                "Gather for Hash Join only"
+              ],
+              "answer": 1,
+              "explain": "Gather Merge: workers return sorted data, leader merges. Gather: unordered collect."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Mastery — Enterprise Join Features",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SET max_parallel_workers_per_gather = 8; -- parallel hash join",
+          "pg": "SET max_parallel_workers_per_gather = 8;",
+          "mysql": "-- No parallel hash join\n-- Manual: multiple connections + UNION ALL",
+          "py-pandas": "Pool(8).map(join_chunk, chunks)",
+          "py-sqlalchemy": "-- Use multiprocessing"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM a JOIN b ON a.id = b.id WHERE a.val > 100;",
+          "pg": "-- Late materialization: fetch columns after join",
+          "mysql": "-- Late materialization in 8.0+",
+          "py-pandas": "merged = a.merge(b, on='id'); merged[merged['val'] > 100]",
+          "py-sqlalchemy": "session.query(A).join(B).filter(A.val > 100)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L4 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "J401",
+              "tier": 4,
+              "title": "Cost Model: SSD Random I/O Tuning",
+              "platform": "drill",
+              "patterns": ["cost-model"],
+              "statement": "On NVMe SSD, random_page_cost=4.0 overestimates. Set optimal value and explain impact on Hash vs NLJ choice.",
+              "hints": ["SET random_page_cost = 1.1; favors Hash Join over NLJ"]
+            },
+            {
+              "id": "J402",
+              "tier": 4,
+              "title": "GEQO vs DP Plan Stability",
+              "platform": "drill",
+              "patterns": ["geqo"],
+              "statement": "15-table query produces different plans on each run. Fix for stability.",
+              "hints": ["SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan"]
+            },
+            {
+              "id": "J403",
+              "tier": 4,
+              "title": "Parallel Hash Join Memory Tuning",
+              "platform": "drill",
+              "patterns": ["parallel-hash-join"],
+              "statement": "Parallel Hash Join spills to disk (Lossy). Fix with work_mem.",
+              "hints": ["SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN"]
+            },
+            {
+              "id": "J404",
+              "tier": 4,
+              "title": "Unique Inner Join Optimization",
+              "platform": "drill",
+              "patterns": ["unique-inner"],
+              "statement": "JOIN on PK column. Show how planner optimizes (stops after first match).",
+              "hints": ["EXPLAIN shows 'Unique Inner: true' or stops early in NLJ"]
+            },
+            {
+              "id": "J405",
+              "tier": 4,
+              "title": "Right-Deep vs Left-Deep Join Trees",
+              "platform": "drill",
+              "patterns": ["join-tree"],
+              "statement": "Explain when right-deep tree (Hash Join build on right) beats left-deep.",
+              "hints": ["When right side is smaller; Hash Join builds on right (build side)"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Cost model: seq_page_cost=1, random_page_cost=4, cpu_tuple_cost=0.01 — tune for hardware",
+    "DP ordering (N≤12): exhaustive DP, optimal. GEQO (N>12): genetic, probabilistic",
+    "Parallel Hash Join: workers build independent hashes; Gather Merge for ordered output",
+    "work_mem critical for Hash Join: spill = Lossy bitmap → massive slowdown",
+    "Unique inner optimization: planner stops after first match on PK/FK inner",
+    "Right-deep trees: Hash Join can build on right (smaller build side)"
+  ],
+  "glossary": [
+    { "term": "left-deep tree", "def": "Join tree where each join adds one table to left result. Standard DP output." },
+    { "term": "right-deep tree", "def": "Join tree where build side is on right. Hash Join can use either." },
+    { "term": "GEQO", "def": "Genetic Query Optimizer — genetic algorithm for join ordering when N > geqo_threshold." },
+    { "term": "adaptive join", "def": "Starts as Nested Loop, dynamically switches to Hash Join if outer rows exceed threshold." },
+    { "term": "late materialization", "def": "Fetch non-join columns after join (avoids carrying wide tuples through join)." },
+    { "term": "join qual", "def": "Join condition (ON clause). Planner extracts for pushdown, index matching." }
+  ]
+}

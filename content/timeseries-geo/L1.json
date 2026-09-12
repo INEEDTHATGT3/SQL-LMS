@@ -1,0 +1,370 @@
+{
+  "level": 1,
+  "title": "Time-Series & Geospatial",
+  "tagline": "time as a dimension — ordering events and locating them in space",
+  "placementQuiz": [
+    {
+      "q": "A time-series is fundamentally:",
+      "options": [
+        "A sequence of data points indexed in time order",
+        "A spatial dataset with coordinates",
+        "A hierarchical data structure",
+        "A graph with temporal edges"
+      ],
+      "answer": 0,
+      "explain": "A time-series is a sequence of data points collected at successive time intervals, where time is the primary index."
+    },
+    {
+      "q": "Which SQL function extracts the year from a timestamp?",
+      "options": [
+        "YEAR(timestamp)",
+        "EXTRACT(YEAR FROM timestamp)",
+        "DATEPART(year, timestamp)",
+        "All of the above (dialect dependent)"
+      ],
+      "answer": 3,
+      "explain": "All three work depending on dialect: YEAR() in MySQL, EXTRACT() in PostgreSQL, DATEPART() in SQL Server."
+    },
+    {
+      "q": "What is a geospatial point represented as in PostGIS?",
+      "options": [
+        "POINT(longitude latitude)",
+        "POINT(latitude longitude)",
+        "POINT(x y) where x=latitude, y=longitude",
+        "LATLON(lat, lon)"
+      ],
+      "answer": 0,
+      "explain": "PostGIS uses POINT(longitude latitude) - x=longitude, y=latitude, following the OGC standard."
+    },
+    {
+      "q": "A time-series with regular intervals is called:",
+      "options": [
+        "Irregular time-series",
+        "Regular time-series",
+        "Sparse time-series",
+        "Dense time-series"
+      ],
+      "answer": 1,
+      "explain": "Regular time-series have observations at consistent, predictable intervals (e.g., hourly sensor readings)."
+    },
+    {
+      "q": "Which operation finds the nearest neighbor in geospatial data?",
+      "options": [
+        "ST_Distance",
+        "ST_DWithin",
+        "ST_Contains",
+        "ST_Intersects"
+      ],
+      "answer": 0,
+      "explain": "ST_Distance calculates the distance between geometries, commonly used with ORDER BY and LIMIT for nearest neighbor searches."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — Time as a Dimension",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**Time-series data adds a temporal dimension to your data — every observation has a 'when' alongside its 'what' and 'where'.**"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"dimension": "What", "description": "The measured value (temperature, sales, velocity)", "example": "23.5°C"},
+              {"dimension": "When", "description": "The timestamp (ISO 8601, epoch, interval)", "example": "2024-01-15T14:30:00Z"},
+              {"dimension": "Where", "description": "The spatial context (lat/lon, geometry)", "example": "POINT(-122.4 37.7)"},
+              {"dimension": "Who", "description": "The entity/series identifier", "example": "sensor_42"}
+            ],
+            "after": [],
+            "highlight": ["dimension"]
+          }
+        },
+        {
+          "type": "prose",
+          "md": "Think of time-series data as a movie rather than a photograph. Each frame has a timestamp, and the sequence reveals patterns — trends, cycles, anomalies — that a single snapshot cannot. Add location, and you get spatio-temporal data: a storm's path, a delivery truck's route, a disease outbreak's spread."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Time is ordered — observations have a natural sequence",
+            "Intervals can be regular (hourly) or irregular (event-driven)",
+            "Spatial data adds geometry: points, lines, polygons",
+            "Spatio-temporal = time-series + geometry per observation"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Time-Series Fundamentals — Timestamps, Intervals, Granularity",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Timestamp Representations"
+        },
+        {
+          "type": "code",
+          "label": "timestamp types",
+          "code": "-- PostgreSQL\nTIMESTAMP           -- no timezone, 8 bytes\nTIMESTAMPTZ         -- with timezone, 8 bytes\nDATE                -- date only, 4 bytes\n\n-- MySQL\nDATETIME            -- no timezone, 8 bytes\nTIMESTAMP           -- converts to/from UTC, 4 bytes\n\n-- SQL Server\nDATETIME2           -- high precision, 6-8 bytes\nDATETIMEOFFSET      -- with timezone offset",
+          "pg": "-- PostgreSQL: TIMESTAMPTZ is preferred for timezone-aware apps",
+          "mysql": "-- MySQL: TIMESTAMP auto-converts to/from UTC",
+          "py-pandas": "# pandas\npd.Timestamp('2024-01-15 14:30:00')\n# timezone aware\npd.Timestamp('2024-01-15 14:30:00', tz='UTC')\n# timezone naive\npd.Timestamp('2024-01-15 14:30:00')"
+        },
+        {
+          "type": "heading",
+          "text": "Intervals & Granularity"
+        },
+        {
+          "type": "code",
+          "label": "intervals & date math",
+          "code": "-- PostgreSQL intervals\nSELECT now() - INTERVAL '1 day';\nSELECT now() - INTERVAL '3 months';\n\n-- Date truncation (granularity)\nSELECT date_trunc('hour', ts) AS hour_bucket,\n       COUNT(*)\nFROM events\nGROUP BY hour_bucket;\n\n-- Generate series (regular intervals)\nSELECT generate_series('2024-01-01'::date,\n                        '2024-01-31'::date,\n                        INTERVAL '1 day') AS day;",
+          "pg": "-- date_trunc truncates to bucket boundary\n-- generate_series creates regular sequences",
+          "mysql": "-- MySQL\nSELECT DATE_SUB(NOW(), INTERVAL 1 DAY);\nSELECT DATE_TRUNC('hour', ts) FROM events;",
+          "py-pandas": "# pandas resample\ndf.set_index('ts').resample('H').count()\n\n# date range\npd.date_range('2024-01-01', '2024-01-31', freq='D')"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "What does date_trunc('month', '2024-01-15') return?",
+              "options": [
+                "2024-01-15 00:00:00",
+                "2024-01-01 00:00:00",
+                "2024-02-01 00:00:00",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "date_trunc truncates to the start of the specified unit (month start)."
+            },
+            {
+              "q": "A sensor records every 30 seconds. What granularity?",
+              "options": [
+                "Second-level",
+                "Minute-level",
+                "Hour-level",
+                "Day-level"
+              ],
+              "answer": 0,
+              "explain": "30-second intervals = second-level granularity (sub-minute)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Geospatial Fundamentals — Points, Lines, Polygons",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Geometry Types (OGC Standard)"
+        },
+        {
+          "type": "code",
+          "label": "PostGIS geometry types",
+          "code": "-- Point: single coordinate pair\nSELECT ST_MakePoint(-122.4194, 37.7749) AS sf;\n-- LINESTRING: ordered sequence of points\nSELECT ST_MakeLine(ARRAY[ST_MakePoint(0,0), ST_MakePoint(1,1)]);\n-- POLYGON: closed ring (first=last)\nSELECT ST_MakePolygon(ST_GeomFromText('LINESTRING(0 0, 1 0, 1 1, 0 1, 0 0)'));\n-- MULTI* variants for collections",
+          "pg": "-- PostGIS implements OGC Simple Features\n-- SRID required for geodesic calculations",
+          "mysql": "-- MySQL 8.0+: ST_PointFromText, ST_LineFromText, ST_PolygonFromText",
+          "py-pandas": "# GeoPandas\nimport geopandas as gpd\nfrom shapely.geometry import Point, LineString, Polygon\ngdf = gpd.GeoDataFrame(geometry=[Point(-122, 37)])"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"type": "POINT", "dimensions": "0", "coordinates": "1 pair", "example": "ST_MakePoint(lon, lat)"},
+              {"type": "LINESTRING", "dimensions": "1", "coordinates": "2+ pairs", "example": "Path, route"},
+              {"type": "POLYGON", "dimensions": "2", "coordinates": "3+ pairs (closed)", "example": "Boundary, zone"},
+              {"type": "MULTIPOINT", "dimensions": "0", "coordinates": "N points", "example": "Multiple locations"}
+            ],
+            "after": [],
+            "highlight": ["type"]
+          }
+        },
+        {
+          "type": "heading",
+          "text": "Coordinate Systems (SRID)"
+        },
+        {
+          "type": "prose",
+          "md": "Every geometry has an SRID (Spatial Reference System Identifier). SRID 4326 = WGS 84 (GPS lat/lon). SRID 3857 = Web Mercator (web maps). Always set SRID for distance/area calculations to be meaningful."
+        },
+        {
+          "type": "code",
+          "label": "setting & transforming SRID",
+          "code": "-- Set SRID on geometry\nSELECT ST_SetSRID(ST_MakePoint(-122.4, 37.7), 4326);\n\n-- Transform to Web Mercator (meters)\nSELECT ST_Transform(geom, 3857);\n\n-- Distance in meters (requires projected CRS)\nSELECT ST_Distance(\n  ST_Transform(a.geom, 3857),\n  ST_Transform(b.geom, 3857)\n) FROM a, b;",
+          "pg": "-- Always use ST_Transform for distance/area\n-- 4326 = degrees (not meters!)",
+          "mysql": "-- MySQL: ST_SRID, ST_Transform (8.0+)",
+          "py-pandas": "# pyproj for transformations\nfrom pyproj import Transformer\ntransformer = Transformer.from_crs('epsg:4326', 'epsg:3857')\nx, y = transformer.transform(lon, lat)"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "SRID 4326 represents:",
+              "options": [
+                "Web Mercator projection",
+                "WGS 84 (GPS latitude/longitude)",
+                "UTM Zone 10N",
+                "State Plane California"
+              ],
+              "answer": 1,
+              "explain": "SRID 4326 = WGS 84 geographic coordinate system (latitude/longitude in degrees)."
+            },
+            {
+              "q": "ST_Distance on SRID 4326 returns:",
+              "options": [
+                "Meters",
+                "Degrees",
+                "Kilometers",
+                "Radians"
+              ],
+              "answer": 1,
+              "explain": "In geographic CRS (4326), ST_Distance returns degrees. Use ST_Transform to a projected CRS (e.g., 3857) for meters."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Spatio-Temporal Queries — Time + Space",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Moving Object Trajectories"
+        },
+        {
+          "type": "code",
+          "label": "trajectory as linestring",
+          "code": "-- Build trajectory from point observations\nSELECT vehicle_id,\n       ST_MakeLine(geom ORDER BY ts) AS trajectory,\n       MIN(ts) AS start_time,\n       MAX(ts) AS end_time\nFROM gps_points\nWHERE vehicle_id = 'V123'\nGROUP BY vehicle_id;\n\n-- Segment trajectory by speed\nSELECT ST_Segmentize(trajectory, 100) AS segmented\nFROM trajectories;",
+          "pg": "-- ST_MakeLine with ORDER BY creates trajectory\n-- ST_Length on geography = meters",
+          "mysql": "-- MySQL: ST_MakeLine not available; use ST_LineFromText on WKT",
+          "py-pandas": "# Pandas: sort by time, group by ID\npoints.sort_values('ts').groupby('id')['geometry'].apply(LineString)"
+        },
+        {
+          "type": "heading",
+          "text": "Spatio-Temporal Joins"
+        },
+        {
+          "type": "code",
+          "label": "find events near a moving object",
+          "code": "-- Find sensors within 1km of vehicle at each timestamp\nSELECT s.sensor_id, v.vehicle_id, v.ts\nFROM vehicles v\nJOIN sensors s\n  ON ST_DWithin(\n    ST_Transform(v.geom, 3857),\n    ST_Transform(s.geom, 3857),\n    1000  -- 1km in meters (3857 = meters)\n)\nWHERE v.ts BETWEEN '2024-01-01' AND '2024-01-02';\n\n-- Time-windowed spatial join\nSELECT * FROM events e\nJOIN sensors s\n  ON ST_DWithin(e.geom, s.geom, 500)\n AND e.ts BETWEEN s.active_from AND s.active_to;",
+          "pg": "-- ST_DWithin with transformed geometries for meter-based distance\n-- Time window + spatial filter = spatio-temporal join",
+          "mysql": "-- MySQL: ST_Distance_Sphere for approximate distance",
+          "py-pandas": "# Spatial join with time filter\nmerged = gpd.sjoin(points, polygons, how='inner', predicate='within')\nmerged = merged[(merged['ts'] >= merged['start']) & (merged['ts'] <= merged['end'])]"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "To build a trajectory from GPS points, you need:",
+              "options": [
+                "ST_MakePoint + GROUP BY",
+                "ST_MakeLine with ORDER BY timestamp",
+                "ST_Collect + GROUP BY",
+                "ST_Union + ORDER BY"
+              ],
+              "answer": 1,
+              "explain": "ST_MakeLine with ORDER BY timestamp creates a proper trajectory linestring."
+            },
+            {
+              "q": "Why use ST_Transform to 3857 before ST_Distance?",
+              "options": [
+                "3857 is faster",
+                "4326 returns degrees; 3857 returns meters",
+                "3857 is more accurate",
+                "Required by ST_DWithin"
+              ],
+              "answer": 1,
+              "explain": "SRID 4326 uses degrees; 3857 (Web Mercator) uses meters. ST_Distance on 4326 returns degrees."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "T101",
+              "tier": 1,
+              "title": "Parse and Extract Timestamp Parts",
+              "platform": "drill",
+              "patterns": ["timestamp-extraction"],
+              "statement": "From a TIMESTAMPTZ column, extract year, month, day, hour, and day-of-week.",
+              "hints": ["EXTRACT(field FROM timestamp)", "date_trunc('unit', timestamp)"]
+            },
+            {
+              "id": "T102",
+              "tier": 1,
+              "title": "Create Point from Lat/Lon",
+              "platform": "drill",
+              "patterns": ["point-creation"],
+              "statement": "Create a POINT geometry from longitude -122.4194 and latitude 37.7749 with SRID 4326.",
+              "hints": ["ST_MakePoint(lon, lat)", "ST_SetSRID(geom, 4326)"]
+            },
+            {
+              "id": "T103",
+              "tier": 1,
+              "title": "Distance Between Two Points",
+              "platform": "drill",
+              "patterns": ["distance-calculation"],
+              "statement": "Calculate distance in meters between two WGS84 points.",
+              "hints": ["ST_Transform to 3857", "ST_Distance on geography type"]
+            },
+            {
+              "id": "T104",
+              "tier": 1,
+              "title": "Points Within Radius",
+              "platform": "drill",
+              "patterns": ["spatial-filter"],
+              "statement": "Find all POIs within 500m of a given location.",
+              "hints": ["ST_DWithin with geography or ST_Transform to 3857"]
+            },
+            {
+              "id": "T105",
+              "tier": 1,
+              "title": "Hourly Bucketing of Events",
+              "platform": "drill",
+              "patterns": ["time-bucketing"],
+              "statement": "Count events per hour for the last 7 days.",
+              "hints": ["date_trunc('hour', ts)", "GROUP BY hour_bucket"]
+            },
+            {
+              "id": "T106",
+              "tier": 1,
+              "title": "Build Trajectory from GPS Points",
+              "platform": "drill",
+              "patterns": ["trajectory-construction"],
+              "statement": "Create a LINESTRING trajectory from GPS points ordered by timestamp.",
+              "hints": ["ST_MakeLine(geom ORDER BY ts)"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "TIMESTAMPTZ vs TIMESTAMP vs DATE — choose based on timezone needs",
+    "date_trunc('unit', ts) truncates to bucket boundary (hour, day, month)",
+    "generate_series creates regular time sequences; date_trunc buckets timestamps",
+    "PostGIS: POINT(lon lat), LINESTRING, POLYGON — SRID 4326 = WGS84",
+    "ST_Distance on geography = meters; on geometry(4326) = degrees",
+    "ST_DWithin + ST_Transform(3857) for meter-based radius searches",
+    "ST_MakeLine(geom ORDER BY ts) builds trajectories from points",
+    "date_trunc + GROUP BY = time bucketing; generate_series = gap filling"
+  ],
+  "glossary": [
+    { "term": "TIMESTAMPTZ", "def": "Timestamp with timezone — stored as UTC, displayed in session timezone." },
+    { "term": "date_trunc", "def": "Truncates timestamp to specified precision (hour, day, month, etc.)." },
+    { "term": "generate_series", "def": "Generates a series of values (dates, numbers) — useful for gap filling." },
+    { "term": "SRID", "def": "Spatial Reference System Identifier — defines coordinate system (4326 = WGS84)." },
+    { "term": "geography type", "def": "PostGIS type for geodesic calculations on sphere (meters, degrees)." },
+    { "term": "geometry type", "def": "PostGIS type for planar calculations on projected coordinates." },
+    { "term": "ST_DWithin", "def": "Returns true if geometries are within specified distance (supports geography)." },
+    { "term": "ST_Transform", "def": "Converts geometry between coordinate systems (SRIDs)." }
+  ]
+}

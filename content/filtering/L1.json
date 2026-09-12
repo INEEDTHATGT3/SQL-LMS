@@ -1,0 +1,389 @@
+{
+  "level": 1,
+  "title": "Filtering & Conditionals",
+  "tagline": "IN, BETWEEN, LIKE, CASE, NULL — precision filtering",
+  "placementQuiz": [
+    {
+      "q": "WHERE status IN ('active', 'pending') is equivalent to:",
+      "options": [
+        "status = 'active' AND status = 'pending'",
+        "status = 'active' OR status = 'pending'",
+        "status BETWEEN 'active' AND 'pending'",
+        "status LIKE 'active%'"
+      ],
+      "answer": 1,
+      "explain": "IN is shorthand for multiple OR conditions."
+    },
+    {
+      "q": "WHERE name LIKE 'J_n' matches:",
+      "options": [
+        "Names starting with J",
+        "3-letter names starting with J (Jan, Jon, Jun)",
+        "Names containing 'Jn'",
+        "Only 'J_n' literally"
+      ],
+      "answer": 1,
+      "explain": "_ matches exactly one character. 'J_n' = J + any char + n."
+    },
+    {
+      "q": "WHERE salary BETWEEN 50000 AND 75000 includes:",
+      "options": [
+        "Salaries >50000 and <75000",
+        "Salaries ≥50000 and ≤75000",
+        "Only 50000 and 75000",
+        "Salaries ≥50000 and <75000"
+      ],
+      "answer": 1,
+      "explain": "BETWEEN is inclusive on both ends."
+    },
+    {
+      "q": "To find NULL values in a column:",
+      "options": [
+        "WHERE col = NULL",
+        "WHERE col IS NULL",
+        "WHERE col == NULL",
+        "WHERE col <> NULL"
+      ],
+      "answer": 1,
+      "explain": "NULL is not a value — use IS NULL / IS NOT NULL."
+    },
+    {
+      "q": "CASE WHEN salary > 100000 THEN 'high' ELSE 'normal' END returns:",
+      "options": [
+        "A boolean",
+        "A string: 'high' or 'normal'",
+        "An integer",
+        "NULL"
+      ],
+      "answer": 1,
+      "explain": "CASE expression returns the THEN/ELSE result value."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — The Filter Funnel",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**WHERE is a funnel: rows enter, predicates test each row, only passing rows exit. Order of predicates doesn't change results (optimizer reorders), but can change performance.**"
+        },
+        {
+          "type": "visual",
+          "kind": "schema-diagram",
+          "spec": {
+            "tables": [
+              {
+                "name": "employees",
+                "columns": [
+                  { "name": "id", "type": "INTEGER", "pk": true },
+                  { "name": "name", "type": "VARCHAR(100)" },
+                  { "name": "dept_id", "type": "INTEGER" },
+                  { "name": "salary", "type": "DECIMAL(10,2)" },
+                  { "name": "status", "type": "VARCHAR(20)" },
+                  { "name": "manager_id", "type": "INTEGER" }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "prose",
+          "md": "Imagine pouring a bucket of rows through a series of screens. Each screen = a predicate (salary > 50000, status = 'active', etc.). Rows that match pass through; others are caught. The final stream is your result set."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Each predicate = independent true/false test per row",
+            "AND = all screens must pass; OR = any screen passes",
+            "NOT = invert the screen",
+            "NULL fails all comparisons (=, <, >, LIKE, IN) — use IS NULL"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "List & Range Filters — IN, BETWEEN",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "IN — Clean List Matching"
+        },
+        {
+          "type": "code",
+          "label": "in / not in",
+          "code": "-- Multiple values\nSELECT * FROM employees WHERE dept_id IN (1, 3, 5);\n\n-- Equivalent to:\nSELECT * FROM employees WHERE dept_id = 1 OR dept_id = 3 OR dept_id = 5;\n\n-- Exclude\nSELECT * FROM employees WHERE dept_id NOT IN (2, 4);\n\n-- With subquery (preview)\nSELECT * FROM employees \nWHERE dept_id IN (SELECT id FROM departments WHERE location = 'NYC');",
+          "pg": "-- Same syntax\n-- NOT IN with subquery: watch for NULLs in subquery result!",
+          "mysql": "-- Same syntax\n-- MySQL optimizes IN (subquery) to semi-join",
+          "py-pandas": "# IN\ne = employees[employees['dept_id'].isin([1, 3, 5])]\n\n# NOT IN\ne = employees[~employees['dept_id'].isin([2, 4])]\n\n# Subquery\nnyc_depts = departments[departments['location'] == 'NYC']['id']\ne = employees[employees['dept_id'].isin(nyc_depts)]",
+          "py-sqlalchemy": "# IN\nsession.query(Employee).filter(Employee.dept_id.in_([1, 3, 5])).all()\n\n# NOT IN\nsession.query(Employee).filter(~Employee.dept_id.in_([2, 4])).all()\n\n# Subquery\nnyc_subq = session.query(Department.id).filter(Department.location == 'NYC')\nsession.query(Employee).filter(Employee.dept_id.in_(nyc_subq)).all()"
+        },
+        {
+          "type": "heading",
+          "text": "BETWEEN — Inclusive Range"
+        },
+        {
+          "type": "code",
+          "label": "between",
+          "code": "-- Numeric range\nSELECT * FROM employees WHERE salary BETWEEN 50000 AND 80000;\n\n-- Equivalent:\nSELECT * FROM employees WHERE salary >= 50000 AND salary <= 80000;\n\n-- Date range\nSELECT * FROM employees WHERE hire_date BETWEEN '2023-01-01' AND '2023-12-31';",
+          "pg": "-- Timestamp range\nSELECT * FROM events WHERE created_at BETWEEN '2024-01-01' AND '2024-01-31 23:59:59';",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Numeric\ne = employees[(employees['salary'] >= 50000) & (employees['salary'] <= 80000)]\n\n# Date\ne = employees[(employees['hire_date'] >= '2023-01-01') & (employees['hire_date'] <= '2023-12-31')]",
+          "py-sqlalchemy": "# Date range\nfrom sqlalchemy import between\nsession.query(Employee).filter(between(Employee.hire_date, '2023-01-01', '2023-12-31')).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "WHERE x IN (1,2,3) is internally rewritten as:",
+              "options": [
+                "x = 1 AND x = 2 AND x = 3",
+                "x = 1 OR x = 2 OR x = 3",
+                "x BETWEEN 1 AND 3",
+                "x = ANY(ARRAY[1,2,3])"
+              ],
+              "answer": 1,
+              "explain": "IN expands to OR chain. A row can't equal 1 AND 2 simultaneously."
+            },
+            {
+              "q": "BETWEEN 10 AND 20 with x = 10 returns:",
+              "options": [
+                "FALSE (exclusive)",
+                "TRUE (inclusive)",
+                "NULL",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "BETWEEN is inclusive: x >= 10 AND x <= 20."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Pattern Matching — LIKE, ILIKE",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "LIKE Wildcards"
+        },
+        {
+          "type": "code",
+          "label": "like patterns",
+          "code": "-- Starts with\nSELECT * FROM employees WHERE name LIKE 'A%';\n\n-- Ends with\nSELECT * FROM employees WHERE email LIKE '%@company.com';\n\n-- Contains\nSELECT * FROM employees WHERE name LIKE '%son%';\n\n-- Single char: _\nSELECT * FROM employees WHERE name LIKE 'J_n';  -- Jan, Jon, Jun\n\n-- Escape literal % or _\nSELECT * FROM employees WHERE code LIKE '100\\%%' ESCAPE '\\\\';",
+          "pg": "-- Case-insensitive (PostgreSQL)\nSELECT * FROM employees WHERE name ILIKE 'a%';\n\n-- SIMILAR TO (regex-like)\nSELECT * FROM employees WHERE name SIMILAR TO '[A-C]%';",
+          "mysql": "-- Case-insensitive by default\nSELECT * FROM employees WHERE name LIKE 'a%';\n\n-- REGEXP for regex\nSELECT * FROM employees WHERE name REGEXP '^[A-C]';",
+          "py-pandas": "# Starts with\ne = employees[employees['name'].str.startswith('A')]\n\n# Ends with\ne = employees[employees['email'].str.endswith('@company.com')]\n\n# Contains\ne = employees[employees['name'].str.contains('son')]\n\n# Regex\ne = employees[employees['name'].str.match(r'^J.n$')]",
+          "py-sqlalchemy": "# Starts with\nsession.query(Employee).filter(Employee.name.like('A%')).all()\n\n# Ends with\nsession.query(Employee).filter(Employee.email.like('%@company.com')).all()\n\n# Contains\nsession.query(Employee).filter(Employee.name.like('%son%')).all()\n\n# Case-insensitive\nsession.query(Employee).filter(Employee.name.ilike('a%')).all()"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Leading % kills index usage.** `LIKE '%son'` → Seq Scan. Trailing `%` (`LIKE 'J%'`) can use B-tree index. For leading wildcard search, see L3: pg_trgm (PostgreSQL) or FULLTEXT (MySQL)."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LIKE '_at' matches:",
+              "options": [
+                "cat, bat, rat",
+                "cat, bat, rat, catfish",
+                "at, bat",
+                "only 'at'"
+              ],
+              "answer": 0,
+              "explain": "_ = exactly one character. '_at' = 3 chars ending in 'at'."
+            },
+            {
+              "q": "PostgreSQL case-insensitive LIKE is:",
+              "options": [
+                "LIKE",
+                "ILIKE",
+                "LIKE_CASELESS",
+                "COLLATE NOCASE"
+              ],
+              "answer": 1,
+              "explain": "ILIKE is PostgreSQL-specific case-insensitive pattern match."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — IN vs OR Predicate",
+          "plan": {
+            "Plan": {
+              "Node Type": "Bitmap Heap Scan",
+              "Relation Name": "employees",
+              "Recheck Cond": "(dept_id = 1 OR dept_id = 3 OR dept_id = 5)",
+              "Startup Cost": 10.00,
+              "Total Cost": 45.00,
+              "Plan Rows": 250,
+              "Plan Width": 72,
+              "Plans": [
+                {
+                  "Node Type": "BitmapOr",
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Index Name": "idx_emp_dept",
+                      "Index Cond": "(dept_id = 1)"
+                    },
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Index Name": "idx_emp_dept",
+                      "Index Cond": "(dept_id = 3)"
+                    },
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Index Name": "idx_emp_dept",
+                      "Index Cond": "(dept_id = 5)"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Conditional Logic — CASE, COALESCE, NULLIF",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CASE Expression"
+        },
+        {
+          "type": "code",
+          "label": "case basics",
+          "code": "-- Simple CASE (equality)\nSELECT name,\n  CASE dept_id\n    WHEN 1 THEN 'Engineering'\n    WHEN 2 THEN 'Sales'\n    WHEN 3 THEN 'Marketing'\n    ELSE 'Other'\n  END AS department\nFROM employees;\n\n-- Searched CASE (conditions)\nSELECT name, salary,\n  CASE\n    WHEN salary >= 100000 THEN 'Senior'\n    WHEN salary >= 70000 THEN 'Mid'\n    ELSE 'Junior'\n  END AS level\nFROM employees;",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Simple mapping\ndept_map = {1: 'Engineering', 2: 'Sales', 3: 'Marketing'}\ne['department'] = e['dept_id'].map(dept_map).fillna('Other')\n\n# Searched case\nimport numpy as np\ne['level'] = np.where(e['salary'] >= 100000, 'Senior',\n               np.where(e['salary'] >= 70000, 'Mid', 'Junior'))",
+          "py-sqlalchemy": "# Simple case\nfrom sqlalchemy import case\nsession.query(Employee.name,\n    case(Employee.dept_id, {1: 'Engineering', 2: 'Sales', 3: 'Marketing'}, else_='Other')\n).all()\n\n# Searched case\nsession.query(Employee.name,\n    case(\n        (Employee.salary >= 100000, 'Senior'),\n        (Employee.salary >= 70000, 'Mid'),\n        else_='Junior'\n    )\n).all()"
+        },
+        {
+          "type": "heading",
+          "text": "NULL Handling — COALESCE, NULLIF"
+        },
+        {
+          "type": "code",
+          "label": "coalesce / nullif",
+          "code": "-- COALESCE: first non-NULL\nSELECT COALESCE(manager_id, 0) AS mgr FROM employees;\n-- If manager_id is NULL, returns 0\n\n-- NULLIF: returns NULL if equal\nSELECT NULLIF(status, '') FROM employees;\n-- Empty string becomes NULL\n\n-- Combined: normalize then coalesce\nSELECT COALESCE(NULLIF(TRIM(phone), ''), 'N/A') FROM employees;",
+          "pg": "-- Same syntax",
+          "mysql": "-- IFNULL (2 args only)\nSELECT IFNULL(manager_id, 0) FROM employees;\n\n-- NULLIF same",
+          "py-pandas": "# COALESCE → fillna\ne['manager_id'] = e['manager_id'].fillna(0)\n\n# NULLIF → replace then fillna\ne['status'] = e['status'].replace('', np.nan)",
+          "py-sqlalchemy": "# COALESCE\nfrom sqlalchemy import func\nsession.query(func.coalesce(Employee.manager_id, 0)).all()\n\n# NULLIF\nsession.query(func.nullif(Employee.status, '')).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "COALESCE(NULL, 1, 2) returns:",
+              "options": [
+                "NULL",
+                "1",
+                "2",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "COALESCE returns first non-NULL argument."
+            },
+            {
+              "q": "NULLIF(5, 5) returns:",
+              "options": [
+                "5",
+                "0",
+                "NULL",
+                "Error"
+              ],
+              "answer": 2,
+              "explain": "NULLIF(a,b) returns NULL if a=b, else a."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "F101",
+              "tier": 1,
+              "title": "Employees in Departments 1, 3, 5",
+              "platform": "drill",
+              "patterns": ["where-in"],
+              "statement": "List all employees in departments 1, 3, or 5.",
+              "hints": ["Use IN (1, 3, 5)"]
+            },
+            {
+              "id": "F102",
+              "tier": 1,
+              "title": "Salary Between 50k and 75k",
+              "platform": "drill",
+              "patterns": ["where-between"],
+              "statement": "Find employees with salary between 50000 and 75000 inclusive.",
+              "hints": ["WHERE salary BETWEEN 50000 AND 75000"]
+            },
+            {
+              "id": "F103",
+              "tier": 1,
+              "title": "Names Starting with 'A'",
+              "platform": "drill",
+              "patterns": ["where-like"],
+              "statement": "Find employees whose name starts with 'A'.",
+              "hints": ["WHERE name LIKE 'A%'"]
+            },
+            {
+              "id": "F104",
+              "tier": 1,
+              "title": "Employees Without Manager",
+              "platform": "drill",
+              "patterns": ["where-null"],
+              "statement": "List employees who don't have a manager (manager_id IS NULL).",
+              "hints": ["WHERE manager_id IS NULL"]
+            },
+            {
+              "id": "F105",
+              "tier": 1,
+              "title": "Department Name from ID (CASE)",
+              "platform": "drill",
+              "patterns": ["case-expression"],
+              "statement": "Add column 'dept_name': 1='Eng', 2='Sales', 3='Marketing', else 'Other'.",
+              "hints": ["CASE dept_id WHEN 1 THEN 'Engineering' ..."]
+            },
+            {
+              "id": "F106",
+              "tier": 1,
+              "title": "Normalize Empty Phone to 'N/A'",
+              "platform": "drill",
+              "patterns": ["coalesce-nullif"],
+              "statement": "Return phone column, but show 'N/A' for NULL or empty string.",
+              "hints": ["COALESCE(NULLIF(TRIM(phone), ''), 'N/A')"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "IN = multiple OR; NOT IN = multiple AND (watch for NULLs in subquery!)",
+    "BETWEEN = inclusive range; works on numbers, dates, strings",
+    "LIKE: % = any chars, _ = one char; leading % kills index",
+    "PostgreSQL: ILIKE for case-insensitive; MySQL: LIKE is case-insensitive by default",
+    "CASE: simple (equality) vs searched (conditions); always include ELSE",
+    "COALESCE = first non-NULL; NULLIF(a,b) = NULL if a=b else a"
+  ],
+  "glossary": [
+    { "term": "predicate", "def": "Boolean expression in WHERE/HAVING that evaluates per row." },
+    { "term": "sargable", "def": "Search ARGument ABLE — predicate that can use index (e.g., col = 5, not UPPER(col) = 'X')." },
+    { "term": "wildcard", "def": "% (zero+ chars) and _ (exactly one char) in LIKE patterns." },
+    { "term": "searched CASE", "def": "CASE WHEN condition THEN result — conditions evaluated in order." },
+    { "term": "simple CASE", "def": "CASE expr WHEN val THEN result — equality checks against expr." },
+    { "term": "three-valued logic", "def": "TRUE, FALSE, UNKNOWN (NULL). WHERE filters keep only TRUE." }
+  ]
+}

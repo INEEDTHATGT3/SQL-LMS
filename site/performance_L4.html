@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance & Indexing — L4 EXPERT</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="4" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 07</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">streaming aggregates, continuous aggregates, materialized views, parallel aggregation</span></div>
+  <h1>Performance & Indexing</h1>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="performance_L1" href="performance_L1.html">BEGINNER</a><a class="level-pill " data-lesson="performance_L2" href="performance_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="performance_L3" href="performance_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="performance_L4" href="performance_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Parallel Aggregation — Multi-Core GROUP BY</a><a href="#sec-1">02 · Materialized Views & Continuous Aggregates</a><a href="#sec-2">03 · Advanced Patterns — Incremental, Streaming, Parallel</a><a href="#sec-3">04 · EXPLAIN — Incremental Aggregate Upsert</a><a href="#sec-4">05 · Dialect Mastery — Enterprise Aggregation</a><a href="#sec-5">06 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q312" data-answer="1">
+      <div class="quiz-q">Continuous aggregate (TimescaleDB) automatically:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Refreshes on schedule</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Maintains real-time view via background workers</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only works with time-series</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Replaces materialized views</span></div></div>
+      <div class="quiz-explain">Continuous aggregates incrementally maintain pre-computed aggregates as new data arrives.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q313" data-answer="1">
+      <div class="quiz-q">Streaming aggregate in PostgreSQL (pg_streaming):</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Aggregates over infinite stream</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Incremental aggregate on append-only table</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Real-time dashboard only</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Requires TimescaleDB</span></div></div>
+      <div class="quiz-explain">Streaming aggregates maintain running aggregates as rows are inserted, without full recomputation.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q314" data-answer="1">
+      <div class="quiz-q">Parallel aggregate (PostgreSQL) splits:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>GROUP BY keys across workers</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Input scan across workers, each does partial aggregate, then combine</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Aggregate functions across workers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Output rows across workers</span></div></div>
+      <div class="quiz-explain">Parallel aggregate: each worker scans partition, computes partial aggregate, leader combines.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q315" data-answer="1">
+      <div class="quiz-q">Materialized view refresh CONCURRENTLY:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Locks table for duration</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>No exclusive lock; allows reads during refresh</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only works with fast refresh</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Requires primary key</span></div></div>
+      <div class="quiz-explain">CONCURRENTLY builds new version, swaps atomically — zero-downtime refresh.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q316" data-answer="0">
+      <div class="quiz-q">Incremental aggregate vs full recompute:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same result, incremental faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Incremental may drift over time</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Full recompute always faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Incremental only for COUNT</span></div></div>
+      <div class="quiz-explain">Incremental applies delta (new/changed rows) to existing aggregate. Correct if logic handles updates/deletes.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Parallel Aggregation — Multi-Core GROUP BY</h2></div>
+    <div class="mantra">Parallel aggregate = scan partitions in parallel → partial aggregates per worker → combine at leader. Key params: max_parallel_workers_per_gather, min_parallel_table_scan_size, parallel_tuple_cost. Enable for large tables.</div>
+<div><div class="code-label"><span>parallel aggregate config</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Enable parallel query
+SET max_parallel_workers_per_gather = <span class="num">4</span>;
+SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;
+SET parallel_tuple_cost = <span class="num">0.1</span>;
+SET parallel_setup_cost = <span class="num">1000</span>;
+
+-- Force parallel <span class="kw">for</span> testing
+SET force_parallel_mode = on;
+
+-- Check <span class="kw">if</span> parallel used
+EXPLAIN ANALYZE SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;
+-- Look <span class="kw">for</span>: Parallel Seq Scan, Partial Aggregate, Gather Merge</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Parallel aggregate (PG 10+)</span>
+<span class="cm">-- Partial Aggregate on workers → Gather Merge at leader</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native parallel GROUP BY</span>
+<span class="cm">-- Use partitioning + UNION ALL manually</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Parallel Aggregate Plan</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Gather Merge</span>
+        <span class="plan-node-meta"> cost=1000..50000 rows=1000000 width=120</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Parallel Hash Join</span>
+        <span class="plan-node-meta"> cost=5000..40000 rows=250000 width=120</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Hash Cond: (a.id = b.id)</div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s0-q317" data-answer="1">
+      <div class="quiz-q">Partial Aggregate in parallel query means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Incomplete result</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Each worker computes aggregate on its partition</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Aggregate stopped early</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error state</span></div></div>
+      <div class="quiz-explain">Each worker builds partial aggregate on its data partition; leader combines via Gather Merge.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q318" data-answer="1">
+      <div class="quiz-q">Gather Merge vs Gather:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Gather Merge preserves ORDER BY; Gather does not</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Gather Merge faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Gather for Hash Join only</span></div></div>
+      <div class="quiz-explain">Gather Merge merges sorted worker outputs; Gather just concatenates unordered.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Materialized Views & Continuous Aggregates</h2></div>
+    <h3>Materialized Views — Pre-computed Snapshots</h3>
+<div><div class="code-label"><span>materialized view</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Create materialized view
+CREATE MATERIALIZED VIEW dept_stats AS
+SELECT dept_id,
+  COUNT(*) AS emp_count,
+  AVG(salary) AS avg_salary,
+  SUM(salary) AS total_salary
+FROM employees
+GROUP BY dept_id;
+
+-- Refresh (full rebuild)
+REFRESH MATERIALIZED VIEW dept_stats;
+
+-- Refresh CONCURRENTLY (zero-downtime)
+REFRESH MATERIALIZED VIEW CONCURRENTLY dept_stats;
+-- Requires: unique index on materialized view
+CREATE UNIQUE INDEX idx_dept_stats_dept ON dept_stats (dept_id);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- MATERIALIZED VIEW + REFRESH CONCURRENTLY (zero downtime)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native materialized view</span>
+<span class="cm">-- Workaround: table + trigger / scheduled refresh</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Continuous Aggregates (TimescaleDB)</h3>
+<div><div class="code-label"><span>continuous aggregate</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- TimescaleDB continuous aggregate
+CREATE MATERIALIZED VIEW hourly_events
+WITH (timescaledb.continuous) AS
+SELECT time_bucket(<span class="st">'1 hour'</span>, time) AS bucket,
+  device_id,
+  COUNT(*) AS event_count,
+  AVG(value) AS avg_value
+FROM events
+GROUP BY bucket, device_id;
+
+-- Automatic refresh (background)
+-- Add refresh policy
+SELECT add_continuous_aggregate_policy(<span class="st">'hourly_events'</span>,
+  start_offset => INTERVAL <span class="st">'3 hours'</span>,
+  end_offset => INTERVAL <span class="st">'1 hour'</span>,
+  schedule_interval => INTERVAL <span class="st">'1 hour'</span>);
+
+-- Real-time view (combines materialized + raw)
+SELECT * FROM hourly_events WHERE bucket > now() - INTERVAL <span class="st">'1 day'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- TimescaleDB: continuous aggregates + real-time views</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native continuous aggregates</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s1-q319" data-answer="1">
+      <div class="quiz-q">REFRESH MATERIALIZED VIEW CONCURRENTLY requires:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Primary key on base table</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Unique index on materialized view</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>No indexes</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>TimescaleDB</span></div></div>
+      <div class="quiz-explain">Unique index on MV enables atomic swap without blocking reads.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q320" data-answer="0">
+      <div class="quiz-q">Continuous aggregate lag (end_offset) means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>How far behind real-time</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>How often to refresh</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>How much history to keep</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Max query latency</span></div></div>
+      <div class="quiz-explain">end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Advanced Patterns — Incremental, Streaming, Parallel</h2></div>
+    <h3>Incremental Aggregate Maintenance</h3>
+<div><div class="code-label"><span>incremental aggregate pattern</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Table <span class="kw">for</span> incremental aggregates
+CREATE TABLE daily_sales_agg (
+  sale_date DATE PRIMARY KEY,
+  total_sales NUMERIC,
+  order_count BIGINT
+);
+
+-- Incremental refresh (daily)
+INSERT INTO daily_sales_agg (sale_date, total_sales, order_count)
+SELECT sale_date, SUM(amount), COUNT(*)
+FROM orders
+WHERE sale_date = CURRENT_DATE - <span class="num">1</span>
+GROUP BY sale_date
+ON CONFLICT (sale_date) DO UPDATE SET
+  total_sales = EXCLUDED.total_sales,
+  order_count = EXCLUDED.order_count;
+
+-- Handle updates/deletes (complex)
+-- Use CDC (Change Data Capture) or triggers <span class="kw">for</span> <span class="kw">true</span> incremental</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- UPSERT pattern for incremental aggregates</span>
+<span class="cm">-- For true CDC: pgoutput + logical replication</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- ON DUPLICATE KEY UPDATE</span>
+INSERT INTO daily_sales_agg ... ON DUPLICATE KEY UPDATE total_sales = VALUES(total_sales);</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Streaming Aggregation (pg_streaming / PipelineDB)</h3>
+<div><div class="code-label"><span>streaming aggregate concept</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Concept: aggregate as data flows in
+-- PipelineDB (PostgreSQL extension) / pg_streaming
+
+-- Continuous view
+CREATE CONTINUOUS VIEW page_views_1min AS
+SELECT site_id, COUNT(*) AS views
+FROM page_views
+GROUP BY site_id, time_bucket(<span class="st">'1 minute'</span>, ts);
+
+-- Query continuous view (always up-to-date)
+SELECT * FROM page_views_1min WHERE site_id = <span class="num">123</span>;
+
+-- Combines: materialized (historical) + streaming (recent)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PipelineDB / pg_streaming for streaming SQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- No native streaming SQL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue">Real-world: TimescaleDB continuous aggregates = 99% of streaming use cases. PipelineDB deprecated. For custom: Kafka + Flink/Spark Streaming + sink to DB.</div>
+<div class="quiz-card" data-quiz-key="s2-q321" data-answer="2">
+      <div class="quiz-q">REFRESH MATERIALIZED VIEW CONCURRENTLY blocks:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Writes to base tables</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Reads from materialized view</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Nothing (except brief schema lock)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All queries</span></div></div>
+      <div class="quiz-explain">CONCURRENTLY builds new version, swaps with brief AccessExclusive lock — reads never blocked.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q322" data-answer="1">
+      <div class="quiz-q">Incremental aggregate challenge:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Inserts only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Handling UPDATE/DELETE in base data</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Memory usage</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index maintenance</span></div></div>
+      <div class="quiz-explain">Updates/deletes in source require reverse aggregation (subtract old, add new). Hard without CDC.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>EXPLAIN — Incremental Aggregate Upsert</h2></div>
+    
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Incremental Aggregate Upsert</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Insert</span>
+        <span class="plan-node-meta"> cost=0..100 rows=1 width=48</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Subquery Scan</span>
+        <span class="plan-node-meta"> cost=0..50 rows=1 width=48</span>
+      </div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Aggregate</span>
+        <span class="plan-node-meta"> cost=0..50 rows=1 width=48</span>
+      </div><div class="plan-node" style="margin-left: 72px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>orders</code>
+        <span class="plan-node-meta"> cost=0..40 rows=1000 width=24</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (sale_date = (CURRENT_DATE - 1))</div></div></div></div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Dialect Mastery — Enterprise Aggregation</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE MATERIALIZED VIEW mv AS SELECT ...; REFRESH MATERIALIZED VIEW CONCURRENTLY mv;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE MATERIALIZED VIEW mv AS ...;
+REFRESH MATERIALIZED VIEW CONCURRENTLY mv; -- requires unique index</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- No MV. Use table + scheduled event:
+CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
+  REPLACE INTO mv SELECT ...;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python"># APScheduler / cron job to refresh pandas aggregation</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id; -- 8.0+</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df.groupby('dept_id')['salary'].quantile(0.5)</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Problem Set — L4 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Parallel Aggregate Tuning</div>
+        <div class="prob-meta">drill · parallel-aggregate</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P401"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzgrof5m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzgrof5m">work_mem</div><button class="reveal-btn" data-target="umtxzgrof5o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzgrof5o">min_parallel_table_scan_size</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Materialized View with Concurrent Refresh</div>
+        <div class="prob-meta">drill · materialized-view</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P402"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create MV for daily sales by region with zero-downtime refresh.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Continuous Aggregate for Real-Time Dashboard</div>
+        <div class="prob-meta">drill · continuous-aggregate</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P403"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzgrof5s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzgrof5s">add_continuous_aggregate_policy</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Incremental Aggregate with CDC</div>
+        <div class="prob-meta">drill · incremental-aggregate + cdc</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P404"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Design incremental daily sales agg using pgoutput logical replication for CDC.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtxzgrof5v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzgrof5v">pgoutput plugin</div><button class="reveal-btn" data-target="umtxzgrof5x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzgrof5x">apply delta to agg table</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Right-Deep Tree for Parallel Hash Aggregate</div>
+        <div class="prob-meta">drill · join-tree + parallel-aggregate</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P405"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Explain when right-deep join tree enables better parallel aggregate distribution.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5y">Build side on right (smaller), probe on left</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Parallel aggregate: workers do Partial Aggregate → Gather Merge combines</li><li>Materialized view + CONCURRENTLY = zero-downtime refresh (needs unique index)</li><li>Continuous aggregates (TimescaleDB): incremental, automatic, near real-time</li><li>Incremental aggregates: apply delta (INSERT/UPDATE/DELETE) to existing aggregate</li><li>Streaming aggregates: continuous view = materialized + raw tail; PipelineDB/pg_streaming</li><li>REFRESH CONCURRENTLY = brief lock swap; requires unique index on MV</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>partial aggregate</code></td><td>Per-worker aggregate on data partition; combined at leader via Gather Merge.</td></tr><tr><td style="width:220px;"><code>continuous aggregate</code></td><td>TimescaleDB: automatically maintained materialized view with incremental refresh.</td></tr><tr><td style="width:220px;"><code>materialized view</code></td><td>Pre-computed query result stored as table; refreshed manually or scheduled.</td></tr><tr><td style="width:220px;"><code>incremental aggregate</code></td><td>Aggregate updated by applying delta (new/changed rows) instead of full recompute.</td></tr><tr><td style="width:220px;"><code>continuous aggregate</code></td><td>TimescaleDB feature: auto-refreshed MV with configurable lag and refresh policy.</td></tr><tr><td style="width:220px;"><code>CDC (Change Data Capture)</code></td><td>Capture INSERT/UPDATE/DELETE from WAL for real-time incremental processing.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: next MODULE</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 07 · L4/EXPERT · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('performance_L4');</script>
+</body></html>

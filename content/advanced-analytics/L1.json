@@ -1,0 +1,480 @@
+{
+  "level": 1,
+  "title": "Advanced Analytics",
+  "tagline": "PIVOT, LATERAL, advanced frames, sampling — analytics beyond GROUP BY",
+  "placementQuiz": [
+    {
+      "q": "PIVOT rotates rows to columns. In PostgreSQL, PIVOT is:",
+      "options": [
+        "Built-in syntax (PIVOT ... FOR)",
+        "Done via crosstab() from tablefunc extension",
+        "Only available in MySQL",
+        "Not possible"
+      ],
+      "answer": 1,
+      "explain": "PostgreSQL uses crosstab() from tablefunc extension for pivot. MySQL has PIVOT syntax in 8.0+."
+    },
+    {
+      "q": "LATERAL join allows the right side to:",
+      "options": [
+        "Reference columns from left side",
+        "Run independently of left side",
+        "Only work with LEFT JOIN",
+        "Replace CTE"
+      ],
+      "answer": 0,
+      "explain": "LATERAL allows right subquery to reference columns from left side of join."
+    },
+    {
+      "q": "Advanced frame: ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING includes:",
+      "options": [
+        "Current row only",
+        "Current row ± 2 rows (5 rows total)",
+        "2 rows before, current, 2 rows after (5 rows total)",
+        "All rows"
+      ],
+      "answer": 2,
+      "explain": "2 PRECEDING + current + 2 FOLLOWING = 5 rows total centered on current."
+    },
+    {
+      "q": "TABLESAMPLE SYSTEM (10) returns:",
+      "options": [
+        "Exactly 10% of rows",
+        "~10% of pages (approximate 10% of rows)",
+        "First 10% of table",
+        "Random 10 rows"
+      ],
+      "answer": 1,
+      "explain": "TABLESAMPLE SYSTEM samples at page level. Returns approximate percentage."
+    },
+    {
+      "q": "LATERAL with LIMIT 1 for top-N per group — execution:",
+      "options": [
+        "Full scan per outer row",
+        "Index seek + LIMIT per outer row",
+        "Full sort per outer row",
+        "Cross join optimization"
+      ],
+      "answer": 1,
+      "explain": "LATERAL + ORDER BY + LIMIT 1 with index on (partition, order) = index seek + LIMIT per outer row."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — Analytics Beyond GROUP BY",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "GROUP BY collapses rows. Advanced analytics keeps rows but adds computed columns: PIVOT for cross-tabs, LATERAL for per-row subqueries, advanced frames for moving analytics, sampling for big data."
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"concept": "GROUP BY", "behavior": "Collapses rows", "output": "One row per group", "example": "SELECT dept, AVG(sal) FROM emp GROUP BY dept"},
+              {"concept": "PIVOT/crosstab", "behavior": "Rows → columns", "output": "Cross-tabulation", "example": "dept vs quarter matrix"},
+              {"concept": "LATERAL", "behavior": "Per-row subquery", "output": "Same row count, extra cols", "example": "Top-N per group"},
+              {"concept": "Advanced frames", "behavior": "Window with custom boundaries", "output": "Moving stats per row", "example": "3-day moving average"}
+            ],
+            "after": [],
+            "highlight": ["behavior"]
+          }
+        },
+        {
+          "type": "list",
+          "items": [
+            "GROUP BY reduces rows; advanced analytics adds columns without collapsing",
+            "PIVOT/crosstab: row values become column headers (cross-tabulation)",
+            "LATERAL: correlated subquery in FROM clause — right side sees left columns",
+            "Frame clauses: ROWS/RANGE/GROUPS with PRECEDING/FOLLOWING/UNBOUNDED",
+            "Sampling: TABLESAMPLE for approximate queries on massive tables"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "PIVOT / Crosstab — Cross-Tabulation",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "PostgreSQL crosstab()"
+        },
+        {
+          "type": "code",
+          "label": "crosstab example",
+          "code": "-- Enable extension\nCREATE EXTENSION IF NOT EXISTS tablefunc;\n\n-- Crosstab: row_header, category, value\nSELECT * FROM crosstab(\n  'SELECT dept, quarter, SUM(sales) FROM sales GROUP BY dept, quarter ORDER BY 1,2',\n  'SELECT DISTINCT quarter FROM sales ORDER BY 1'\n) AS ct(dept TEXT, q1 NUMERIC, q2 NUMERIC, q3 NUMERIC, q4 NUMERIC);\n\n-- Dynamic columns not possible directly; use dynamic SQL or fixed columns",
+          "pg": "-- crosstab() from tablefunc extension",
+          "mysql": "-- MySQL 8.0+: PIVOT not native; use CASE + GROUP BY\nSELECT dept,\n  SUM(CASE WHEN quarter='Q1' THEN sales END) AS q1,\n  SUM(CASE WHEN quarter='Q2' THEN sales END) AS q2\nFROM sales GROUP BY dept;",
+          "py-pandas": "# pandas pivot_table\ndf.pivot_table(index='dept', columns='quarter', values='sales', aggfunc='sum')"
+        },
+        {
+          "type": "heading",
+          "text": "LATERAL JOIN — Correlated Subquery in FROM"
+        },
+        {
+          "type": "code",
+          "label": "lateral basics",
+          "code": "-- For each employee, get latest order\nSELECT e.name, o.order_date, o.total\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT order_date, total\n  FROM orders o\n  WHERE o.emp_id = e.id\n  ORDER BY o.order_date DESC\n  LIMIT 1\n) o ON true;\n\n-- Equivalent correlated subquery (harder to read)\nSELECT e.name,\n  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_date,\n  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_total\nFROM employees e;",
+          "pg": "-- LATERAL is PostgreSQL standard",
+          "mysql": "-- MySQL 8.0.14+: LATERAL supported\n-- Same syntax",
+          "py-pandas": "# GroupBy + head(1)\nlatest = orders.sort_values('order_date').groupby('emp_id').head(1)\nmerged = employees.merge(latest, left_on='id', right_on='emp_id', how='left')"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"pattern": "LATERAL", "readability": "High — looks like join", "performance": "Same as correlated subquery", "use_case": "Top-N per group, complex per-row logic"},
+              {"pattern": "Correlated Subquery", "readability": "Low — nested in SELECT", "performance": "Same", "use_case": "Single column, simple"},
+              {"pattern": "Window Function", "readability": "Medium", "performance": "Better for full scan", "use_case": "All rows need rank/row_number"}
+            ],
+            "after": [],
+            "highlight": ["readability", "performance"]
+          }
+        },
+{
+              "type": "quiz",
+              "items": [
+                {
+                  "q": "LATERAL subquery can reference:",
+                  "options": [
+                    "Only tables in same FROM",
+                    "Columns from LEFT side of join",
+                    "Only columns from same subquery",
+                    "Global variables only"
+                  ],
+                  "answer": 1,
+                  "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
+                },
+                {
+                  "q": "CROSS JOIN LATERAL vs LEFT JOIN LATERAL:",
+                  "options": [
+                    "Same",
+                    "CROSS = inner (drops left rows with no match), LEFT = preserves left",
+                    "LEFT not allowed with LATERAL",
+                    "CROSS not allowed"
+                  ],
+                  "answer": 1,
+                  "explain": "CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match)."
+                }
+              ]
+            },
+            {
+              "type": "query-plan",
+              "title": "EXPLAIN — LATERAL Join Index Seek",
+              "plan": {
+                "Plan": {
+                  "Node Type": "Nested Loop Left Join",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 5000.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 120,
+                  "Join Filter": "true",
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 185.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 72
+                    },
+                    {
+                      "Node Type": "Subquery Scan",
+                      "Startup Cost": 0.29,
+                      "Total Cost": 0.55,
+                      "Plan Rows": 1,
+                      "Plan Width": 48,
+                      "SubPlan": {
+                        "Node Type": "Limit",
+                        "Startup Cost": 0.29,
+                        "Total Cost": 0.55,
+                        "Plan Rows": 1,
+                        "Plan Width": 48,
+                        "Plans": [
+                          {
+                            "Node Type": "Index Scan",
+                            "Relation Name": "orders",
+                            "Index Name": "idx_orders_emp_date",
+                            "Startup Cost": 0.29,
+                            "Total Cost": 0.55,
+                            "Plan Rows": 1,
+                            "Plan Width": 48,
+                            "Index Cond": "(emp_id = employees.id)",
+                            "Order By": "order_date DESC"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              "dialect": "pg"
+            }
+          ]
+        },
+        {
+          "title": "Advanced Frames — ROWS/RANGE/GROUPS, EXCLUDE",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Frame Clauses Deep Dive"
+        },
+        {
+          "type": "code",
+          "label": "frame syntax",
+          "code": "-- ROWS: physical row count\nSUM(amount) OVER (\n  ORDER BY sale_date\n  ROWS BETWEEN 3 PRECEDING AND CURRENT ROW\n) AS moving_sum_4days\n\n-- RANGE: value-based (ORDER BY must be numeric/date)\nSUM(amount) OVER (\n  ORDER BY sale_date\n  RANGE BETWEEN INTERVAL '3 days' PRECEDING AND CURRENT ROW\n) AS moving_sum_3days\n\n-- Unbounded\nSUM(amount) OVER (\n  ORDER BY sale_date\n  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n) AS total_so_far",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: frame clauses supported",
+          "py-pandas": "# Rolling window\ndf['amount'].rolling(4).sum()  # 4-row window\n\n# Date-based\nfrom pandas import Timedelta\ndf.set_index('sale_date')['amount'].rolling(Timedelta('3D')).sum()"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"frame": "ROWS 3 PRECEDING", "meaning": "Current row + 3 rows before", "use_case": "Moving average N rows"},
+              {"frame": "RANGE 3 PRECEDING", "meaning": "Current row + rows with ORDER BY value within 3", "use_case": "Time-based windows"},
+              {"frame": "UNBOUNDED PRECEDING", "meaning": "All rows from start", "use_case": "Running total"},
+              {"frame": "CURRENT ROW", "meaning": "Only current row", "use_case": "Point lookup"}
+            ],
+            "after": [],
+            "highlight": ["frame"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "RANGE INTERVAL '1 day' PRECEDING with ORDER BY ts includes:",
+              "options": [
+                "Exactly 1 row before",
+                "All rows where ts >= current_ts - 1 day",
+                "Current row only",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "RANGE uses value semantics. All rows with ts within 1 day of current row's ts."
+            },
+            {
+              "q": "ROWS 1 PRECEDING vs RANGE 1 PRECEDING with ORDER BY salary:",
+              "options": [
+                "Same",
+                "ROWS = 1 row before; RANGE = salaries within 1 of current",
+                "RANGE = 1 row; ROWS = salary ± 1",
+                "Both invalid"
+              ],
+              "answer": 1,
+              "explain": "ROWS counts rows. RANGE uses ORDER BY value difference (salary ± 1)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "NTILE, Sampling, Advanced Aggregates",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "NTILE(n) — Equal-Size Buckets"
+        },
+        {
+          "type": "code",
+          "label": "ntile",
+          "code": "-- Quartiles (4 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(4) OVER (ORDER BY salary) AS quartile\nFROM employees;\n\n-- Deciles (10 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(10) OVER (ORDER BY salary) AS decile\nFROM employees;\n\n-- Per department\nSELECT \n  dept_id,\n  name,\n  salary,\n  NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary) AS dept_quartile\nFROM employees;",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: NTILE supported",
+          "py-pandas": "# Quantile bins\ndf['quartile'] = pd.qcut(df['salary'], 4, labels=[1,2,3,4])\n\n# Per group\ndf['dept_quartile'] = df.groupby('dept_id')['salary'].transform(lambda x: pd.qcut(x, 4, labels=[1,2,3,4]))"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows."
+        },
+        {
+          "type": "heading",
+          "text": "TABLESAMPLE — Fast Approximate Queries"
+        },
+        {
+          "type": "code",
+          "label": "tablesample",
+          "code": "-- SYSTEM: page-level sampling\nSELECT * FROM large_table TABLESAMPLE SYSTEM (10);\n-- ~10% of pages\n\n-- BERNOULLI: row-level sampling\nSELECT * FROM large_table TABLESAMPLE BERNOULLI (10);\n-- True 10% of rows, slower\n\n-- Repeatable (deterministic)\nSELECT * FROM large_table TABLESAMPLE SYSTEM (10) REPEATABLE (42);",
+          "pg": "-- SYSTEM (page-level) vs BERNOULLI (row-level)",
+          "mysql": "-- MySQL: no TABLESAMPLE\n-- Use: WHERE RAND() < 0.1",
+          "py-pandas": "# df.sample(frac=0.1)"
+        },
+        {
+          "type": "heading",
+          "text": "Advanced Aggregates — FILTER, Percentile, Approximate"
+        },
+        {
+          "type": "code",
+          "label": "filter clause / percentile",
+          "code": "-- FILTER: conditional aggregate in one scan\nSELECT dept_id,\n  COUNT(*) FILTER (WHERE status = 'active') AS active_cnt,\n  COUNT(*) FILTER (WHERE status = 'pending') AS pending_cnt\nFROM employees\nGROUP BY dept_id;\n\n-- Percentile aggregates\nSELECT \n  percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) AS median,\n  percentile_disc(0.5) WITHIN GROUP (ORDER BY salary) AS median_discrete\nFROM employees;\n\n-- With GROUP BY\nSELECT dept_id,\n  percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) AS median_sal\nFROM employees\nGROUP BY dept_id;",
+          "pg": "-- FILTER is PostgreSQL standard",
+          "mysql": "-- MySQL 8.0+: no FILTER; use SUM(CASE...)\n-- PERCENTILE_CONT/DISC in 8.0+",
+          "py-pandas": "# FILTER equivalent\nactive_cnt = df[df['status']=='active'].groupby('dept_id').size()\n\n# Quantiles\ndf.groupby('dept_id')['salary'].quantile(0.5)"
+        },
+{
+          "type": "code",
+          "label": "ntile",
+          "code": "-- Quartiles (4 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(4) OVER (ORDER BY salary) AS quartile\nFROM employees;\n\n-- Deciles (10 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(10) OVER (ORDER BY salary) AS decile\nFROM employees;\n\n-- Per department\nSELECT \n  dept_id,\n  name,\n  salary,\n  NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary) AS dept_quartile\nFROM employees;",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: NTILE supported",
+          "py-pandas": "# Quantile bins\ndf['quartile'] = pd.qcut(df['salary'], 4, labels=[1,2,3,4])\n\n# Per group\ndf['dept_quartile'] = df.groupby('dept_id')['salary'].transform(lambda x: pd.qcut(x, 4, labels=[1,2,3,4]))"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows."
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — NTILE Partition Sort",
+          "plan": {
+            "Plan": {
+              "Node Type": "WindowAgg",
+              "Startup Cost": 50.00,
+              "Total Cost": 300.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 200.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 40,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 185.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 40
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "percentile_cont(0.5) on [10, 20, 30, 40] returns:",
+              "options": [
+                "20",
+                "25",
+                "30",
+                "15"
+              ],
+              "answer": 1,
+              "explain": "Even count (4): cont interpolates between 20 and 30 = 25. disc = 20 (lower middle)."
+            },
+            {
+              "q": "STRING_AGG with ORDER BY inside aggregate:",
+              "options": [
+                "Syntax error",
+                "Orders concatenated values by that column",
+                "Orders groups",
+                "Only works with FILTER"
+              ],
+              "answer": 1,
+              "explain": "STRING_AGG(x, ',' ORDER BY y) sorts the x values by y before concatenation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "X101",
+              "tier": 1,
+              "title": "Department × Quarter Sales Matrix",
+              "platform": "drill",
+              "patterns": ["crosstab"],
+              "statement": "Create cross-tabulation: departments as rows, quarters as columns, sales as values.",
+              "hints": ["crosstab() from tablefunc"]
+            },
+            {
+              "id": "X102",
+              "tier": 1,
+              "title": "Latest Order per Customer (LATERAL)",
+              "platform": "drill",
+              "patterns": ["lateral-join"],
+              "statement": "For each customer, show their most recent order date and total.",
+              "hints": ["LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"]
+            },
+            {
+              "id": "X103",
+              "tier": 1,
+              "title": "4-Row Moving Average",
+              "platform": "drill",
+              "patterns": ["frame-rows"],
+              "statement": "Compute 4-row moving average of daily sales (current + 3 preceding).",
+              "hints": ["ROWS BETWEEN 3 PRECEDING AND CURRENT ROW"]
+            },
+            {
+              "id": "X104",
+              "tier": 1,
+              "title": "7-Day Moving Sum (RANGE)",
+              "platform": "drill",
+              "patterns": ["frame-range"],
+              "statement": "Sum of sales for each day + previous 6 days using RANGE.",
+              "hints": ["RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW"]
+            },
+            {
+              "id": "X105",
+              "tier": 1,
+              "title": "Quartile Assignment",
+              "platform": "drill",
+              "patterns": ["ntile"],
+              "statement": "Assign each employee to a salary quartile (1-4) within their department.",
+              "hints": ["NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)"]
+            },
+            {
+              "id": "X106",
+              "tier": 1,
+              "title": "Conditional Counts with FILTER",
+              "platform": "drill",
+              "patterns": ["filter-clause"],
+              "statement": "Per department: count of active, pending, inactive employees using FILTER.",
+              "hints": ["COUNT(*) FILTER (WHERE status = 'active')"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "PIVOT/crosstab: rows → columns; PostgreSQL uses crosstab() from tablefunc",
+    "LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer",
+    "Frame clauses: ROWS = row count; RANGE = ORDER BY value distance; GROUPS = peer groups",
+    "NTILE(n) = n buckets; extra rows to first buckets",
+    "TABLESAMPLE SYSTEM/BERNOULLI for approximate queries",
+    "FILTER clause: conditional aggregate in one scan; cleaner than CASE"
+  ],
+  "glossary": [
+    { "term": "crosstab", "def": "PostgreSQL function (tablefunc) for pivot/cross-tabulation." },
+    { "term": "LATERAL join", "def": "Right subquery references left columns. Like correlated subquery in FROM clause." },
+    { "term": "frame clause", "def": "ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row." },
+    { "term": "NTILE", "def": "Divides partition into n roughly equal buckets (1..n)." },
+    { "term": "TABLESAMPLE", "def": "Fast approximate sampling of tables (SYSTEM = page-level, BERNOULLI = row-level)." },
+    { "term": "FILTER clause", "def": "Conditional aggregate: AGG(expr) FILTER (WHERE condition)." }
+  ]
+}

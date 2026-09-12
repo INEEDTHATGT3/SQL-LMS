@@ -1,0 +1,353 @@
+{
+  "level": 1,
+  "title": "Performance & Indexing",
+  "tagline": "EXPLAIN, indexes, statistics — make queries fast",
+  "placementQuiz": [
+    {
+      "q": "EXPLAIN shows:",
+      "options": [
+        "Actual execution time",
+        "Estimated query plan with costs",
+        "Actual rows returned",
+        "Index usage statistics"
+      ],
+      "answer": 1,
+      "explain": "EXPLAIN shows the planner's estimated plan with startup/total costs. EXPLAIN ANALYZE runs the query and shows actuals."
+    },
+    {
+      "q": "A B-tree index helps with:",
+      "options": [
+        "Exact match (=) and range queries (> < BETWEEN)",
+        "Only exact match (=)",
+        "Only full-text search",
+        "Only ORDER BY"
+      ],
+      "answer": 0,
+      "explain": "B-tree indexes support equality, inequality, range, and ORDER BY on the indexed column(s)."
+    },
+    {
+      "q": "Seq Scan vs Index Scan — Seq Scan is chosen when:",
+      "options": [
+        "Table is small or query returns large % of rows",
+        "Index doesn't exist",
+        "Query has no WHERE clause",
+        "All of the above"
+      ],
+      "answer": 3,
+      "explain": "Seq Scan is faster for small tables or when query touches large fraction of table (random I/O cost > sequential I/O)."
+    },
+    {
+      "q": "Composite index (a, b) can be used for:",
+      "options": [
+        "WHERE a = 1 AND b = 2",
+        "WHERE a = 1",
+        "WHERE b = 2",
+        "A and B"
+      ],
+      "answer": 3,
+      "explain": "Composite index (a,b) supports queries on a alone, or a+b together. Leading column matters!"
+    },
+    {
+      "q": "Index on (dept_id, salary DESC) helps query:",
+      "options": [
+        "WHERE dept_id = 5 ORDER BY salary DESC LIMIT 10",
+        "WHERE salary > 50000",
+        "WHERE dept_id = 5",
+        "Both A and C"
+      ],
+      "answer": 3,
+      "explain": "Index (dept_id, salary DESC) supports both equality on dept_id and ORDER BY salary DESC within that dept."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — The Library Catalog",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "An index is like a library catalog. Without it, you scan every book (Seq Scan). With it, you jump straight to the shelf (Index Scan). But catalogs take space and slow down writes — use wisely."
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"scan_type": "Seq Scan", "cost": "O(N)", "when": "Small table, no index, or large % of rows", "example": "SELECT * FROM users"},
+              {"scan_type": "Index Scan", "cost": "O(log N + K)", "when": "Index exists, selective WHERE", "example": "WHERE id = 5"},
+              {"scan_type": "Index Only Scan", "cost": "O(log N + K)", "when": "All columns in index", "example": "SELECT id FROM users WHERE id = 5"},
+              {"scan_type": "Bitmap Index Scan", "cost": "O(log N + pages)", "when": "Multiple indexes combined", "example": "WHERE a=1 AND b=2"}
+            ],
+            "after": [],
+            "highlight": ["scan_type"]
+          }
+        },
+        {
+          "type": "list",
+          "items": [
+            "Seq Scan: reads every page sequentially — O(N) but sequential I/O",
+            "Index Scan: B-tree lookup + heap fetch — O(log N + K) but random I/O",
+            "Index Only Scan: all columns in index — no heap fetch",
+            "Bitmap Index Scan: combines multiple indexes, builds bitmap, then heap fetch"
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Seq Scan vs Index Scan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "employees",
+              "Startup Cost": 0.00,
+              "Total Cost": 185.00,
+              "Plan Rows": 8500,
+              "Plan Width": 72,
+              "Filter": "(salary > 50000)"
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "EXPLAIN & EXPLAIN ANALYZE",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Reading the Plan"
+        },
+        {
+          "type": "code",
+          "label": "explain basics",
+          "code": "-- Estimated plan (no execution)\nEXPLAIN SELECT * FROM employees WHERE salary > 50000;\n\n-- Actual execution + actuals\nEXPLAIN ANALYZE SELECT * FROM employees WHERE salary > 50000;\n\n-- With buffers (I/O detail)\nEXPLAIN (ANALYZE, BUFFERS) SELECT * FROM employees WHERE salary > 50000;\n\n-- JSON format (machine-readable)\nEXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT * FROM employees WHERE salary > 50000;",
+          "pg": "-- Full options: ANALYZE, BUFFERS, FORMAT, SETTINGS, WAL, TIMING",
+          "mysql": "-- MySQL: EXPLAIN FORMAT=JSON, EXPLAIN ANALYZE (8.0.18+)",
+          "py-pandas": "# No query planner; use %timeit for timing"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"metric": "Startup Cost", "meaning": "Cost before first row returned", "unit": "arbitrary planner units"},
+              {"metric": "Total Cost", "meaning": "Total estimated cost", "unit": "arbitrary planner units"},
+              {"metric": "Plan Rows", "meaning": "Estimated rows output", "unit": "rows"},
+              {"metric": "Plan Width", "meaning": "Estimated avg row size", "unit": "bytes"},
+              {"metric": "Actual Time", "meaning": "Actual ms (ANALYZE)", "unit": "milliseconds"},
+              {"metric": "Actual Rows", "meaning": "Actual rows output", "unit": "rows"}
+            ],
+            "after": [],
+            "highlight": ["metric"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "EXPLAIN vs EXPLAIN ANALYZE — key difference:",
+              "options": [
+                "ANALYZE runs the query; EXPLAIN only plans",
+                "ANALYZE is faster",
+                "EXPLAIN shows actual rows",
+                "No difference"
+              ],
+              "answer": 0,
+              "explain": "EXPLAIN = planner's estimate. ANALYZE = runs query, shows actual time/rows."
+            },
+{
+              "q": "Buffers in EXPLAIN (ANALYZE, BUFFERS) show:",
+              "options": [
+                "Memory usage",
+                "Shared hit/read/dirtied blocks",
+                "CPU usage",
+                "Network I/O"
+              ],
+              "answer": 1,
+              "explain": "Buffers show shared hit (cache), shared read (disk), dirtied (modified), written (flushed)."
+            },
+            {
+              "q": "EXPLAIN ANALYZE shows 'Actual Rows=1000, Plan Rows=100' — what does this mean?",
+              "options": [
+                "Plan was perfect",
+                "Planner underestimated by 10x",
+                "Query returned fewer rows",
+                "Index is corrupted"
+              ],
+              "answer": 1,
+              "explain": "Planner estimated 100 rows but actual was 1000. Statistics may be stale (run ANALYZE)."
+            },
+            {
+              "q": "Buffers in EXPLAIN (ANALYZE, BUFFERS) show:",
+              "options": [
+                "Memory usage",
+                "Shared hit/read/dirtied blocks",
+                "CPU usage",
+                "Network I/O"
+              ],
+              "answer": 1,
+              "explain": "Buffers show shared hit (cache), shared read (disk), dirtied (modified), written (flushed)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Indexes — B-tree, Composite, Partial, Covering",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "B-tree Index Basics"
+        },
+        {
+          "type": "code",
+          "label": "create index",
+          "code": "-- Single column\nCREATE INDEX idx_emp_salary ON employees (salary);\n\n-- Composite (order matters!)\nCREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);\n\n-- Partial (filtered)\nCREATE INDEX idx_active_emp ON employees (salary) WHERE status = 'active';\n\n-- Covering (INCLUDE)\nCREATE INDEX idx_emp_salary_name ON employees (salary) INCLUDE (name);\n\n-- Expression index\nCREATE INDEX idx_emp_annual ON employees ((salary * 12));\n\n-- Drop index\nDROP INDEX idx_emp_salary;",
+          "pg": "-- Partial, INCLUDE, expression indexes supported",
+          "mysql": "-- MySQL 8.0+: partial (WHERE), INCLUDE (8.0.13+), expression indexes",
+          "py-pandas": "# No DDL; use df.set_index() for lookup"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"index_type": "B-tree", "supports": "=, <, >, <=, >=, BETWEEN, IN, LIKE 'prefix%'", "use_case": "Default, general purpose"},
+              {"index_type": "Partial", "supports": "WHERE clause filters rows", "use_case": "Small subset queries (active users)"},
+              {"index_type": "Covering (INCLUDE)", "supports": "Index-only scan", "use_case": "SELECT col1, col2 WHERE key = ?"},
+              {"index_type": "Expression", "supports": "Index on f(col)", "use_case": "WHERE LOWER(email) = ?"}
+            ],
+            "after": [],
+            "highlight": ["index_type"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Composite index (a, b) — query WHERE a = 1 uses index?",
+              "options": [
+                "Yes",
+                "No",
+                "Only if b is also in WHERE",
+                "Only if b is in ORDER BY"
+              ],
+              "answer": 0,
+              "explain": "Leading column of composite index can be used alone. (a,b) works for WHERE a=1."
+            },
+            {
+              "q": "Partial index WHERE status='active' helps query:",
+              "options": [
+                "WHERE status = 'active'",
+                "WHERE status = 'inactive'",
+                "Both",
+                "Neither"
+              ],
+              "answer": 0,
+              "explain": "Partial index only contains rows matching its WHERE clause. Only helps matching queries."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Index Scan vs Seq Scan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Index Scan",
+              "Relation Name": "employees",
+              "Index Name": "idx_emp_dept",
+              "Startup Cost": 0.29,
+              "Total Cost": 8.30,
+              "Plan Rows": 1,
+              "Plan Width": 72,
+              "Index Cond": "(dept_id = 3)",
+              "Actual Startup Time": 0.015,
+              "Actual Total Time": 0.045,
+              "Actual Rows": 1,
+              "Actual Loops": 1
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "P101",
+              "tier": 1,
+              "title": "EXPLAIN Simple Query",
+              "platform": "drill",
+              "patterns": ["explain"],
+              "statement": "Run EXPLAIN on SELECT * FROM employees WHERE dept_id = 3. Identify scan type.",
+              "hints": ["Look for Seq Scan vs Index Scan"]
+            },
+            {
+              "id": "P102",
+              "tier": 1,
+              "title": "Create Index for Dept Filter",
+              "platform": "drill",
+              "patterns": ["create-index"],
+              "statement": "Create index to speed up WHERE dept_id = 5.",
+              "hints": ["CREATE INDEX ON employees (dept_id)"]
+            },
+            {
+              "id": "P103",
+              "tier": 1,
+              "title": "Composite Index for Dept + Salary",
+              "platform": "drill",
+              "patterns": ["composite-index"],
+              "statement": "Optimize: WHERE dept_id = 3 ORDER BY salary DESC LIMIT 5.",
+              "hints": ["CREATE INDEX ON employees (dept_id, salary DESC)"]
+            },
+            {
+              "id": "P104",
+              "tier": 1,
+              "title": "Partial Index for Active Users",
+              "platform": "drill",
+              "patterns": ["partial-index"],
+              "statement": "90% queries filter status='active'. Create partial index on users(last_login).",
+              "hints": ["WHERE status = 'active'"]
+            },
+            {
+              "id": "P105",
+              "tier": 1,
+              "title": "Covering Index for Name Lookup",
+              "platform": "drill",
+              "patterns": ["covering-index"],
+              "statement": "Query: SELECT name FROM users WHERE id = 123. Create covering index.",
+              "hints": ["INCLUDE (name)"]
+            },
+            {
+              "id": "P106",
+              "tier": 1,
+              "title": "Expression Index for Email Domain",
+              "platform": "drill",
+              "patterns": ["expression-index"],
+              "statement": "Speed up: WHERE email LIKE '%@company.com'. Use expression index.",
+              "hints": ["CREATE INDEX ON users ((SUBSTRING(email FROM '@.*')))"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "EXPLAIN = plan; EXPLAIN ANALYZE = plan + actuals",
+    "Seq Scan = full table; Index Scan = B-tree lookup + heap fetch; Index Only Scan = no heap fetch",
+    "Composite index: leading column first; (a,b) works for WHERE a=1 but not WHERE b=2",
+    "Partial index = WHERE clause on index; smaller, faster for filtered queries",
+    "Covering index (INCLUDE): all needed columns in index → Index Only Scan",
+    "Expression index: index on f(col) for WHERE f(col) = ?"
+  ],
+  "glossary": [
+    { "term": "Seq Scan", "def": "Sequential scan — reads every table page sequentially." },
+    { "term": "Index Scan", "def": "Uses B-tree index to find matching rows, then fetches from heap." },
+    { "term": "Index Only Scan", "def": "All required columns in index; no heap fetch needed." },
+    { "term": "Bitmap Index Scan", "def": "Combines multiple indexes via bitmap; good for AND/OR conditions." },
+    { "term": "Partial Index", "def": "Index with WHERE clause — only indexes subset of rows." },
+    { "term": "Covering Index", "def": "Index with INCLUDE columns — satisfies query without heap access." }
+  ]
+}

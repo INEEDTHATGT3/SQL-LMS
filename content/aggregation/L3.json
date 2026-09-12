@@ -1,0 +1,367 @@
+{
+  "level": 3,
+  "title": "Aggregation & Grouping",
+  "tagline": "windowed aggregates, FILTER clause, approximate aggregates, percentile",
+  "placementQuiz": [
+    {
+      "q": "FILTER clause in aggregate: SUM(salary) FILTER (WHERE dept_id=1):",
+      "options": [
+        "Same as WHERE dept_id=1 before GROUP BY",
+        "Conditional aggregate within group — only rows matching filter contribute",
+        "Syntax error",
+        "Filters the entire result set"
+      ],
+      "answer": 1,
+      "explain": "FILTER applies condition inside aggregate — only matching rows contribute to that aggregate."
+    },
+    {
+      "q": "percentile_cont(0.5) WITHIN GROUP (ORDER BY salary):",
+      "options": [
+        "Average salary",
+        "Median salary",
+        "5th percentile salary",
+        "50% of rows"
+      ],
+      "answer": 1,
+      "explain": "percentile_cont(0.5) = continuous percentile at 0.5 = median."
+    },
+    {
+      "q": "approx_count_distinct(col) vs COUNT(DISTINCT col):",
+      "options": [
+        "Same result, approx is faster",
+        "approx is exact, COUNT DISTINCT is approximate",
+        "approx only works on integers",
+        "COUNT DISTINCT is deprecated"
+      ],
+      "answer": 0,
+      "explain": "Approximate aggregates (HyperLogLog) trade small error for massive speed on large datasets."
+    },
+    {
+      "q": "percentile_disc vs percentile_cont:",
+      "options": [
+        "Same",
+        "disc = discrete (actual value), cont = interpolated",
+        "cont = discrete, disc = continuous",
+        "Only disc exists"
+      ],
+      "answer": 1,
+      "explain": "disc = existing value at percentile; cont = interpolated between values."
+    },
+    {
+      "q": "STRING_AGG(name, ', ') ORDER BY salary DESC:",
+      "options": [
+        "Syntax error",
+        "Concatenates names ordered by salary descending",
+        "Orders by name",
+        "Only works with FILTER"
+      ],
+      "answer": 1,
+      "explain": "STRING_AGG supports ORDER BY inside aggregate for custom ordering."
+    }
+  ],
+  "sections": [
+    {
+      "title": "FILTER Clause — Conditional Aggregation",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "FILTER = conditional aggregate without CASE. One scan, multiple aggregates with different conditions. Cleaner than SUM(CASE...), optimizer-friendly, index-friendly."
+        },
+        {
+          "type": "code",
+          "label": "filter clause",
+          "code": "-- Count active employees per dept\nSELECT dept_id,\n  COUNT(*) FILTER (WHERE status = 'active') AS active_cnt,\n  COUNT(*) FILTER (WHERE status = 'pending') AS pending_cnt,\n  COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_cnt\nFROM employees\nGROUP BY dept_id;\n\n-- Equivalent CASE (verbose, less readable)\nSELECT dept_id,\n  SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active_cnt,\n  SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_cnt\nFROM employees GROUP BY dept_id;\n\n-- Multiple aggregates, different filters\nSELECT dept_id,\n  AVG(salary) FILTER (WHERE status = 'active') AS avg_active,\n  AVG(salary) FILTER (WHERE status = 'pending') AS avg_pending\nFROM employees GROUP BY dept_id;",
+          "pg": "-- FILTER is PostgreSQL standard",
+          "mysql": "-- MySQL: no FILTER clause\n-- Use SUM(CASE WHEN ... THEN 1 ELSE 0 END)",
+          "py-pandas": "# Boolean indexing\nactive_avg = df[df['status']=='active'].groupby('dept_id')['salary'].mean()\npending_avg = df[df['status']=='pending'].groupby('dept_id')['salary'].mean()"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"method": "FILTER", "readability": "High — condition inline", "performance": "Single scan, optimizer can use indexes", "portability": "PostgreSQL, standard SQL"},
+              {"method": "CASE SUM", "readability": "Medium — verbose", "performance": "Same as FILTER (optimizer converts)", "portability": "All databases"},
+              {"method": "Multiple subqueries", "readability": "Low — verbose", "performance": "Multiple scans", "portability": "All databases"}
+            ],
+            "after": [],
+            "highlight": ["readability", "performance"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "FILTER can be used with:",
+              "options": [
+                "Only COUNT",
+                "All aggregate functions (SUM, AVG, MIN, MAX, etc.)",
+                "Only COUNT and SUM",
+                "Only window functions"
+              ],
+              "answer": 1,
+              "explain": "FILTER works with any aggregate: COUNT, SUM, AVG, MIN, MAX, STRING_AGG, percentile, etc."
+            },
+            {
+              "q": "FILTER vs WHERE before GROUP BY:",
+              "options": [
+                "Same",
+                "FILTER keeps row for other aggregates; WHERE removes row entirely",
+                "WHERE is faster",
+                "FILTER only works with COUNT"
+              ],
+              "answer": 1,
+              "explain": "WHERE removes row from all aggregates. FILTER only affects that specific aggregate — row still contributes to others."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Approximate Aggregates — HyperLogLog, Percentile",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Approximate Count Distinct"
+        },
+        {
+          "type": "code",
+          "label": "approx_count_distinct",
+          "code": "-- Exact (slow on large tables)\nSELECT COUNT(DISTINCT user_id) FROM events;\n\n-- Approximate (fast, ~1-2% error)\nSELECT approx_count_distinct(user_id) FROM events;\n\n-- With GROUP BY\nSELECT dept_id, approx_count_distinct(user_id)\nFROM events\nGROUP BY dept_id;\n\n-- Precision control (PostgreSQL: hyperloglog extension)\nSELECT approx_count_distinct(user_id, 12) FROM events;\n-- 12 = log2m parameter, higher = more accurate, more memory",
+          "pg": "-- HyperLogLog via approx_count_distinct (requires extension)\n-- Or use hyperloglog extension directly",
+          "mysql": "-- MySQL: APPROX_COUNT_DISTINCT() (8.0.13+)\nSELECT APPROX_COUNT_DISTINCT(user_id) FROM events;",
+          "py-pandas": "# Exact\ndf['user_id'].nunique()\n\n# Approximate (datasketches, hyperstream)"
+        },
+        {
+          "type": "heading",
+          "text": "Percentile Aggregates"
+        },
+        {
+          "type": "code",
+          "label": "percentile functions",
+          "code": "-- Continuous percentile (interpolated)\nSELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM employees;\n-- Median\n\n-- Discrete percentile (actual value)\nSELECT percentile_disc(0.5) WITHIN GROUP (ORDER BY salary) FROM employees;\n\n-- Multiple percentiles\nSELECT \n  percentile_cont(0.25) WITHIN GROUP (ORDER BY salary) AS p25,\n  percentile_cont(0.50) WITHIN GROUP (ORDER BY salary) AS p50,\n  percentile_cont(0.75) WITHIN GROUP (ORDER BY salary) AS p75\nFROM employees;\n\n-- With GROUP BY\nSELECT dept_id,\n  percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) AS median_sal\nFROM employees\nGROUP BY dept_id;",
+          "pg": "-- percentile_cont / percentile_disc standard",
+          "mysql": "-- MySQL 8.0+: PERCENTILE_CONT, PERCENTILE_DISC\nSELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) FROM employees;",
+          "py-pandas": "# Quantiles\ndf.groupby('dept_id')['salary'].quantile(0.5)\n\n# Multiple\ndf.groupby('dept_id')['salary'].quantile([0.25, 0.5, 0.75])"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "percentile_cont = interpolated (may return non-existent value). percentile_disc = actual value from dataset. For median of even count: cont = avg of middle two, disc = lower middle."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "approx_count_distinct uses:",
+              "options": [
+                "B-tree index",
+                "HyperLogLog sketch",
+                "Hash table",
+                "Bitmap index"
+              ],
+              "answer": 1,
+              "explain": "HyperLogLog probabilistic counter — O(1) memory, ~1-2% error."
+            },
+            {
+              "q": "percentile_cont(0.5) on [10, 20, 30, 40] returns:",
+              "options": [
+                "20",
+                "25",
+                "30",
+                "15"
+              ],
+              "answer": 1,
+              "explain": "Even count (4): cont interpolates between 20 and 30 = 25. disc = 20 (lower middle)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Advanced Aggregates — STRING_AGG, JSON_AGG, MODE",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "String & JSON Aggregation"
+        },
+        {
+          "type": "code",
+          "label": "string_agg / json_agg",
+          "code": "-- Concatenate with delimiter\nSELECT dept_id, STRING_AGG(name, ', ') AS employees\nFROM employees\nGROUP BY dept_id;\n\n-- With ORDER BY inside aggregate\nSELECT dept_id, STRING_AGG(name, ', ' ORDER BY salary DESC) AS top_paid_first\nFROM employees\nGROUP BY dept_id;\n\n-- JSON aggregation (PostgreSQL)\nSELECT dept_id, JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))\nFROM employees\nGROUP BY dept_id;\n\n-- JSON object aggregation\nSELECT JSON_OBJECT_AGG(dept_id, cnt) FROM (\n  SELECT dept_id, COUNT(*) AS cnt FROM employees GROUP BY dept_id\n) t;",
+          "pg": "-- STRING_AGG, JSON_AGG, JSON_OBJECT_AGG, JSONB_AGG",
+          "mysql": "-- GROUP_CONCAT (no ORDER BY in 5.7, 8.0 supports)\nSELECT dept_id, GROUP_CONCAT(name ORDER BY salary DESC SEPARATOR ', ') FROM employees GROUP BY dept_id;\n\n-- JSON_ARRAYAGG, JSON_OBJECTAGG (8.0+)",
+          "py-pandas": "# String aggregation\ndf.groupby('dept_id')['name'].apply(', '.join)\n\n# With sort\ndf.sort_values('salary', ascending=False).groupby('dept_id')['name'].apply(', '.join)\n\n# JSON\ndf.groupby('dept_id').apply(lambda x: x[['name','salary']].to_dict('records')).reset_index()"
+        },
+        {
+          "type": "heading",
+          "text": "Mode & Statistical Aggregates"
+        },
+        {
+          "type": "code",
+          "label": "mode / stats",
+          "code": "-- Mode (most frequent value) — PostgreSQL 15+\nSELECT mode() WITHIN GROUP (ORDER BY status) FROM employees;\n-- Per group\nSELECT dept_id, mode() WITHIN GROUP (ORDER BY status)\nFROM employees\nGROUP BY dept_id;\n\n-- Standard deviation, variance\nSELECT dept_id,\n  STDDEV(salary) AS stddev,\n  VARIANCE(salary) AS var\nFROM employees\nGROUP BY dept_id;\n\n-- Correlation\nSELECT CORR(salary, years_exp) FROM employees;",
+          "pg": "-- mode(), stddev, variance, corr, covar_pop, regr_*",
+          "mysql": "-- STDDEV, VARIANCE, CORR (8.0+)\n-- No MODE() function",
+          "py-pandas": "# Mode\ndf.groupby('dept_id')['status'].agg(lambda x: x.mode().iloc[0] if not x.mode().empty else None)\n\n# Stats\ndf.groupby('dept_id')['salary'].agg(['std', 'var'])"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "STRING_AGG with ORDER BY inside aggregate:",
+              "options": [
+                "Syntax error",
+                "Orders concatenated values by that column",
+                "Orders groups",
+                "Only works with FILTER"
+              ],
+              "answer": 1,
+              "explain": "STRING_AGG(x, ',' ORDER BY y) sorts the x values by y before concatenation."
+            },
+            {
+              "q": "JSON_AGG vs JSONB_AGG:",
+              "options": [
+                "Same",
+                "JSON_AGG = text, JSONB_AGG = binary (faster to process)",
+                "JSONB_AGG deprecated",
+                "Only JSON_AGG exists"
+              ],
+              "answer": 1,
+              "explain": "JSONB_AGG returns binary JSONB — faster to query, smaller storage."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — FILTER Aggregate",
+          "plan": {
+            "Plan": {
+              "Node Type": "GroupAggregate",
+              "Strategy": "Sorted",
+              "Group Key": ["dept_id"],
+              "Startup Cost": 100.00,
+              "Total Cost": 500.00,
+              "Plan Rows": 5,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 450.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 40,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 185.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 40,
+                      "Filter": "(status = 'active')"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Dialect Differences — Percentile",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;",
+          "pg": "SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;",
+          "mysql": "SELECT dept_id, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id; -- 8.0+",
+          "py-pandas": "df.groupby('dept_id')['salary'].quantile(0.5)",
+          "py-sqlalchemy": "session.query(func.percentile_cont(0.5).within_group(Employee.salary)).group_by(Employee.dept_id)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L3 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "A301",
+              "tier": 3,
+              "title": "Conditional Counts with FILTER",
+              "platform": "drill",
+              "patterns": ["filter-clause"],
+              "statement": "Per department: count of active, pending, inactive employees using FILTER.",
+              "hints": ["COUNT(*) FILTER (WHERE status = 'active')"]
+            },
+            {
+              "id": "A302",
+              "tier": 3,
+              "title": "Median Salary per Department",
+              "platform": "drill",
+              "patterns": ["percentile"],
+              "statement": "Median salary per department using percentile_cont.",
+              "hints": ["percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)"]
+            },
+            {
+              "id": "A303",
+              "tier": 3,
+              "title": "Approximate Unique Users",
+              "platform": "drill",
+              "patterns": ["approx-aggregate"],
+              "statement": "Approximate distinct user count per day from events table.",
+              "hints": ["approx_count_distinct(user_id)"]
+            },
+            {
+              "id": "A304",
+              "tier": 3,
+              "title": "Top 3 Earners per Dept (STRING_AGG)",
+              "platform": "drill",
+              "patterns": ["string-agg"],
+              "statement": "Concatenate top 3 employee names by salary per department.",
+              "hints": ["STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3"]
+            },
+            {
+              "id": "A304",
+              "tier": 3,
+              "title": "JSON Payload per Department",
+              "platform": "drill",
+              "patterns": ["json-agg"],
+              "statement": "Return JSON array of {name, salary} objects per department.",
+              "hints": ["JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))"]
+            },
+            {
+              "id": "A306",
+              "tier": 3,
+              "title": "Mode Status per Department",
+              "platform": "drill",
+              "patterns": ["mode"],
+              "statement": "Most common employee status per department (PostgreSQL 15+).",
+              "hints": ["mode() WITHIN GROUP (ORDER BY status)"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "FILTER: conditional aggregate in one scan; cleaner than CASE, optimizer-friendly",
+    "percentile_cont(0.5) = median (interpolated); percentile_disc = actual value",
+    "approx_count_distinct = HyperLogLog, ~1-2% error, O(1) memory",
+    "STRING_AGG with ORDER BY inside aggregate for custom sort",
+    "JSON_AGG/JSONB_AGG for nested JSON output",
+    "mode() WITHIN GROUP = most frequent value (PG 15+)"
+  ],
+  "glossary": [
+    { "term": "FILTER clause", "def": "Conditional aggregate: AGG(expr) FILTER (WHERE condition). Row contributes only if condition true." },
+    { "term": "percentile_cont", "def": "Continuous percentile — interpolates between values for exact percentile." },
+    { "term": "percentile_disc", "def": "Discrete percentile — returns actual value from dataset at percentile." },
+    { "term": "HyperLogLog", "def": "Probabilistic algorithm for approximate distinct count with fixed memory." },
+    { "term": "STRING_AGG", "def": "Concatenates values with delimiter; supports ORDER BY inside aggregate." },
+    { "term": "JSON_AGG", "def": "Aggregates rows into JSON array; JSONB_AGG returns binary JSONB." }
+  ]
+}

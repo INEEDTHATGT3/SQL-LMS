@@ -1,0 +1,368 @@
+{
+  "level": 3,
+  "title": "Window Functions",
+  "tagline": "advanced frames, nested windows, performance, optimization",
+  "placementQuiz": [
+    {
+      "q": "Window function in WHERE clause:",
+      "options": [
+        "Allowed",
+        "Not allowed - use CTE/subquery",
+        "Only with FILTER",
+        "Only in PostgreSQL"
+      ],
+      "answer": 1,
+      "explain": "Window functions not allowed in WHERE/HAVING. Wrap in CTE/subquery and filter outer query."
+    },
+    {
+      "q": "Performance: window function vs self-join for running total:",
+      "options": [
+        "Self-join faster",
+        "Window function faster (single scan)",
+        "Same",
+        "Depends on data size"
+      ],
+      "answer": 1,
+      "explain": "Window function = single pass. Self-join = N² or requires index. Window function scales O(N log N)."
+    },
+    {
+      "q": "PARTITION BY on large column (high cardinality) vs small:",
+      "options": [
+        "No difference",
+        "High cardinality = more partitions = more memory for sort",
+        "High cardinality = faster",
+        "Low cardinality = more memory"
+      ],
+      "answer": 1,
+      "explain": "More partitions = more sort buffers. Very high cardinality can exceed work_mem → disk spill."
+    },
+    {
+      "q": "Frame exclusion EXCLUDE TIES with RANGE:",
+      "options": [
+        "Excludes current row only",
+        "Excludes all rows with same ORDER BY value as current",
+        "Excludes all rows in partition",
+        "Syntax error"
+      ],
+      "answer": 1,
+      "explain": "EXCLUDE TIES removes all rows with same ORDER BY value as current row (all peers)."
+    },
+    {
+      "q": "Window function in SELECT vs CTE for reuse:",
+      "options": [
+        "Same performance",
+        "CTE allows reuse + predicate pushdown",
+        "Direct SELECT faster",
+        "Window functions not allowed in CTE"
+      ],
+      "answer": 1,
+      "explain": "CTE materializes window results once. Reuse in multiple outer queries. Planner can push predicates."
+    },
+    {
+      "q": "Two window functions with same PARTITION+ORDER — execution:",
+      "options": [
+        "Two separate sorts",
+        "Single sort, two window passes",
+        "Single sort, single pass",
+        "Error"
+      ],
+      "answer": 1,
+      "explain": "Same PARTITION+ORDER = single sort. Each function = separate WindowAgg pass over sorted data."
+    },
+    {
+      "q": "Window function in CTE can be referenced in outer query:",
+      "options": [
+        "Only in SELECT",
+        "In SELECT, WHERE, ORDER BY of outer query",
+        "Only in ORDER BY",
+        "Not allowed"
+      ],
+      "answer": 1,
+      "explain": "CTE materializes window result. Outer query can filter (WHERE) on window result."
+    },
+    {
+      "q": "work_mem affects window functions by:",
+      "options": [
+        "Controlling result set size",
+        "Setting sort memory for WindowAgg sort phase",
+        "Limiting output rows",
+        "No effect"
+      ],
+      "answer": 1,
+      "explain": "work_mem controls memory for sort phase of WindowAgg. Low work_mem = disk spill."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Nested Windows & CTE Patterns",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Window functions can't nest directly. Use CTE to chain: inner CTE computes window, outer applies another window. This enables complex patterns like 'moving average of ranks' or 'rank of running totals'."
+        },
+        {
+          "type": "code",
+          "label": "nested windows via CTE",
+          "code": "-- Moving average of row numbers (smooth rank)\nWITH ranked AS (\n  SELECT \n    name,\n    salary,\n    ROW_NUMBER() OVER (ORDER BY salary) AS rn\n  FROM employees\n)\nSELECT \n  name,\n  salary,\n  rn,\n  AVG(rn) OVER (ORDER BY rn ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS smooth_rank\nFROM ranked;\n\n-- Running total of ranks\nWITH ranked AS (\n  SELECT *, ROW_NUMBER() OVER (ORDER BY salary) AS rn FROM employees\n)\nSELECT \n  name,\n  rn,\n  SUM(rn) OVER (ORDER BY rn) AS running_rn\nFROM ranked;",
+          "pg": "-- CTE chains for nested windows",
+          "mysql": "-- MySQL 8.0+: CTEs supported",
+          "py-pandas": "# Chained operations\ndf['rn'] = df['salary'].rank(ascending=False, method='first').astype(int)\ndf['smooth'] = df['rn'].rolling(3).mean()"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Nested Window via CTE",
+          "plan": {
+            "Plan": {
+              "Node Type": "CTE Scan",
+              "CTE Name": "ranked",
+              "Startup Cost": 100.00,
+              "Total Cost": 500.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "WindowAgg",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 200.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 48,
+                  "Plans": [
+                    {
+                      "Node Type": "Sort",
+                      "Startup Cost": 50.00,
+                      "Total Cost": 100.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 40,
+                      "Plans": [
+                        {
+                          "Node Type": "Seq Scan",
+                          "Relation Name": "employees",
+                          "Startup Cost": 0.00,
+                          "Total Cost": 185.00,
+                          "Plan Rows": 8500,
+                          "Plan Width": 40
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Window function in CTE can be referenced in outer query:",
+              "options": [
+                "Only in SELECT",
+                "In SELECT, WHERE, ORDER BY of outer query",
+                "Only in ORDER BY",
+                "Not allowed"
+              ],
+              "answer": 1,
+              "explain": "CTE materializes window result. Outer query can filter (WHERE) on window result."
+            },
+            {
+              "q": "Two window functions in same CTE — execution:",
+              "options": [
+                "Two separate sorts",
+                "Single sort, two window passes",
+                "Error",
+                "Depends on PARTITION BY"
+              ],
+              "answer": 1,
+              "explain": "Same PARTITION BY + ORDER BY → single sort, multiple WindowAgg passes. Different partitions/orders = multiple sorts."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Performance — Work_Memory, Spills, Indexes",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Work_Memory & Spilling"
+        },
+        {
+          "type": "code",
+          "label": "work_mem tuning",
+          "code": "-- Check for spills\nEXPLAIN ANALYZE SELECT ROW_NUMBER() OVER (ORDER BY salary) FROM employees;\n-- Look for: 'Sort Method: external merge Disk: 1234kB'\n\n-- Increase work_mem\nSET work_mem = '256MB';\n\n-- For parallel: per-worker work_mem\nSET max_parallel_workers_per_gather = 4;\nSET work_mem = '64MB';  -- per worker\n\n-- Monitor\nSELECT * FROM pg_stat_clear_snapshot();\nEXPLAIN ANALYZE ...;\nSELECT * FROM pg_stat_get_db_stat();",
+          "pg": "-- work_mem per operation. Sort/Hash/Window spills to disk if > work_mem",
+          "mysql": "-- MySQL: sort_buffer_size, join_buffer_size",
+          "py-pandas": "# Memory: monitor with df.memory_usage()"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Spill = massive slowdown.** Window functions sort entire partition. If partition > work_mem → disk spill. Increase work_mem or reduce partition size (add PARTITION BY)."
+        },
+        {
+          "type": "heading",
+          "text": "Indexes for Window Functions"
+        },
+        {
+          "type": "code",
+          "label": "indexes for window functions",
+          "code": "-- Window functions benefit from indexes on:\n-- 1. PARTITION BY columns\n-- 2. ORDER BY columns\n-- 3. Composite: (partition_col, order_col)\n\nCREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);\n\n-- For frame clauses: ORDER BY must match index\n-- ROWS frame: any order\n-- RANGE frame: ORDER BY must match index order",
+          "pg": "-- B-tree on (partition, order) enables Index Scan instead of Seq Scan + Sort",
+          "mysql": "-- MySQL: same principle",
+          "py-pandas": "# No indexes; sort is in-memory"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Window function spill indicator in EXPLAIN ANALYZE:",
+              "options": [
+                "Sort Method: external merge Disk:",
+                "WindowAgg: spilled",
+                "Memory: exceeded",
+                "Sort: disk"
+              ],
+              "answer": 0,
+              "explain": "'Sort Method: external merge Disk: XXXkB' indicates spill to disk. Increase work_mem."
+            },
+            {
+              "q": "Best index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC):",
+              "options": [
+                "idx_salary",
+                "idx_dept_id",
+                "idx_dept_id_salary (dept_id, salary DESC)",
+                "idx_salary_dept"
+              ],
+              "answer": 2,
+              "explain": "Composite index matching PARTITION BY then ORDER BY enables Index Scan instead of Sort."
+            },
+            {
+              "q": "CTE with window function allows predicate pushdown:",
+              "options": [
+                "Never",
+                "Always",
+                "Only in PostgreSQL 14+",
+                "When CTE is not materialized"
+              ],
+              "answer": 3,
+              "explain": "PostgreSQL 14+ can push predicates into non-materialized CTEs. Use NOT MATERIALIZED for pushdown."
+            },
+            {
+              "q": "Multiple window functions with different ORDER BY — sorts needed:",
+              "options": [
+                "One sort for all",
+                "One sort per unique ORDER BY",
+                "One sort per function",
+                "No sorts needed"
+              ],
+              "answer": 1,
+              "explain": "Each unique ORDER BY requires separate sort. Same PARTITION but different ORDER = separate sorts."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Deep Dive — Window Function Support",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) FROM emp;",
+          "pg": "Full support: all frame types, EXCLUDE, GROUPS, IGNORE NULLS",
+          "mysql": "MySQL 8.0+: ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, NTILE, FIRST_VALUE, LAST_VALUE, frame clauses",
+          "py-pandas": "df.groupby('dept')['salary'].rank()",
+          "py-sqlalchemy": "func.row_number().over(partition_by=Emp.dept, order_by=Emp.salary.desc())"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "LAST_VALUE(x) OVER (ORDER BY ts ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)",
+          "pg": "Requires explicit frame for LAST_VALUE. Supports IGNORE NULLS.",
+          "mysql": "LAST_VALUE requires frame clause. No IGNORE NULLS.",
+          "py-pandas": "df['col'].transform('last')",
+          "py-sqlalchemy": "func.last_value(Emp.col).over(...)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L3 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "W301",
+              "tier": 3,
+              "title": "Moving Average of Ranks",
+              "platform": "drill",
+              "patterns": ["nested-window", "cte"],
+              "statement": "Compute 3-period moving average of ROW_NUMBER() ordered by salary.",
+              "hints": ["CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)"]
+            },
+            {
+              "id": "W302",
+              "tier": 3,
+              "title": "Running Total of Ranks",
+              "platform": "drill",
+              "patterns": ["nested-window"],
+              "statement": "Running sum of ROW_NUMBER() ordered by salary.",
+              "hints": ["SUM(rn) OVER (ORDER BY rn)"]
+            },
+            {
+              "id": "W303",
+              "tier": 3,
+              "title": "Work_Mem Tuning for Window Spill",
+              "platform": "drill",
+              "patterns": ["work-mem", "spill"],
+              "statement": "EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.",
+              "hints": ["SET work_mem = '256MB'; watch for 'Sort Method: external merge'"]
+            },
+            {
+              "id": "W304",
+              "tier": 3,
+              "title": "Index for Window Function",
+              "platform": "drill",
+              "patterns": ["index-optimization"],
+              "statement": "Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).",
+              "hints": ["CREATE INDEX ON employees (dept_id, hire_date DESC)"]
+            },
+            {
+              "id": "W305",
+              "tier": 3,
+              "title": "Nested Window: Rank of Running Total",
+              "platform": "drill",
+              "patterns": ["nested-window"],
+              "statement": "Rank employees by their running total of salary (ordered by hire_date).",
+              "hints": ["CTE: running total, then RANK() OVER (ORDER BY running_total)"]
+            },
+            {
+              "id": "W306",
+              "tier": 3,
+              "title": "Filter on Window Result",
+              "platform": "drill",
+              "patterns": ["cte-filter"],
+              "statement": "Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).",
+              "hints": ["CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Chain windows via CTE: inner computes, outer applies another window",
+    "Spill = Sort Method: external merge Disk; fix with work_mem",
+    "Index on (PARTITION BY, ORDER BY) avoids sort for window functions",
+    "Multiple windows with same PARTITION+ORDER = single sort, multiple WindowAgg",
+    "CTE materializes window result → allows WHERE/HAVING on window output",
+    "GROUPS frame (PG14) counts peer groups; EXCLUDE TIES/GROUP/CURRENT ROW"
+  ],
+  "glossary": [
+    { "term": "nested window", "def": "Window function applied to result of another window function via CTE." },
+    { "term": "WindowAgg", "def": "PostgreSQL executor node for window functions. Multiple passes for different functions." },
+    { "term": "work_mem", "def": "Memory budget for sort/hash/window operations per query. Spills to disk if exceeded." },
+    { "term": "CTE materialization", "def": "CTE result computed once, reused. Enables predicate pushdown on window results." },
+    { "term": "Sort Method: external merge", "def": "EXPLAIN ANALYZE indicator that sort spilled to disk (work_mem exceeded)." },
+    { "term": "peer group", "def": "Rows with identical ORDER BY values. Relevant for RANGE/GROUPS frames and EXCLUDE TIES." }
+  ]
+}

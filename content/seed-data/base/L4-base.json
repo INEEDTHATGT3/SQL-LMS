@@ -1,0 +1,9 @@
+{
+  "tables": [
+    {
+      "name": "table1",
+      "columns": [],
+      "rows": 10
+    }
+  ]
+}

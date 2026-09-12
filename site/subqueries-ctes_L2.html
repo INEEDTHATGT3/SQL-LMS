@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subqueries & CTEs — L2 INTERVIEW READY</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="2" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 06</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">correlated subqueries, lateral joins, predicate pushdown, optimization</span></div>
+  <h1>Subqueries & CTEs</h1>
+  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="subqueries-ctes_L1" href="subqueries-ctes_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="subqueries-ctes_L2" href="subqueries-ctes_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="subqueries-ctes_L3" href="subqueries-ctes_L3.html">ADVANCED</a><a class="level-pill " data-lesson="subqueries-ctes_L4" href="subqueries-ctes_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Correlated Subqueries — Per-Row Evaluation</a><a href="#sec-1">02 · LATERAL Joins — Correlated Subquery in FROM</a><a href="#sec-2">03 · CTE Optimization — Materialization & Pushdown</a><a href="#sec-3">04 · Recursive CTE Patterns — Graphs, Trees, Paths</a><a href="#sec-4">05 · Dialect Differences — CTEs & Subqueries</a><a href="#sec-5">06 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q242" data-answer="1">
+      <div class="quiz-q">A correlated subquery references outer query columns and:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Runs once for the entire query</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Runs once per outer row</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Runs once per inner row</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Runs only if outer query returns rows</span></div></div>
+      <div class="quiz-explain">Correlated subquery executes once per outer row, using outer row's values.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q243" data-answer="0">
+      <div class="quiz-q">LATERAL join allows the right side to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Reference columns from left side</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Run independently of left side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only work with LEFT JOIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Replace CTE</span></div></div>
+      <div class="quiz-explain">LATERAL allows right subquery to reference columns from left side of join.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q244" data-answer="1">
+      <div class="quiz-q">EXISTS vs IN for correlated subquery — which stops at first match?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>IN</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>EXISTS</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Neither</span></div></div>
+      <div class="quiz-explain">EXISTS is semi-join: stops at first match per outer row. IN may evaluate all.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q245" data-answer="1">
+      <div class="quiz-q">CTE in PostgreSQL 12+ can be inlined with:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>MATERIALIZED</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>NOT MATERIALIZED</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>INLINE</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>NO_MATERIALIZE</span></div></div>
+      <div class="quiz-explain">NOT MATERIALIZED hint allows predicate pushdown into CTE.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q246" data-answer="1">
+      <div class="quiz-q">Recursive CTE max depth is controlled by:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>MAX_RECURSION_DEPTH setting</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE level < N in recursive part</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>MAX_RECURSIVE_ITERATIONS</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>RECURSION_LIMIT hint</span></div></div>
+      <div class="quiz-explain">Termination condition in recursive part (e.g., WHERE level < 10) controls depth.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Correlated Subqueries — Per-Row Evaluation</h2></div>
+    <div class="mantra">Correlated subquery = parameterized inner query. For each outer row, inner query runs with outer row's values as parameters. Powerful but can be slow — consider JOIN or LATERAL for performance.</div>
+<div><div class="code-label"><span>correlated subquery patterns</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Correlated in WHERE
+SELECT * FROM employees e
+WHERE salary > (
+  SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id
+);
+
+-- Correlated in SELECT (per row)
+SELECT 
+  e.name,
+  e.salary,
+  (SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id) AS dept_avg
+FROM employees e;
+
+-- Correlated with EXISTS (semi-join)
+SELECT * FROM employees e
+WHERE EXISTS (
+  SELECT <span class="num">1</span> FROM orders o WHERE o.emp_id = e.id AND o.total > <span class="num">1000</span>
+);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s0-q247" data-answer="1">
+      <div class="quiz-q">Correlated subquery in SELECT with 10,000 outer rows executes inner query:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>1 time</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>10,000 times</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Depends on data</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>0 times (optimized away)</span></div></div>
+      <div class="quiz-explain">Correlated subquery in SELECT executes once per outer row. 10,000 rows = 10,000 executions.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q248" data-answer="1">
+      <div class="quiz-q">EXISTS (SELECT 1 FROM ...) vs IN (SELECT ...) for correlated:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same performance</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>EXISTS often faster (stops at first match)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>IN often faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>IN always faster</span></div></div>
+      <div class="quiz-explain">EXISTS stops at first match per outer row (semi-join). IN may evaluate all matching rows.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>LATERAL Joins — Correlated Subquery in FROM</h2></div>
+    <h3>LATERAL — The Powerful Correlated Subquery</h3>
+<div><div class="code-label"><span>lateral basics</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- For each employee, get latest order
+SELECT e.name, o.order_date, o.total
+FROM employees e
+LEFT JOIN LATERAL (
+  SELECT order_date, total
+  FROM orders o
+  WHERE o.emp_id = e.id
+  ORDER BY o.order_date DESC
+  LIMIT <span class="num">1</span>
+) o ON <span class="kw">true</span>;
+
+-- Equivalent correlated subquery (less readable)
+SELECT e.name,
+  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT <span class="num">1</span>) AS latest_date,
+  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT <span class="num">1</span>) AS latest_total
+FROM employees e;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- LATERAL is PostgreSQL standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0.14+: LATERAL supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s1-q249" data-answer="1">
+      <div class="quiz-q">LATERAL subquery can reference:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only tables in same FROM</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Columns from LEFT side of join</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only columns from same subquery</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Global variables only</span></div></div>
+      <div class="quiz-explain">LATERAL allows right side to see left side columns. Like correlated subquery in FROM.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q250" data-answer="1">
+      <div class="quiz-q">CROSS JOIN LATERAL vs LEFT JOIN LATERAL:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CROSS = inner (drops left rows with no match), LEFT = preserves left</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>LEFT not allowed with LATERAL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CROSS not allowed</span></div></div>
+      <div class="quiz-explain">CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>CTE Optimization — Materialization & Pushdown</h2></div>
+    <h3>CTE Materialization & Inlining</h3>
+<div><div class="code-label"><span>cte materialization control</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- PostgreSQL <span class="num">12</span>+: control materialization
+WITH cte AS NOT MATERIALIZED (
+  SELECT * FROM large_table WHERE status = <span class="st">'active'</span>
+)
+SELECT * FROM cte WHERE dept_id = <span class="num">5</span>;
+-- Predicate dept_id=<span class="num">5</span> pushed into CTE scan
+
+-- Force materialization (default <span class="kw">for</span> recursive, volatile functions)
+WITH cte AS MATERIALIZED (
+  SELECT * FROM large_table WHERE status = <span class="st">'active'</span>
+)
+SELECT * FROM cte WHERE dept_id = <span class="num">5</span>;
+
+-- Default: materialized <span class="kw">if</span> referenced multiple times, or has volatile functions</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PG 12+: NOT MATERIALIZED / MATERIALIZED hints</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no materialization hints; CTEs always materialized</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">CTE = optimization fence (materialized) by default in PG < 12. NOT MATERIALIZED allows predicate pushdown but may recompute. Use wisely!</div>
+<div class="quiz-card" data-quiz-key="s2-q251" data-answer="0">
+      <div class="quiz-q">NOT MATERIALIZED CTE allows:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Predicate pushdown into CTE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Faster materialization</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Recursive queries</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Parallel execution</span></div></div>
+      <div class="quiz-explain">NOT MATERIALIZED = inline CTE, allowing outer predicates to push into CTE scan.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q252" data-answer="0">
+      <div class="quiz-q">CTE with volatile function (random()) is:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Always materialized</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Never materialized</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Inlined by default</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">Volatile functions force materialization to ensure consistent results per execution.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Recursive CTE Patterns — Graphs, Trees, Paths</h2></div>
+    <h3>Recursive CTE Patterns</h3>
+<div><div class="code-label"><span>recursive patterns</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Path enumeration: find path from A to B
+WITH RECURSIVE paths AS (
+  SELECT id, name, ARRAY[id] AS path, <span class="num">1</span> AS depth
+  FROM nodes WHERE id = <span class="st">'A'</span>
+
+  UNION ALL
+
+  SELECT n.id, n.name, p.path || n.id, p.depth + <span class="num">1</span>
+  FROM nodes n
+  JOIN paths p ON n.parent_id = p.id
+  WHERE n.id != ALL(p.path)  -- prevent cycles
+  AND p.depth < <span class="num">10</span>
+)
+SELECT * FROM paths WHERE id = <span class="st">'B'</span>;
+
+-- Level-order traversal (breadth-first)
+WITH RECURSIVE bfs AS (
+  SELECT id, name, <span class="num">0</span> AS level
+  FROM employees WHERE manager_id IS NULL
+
+  UNION ALL
+
+  SELECT e.id, e.name, b.level + <span class="num">1</span>
+  FROM employees e
+  JOIN bfs b ON e.manager_id = b.id
+)
+SELECT * FROM bfs ORDER BY level;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Array path tracking with || operator</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: JSON_ARRAY_APPEND for path, CTE depth limit</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">Always include cycle detection (visited set) and max depth limit. Infinite recursion = hung query.</div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Recursive CTE Breadth-First Search</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">CTE Scan</span>
+        <span class="plan-node-meta"> cost=100..5000 rows=8500 width=48</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Recursive Union</span>
+        <span class="plan-node-meta"> cost=100..5000 rows=8500 width=48</span>
+      </div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0..100 rows=100</span>
+      </div></div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">WorkTable Scan</span> on <code>bfs</code>
+        <span class="plan-node-meta"> cost=100..4900 rows=8400 width=48</span>
+      </div><div class="plan-node" style="margin-left: 72px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Hash Join</span>
+        <span class="plan-node-meta"> cost=100..4900 rows=8400 width=48</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Hash Cond: (e.manager_id = bfs.id)</div><div class="plan-node" style="margin-left: 96px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0..100 rows=1000</span>
+      </div></div><div class="plan-node" style="margin-left: 96px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">WorkTable Scan</span> on <code>bfs</code>
+        <span class="plan-node-meta"> cost=0..0 rows=100 width=24</span>
+      </div></div></div></div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s3-q253" data-answer="2">
+      <div class="quiz-q">Recursive CTE cycle prevention:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Automatic in all databases</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE id NOT IN (SELECT id FROM cte)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE id != ALL(path_array)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Automatic with RECURSIVE keyword</span></div></div>
+      <div class="quiz-explain">Track visited nodes in array/path column. Check <code>WHERE id != ALL(path)</code> before recursing.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q254" data-answer="2">
+      <div class="quiz-q">Recursive CTE for breadth-first search uses:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ORDER BY depth in outer query</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Recursive part adds level+1</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both A and B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Neither</span></div></div>
+      <div class="quiz-explain">Recursive part increments level; outer ORDER BY level gives breadth-first.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Dialect Differences — CTEs & Subqueries</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">WITH cte AS (SELECT * FROM t WHERE x > 5) SELECT * FROM cte;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">WITH cte AS (SELECT * FROM t WHERE x > 5) SELECT * FROM cte;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">WITH cte AS (SELECT * FROM t WHERE x > 5) SELECT * FROM cte; -- 8.0+</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">cte = df[df['x'] > 5]</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte; -- 8.0+</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python"># Iterative approach
+results = [1]
+while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Problem Set — L2 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Correlated Avg Salary per Dept</div>
+        <div class="prob-meta">drill · correlated-subquery</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S201"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Each employee with their department's average salary.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro649" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro649">SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Latest Order per Customer (LATERAL)</div>
+        <div class="prob-meta">drill · lateral</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S202"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      For each customer, show their most recent order date and total.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro64a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro64a">LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Customers with Orders > $1000 (EXISTS)</div>
+        <div class="prob-meta">drill · correlated-exists</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S203"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Customers who placed at least one order over $1000.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro64b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro64b">EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Non-Materialized CTE for Pushdown</div>
+        <div class="prob-meta">drill · not-materialized</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S204"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      CTE filters status='active', outer query adds dept_id=5. Use NOT MATERIALIZED.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro64c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro64c">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Recursive CTE: All Subordinates</div>
+        <div class="prob-meta">drill · recursive-cte</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S205"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Find all subordinates (direct + indirect) of manager_id = 5.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro64d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro64d">WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Path Finding: A to B</div>
+        <div class="prob-meta">drill · recursive-cte + path</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S206"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Find path from node 'A' to 'B' in graph edges table.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro64e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro64e">Track path in array: path || next_node</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Safe NOT IN (avoid NULL trap)</div>
+        <div class="prob-meta">drill · not-in-null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S207"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Departments without employees. Fix NOT IN NULL trap.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro64f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro64f">NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">LATERAL: Top 3 Products per Category</div>
+        <div class="prob-meta">drill · lateral + top-n</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S208"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      For each category, list top 3 products by sales.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgro64g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgro64g">LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Correlated subquery: runs per outer row; use EXISTS for semi-join, LATERAL for set results</li><li>LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer</li><li>EXISTS stops at first match; IN may scan all. Use EXISTS for correlated semi/anti joins</li><li>CTE: NOT MATERIALIZED for pushdown, MATERIALIZED to force; recursive = anchor + UNION ALL + recurse</li><li>Recursive CTE: track visited (path array), limit depth, prevent cycles</li><li>NOT IN + NULL = zero rows; always NOT EXISTS for anti-join</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>correlated subquery</code></td><td>Subquery referencing outer query columns; executes once per outer row.</td></tr><tr><td style="width:220px;"><code>LATERAL join</code></td><td>Right subquery references left-side columns. Like correlated subquery in FROM.</td></tr><tr><td style="width:220px;"><code>NOT MATERIALIZED</code></td><td>PostgreSQL hint to inline CTE, enabling predicate pushdown.</td></tr><tr><td style="width:220px;"><code>recursive CTE</code></td><td>CTE with RECURSIVE keyword: anchor + UNION ALL + recursive part referencing itself.</td></tr><tr><td style="width:220px;"><code>cycle detection</code></td><td>Tracking visited nodes in recursive CTE to prevent infinite loops (path array check).</td></tr><tr><td style="width:220px;"><code>semi-join</code></td><td>EXISTS/IN pattern — returns left rows with match; stops at first match per row.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 06 · L2/INTERVIEW READY · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('subqueries-ctes_L2');</script>
+</body></html>

@@ -1,0 +1,375 @@
+{
+  "level": 4,
+  "title": "Filtering & Conditionals",
+  "tagline": "expression indexes, predicate optimization, statistics, extended statistics",
+  "placementQuiz": [
+    {
+      "q": "Extended statistics (CREATE STATISTICS) helps with:",
+      "options": [
+        "Single column selectivity",
+        "Correlated columns (e.g., city + zip_code)",
+        "Index creation speed",
+        "VACUUM performance"
+      ],
+      "answer": 1,
+      "explain": "Extended stats capture correlation between columns (functional dependency, n-distinct)."
+    },
+    {
+      "q": "Expression index on (a + b) supports query:",
+      "options": [
+        "WHERE a + b > 100",
+        "WHERE a > 100 AND b > 100",
+        "WHERE a > 100 OR b > 100",
+        "None"
+      ],
+      "answer": 0,
+      "explain": "Expression must match exactly. Index on (a+b) helps WHERE a+b > 100."
+    },
+    {
+      "q": "When planner underestimates rows for correlated columns:",
+      "options": [
+        "Run ANALYZE",
+        "CREATE STATISTICS ... DEPENDENCIES",
+        "Increase default_statistics_target",
+        "Drop and recreate index"
+      ],
+      "answer": 1,
+      "explain": "Extended statistics with DEPENDENCIES captures functional dependency between columns."
+    },
+    {
+      "q": "Partial index predicate must be:",
+      "options": [
+        "Immutable (no volatile functions)",
+        "Any valid WHERE clause",
+        "Only equality checks",
+        "Referencing indexed columns only"
+      ],
+      "answer": 0,
+      "explain": "Partial index predicate must use immutable functions only (no NOW(), random())."
+    },
+    {
+      "q": "Bitmap Index Scan vs Index Scan:",
+      "options": [
+        "Bitmap is always faster",
+        "Bitmap combines multiple indexes; Index Scan single index",
+        "Bitmap only for PRIMARY KEY",
+        "Index Scan deprecated"
+      ],
+      "answer": 1,
+      "explain": "Bitmap Index Scan builds in-memory bitmap from multiple indexes, then heap fetch. Good for multiple conditions."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Extended Statistics — Correlated Columns",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**Planner assumes column independence. city='NYC' AND zip='10001' → estimates selectivity as product. But they're correlated! Extended statistics (CREATE STATISTICS) teaches planner the truth.**"
+        },
+        {
+          "type": "code",
+          "label": "create statistics",
+          "code": "-- Capture correlation between city and zip_code\nCREATE STATISTICS st_city_zip (DEPENDENCIES) ON city, zip_code FROM users;\nANALYZE users;\n\n-- Now planner knows city → zip_code dependency\nEXPLAIN SELECT * FROM users WHERE city = 'NYC' AND zip_code = '10001';\n-- Better row estimate, better plan\n\n-- N-distinct for GROUP BY\nCREATE STATISTICS st_dept_role (NDISTINCT) ON dept_id, role FROM employees;\nANALYZE employees;",
+          "pg": "-- PostgreSQL 10+: CREATE STATISTICS\n-- Types: DEPENDENCIES, NDISTINCT, MCV (Most Common Values)",
+          "mysql": "-- MySQL: no extended statistics\n-- Workaround: composite index or generated column",
+          "py-pandas": "# No planner, but correlation analysis:\ndf[['city', 'zip_code']].corr()\n# Or mutual information for categorical"
+        },
+        {
+          "type": "query-plan",
+          "title": "Before Extended Stats — Independence Assumption",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "users",
+              "Filter": "(city = 'NYC' AND zip_code = '10001')",
+              "Startup Cost": 0.00,
+              "Total Cost": 1250.00,
+              "Plan Rows": 5,
+              "Plan Width": 120,
+              "Actual Rows": 500
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "query-plan",
+          "title": "After Extended Stats — Correlation Known",
+          "plan": {
+            "Plan": {
+              "Node Type": "Index Scan",
+              "Relation Name": "users",
+              "Index Name": "idx_users_city_zip",
+              "Filter": "(city = 'NYC' AND zip_code = '10001')",
+              "Startup Cost": 0.29,
+              "Total Cost": 42.15,
+              "Plan Rows": 480,
+              "Plan Width": 120,
+              "Actual Rows": 500
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "**Plan rows: 5 → 480 (actual 500).** Planner now knows city/zip correlation. Chooses Index Scan over Seq Scan. Extended stats are free (just ANALYZE) and transform plans for correlated columns."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "CREATE STATISTICS s (MCV) ON a, b FROM t; captures:",
+              "options": [
+                "Most common single values",
+                "Most common value combinations",
+                "Null fraction",
+                "Histogram bounds"
+              ],
+              "answer": 1,
+              "explain": "MCV = Most Common Values — stores frequent (a,b) pairs for better selectivity estimates."
+            },
+            {
+              "q": "After CREATE STATISTICS, you must run:",
+              "options": [
+                "VACUUM",
+                "ANALYZE",
+                "REINDEX",
+                "Nothing — automatic"
+              ],
+              "answer": 1,
+              "explain": "Statistics object populated during ANALYZE."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Expression Indexes — Complex Expressions",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Multi-Column Expression Indexes"
+        },
+        {
+          "type": "code",
+          "label": "expression index patterns",
+          "code": "-- Concatenated search\nCREATE INDEX idx_full_name ON users ((first_name || ' ' || last_name));\n-- WHERE first_name || ' ' || last_name = 'John Doe'\n\n-- JSONB path\nCREATE INDEX idx_tags ON events USING GIN ((data->'tags'));\n-- WHERE data->'tags' @> '[\"urgent\"]'\n\n-- Date math\nCREATE INDEX idx_year_month ON events ((date_trunc('month', created_at)));\n-- WHERE date_trunc('month', created_at) = '2024-01-01'\n\n-- Math expression\nCREATE INDEX idx_annual_sal ON employees ((salary * 12));\n-- WHERE salary * 12 > 120000",
+          "pg": "-- Expression index (PostgreSQL)\nCREATE INDEX idx ON t ((col1 + col2));\n-- Requires IMMUTABLE functions only",
+          "mysql": "-- MySQL 8.0+: expression index\nCREATE INDEX idx ON t ((col1 + col2));\n-- Double parentheses!",
+          "py-pandas": "# Pre-compute expressions\nusers['full_name'] = users['first_name'] + ' ' + users['last_name']\nevents['year_month'] = events['created_at'].dt.to_period('M')"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Expression must be IMMUTABLE.** No NOW(), random(), volatile functions. Expression index stores computed value — if function isn't immutable, index becomes inconsistent."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Index on (date_trunc('month', created_at)) helps query:",
+              "options": [
+                "WHERE created_at >= '2024-01-01'",
+                "WHERE date_trunc('month', created_at) = '2024-01-01'",
+                "WHERE created_at > '2024-01-01'",
+                "All of the above"
+              ],
+              "answer": 1,
+              "explain": "Expression index only matches queries using the exact same expression."
+            },
+            {
+              "q": "Why must expression index functions be IMMUTABLE?",
+              "options": [
+                "Performance",
+                "Index consistency — same input must always give same output",
+                "Storage efficiency",
+                "Parallel query support"
+              ],
+              "answer": 1,
+              "explain": "If function returns different values for same input, index entries become wrong."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Predicate Optimization — Planner Internals",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "How Planner Estimates Selectivity"
+        },
+        {
+          "type": "prose",
+          "md": "Planner uses: histogram (most common values), n_distinct, null_frac, correlation. For range: histogram bounds + linear interpolation. For equality: MCV list + 1/n_distinct for non-MCV. For correlated columns: independence assumption (wrong) unless extended stats exist."
+        },
+        {
+          "type": "code",
+          "label": "viewing statistics",
+          "code": "-- View column statistics\nSELECT * FROM pg_stats WHERE tablename = 'employees';\n\n-- Key columns:\n-- null_frac, avg_width, n_distinct, most_common_vals, most_common_freqs\n-- histogram_bounds, correlation\n\n-- Increase stats target for better estimates\nALTER TABLE employees ALTER COLUMN salary SET STATISTICS 1000;\nANALYZE employees;",
+          "pg": "-- pg_stats is the window into planner's mind",
+          "mysql": "-- MySQL: SHOW INDEX, ANALYZE TABLE\n-- No pg_stats equivalent",
+          "py-pandas": "# Manual selectivity estimation\ndef selectivity(df, col, val):\n    return (df[col] == val).mean()\n\n# For range\ndef range_sel(df, col, lo, hi):\n    return ((df[col] >= lo) & (df[col] <= hi)).mean()"
+        },
+        {
+          "type": "query-plan",
+          "title": "Bitmap Index Scan — Multiple Indexes Combined",
+          "plan": {
+            "Plan": {
+              "Node Type": "Bitmap Heap Scan",
+              "Relation Name": "employees",
+              "Recheck Cond": "((dept_id = 1) AND (salary > 50000))",
+              "Startup Cost": 10.00,
+              "Total Cost": 150.00,
+              "Plan Rows": 50,
+              "Plan Width": 72,
+              "Plans": [
+                {
+                  "Node Type": "BitmapAnd",
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Index Name": "idx_emp_dept",
+                      "Index Cond": "(dept_id = 1)"
+                    },
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Index Name": "idx_emp_salary",
+                      "Index Cond": "(salary > 50000)"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "**Bitmap Index Scan:** Combines multiple indexes in memory (bitmap), then single heap fetch. Great for AND/OR combinations where no composite index exists. Recheck Cond means heap tuple rechecked (lossy pages)."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Bitmap Index Scan is chosen when:",
+              "options": [
+                "Single index matches",
+                "Multiple indexes can be combined for AND/OR",
+                "Table is tiny",
+                "Index is corrupted"
+              ],
+              "answer": 1,
+              "explain": "BitmapAnd/BitmapOr combines multiple index scans in memory before heap access."
+            },
+            {
+              "q": "\"Recheck Cond\" in Bitmap Heap Scan means:",
+              "options": [
+                "Index is corrupted",
+                "Heap tuple rechecked due to lossy bitmap pages",
+                "Predicate pushed to storage",
+                "Statistics outdated"
+              ],
+              "answer": 1,
+              "explain": "Lossy bitmap pages store page-level, not tuple-level. Must recheck each tuple."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Mastery — Advanced Predicates",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "CREATE STATISTICS s (DEPENDENCIES) ON city, zip FROM users;",
+          "pg": "CREATE STATISTICS s (DEPENDENCIES) ON city, zip FROM users;\nANALYZE users;",
+          "mysql": "-- No extended statistics\n-- Use composite index or generated column",
+          "py-pandas": "df[['city', 'zip']].corr()",
+          "py-sqlalchemy": "DDL('CREATE STATISTICS...')"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "CREATE INDEX idx ON t ((a + b));",
+          "pg": "CREATE INDEX idx ON t ((a + b));",
+          "mysql": "CREATE INDEX idx ON t ((a + b)); -- 8.0+",
+          "py-pandas": "df['sum_ab'] = df['a'] + df['b']",
+          "py-sqlalchemy": "Index('idx', T.a + T.b)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L4 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "F401",
+              "tier": 4,
+              "title": "Extended Stats for Correlated Columns",
+              "platform": "drill",
+              "patterns": ["extended-statistics"],
+              "statement": "Table users(city, zip_code) — queries filter both. Create extended stats for dependency.",
+              "hints": ["CREATE STATISTICS s (DEPENDENCIES) ON city, zip_code FROM users;"]
+            },
+            {
+              "id": "F402",
+              "tier": 4,
+              "title": "Expression Index for Full-Text Search",
+              "platform": "drill",
+              "patterns": ["expression-index"],
+              "statement": "Create index for WHERE first_name || ' ' || last_name ILIKE 'john%'.",
+              "hints": ["CREATE INDEX ON users ((first_name || ' ' || last_name))"]
+            },
+            {
+              "id": "F403",
+              "tier": 4,
+              "title": "Partial Index with Immutable Predicate",
+              "platform": "drill",
+              "patterns": ["partial-index"],
+              "statement": "Create partial index on orders(created_at) WHERE status IN ('shipped','delivered'). Why can't we use NOW()?",
+              "hints": ["Predicate must be immutable; NOW() is volatile"]
+            },
+            {
+              "id": "F404",
+              "tier": 4,
+              "title": "MCV Statistics for Skewed Data",
+              "platform": "drill",
+              "patterns": ["extended-statistics", "mcv"],
+              "statement": "status column has 3 values but 90%='active'. Create MCV stats for better estimates.",
+              "hints": ["CREATE STATISTICS s (MCV) ON status FROM users;"]
+            },
+            {
+              "id": "F405",
+              "tier": 4,
+              "title": "NDISTINCT for GROUP BY Accuracy",
+              "platform": "drill",
+              "patterns": ["extended-statistics", "ndistinct"],
+              "statement": "GROUP BY dept_id, role — planner underestimates groups. Create NDISTINCT stats.",
+              "hints": ["CREATE STATISTICS s (NDISTINCT) ON dept_id, role FROM employees;"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Extended stats: DEPENDENCIES (correlation), NDISTINCT (group count), MCV (value combos)",
+    "CREATE STATISTICS + ANALYZE teaches planner truth about correlated columns",
+    "Expression index: exact expression match required; functions must be IMMUTABLE",
+    "Bitmap Index Scan: combines multiple indexes in memory; Recheck Cond = lossy pages",
+    "Planner assumes independence; extended stats fix correlation blindness",
+    "Statistics target: ALTER TABLE ... SET STATISTICS N — more histogram buckets"
+  ],
+  "glossary": [
+    { "term": "extended statistics", "def": "CREATE STATISTICS object capturing cross-column correlation (DEPENDENCIES, NDISTINCT, MCV)." },
+    { "term": "functional dependency", "def": "Column A determines column B (e.g., zip_code → city). Planner learns via DEPENDENCIES stats." },
+    { "term": "n-distinct", "def": "Estimated distinct value count for GROUP BY accuracy. Extended stats improve this." },
+    { "term": "MCV (Most Common Values)", "def": "List of frequent value combinations for multi-column selectivity estimates." },
+    { "term": "lossy bitmap", "def": "Bitmap page stores page-level not tuple-level; requires Recheck Cond on heap." },
+    { "term": "immutable function", "def": "Same input → same output, forever. Required for expression indexes." }
+  ]
+}

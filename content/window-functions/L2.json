@@ -1,0 +1,402 @@
+{
+  "level": 2,
+  "title": "Window Functions",
+  "tagline": "frame clauses, NTILE, percentiles, frame exclusion",
+  "placementQuiz": [
+    {
+      "q": "Default window frame is:",
+      "options": [
+        "ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING",
+        "RANGE UNBOUNDED PRECEDING TO CURRENT ROW",
+        "ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING",
+        "CURRENT ROW ONLY"
+      ],
+      "answer": 1,
+      "explain": "Default = RANGE UNBOUNDED PRECEDING TO CURRENT ROW. Includes all rows up to current row."
+    },
+    {
+      "q": "ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING includes:",
+      "options": [
+        "Current row only",
+        "Current row + 1 before + 1 after",
+        "All rows",
+        "Current row + all preceding"
+      ],
+      "answer": 1,
+      "explain": "1 PRECEDING = 1 row before; 1 FOLLOWING = 1 row after. Total 3 rows."
+    },
+    {
+      "q": "NTILE(4) divides partition into:",
+      "options": [
+        "4 equal rows",
+        "4 buckets (roughly equal size)",
+        "4 groups by value",
+        "Quartiles only"
+      ],
+      "answer": 1,
+      "explain": "NTILE(n) divides rows into n buckets as equally as possible. Buckets numbered 1..n."
+    },
+    {
+      "q": "EXCLUDE CURRENT ROW in frame clause:",
+      "options": [
+        "Removes current row from window",
+        "Excludes current row from frame",
+        "Syntax error",
+        "Only for RANGE"
+      ],
+      "answer": 1,
+      "explain": "EXCLUDE CURRENT ROW omits current row from frame. Useful for 'other rows' calculations."
+    },
+    {
+      "q": "RANGE vs ROWS with ORDER BY salary:",
+      "options": [
+        "Same always",
+        "RANGE uses value proximity; ROWS uses row count",
+        "ROWS uses value; RANGE uses count",
+        "RANGE not allowed with salary"
+      ],
+      "answer": 1,
+      "explain": "RANGE uses ORDER BY value + offset (e.g., salary ± 1000). ROWS uses physical row count."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Frame Clauses — ROWS vs RANGE",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Frame = window boundaries. ROWS = physical row count. RANGE = ORDER BY value + offset. Default = RANGE UNBOUNDED PRECEDING TO CURRENT ROW. Always specify frame for LAST_VALUE, running totals, moving averages."
+        },
+        {
+          "type": "code",
+          "label": "frame syntax",
+          "code": "-- ROWS: physical row count\nSUM(amount) OVER (\n  ORDER BY sale_date\n  ROWS BETWEEN 3 PRECEDING AND CURRENT ROW\n) AS moving_sum_4days\n\n-- RANGE: value-based (ORDER BY must be numeric/date)\nSUM(amount) OVER (\n  ORDER BY sale_date\n  RANGE BETWEEN INTERVAL '3 days' PRECEDING AND CURRENT ROW\n) AS moving_sum_3days\n\n-- Unbounded\nSUM(amount) OVER (\n  ORDER BY sale_date\n  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n) AS total_so_far",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: frame clauses supported",
+          "py-pandas": "# Rolling window\ndf['amount'].rolling(4).sum()  # 4-row window\n\n# Date-based\nfrom pandas import Timedelta\ndf.set_index('sale_date')['amount'].rolling(Timedelta('3D')).sum()"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"frame": "ROWS 3 PRECEDING", "meaning": "Current row + 3 rows before", "use_case": "Moving average N rows"},
+              {"frame": "RANGE 3 PRECEDING", "meaning": "Current row + rows with ORDER BY value within 3", "use_case": "Time-based windows"},
+              {"frame": "UNBOUNDED PRECEDING", "meaning": "All rows from start", "use_case": "Running total"},
+              {"frame": "CURRENT ROW", "meaning": "Only current row", "use_case": "Point lookup"}
+            ],
+            "after": [],
+            "highlight": ["frame"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "RANGE INTERVAL '1 day' PRECEDING with ORDER BY ts includes:",
+              "options": [
+                "Exactly 1 row before",
+                "All rows where ts >= current_ts - 1 day",
+                "Current row only",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "RANGE uses value semantics. All rows with ts within 1 day of current row's ts."
+            },
+            {
+              "q": "ROWS 1 PRECEDING vs RANGE 1 PRECEDING with ORDER BY salary:",
+              "options": [
+                "Same",
+                "ROWS = 1 row before; RANGE = salaries within 1 of current",
+                "RANGE = 1 row; ROWS = salary ± 1",
+                "Both invalid"
+              ],
+              "answer": 1,
+              "explain": "ROWS counts rows. RANGE uses ORDER BY value difference (salary ± 1)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "NTILE — Bucketing Rows",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "NTILE(n) — Equal-Size Buckets"
+        },
+        {
+          "type": "code",
+          "label": "ntile",
+          "code": "-- Quartiles (4 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(4) OVER (ORDER BY salary) AS quartile\nFROM employees;\n\n-- Deciles (10 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(10) OVER (ORDER BY salary) AS decile\nFROM employees;\n\n-- Per department\nSELECT \n  dept_id,\n  name,\n  salary,\n  NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary) AS dept_quartile\nFROM employees;",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: NTILE supported",
+          "py-pandas": "# Quantile bins\ndf['quartile'] = pd.qcut(df['salary'], 4, labels=[1,2,3,4])\n\n# Per group\ndf['dept_quartile'] = df.groupby('dept_id')['salary'].transform(lambda x: pd.qcut(x, 4, labels=[1,2,3,4]))"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "NTILE(4) on 10 rows → bucket sizes:",
+              "options": [
+                "2,2,3,3",
+                "3,3,2,2",
+                "2,2,2,4",
+                "3,2,2,3"
+              ],
+              "answer": 1,
+              "explain": "Extra rows go to first buckets. 10/4 = 2 remainder 2 → first 2 buckets get 3 rows."
+            },
+            {
+              "q": "NTILE with PARTITION BY dept_id — buckets per partition:",
+              "options": [
+                "Across all departments combined",
+                "Separate buckets per department",
+                "Only works without PARTITION BY",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "NTILE respects PARTITION BY — each partition gets its own buckets 1..n."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — NTILE Partition Sort",
+          "plan": {
+            "Plan": {
+              "Node Type": "WindowAgg",
+              "Startup Cost": 50.00,
+              "Total Cost": 300.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 200.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 40,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 185.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 40
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Advanced Frames — EXCLUDE, GROUPS",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Frame Exclusion — EXCLUDE CURRENT ROW"
+        },
+        {
+          "type": "code",
+          "label": "exclude current row",
+          "code": "-- Sum of OTHER employees' salaries in same dept\nSELECT \n  name,\n  salary,\n  SUM(salary) OVER (\n    PARTITION BY dept_id\n    ORDER BY salary\n    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n    EXCLUDE CURRENT ROW\n  ) AS sum_other_salaries\nFROM employees;\n\n-- Exclude group (all tied peers)\nSUM(salary) OVER (\n  PARTITION BY dept_id\n  ORDER BY salary\n  RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n  EXCLUDE GROUP\n) AS sum_other_tiers\n\n-- Exclude ties\nSUM(salary) OVER (\n  PARTITION BY dept_id\n  ORDER BY salary\n  RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n  EXCLUDE TIES\n) AS sum_other_tiers",
+          "pg": "-- EXCLUDE CURRENT ROW / GROUP / TIES (PostgreSQL 11+)",
+          "mysql": "-- MySQL: no EXCLUDE clause",
+          "py-pandas": "# Total minus current\ntotal = df.groupby('dept_id')['salary'].transform('sum')\ndf['sum_others'] = total - df['salary']"
+        },
+        {
+          "type": "heading",
+          "text": "GROUPS Frame (PostgreSQL 14+)"
+        },
+        {
+          "type": "code",
+          "label": "groups frame",
+          "code": "-- GROUPS: counts groups of peer rows (same ORDER BY value)\n-- 1 group = all rows with same ORDER BY value\nSELECT \n  salary,\n  COUNT(*) OVER (\n    ORDER BY salary\n    GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING\n  ) AS peer_count\nFROM employees;\n\n-- Useful for: percentile buckets with variable row density",
+          "pg": "-- GROUPS frame (PostgreSQL 14+)\n-- Counts peer groups (ties) not individual rows",
+          "mysql": "-- MySQL: no GROUPS frame",
+          "py-pandas": "# No direct equivalent; use rank + transform"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "EXCLUDE CURRENT ROW removes:",
+              "options": [
+                "Current row from result set",
+                "Current row from frame calculation",
+                "Current partition",
+                "Current ORDER BY"
+              ],
+              "answer": 1,
+              "explain": "Excludes only the current row from frame calculation. Other rows with same ORDER BY value remain."
+            },
+            {
+              "q": "GROUPS 1 PRECEDING with ORDER BY salary:",
+              "options": [
+                "1 row before",
+                "All rows with salary = current_salary - 1",
+                "All rows with same salary as previous distinct salary",
+                "All rows with salary less than current"
+              ],
+              "answer": 2,
+              "explain": "GROUPS counts distinct ORDER BY values (peer groups). 1 PRECEDING = previous distinct salary tier."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Percentile & Distribution Functions",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "PERCENT_RANK, CUME_DIST, PERCENTILE_CONT/DISC"
+        },
+        {
+          "type": "code",
+          "label": "distribution functions",
+          "code": "-- Percent rank (0 to 1)\nSELECT \n  name,\n  salary,\n  PERCENT_RANK() OVER (ORDER BY salary) AS pct_rank,\n  CUME_DIST() OVER (ORDER BY salary) AS cume_dist\nFROM employees;\n\n-- PERCENT_RANK = (rank - 1) / (total - 1)\n-- CUME_DIST = rank / total  (includes ties)\n\n-- Percentile aggregates (ordered-set aggregates)\nSELECT \n  percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) AS median,\n  percentile_disc(0.5) WITHIN GROUP (ORDER BY salary) AS median_discrete,\n  percentile_cont(0.95) WITHIN GROUP (ORDER BY salary) AS p95\nFROM employees;",
+          "pg": "-- PERCENT_RANK, CUME_DIST, percentile_cont/disc standard",
+          "mysql": "-- MySQL 8.0+: PERCENT_RANK, CUME_DIST, PERCENTILE_CONT/DISC",
+          "py-pandas": "# Percent rank\ndf['pct_rank'] = df['salary'].rank(pct=True)\n\n# Cume dist\ndf['cume_dist'] = df['salary'].rank(method='max') / len(df)\n\n# Percentiles\ndf['salary'].quantile([0.5, 0.95])"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "PERCENT_RANK vs CUME_DIST for value at position 3 of 10:",
+              "options": [
+                "Same",
+                "PERCENT_RANK=0.2, CUME_DIST=0.3",
+                "PERCENT_RANK=0.3, CUME_DIST=0.2",
+                "Both 0.2"
+              ],
+              "answer": 1,
+              "explain": "PERCENT_RANK = (rank-1)/(N-1). CUME_DIST = rank/N. For rank 3 of 10: (3-1)/9=0.22 vs 3/10=0.3."
+            },
+            {
+              "q": "percentile_cont(0.95) returns:",
+              "options": [
+                "95th percentile (interpolated)",
+                "95th percentile (actual value)",
+                "Top 5% rows",
+                "Top 5% average"
+              ],
+              "answer": 0,
+              "explain": "percentile_cont interpolates between values for exact percentile."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "W201",
+              "tier": 2,
+              "title": "4-Row Moving Average",
+              "platform": "drill",
+              "patterns": ["frame-rows"],
+              "statement": "Compute 4-row moving average of daily sales (current + 3 preceding).",
+              "hints": ["ROWS BETWEEN 3 PRECEDING AND CURRENT ROW"]
+            },
+            {
+              "id": "W202",
+              "tier": 2,
+              "title": "7-Day Moving Sum (RANGE)",
+              "platform": "drill",
+              "patterns": ["frame-range"],
+              "statement": "Sum of sales for each day + previous 6 days using RANGE.",
+              "hints": ["RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW"]
+            },
+            {
+              "id": "W203",
+              "tier": 2,
+              "title": "Running Total with ROWS",
+              "platform": "drill",
+              "patterns": ["frame-unbounded"],
+              "statement": "Running total of sales ordered by date using ROWS UNBOUNDED PRECEDING.",
+              "hints": ["ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"]
+            },
+            {
+              "id": "W204",
+              "tier": 2,
+              "title": "Quartile Assignment",
+              "platform": "drill",
+              "patterns": ["ntile"],
+              "statement": "Assign each employee to a salary quartile (1-4) within their department.",
+              "hints": ["NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)"]
+            },
+            {
+              "id": "W205",
+              "tier": 2,
+              "title": "Sum of Peers (EXCLUDE GROUP)",
+              "platform": "drill",
+              "patterns": ["exclude-group"],
+              "statement": "Sum of salaries for employees in same salary tier (excluding current tier).",
+              "hints": ["EXCLUDE GROUP with RANGE frame"]
+            },
+            {
+              "id": "W206",
+              "tier": 2,
+              "title": "Percentile Rank vs Cume Dist",
+              "platform": "drill",
+              "patterns": ["percent_rank", "cume_dist"],
+              "statement": "Show both PERCENT_RANK and CUME_DIST for each employee by salary.",
+              "hints": ["PERCENT_RANK() OVER (ORDER BY salary)"]
+            },
+            {
+              "id": "W207",
+              "tier": 2,
+              "title": "Moving Average Excluding Current",
+              "platform": "drill",
+              "patterns": ["exclude-current"],
+              "statement": "3-day moving average excluding current day (previous 3 days only).",
+              "hints": ["ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING"]
+            },
+            {
+              "id": "W208",
+              "tier": 2,
+              "title": "Peer Group Count (GROUPS frame)",
+              "platform": "drill",
+              "patterns": ["groups-frame"],
+              "statement": "Count of employees in same salary tier ±1 tier. Use GROUPS frame (PG 14+).",
+              "hints": ["GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Default frame: RANGE UNBOUNDED PRECEDING TO CURRENT ROW",
+    "ROWS = row count; RANGE = ORDER BY value distance; GROUPS = peer groups",
+    "NTILE(n) = n buckets; extra rows to first buckets",
+    "EXCLUDE CURRENT ROW / GROUP / TIES removes rows from frame",
+    "LAST_VALUE needs explicit frame: ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING",
+    "RANGE = value distance; ROWS = row count; GROUPS = peer group count"
+  ],
+  "glossary": [
+    { "term": "frame clause", "def": "ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row." },
+    { "term": "ROWS", "def": "Frame unit = physical row count." },
+    { "term": "RANGE", "def": "Frame unit = ORDER BY value distance (numeric/date)." },
+    { "term": "GROUPS", "def": "Frame unit = peer groups (rows with same ORDER BY value)." },
+    { "term": "NTILE", "def": "Divides partition into n roughly equal buckets (1..n)." },
+    { "term": "EXCLUDE CURRENT ROW", "def": "Excludes current row from frame calculation." }
+  ]
+}

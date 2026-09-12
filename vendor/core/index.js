@@ -1,0 +1,9 @@
+// @layered-study/core - Main entry point
+export { render } from './renderer/render.js';
+export { lint } from './renderer/lint.js';
+export { newModule } from './renderer/new-module.js';
+export { builtinBlocks } from './renderer/blocks/index.js';
+export { compileTheme } from './css/theme-compiler.js';
+export { generateLanguageSwitcher } from './js/language-switcher.js';
+export { createProgressTracker } from './js/progress-tracker.js';
+export { recallCore } from './js/recall-core.js';

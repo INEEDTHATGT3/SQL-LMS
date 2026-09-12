@@ -1,0 +1,360 @@
+{
+  "level": 3,
+  "title": "Filtering & Conditionals",
+  "tagline": "sargability, predicate pushdown, functional indexes, partial indexes",
+  "placementQuiz": [
+    {
+      "q": "WHERE UPPER(name) = 'ALICE' ignores index on name because:",
+      "options": [
+        "UPPER is not deterministic",
+        "Function on column prevents B-tree traversal",
+        "Case-insensitive collation required",
+        "Index only stores lowercase"
+      ],
+      "answer": 1,
+      "explain": "B-tree stores raw values. Function transforms value → can't traverse tree. Fix: functional index."
+    },
+    {
+      "q": "Partial index CREATE INDEX idx ON t (col) WHERE status='active':",
+      "options": [
+        "Indexes only rows where status='active'",
+        "Indexes all rows but filters at query time",
+        "Creates two indexes internally",
+        "Only works with UNIQUE"
+      ],
+      "answer": 0,
+      "explain": "Partial index only stores entries matching WHERE clause — smaller, faster for that subset."
+    },
+    {
+      "q": "Predicate pushdown means:",
+      "options": [
+        "Pushing predicates to application layer",
+        "Moving filter closer to data source (storage/index)",
+        "Converting WHERE to HAVING",
+        "Rewriting OR to UNION"
+      ],
+      "answer": 1,
+      "explain": "Push filter down to scan/index level — reduce rows early. Key optimization in distributed DBs."
+    },
+    {
+      "q": "Functional index on LOWER(email) supports:",
+      "options": [
+        "WHERE email = 'alice@x.com'",
+        "WHERE LOWER(email) = 'alice@x.com'",
+        "WHERE email LIKE 'alice%'",
+        "All of the above"
+      ],
+      "answer": 1,
+      "explain": "Index on expression matches queries using that exact expression."
+    },
+    {
+      "q": "Covering index (INCLUDE) avoids:",
+      "options": [
+        "Index creation",
+        "Heap lookups (table access)",
+        "Sort operations",
+        "Join operations"
+      ],
+      "answer": 1,
+      "explain": "INCLUDE columns stored in index leaf — query satisfied from index alone."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Sargability — Write Predicates That Use Indexes",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**SARGable = Search ARGument ABLE. Predicate can use index seek. Non-sargable → Seq Scan. Rule: column naked on one side, constant on other. No functions, no math, no implicit casts on column.**"
+        },
+        {
+          "type": "code",
+          "label": "sargable vs non-sargable",
+          "code": "-- SARGABLE (index seek)\nWHERE created_at >= '2024-01-01'\nWHERE name LIKE 'Alice%'\nWHERE dept_id IN (1,2,3)\nWHERE salary > 50000\n\n-- NON-SARGABLE (Seq Scan)\nWHERE UPPER(name) = 'ALICE'           -- function on column\nWHERE created_at + INTERVAL '1 day' > NOW()  -- math on column\nWHERE YEAR(created_at) = 2024         -- function\nWHERE salary * 1.1 > 55000            -- math\nWHERE name LIKE '%smith'              -- leading wildcard\nWHERE status = 'active' OR status = 'pending'  -- OR often kills index",
+          "pg": "-- Partial index makes OR sargable for known values\nCREATE INDEX idx_status_active ON employees (id) WHERE status IN ('active','pending');",
+          "mysql": "-- Functional index (MySQL 8.0+)\nCREATE INDEX idx_email_lower ON users ((LOWER(email)));",
+          "py-pandas": "# No index concept, but vectorized ops:\n# Good: df[df['created_at'] >= '2024-01-01']\n# Bad: df[df['created_at'].dt.year == 2024]  # computes year for all rows"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Implicit cast kills index too.** `WHERE varchar_col = 123` casts column to numeric → Seq Scan. `WHERE numeric_col = '123'` is fine (constant cast). Always match types."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "WHERE date_col + 1 > '2024-01-01' is non-sargable because:",
+              "options": [
+                "Date math not supported",
+                "Function/math on column prevents index use",
+                "> operator not indexed",
+                "Literal format wrong"
+              ],
+              "answer": 1,
+              "explain": "Any computation on column (math, function, cast) prevents B-tree traversal."
+            },
+            {
+              "q": "WHERE status IN ('active', 'pending') with partial index on status:",
+              "options": [
+                "Always Seq Scan",
+                "Index seek on partial index",
+                "Bitmap scan only",
+                "Depends on PostgreSQL version"
+              ],
+              "answer": 1,
+              "explain": "Partial index `WHERE status IN ('active','pending')` makes this predicate sargable."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Functional & Partial Indexes — Make Non-Sargable Sargable",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Functional Index — Index the Expression"
+        },
+        {
+          "type": "code",
+          "label": "functional index",
+          "code": "-- Query: WHERE LOWER(email) = 'alice@x.com'\n-- BAD: Seq Scan\n-- FIX: Functional index\nCREATE INDEX idx_users_email_lower ON users (LOWER(email));\n\n-- Now query uses index!\nEXPLAIN SELECT * FROM users WHERE LOWER(email) = 'alice@x.com';\n-- Index Scan using idx_users_email_lower\n\n-- Case-insensitive unique constraint\nCREATE UNIQUE INDEX idx_users_email_ci ON users (LOWER(email));\n-- Prevents 'Alice@x.com' and 'alice@x.com' both existing",
+          "pg": "-- PostgreSQL: expression index\nCREATE INDEX idx ON users (LOWER(email));\n-- Supports any immutable function",
+          "mysql": "-- MySQL 8.0+: functional index\nCREATE INDEX idx_email_lower ON users ((LOWER(email)));\n-- Note: double parentheses required",
+          "py-pandas": "# No index, but pre-compute:\nusers['email_lower'] = users['email'].str.lower()\n# Then: users[users['email_lower'] == 'alice@x.com']"
+        },
+        {
+          "type": "heading",
+          "text": "Partial Index — Index Only What You Query"
+        },
+        {
+          "type": "code",
+          "label": "partial index",
+          "code": "-- 90% queries: WHERE status = 'active'\n-- Full index wastes space on 'inactive', 'deleted'\nCREATE INDEX idx_emp_active ON employees (salary) WHERE status = 'active';\n\n-- Size: fraction of full index\n-- Query uses it:\nSELECT * FROM employees WHERE status = 'active' AND salary > 50000;\n-- Index Scan on idx_emp_active\n\n-- Partial unique: one 'active' per email\nCREATE UNIQUE INDEX idx_email_active ON users (email) WHERE status = 'active';\n-- Allows 'alice@x.com' in 'inactive' + 'active'",
+          "pg": "-- Partial index (PostgreSQL native)\nCREATE INDEX idx ON t (col) WHERE status = 'active';",
+          "mysql": "-- MySQL: no native partial index\n-- Workaround: partitioned table or filtered index via generated column",
+          "py-pandas": "# Filter first, then index conceptually:\nactive = employees[employees['status'] == 'active']\n# Then operate on smaller DataFrame"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"index_type": "Full B-tree", "size": "100%", "covers": "all rows", "query_speed": "fast for all"},
+              {"index_type": "Partial (active)", "size": "~10%", "covers": "status='active'", "query_speed": "fast for active, N/A for inactive"},
+              {"index_type": "Functional (LOWER)", "size": "100%", "covers": "expression", "query_speed": "fast for LOWER() queries"},
+              {"index_type": "Covering (INCLUDE)", "size": "+20%", "covers": "key + payload", "query_speed": "index-only scan"}
+            ],
+            "after": [],
+            "highlight": ["size", "query_speed"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Partial index WHERE status='active' helps query:",
+              "options": [
+                "WHERE status = 'inactive'",
+                "WHERE status = 'active' AND salary > 50k",
+                "WHERE salary > 50k (no status filter)",
+                "All of the above"
+              ],
+              "answer": 1,
+              "explain": "Partial index only contains 'active' rows. Predicate must include status='active' to match."
+            },
+            {
+              "q": "Functional index on (salary * 12) supports:",
+              "options": [
+                "WHERE salary > 50000",
+                "WHERE salary * 12 > 600000",
+                "WHERE salary < 50000",
+                "None"
+              ],
+              "answer": 1,
+              "explain": "Expression must match exactly. Index on (salary * 12) helps queries using salary * 12."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Functional Index Scan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Index Scan",
+              "Relation Name": "users",
+              "Index Name": "idx_users_email_lower",
+              "Index Cond": "(lower(email) = 'alice@x.com')",
+              "Startup Cost": 0.29,
+              "Total Cost": 8.30,
+              "Plan Rows": 1,
+              "Plan Width": 120,
+              "Actual Startup Time": 0.015,
+              "Actual Total Time": 0.045,
+              "Actual Rows": 1,
+              "Actual Loops": 1
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Advanced Patterns — NULLS FIRST/LAST, Boolean Index",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "NULL Ordering in Indexes"
+        },
+        {
+          "type": "code",
+          "label": "nulls first/last",
+          "code": "-- Index with NULLs last (default in PG)\nCREATE INDEX idx_name ON users (name);\n-- NULLs sort last in ASC\n\n-- Explicit NULLS FIRST/LAST\nCREATE INDEX idx_name_nulls_first ON users (name ASC NULLS FIRST);\n\n-- Query matching order\nSELECT * FROM users ORDER BY name ASC NULLS FIRST;\n-- Uses idx_name_nulls_first\n\n-- Descending\nCREATE INDEX idx_salary_desc ON employees (salary DESC NULLS LAST);",
+          "pg": "-- NULLS FIRST/LAST in index definition",
+          "mysql": "-- MySQL: NULLs always first in ASC, last in DESC\n-- No control in index definition",
+          "py-pandas": "# sort_values na_position='first' or 'last'\ndf.sort_values('name', na_position='first')"
+        },
+        {
+          "type": "heading",
+          "text": "Boolean Column — Partial Index for True/False"
+        },
+        {
+          "type": "code",
+          "label": "boolean partial index",
+          "code": "-- Table: is_deleted BOOLEAN DEFAULT FALSE\n-- 99% FALSE, queries only need non-deleted\nCREATE INDEX idx_not_deleted ON items (id) WHERE NOT is_deleted;\n\n-- Query:\nSELECT * FROM items WHERE NOT is_deleted AND created_at > '2024-01-01';\n-- Uses idx_not_deleted + created_at filter",
+          "pg": "-- Boolean partial index very common for soft-delete",
+          "mysql": "-- Generated column workaround\nALTER TABLE items ADD COLUMN not_deleted TINYINT \n  GENERATED ALWAYS AS (NOT is_deleted) STORED;\nCREATE INDEX idx_not_deleted ON items (not_deleted);"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Index on (created_at DESC NULLS LAST) helps query:",
+              "options": [
+                "ORDER BY created_at ASC",
+                "ORDER BY created_at DESC NULLS LAST",
+                "WHERE created_at > '2024-01-01'",
+                "None"
+              ],
+              "answer": 1,
+              "explain": "Index sort order must match query ORDER BY for index-only scan."
+            },
+            {
+              "q": "Boolean partial index WHERE NOT is_deleted is useful when:",
+              "options": [
+                "50% deleted",
+                "1% deleted (vast majority not deleted)",
+                "Frequently query deleted items",
+                "Never query non-deleted"
+              ],
+              "answer": 1,
+              "explain": "Partial index shines when filtering to small subset. If 99% not deleted, index is 1% of full size."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Deep Dive — Predicate Pushdown & Sargability",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "CREATE INDEX idx ON t (LOWER(name));",
+          "pg": "CREATE INDEX idx ON t (LOWER(name));",
+          "mysql": "CREATE INDEX idx ON t ((LOWER(name))); -- double parens",
+          "py-pandas": "df['name_lower'] = df['name'].str.lower()",
+          "py-sqlalchemy": "Index('idx', func.lower(User.name))"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "CREATE INDEX idx ON t (col) WHERE status = 'active';",
+          "pg": "CREATE INDEX idx ON t (col) WHERE status = 'active';",
+          "mysql": "-- No native partial index\n-- Workaround: filtered index via generated column",
+          "py-pandas": "active = df[df['status'] == 'active']",
+          "py-sqlalchemy": "-- DDL varies; use DDL() construct"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L3 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "F301",
+              "tier": 3,
+              "title": "Functional Index for Case-Insensitive Email",
+              "platform": "drill",
+              "patterns": ["functional-index"],
+              "statement": "Users login with email case-insensitively. Create index for WHERE LOWER(email) = ?.",
+              "hints": ["CREATE INDEX ON users (LOWER(email))"]
+            },
+            {
+              "id": "F302",
+              "tier": 3,
+              "title": "Partial Index for Active Users",
+              "platform": "drill",
+              "patterns": ["partial-index"],
+              "statement": "95% queries filter status='active'. Create partial index on users(created_at) for active users.",
+              "hints": ["WHERE status = 'active'"]
+            },
+            {
+              "id": "F303",
+              "tier": 3,
+              "title": "Fix Non-Sargable: YEAR(created_at) = 2024",
+              "platform": "drill",
+              "patterns": ["sargability-fix"],
+              "statement": "Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.",
+              "hints": ["created_at >= '2024-01-01' AND created_at < '2025-01-01'"]
+            },
+            {
+              "id": "F304",
+              "tier": 3,
+              "title": "Functional Index for Annual Salary",
+              "platform": "drill",
+              "patterns": ["functional-index"],
+              "statement": "Query: WHERE salary * 12 > 120000. Create functional index.",
+              "hints": ["CREATE INDEX ON employees ((salary * 12))"]
+            },
+            {
+              "id": "F305",
+              "tier": 3,
+              "title": "Partial Unique: One Active Email Per User",
+              "platform": "drill",
+              "patterns": ["partial-unique"],
+              "statement": "Allow same email for inactive users, but only one active per email.",
+              "hints": ["CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'"]
+            },
+            {
+              "id": "F306",
+              "tier": 3,
+              "title": "Sargable Rewrite: salary * 1.1 > 55000",
+              "platform": "drill",
+              "patterns": ["sargability-fix"],
+              "statement": "Rewrite to use index on salary.",
+              "hints": ["salary > 50000"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "SARGable: column naked on left, constant on right. No functions/math/casts on column",
+    "Functional index: index the expression (LOWER, math) to make non-sargable sargable",
+    "Partial index: WHERE clause on index — smaller, faster for skewed access patterns",
+    "Predicate pushdown: move filter to storage layer; key in distributed/columnar DBs",
+    "Covering index (INCLUDE): index-only scan, avoids heap fetch",
+    "Implicit cast on column = Seq Cast. Match types: numeric_col = 123 not '123'"
+  ],
+  "glossary": [
+    { "term": "sargable", "def": "Search ARGument ABLE — predicate that can use index seek (e.g., col = 5)." },
+    { "term": "functional index", "def": "Index on expression (e.g., LOWER(col)) — supports queries using that expression." },
+    { "term": "partial index", "def": "Index with WHERE clause — only indexes subset of rows matching condition." },
+    { "term": "covering index", "def": "Index with INCLUDE columns — satisfies query without heap lookup." },
+    { "term": "predicate pushdown", "def": "Moving filter predicate down to storage/index layer to reduce data movement." },
+    { "term": "implicit cast", "def": "Automatic type conversion on column (e.g., varchar = 123) — kills index." }
+  ]
+}

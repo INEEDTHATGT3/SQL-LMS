@@ -1,0 +1,358 @@
+{
+  "level": 3,
+  "title": "SQL Fundamentals",
+  "tagline": "query plans, indexes, dialect nuances — optimization begins",
+  "placementQuiz": [
+    {
+      "q": "An Index Scan is generally faster than Seq Scan because:",
+      "options": [
+        "It reads fewer pages by jumping via B-tree",
+        "It sorts data automatically",
+        "It uses more CPU but less I/O",
+        "It only works on primary keys"
+      ],
+      "answer": 0,
+      "explain": "B-tree index lets the database jump directly to matching rows instead of scanning all pages."
+    },
+    {
+      "q": "In EXPLAIN output, 'cost=0.29..42.15' means:",
+      "options": [
+        "Startup cost 0.29, total cost 42.15 (arbitrary units)",
+        "Takes 0.29ms to start, 42.15ms total",
+        "Cost is 0.29 for index, 42.15 for table",
+        "Rows 0.29 to 42.15"
+      ],
+      "answer": 0,
+      "explain": "Cost is planner's estimate in arbitrary units. First = startup, second = total."
+    },
+    {
+      "q": "Which index type supports range queries (>, <, BETWEEN) efficiently?",
+      "options": [
+        "Hash index",
+        "B-tree index",
+        "GIN index",
+        "BRIN index"
+      ],
+      "answer": 1,
+      "explain": "B-tree maintains sorted order, enabling range scans. Hash only supports equality."
+    },
+    {
+      "q": "Partial index (WHERE clause on index) is useful when:",
+      "options": [
+        "You always query the same subset (e.g., status='active')",
+        "Table has fewer than 100 rows",
+        "Column has all unique values",
+        "You need full-text search"
+      ],
+      "answer": 0,
+      "explain": "Partial index only indexes rows matching condition — smaller, faster for that subset."
+    },
+    {
+      "q": "Covering index (INCLUDE columns) avoids:",
+      "options": [
+        "Index creation",
+        "Heap lookups (table access)",
+        "Sort operations",
+        "Join operations"
+      ],
+      "answer": 1,
+      "explain": "INCLUDE columns stored in index leaf — query satisfied from index alone, no heap fetch."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Query Plans Deep Dive — EXPLAIN ANALYZE",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**EXPLAIN shows the plan; EXPLAIN ANALYZE runs it and shows actuals. Compare estimated vs actual rows — divergence = stale stats or bad assumptions.**"
+        },
+        {
+          "type": "code",
+          "label": "explain variants",
+          "code": "-- Plan only (no execution)\nEXPLAIN SELECT * FROM employees WHERE salary > 50000;\n\n-- Execute + actual timings\nEXPLAIN ANALYZE SELECT * FROM employees WHERE salary > 50000;\n\n-- JSON format (machine-readable)\nEXPLAIN (ANALYZE, FORMAT JSON) SELECT * FROM employees WHERE salary > 50000;\n\n-- With buffers (I/O detail)\nEXPLAIN (ANALYZE, BUFFERS) SELECT * FROM employees WHERE salary > 50000;",
+          "pg": "-- PostgreSQL specific options\nEXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT ...;",
+          "mysql": "-- MySQL\nEXPLAIN ANALYZE SELECT * FROM employees WHERE salary > 50000;\nEXPLAIN FORMAT=JSON SELECT ...;"
+        },
+        {
+          "type": "query-plan",
+          "title": "Seq Scan with Filter (Actual vs Estimated)",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "employees",
+              "Alias": "e",
+              "Startup Cost": 0.00,
+              "Total Cost": 185.00,
+              "Plan Rows": 8500,
+              "Plan Width": 72,
+              "Filter": "(salary > 50000)",
+              "Actual Startup Time": 0.024,
+              "Actual Total Time": 12.45,
+              "Actual Rows": 3200,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 120
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Estimated rows: 8500 → Actual: 3200.** Statistics may be stale (run ANALYZE) or filter selectivity misestimated. At L4 you'll learn to fix this with extended statistics."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "If 'Actual Rows' >> 'Plan Rows', likely cause:",
+              "options": [
+                "Index is missing",
+                "Statistics are stale (run ANALYZE)",
+                "Query is too slow",
+                "Wrong join type"
+              ],
+              "answer": 1,
+              "explain": "Planner relies on pg_stats. Stale stats = wrong row estimates = bad plan choices."
+            },
+            {
+              "q": "Buffers: shared hit=120 means:",
+              "options": [
+                "120 index pages read from disk",
+                "120 pages found in shared memory (cache)",
+                "120 rows returned",
+                "120ms elapsed"
+              ],
+              "answer": 1,
+              "explain": "Shared hit = pages already in RAM. Shared read = disk I/O. Dirtied = modified."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Index Types & When to Use",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "B-tree (Default) — The Workhorse"
+        },
+        {
+          "type": "code",
+          "label": "btree usage",
+          "code": "-- Created automatically for PRIMARY KEY, UNIQUE\n-- Manual creation\nCREATE INDEX idx_employees_salary ON employees (salary);\n\n-- Composite (order matters!)\nCREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary);\n\n-- Supports: =, <, >, <=, >=, BETWEEN, IN, LIKE 'prefix%'\n-- Does NOT support: LIKE '%suffix', functions on column",
+          "pg": "-- Partial index (PostgreSQL)\nCREATE INDEX idx_active_emp ON employees (salary) WHERE status = 'active';\n\n-- Covering index\nCREATE INDEX idx_emp_salary_name ON employees (salary) INCLUDE (name);",
+          "mysql": "-- Covering index (MySQL 8.0+)\nCREATE INDEX idx_emp_salary_name ON employees (salary, name);\n-- MySQL stores included cols in secondary index automatically"
+        },
+        {
+          "type": "heading",
+          "text": "Hash Index — Equality Only"
+        },
+        {
+          "type": "prose",
+          "md": "Hash indexes only support `=` comparisons. Faster for point lookups but no range scans. PostgreSQL: `CREATE INDEX ... USING HASH`. MySQL MEMORY engine uses hash by default."
+        },
+        {
+          "type": "heading",
+          "text": "Other Types (PostgreSQL)"
+        },
+        {
+          "type": "list",
+          "items": [
+            "**GIN** — Generalized Inverted Index: arrays, JSONB, full-text search, `col @> '{\"key\": \"val\"}'`",
+            "**GiST** — Generalized Search Tree: geometric data, `tsvector`, range types",
+            "**BRIN** — Block Range Index: huge tables with natural correlation (timestamps, auto-increment IDs). Tiny size, coarse granularity.",
+            "**SP-GiST** — Space-Partitioned GiST: non-balanced structures (quadtrees, prefix trees)"
+          ]
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Which index supports `col @> '{\"a\":1}'` (JSONB containment)?",
+              "options": [
+                "B-tree",
+                "Hash",
+                "GIN",
+                "BRIN"
+              ],
+              "answer": 2,
+              "explain": "GIN is designed for composite values with containment/overlap operators."
+            },
+            {
+              "q": "BRIN index is best for:",
+              "options": [
+                "Small tables with random data",
+                "Huge tables with correlated columns (time, ID)",
+                "Full-text search",
+                "Primary keys"
+              ],
+              "answer": 1,
+              "explain": "BRIN stores min/max per block range. Tiny (KB vs GB) but only works when physical order matches logical."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Index Pitfalls — When Indexes Don't Help",
+      "blocks": [
+        {
+          "type": "code",
+          "label": "functions on columns kill indexes",
+          "code": "-- BAD: function on column → Seq Scan\nSELECT * FROM employees WHERE UPPER(name) = 'ALICE';\n\n-- GOOD: functional index\nCREATE INDEX idx_emp_upper_name ON employees (UPPER(name));\n-- or store normalized\nALTER TABLE employees ADD COLUMN name_upper TEXT GENERATED ALWAYS AS (UPPER(name)) STORED;\nCREATE INDEX idx_emp_name_upper ON employees (name_upper);",
+          "pg": "-- Functional index (PostgreSQL)\nCREATE INDEX idx_emp_upper_name ON employees (UPPER(name));",
+          "mysql": "-- Functional index (MySQL 8.0+)\nCREATE INDEX idx_emp_upper_name ON employees ((UPPER(name)));"
+        },
+        {
+          "type": "code",
+          "label": "leading wildcard kills index",
+          "code": "-- BAD: leading % → Seq Scan\nSELECT * FROM employees WHERE name LIKE '%son';\n\n-- GOOD: trailing % uses B-tree\nSELECT * FROM employees WHERE name LIKE 'J%';",
+          "pg": "-- Trigram index for leading wildcard (pg_trgm extension)\nCREATE EXTENSION pg_trgm;\nCREATE INDEX idx_emp_name_trgm ON employees USING GIN (name gin_trgm_ops);\n-- Now LIKE '%son' uses index!",
+          "mysql": "-- Fulltext index for text search\nALTER TABLE employees ADD FULLTEXT(name);\nSELECT * FROM employees WHERE MATCH(name) AGAINST('son');"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Low selectivity = planner ignores index.** If query returns >5-10% of table, Seq Scan is often faster (sequential I/O vs random). Check `reltuples` vs `rows` in EXPLAIN."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "WHERE UPPER(name) = 'ALICE' ignores index on name because:",
+              "options": [
+                "UPPER is not deterministic",
+                "Function on column prevents B-tree usage",
+                "Case-insensitive collation needed",
+                "Index only stores lowercase"
+              ],
+              "answer": 1,
+              "explain": "B-tree stores raw column values. Function transforms value → can't traverse tree. Fix: functional index."
+            },
+            {
+              "q": "Planner chooses Seq Scan over Index Scan when:",
+              "options": [
+                "Table has < 100 rows",
+                "Query returns large fraction of table (>5-10%)",
+                "Index is fragmented",
+                "All of the above"
+              ],
+              "answer": 1,
+              "explain": "Random I/O (index) vs sequential I/O (scan). Threshold depends on settings (random_page_cost)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Differences — Date/Time & Limit",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT CURRENT_DATE;",
+          "pg": "SELECT CURRENT_DATE; -- or NOW()::date",
+          "mysql": "SELECT CURDATE();",
+          "py-pandas": "pd.Timestamp.now().date()",
+          "py-sqlalchemy": "session.query(func.current_date()).scalar()"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;",
+          "pg": "SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;",
+          "mysql": "SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;",
+          "py-pandas": "employees.nlargest(10, 'hire_date')",
+          "py-sqlalchemy": "session.query(Employee).order_by(Employee.hire_date.desc()).limit(10).all()"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM employees OFFSET 20 LIMIT 10;",
+          "pg": "SELECT * FROM employees OFFSET 20 LIMIT 10;",
+          "mysql": "SELECT * FROM employees LIMIT 10 OFFSET 20; -- or LIMIT 20, 10",
+          "py-pandas": "employees.iloc[20:30]",
+          "py-sqlalchemy": "session.query(Employee).offset(20).limit(10).all()"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L3 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "B301",
+              "tier": 3,
+              "title": "Create Index for Salary Range Queries",
+              "platform": "drill",
+              "patterns": ["create-index", "btree"],
+              "statement": "Create a B-tree index on employees.salary to speed up range queries.",
+              "hints": ["CREATE INDEX idx_emp_salary ON employees (salary);"]
+            },
+            {
+              "id": "B302",
+              "tier": 3,
+              "title": "Composite Index for Dept + Salary",
+              "platform": "drill",
+              "patterns": ["composite-index"],
+              "statement": "Create composite index for queries filtering by dept_id then ordering by salary.",
+              "hints": ["Column order matters: equality first (dept_id), then range (salary)"]
+            },
+            {
+              "id": "B303",
+              "tier": 3,
+              "title": "Partial Index for Active Employees",
+              "platform": "drill",
+              "patterns": ["partial-index"],
+              "statement": "90% of queries filter status='active'. Create partial index on salary for active employees only.",
+              "hints": ["WHERE status = 'active'"]
+            },
+            {
+              "id": "B304",
+              "tier": 3,
+              "title": "Covering Index to Avoid Heap Fetch",
+              "platform": "drill",
+              "patterns": ["covering-index"],
+              "statement": "Query: SELECT name, salary FROM employees WHERE salary > 50000. Create covering index.",
+              "hints": ["INCLUDE (name) in PostgreSQL; (salary, name) in MySQL"]
+            },
+            {
+              "id": "B305",
+              "tier": 3,
+              "title": "Analyze Query Plan",
+              "platform": "drill",
+              "patterns": ["explain-analyze"],
+              "statement": "Run EXPLAIN ANALYZE on: SELECT * FROM employees WHERE dept_id = 3 AND salary > 60000. Note: Seq Scan vs Index Scan, actual rows.",
+              "hints": ["EXPLAIN (ANALYZE, BUFFERS) ..."]
+            },
+            {
+              "id": "B306",
+              "tier": 3,
+              "title": "Fix Function-on-Column Index Issue",
+              "platform": "drill",
+              "patterns": ["functional-index"],
+              "statement": "Query: SELECT * FROM employees WHERE LOWER(email) = 'alice@company.com'. Create index to support this.",
+              "hints": ["Functional index on LOWER(email)"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "EXPLAIN vs EXPLAIN ANALYZE — estimated vs actual rows reveals stats issues",
+    "B-tree = default, supports ranges; Hash = equality only; GIN = JSONB/arrays; BRIN = huge correlated tables",
+    "Partial index (WHERE on index) for skewed query patterns",
+    "Covering index (INCLUDE) avoids heap lookups",
+    "Functions on columns kill indexes — use functional indexes",
+    "Leading wildcard (%text) kills B-tree — pg_trgm or fulltext for that"
+  ],
+  "glossary": [
+    { "term": "covering index", "def": "Index that includes all columns needed by query (INCLUDE), avoiding table lookup." },
+    { "term": "partial index", "def": "Index with WHERE clause — only indexes subset of rows." },
+    { "term": "functional index", "def": "Index on expression (e.g., UPPER(col)) — supports queries with functions." },
+    { "term": "selectivity", "def": "Fraction of rows matching condition. Low selectivity = few rows = index friendly." },
+    { "term": "heap fetch", "def": "Table lookup after index finds row pointer. Covering index eliminates this." },
+    { "term": "random_page_cost", "def": "Planner parameter: cost of random I/O vs sequential. Higher = prefer Seq Scan." }
+  ]
+}

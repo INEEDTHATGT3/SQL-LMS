@@ -1,0 +1,38 @@
+{
+  "storageKey": "sql_lms_progress_v1",
+  "minPlacementQuiz": 5,
+  "minTraces": 1,
+  "minMcqsTotal": 6,
+  "minProblems": {
+    "1": 6,
+    "2": 8,
+    "3": 6,
+    "4": 5
+  },
+  "minRevisionBullets": 4,
+  "minGlossaryTerms": 5,
+  "tierRule": "problem.tier === lesson.level",
+  "traceTypes": ["query-plan"],
+  "custom": {
+    "requireQueryPlan": {
+      "3": 1,
+      "4": 2
+    },
+    "requireDialectNote": {
+      "3": true,
+      "4": true
+    },
+    "requireSeedData": true
+  },
+  "customBlocks": {
+    "query-plan": "./renderer/blocks/query-plan.js",
+    "schema-diagram": "./renderer/blocks/schema-diagram.js",
+    "table-diff": "./renderer/blocks/table-diff.js",
+    "dialect-diff": "./renderer/blocks/dialect-diff.js",
+    "seed-data": "./renderer/blocks/seed-data.js"
+  },
+  "customValidators": {
+    "requireQueryPlan": "./renderer/validators/query-plan-validator.js",
+    "requireDialectNote": "./renderer/validators/dialect-validator.js"
+  }
+}

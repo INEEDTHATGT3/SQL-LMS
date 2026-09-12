@@ -1,0 +1,387 @@
+{
+  "level": 3,
+  "title": "Subqueries & CTEs",
+  "tagline": "predicate pushdown, cte optimization, recursive patterns, performance",
+  "placementQuiz": [
+    {
+      "q": "NOT MATERIALIZED CTE in PostgreSQL allows:",
+      "options": [
+        "Predicate pushdown into CTE",
+        "Faster materialization",
+        "Recursive queries only",
+        "Parallel execution"
+      ],
+      "answer": 0,
+      "explain": "NOT MATERIALIZED = inline CTE, allowing outer predicates to push into CTE scan."
+    },
+    {
+      "q": "CTE with volatile function (random()) is:",
+      "options": [
+        "Always materialized",
+        "Never materialized",
+        "Inlined by default",
+        "Error"
+      ],
+      "answer": 0,
+      "explain": "Volatile functions force materialization to ensure consistent results per execution."
+    },
+    {
+      "q": "Recursive CTE cycle prevention uses:",
+      "options": [
+        "Automatic in all databases",
+        "WHERE id NOT IN (SELECT id FROM cte)",
+        "WHERE id != ALL(path_array)",
+        "Automatic with RECURSIVE keyword"
+      ],
+      "answer": 2,
+      "explain": "Track visited nodes in array/path column. Check `WHERE id != ALL(path)` before recursing."
+    },
+    {
+      "q": "Predicate pushdown through CTE is blocked by:",
+      "options": [
+        "MATERIALIZED hint",
+        "Volatile functions in CTE",
+        "Multiple CTE references",
+        "All of the above"
+      ],
+      "answer": 3,
+      "explain": "All block pushdown: MATERIALIZED hint, volatile functions, multiple references (sometimes)."
+    },
+    {
+      "q": "LATERAL join with LIMIT for top-N per group — execution:",
+      "options": [
+        "Full scan per outer row",
+        "Index seek + LIMIT per outer row",
+        "Full sort per outer row",
+        "Hash join"
+      ],
+      "answer": 1,
+      "explain": "LATERAL + ORDER BY + LIMIT with index on (partition, order) = index seek + LIMIT per outer row."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Predicate Pushdown — Moving Filters Down",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Push predicates down to data source. Filter early = fewer rows to join/aggregate. CTEs, views, subqueries — all can block or allow pushdown. NOT MATERIALIZED = pushdown enabled. MATERIALIZED/volatile = pushdown blocked."
+        },
+        {
+          "type": "code",
+          "label": "predicate pushdown examples",
+          "code": "-- View with filter\nCREATE VIEW active_users AS SELECT * FROM users WHERE status = 'active';\n-- Query: SELECT * FROM active_users WHERE dept_id = 5;\n-- Pushdown: status='active' AND dept_id=5 pushed into view scan\n\n-- CTE with NOT MATERIALIZED (PG 12+)\nWITH active AS NOT MATERIALIZED (\n  SELECT * FROM users WHERE status = 'active'\n)\nSELECT * FROM active WHERE dept_id = 5;\n-- dept_id=5 pushed into CTE scan\n\n-- Subquery pushdown\nSELECT * FROM (\n  SELECT * FROM users WHERE status = 'active'\n) u WHERE dept_id = 5;\n-- Pushdown works (subquery merged)",
+          "pg": "-- Pushdown automatic in PostgreSQL\n-- Blocked by: VOLATILE functions, LIMIT/OFFSET in subquery, set operations, window functions",
+          "mysql": "-- MySQL 8.0+: derived table pushdown (merged)\n-- Blocked by: LIMIT in subquery, UNION, user variables",
+          "py-pandas": "# Manual pushdown: filter first\nactive = df[df['status'] == 'active']\nresult = active[active['dept_id'] == 5]"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "Pushdown blockers: VOLATILE functions (random(), now()), LIMIT/OFFSET in subquery, UNION/EXCEPT/INTERSECT, window functions in subquery, CTEs (materialized by default), multiple CTE references."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Predicate pushdown moves filter:",
+              "options": [
+                "From outer query INTO inner subquery/CTE",
+                "From inner TO outer",
+                "To application layer",
+                "To storage engine only"
+              ],
+              "answer": 0,
+              "explain": "Push filter down to where data originates — reduces rows before join/aggregation."
+            },
+            {
+              "q": "CTE with LIMIT blocks pushdown because:",
+              "options": [
+                "LIMIT changes semantics if pushed",
+                "CTEs are optimization fences",
+                "Both A and B",
+                "CTEs don't support pushdown"
+              ],
+              "answer": 2,
+              "explain": "In PostgreSQL, CTEs are optimization fences (materialized). LIMIT inside CTE prevents pushdown."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "CTE Optimization Patterns",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "When to MATERIALIZE vs NOT MATERIALIZED"
+        },
+        {
+          "type": "code",
+          "label": "cte materialization control",
+          "code": "-- Force inlining (pushdown)\nWITH cte AS NOT MATERIALIZED (\n  SELECT * FROM large_table WHERE status = 'active'\n)\nSELECT * FROM cte WHERE created > '2024-01-01';\n-- Predicate pushed into scan\n\n-- Force materialization (prevent re-computation)\nWITH cte AS MATERIALIZED (\n  SELECT * FROM large_table WHERE status = 'active'\n)\nSELECT * FROM cte WHERE dept = 1;\nSELECT * FROM cte WHERE dept = 2;\n-- CTE computed once, reused\n\n-- Auto: referenced once + no volatile = NOT MATERIALIZED\n-- Referenced multiple times OR volatile func = MATERIALIZED",
+          "pg": "-- PG 12+: MATERIALIZED / NOT MATERIALIZED hints",
+          "mysql": "-- MySQL: no hints; CTEs always materialized",
+          "py-pandas": "# No CTE; manual optimization\n# Push filter first, then compute"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "Rule of thumb: Single reference + no volatile = NOT MATERIALIZED (pushdown). Multiple refs OR volatile = MATERIALIZED. Default in PG 12+ is smart."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "CTE with NOW() function — materialization:",
+              "options": [
+                "Never materialized",
+                "Always materialized (volatile)",
+                "Depends on references",
+                "Only if referenced twice"
+              ],
+              "answer": 1,
+              "explain": "Volatile functions (NOW(), random()) force materialization to ensure consistent results per execution."
+            },
+            {
+              "q": "CTE referenced 3 times in outer query — default behavior:",
+              "options": [
+                "Inlined 3 times",
+                "Materialized once, scanned 3 times",
+                "Error",
+                "Inlined once"
+              ],
+              "answer": 1,
+              "explain": "Multiple references → materialized once, then scanned multiple times (avoids recomputation)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Advanced Recursive CTE Patterns",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Advanced Recursion Patterns"
+        },
+        {
+          "type": "code",
+          "label": "advanced recursive patterns",
+          "code": "-- Cycle detection with path tracking\nWITH RECURSIVE paths AS (\n  SELECT id, parent_id, name, ARRAY[id] AS path, 1 AS depth\n  FROM nodes WHERE parent_id IS NULL\n\n  UNION ALL\n\n  SELECT n.id, n.parent_id, n.name, p.path || n.id, p.depth + 1\n  FROM nodes n\n  JOIN paths p ON n.parent_id = p.id\n  WHERE n.id != ALL(p.path)  -- cycle prevention\n  AND p.depth < 20\n)\nSELECT * FROM paths;\n\n-- Shortest path (BFS via level)\nWITH RECURSIVE bfs AS (\n  SELECT id, ARRAY[id] AS path, 0 AS dist\n  FROM nodes WHERE id = 'A'\n\n  UNION ALL\n\n  SELECT n.id, p.path || n.id, p.dist + 1\n  FROM edges e\n  JOIN bfs p ON e.from_id = p.id\n  JOIN nodes n ON e.to_id = n.id\n  WHERE n.id != ALL(p.path)\n  AND p.dist < 10\n)\nSELECT * FROM bfs WHERE id = 'Z' ORDER BY path LIMIT 1;\n\n-- Transitive closure (all reachable)\nWITH RECURSIVE reachable AS (\n  SELECT from_id, to_id FROM edges WHERE from_id = 1\n\n  UNION ALL\n\n  SELECT r.from_id, e.to_id\n  FROM reachable r\n  JOIN edges e ON e.from_id = r.to_id\n  WHERE e.to_id != ALL(ARRAY[r.from_id] || r.to_id)\n)\nSELECT DISTINCT to_id FROM reachable;",
+          "pg": "-- Array path tracking with || operator",
+          "mysql": "-- MySQL: JSON_ARRAY_APPEND for path, CTE depth limit",
+          "py-pandas": "# NetworkX for graph traversal\nimport networkx as nx\ng = nx.DiGraph()\nfor _, r in df.iterrows():\n    if pd.notna(r['parent_id']): g.add_edge(r['parent_id'], r['id'])\nnx.all_simple_paths(g, source, target)"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"pattern": "Path enumeration", "technique": "ARRAY[id] || next_id", "cycle_check": "id != ALL(path)", "use_case": "Full path, cycle detection"},
+              {"pattern": "Shortest path (BFS)", "technique": "Track distance, stop at target", "cycle_check": "Visited set", "use_case": "Shortest path in unweighted graph"},
+              {"pattern": "Transitive closure", "technique": "Recursive join on edges", "cycle_check": "Visited set", "use_case": "All reachable nodes"},
+              {"pattern": "Cycle detection", "technique": "path @> ARRAY[next_id]", "cycle_check": "Early termination", "use_case": "Detect cycles in graph"}
+            ],
+            "after": [],
+            "highlight": ["cycle_check"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Recursive CTE for shortest path uses:",
+              "options": [
+                "Depth-first search",
+                "Breadth-first search (level by level)",
+                "Random walk",
+                "Dijkstra's algorithm"
+              ],
+              "answer": 1,
+              "explain": "Recursive CTE naturally does BFS: level N expands from level N-1. First hit = shortest path."
+            },
+            {
+              "q": "Cycle detection in recursive CTE:",
+              "options": [
+                "Automatic",
+                "WHERE next_id != ALL(path_array)",
+                "Automatic with RECURSIVE keyword",
+                "Not needed if graph is acyclic"
+              ],
+              "answer": 1,
+              "explain": "Must explicitly check `WHERE next_id != ALL(path)` to prevent infinite loops."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Recursive CTE Shortest Path",
+          "plan": {
+            "Plan": {
+              "Node Type": "CTE Scan",
+              "CTE Name": "bfs",
+              "Startup Cost": 100.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 8500,
+              "Plan Width": 48,
+              "Plans": [
+                {
+                  "Node Type": "Recursive Union",
+                  "Startup Cost": 100.00,
+                  "Total Cost": 5000.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 48,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "nodes",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 100.00,
+                      "Plan Rows": 100
+                    },
+                    {
+                      "Node Type": "WorkTable Scan",
+                      "Relation Name": "bfs",
+                      "Startup Cost": 100.00,
+                      "Total Cost": 4900.00,
+                      "Plan Rows": 8400,
+                      "Plan Width": 48,
+                      "Plans": [
+                        {
+                          "Node Type": "Hash Join",
+                          "Startup Cost": 100.00,
+                          "Total Cost": 4900.00,
+                          "Plan Rows": 8400,
+                          "Plan Width": 48,
+                          "Hash Cond": "(edges.from_id = bfs.id)",
+                          "Plans": [
+                            {
+                              "Node Type": "Seq Scan",
+                              "Relation Name": "edges",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 100.00,
+                              "Plan Rows": 1000
+                            },
+                            {
+                              "Node Type": "WorkTable Scan",
+                              "Relation Name": "bfs",
+                              "Startup Cost": 0.00,
+                              "Total Cost": 0.00,
+                              "Plan Rows": 100,
+                              "Plan Width": 24
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Dialect Deep Dive — CTE & Subquery Limits",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "WITH cte AS NOT MATERIALIZED (SELECT * FROM t WHERE x > 5) SELECT * FROM cte WHERE y = 1;",
+          "pg": "WITH cte AS NOT MATERIALIZED (SELECT * FROM t WHERE x > 5) SELECT * FROM cte WHERE y = 1; -- PG 12+",
+          "mysql": "-- No NOT MATERIALIZED; CTE always materialized. Use subquery for pushdown:\nSELECT * FROM (SELECT * FROM t WHERE x > 5) AS cte WHERE y = 1;",
+          "py-pandas": "cte = df[df['x'] > 5]; result = cte[cte['y'] == 1]"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte;",
+          "pg": "WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte;",
+          "mysql": "WITH RECURSIVE cte AS (SELECT 1 AS n UNION ALL SELECT n+1 FROM cte WHERE n < 5) SELECT * FROM cte; -- 8.0+",
+          "py-pandas": "results = [1]\nwhile results[-1] < 5: results.append(results[-1] + 1)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L3 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S301",
+              "tier": 3,
+              "title": "Pushdown Through View",
+              "platform": "drill",
+              "patterns": ["predicate-pushdown"],
+              "statement": "View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.",
+              "hints": ["EXPLAIN SELECT * FROM active_view WHERE dept_id = 5"]
+            },
+            {
+              "id": "S302",
+              "tier": 3,
+              "title": "Force Predicate Pushdown Through CTE",
+              "platform": "drill",
+              "patterns": ["not-materialized"],
+              "statement": "CTE filters status='active'. Outer adds dept_id=5. Rewrite with NOT MATERIALIZED.",
+              "hints": ["WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active')"]
+            },
+            {
+              "id": "S303",
+              "tier": 3,
+              "title": "Recursive CTE with Cycle Detection",
+              "platform": "drill",
+              "patterns": ["recursive-cte", "cycle-detection"],
+              "statement": "Graph edges table (from_id, to_id). Find all paths from A to B with cycle detection.",
+              "hints": ["Track path in ARRAY, check `WHERE next_id != ALL(path)`"]
+            },
+            {
+              "id": "S304",
+              "tier": 3,
+              "title": "Materialized vs Not Materialized CTE",
+              "platform": "drill",
+              "patterns": ["materialized", "not-materialized"],
+              "statement": "CTE computes expensive aggregation. Referenced 3 times. Force MATERIALIZED.",
+              "hints": ["WITH cte AS MATERIALIZED (SELECT ...)"]
+            },
+            {
+              "id": "S305",
+              "tier": 3,
+              "title": "Shortest Path in Weighted Graph (Conceptual)",
+              "platform": "drill",
+              "patterns": ["recursive-cte", "shortest-path"],
+              "statement": "Explain how recursive CTE finds shortest path in unweighted graph.",
+              "hints": ["BFS via recursive CTE level expansion; first hit = shortest"]
+            },
+            {
+              "id": "S306",
+              "tier": 3,
+              "title": "Fix Blocked Pushdown",
+              "platform": "drill",
+              "patterns": ["pushdown-fix"],
+              "statement": "CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.",
+              "hints": ["Move LIMIT to outer query; use subquery instead of CTE"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Pushdown: move filter down to data source; blocked by VOLATILE, LIMIT, CTEs, set ops",
+    "CTE: NOT MATERIALIZED = pushdown; MATERIALIZED = force compute once; default = smart",
+    "Volatile functions (NOW(), random()) force materialization",
+    "Recursive CTE: path array for cycle detection, BFS for shortest path",
+    "CTE referenced multiple times = materialized once; single ref = inlined",
+    "Pushdown blockers: VOLATILE, LIMIT, CTE (materialized), set ops, window funcs"
+  ],
+  "glossary": [
+    { "term": "predicate pushdown", "def": "Moving WHERE filter down into view/CTE/subquery to reduce rows before join." },
+    { "term": "optimization fence", "def": "CTE in PostgreSQL — materialized by default, blocks predicate pushdown and join reordering." },
+    { "term": "NOT MATERIALIZED", "def": "PostgreSQL 12+ hint to inline CTE, enabling predicate pushdown." },
+    { "term": "MATERIALIZED", "def": "Force CTE to be computed once and stored; avoids recomputation for multiple references." },
+    { "term": "transitive closure", "def": "All reachable nodes from a starting node in a graph." },
+    { "term": "cycle detection", "def": "Checking if next node already in path to prevent infinite recursion." }
+  ]
+}

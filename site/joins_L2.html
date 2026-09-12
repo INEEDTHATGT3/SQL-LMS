@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joins & Set Operations — L2 INTERVIEW READY</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="2" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 03</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">join algorithms, lateral, semi/anti joins, join order</span></div>
+  <h1>Joins & Set Operations</h1>
+  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="joins_L1" href="joins_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="joins_L2" href="joins_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="joins_L3" href="joins_L3.html">ADVANCED</a><a class="level-pill " data-lesson="joins_L4" href="joins_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Join Algorithms — How the Planner Executes</a><a href="#sec-1">02 · LATERAL JOIN — Correlated Subquery in FROM</a><a href="#sec-2">03 · Semi/Anti Joins & Join Order</a><a href="#sec-3">04 · Dialect Differences — Join Syntax</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q101" data-answer="1">
+      <div class="quiz-q">Nested Loop Join is best when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Both tables are large</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>One table is small, other has index on join key</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>No indexes exist</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Joining on non-equality condition</span></div></div>
+      <div class="quiz-explain">NLJ: for each outer row, probe inner index. Best when outer is small and inner has index.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q102" data-answer="0">
+      <div class="quiz-q">Hash Join builds hash table on:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Smaller table (build side)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Larger table</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both tables</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Primary key only</span></div></div>
+      <div class="quiz-explain">Hash Join: build hash on smaller (build) table, probe with larger. Memory-intensive.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q103" data-answer="0">
+      <div class="quiz-q">Merge Join requires:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Both tables sorted on join key</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Hash indexes</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>No indexes</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Foreign keys</span></div></div>
+      <div class="quiz-explain">Merge Join: both inputs sorted on join key, then merged like merge sort. O(N+M).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q104" data-answer="0">
+      <div class="quiz-q">LATERAL JOIN allows:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Right side references left side columns</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Left side references right side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Joining without ON condition</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Cross join optimization</span></div></div>
+      <div class="quiz-explain">LATERAL: right subquery can reference columns from left. Like correlated subquery but in FROM.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q105" data-answer="1">
+      <div class="quiz-q">Semi-join vs Inner Join:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same result</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Semi-join returns only left columns, stops at first match</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Semi-join returns duplicate left rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Semi-join requires unique right key</span></div></div>
+      <div class="quiz-explain">Semi-join (EXISTS/IN): returns left rows only, stops at first match per left row. No duplication.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Join Algorithms — How the Planner Executes</h2></div>
+    <div class="mantra">Planner picks algorithm: Nested Loop (small + index), Hash Join (large, no index), Merge Join (pre-sorted). EXPLAIN shows which. You can influence with indexes, stats, enable_* settings.</div>
+<div><div class="code-label"><span>join algorithms in EXPLAIN</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Nested Loop: outer rows × index probe
+EXPLAIN SELECT * FROM small s JOIN big b ON s.id = b.sid;
+-- Nested Loop (big has index on sid)
+
+-- Hash Join: build hash on smaller, probe larger
+EXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;
+-- Hash Join (no useful indexes, both large)
+
+-- Merge Join: both sorted
+EXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;
+-- Merge Join (both have indexes on id, or pre-sorted)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Disable to test others</span>
+SET enable_nestloop = off;
+SET enable_hashjoin = off;
+SET enable_mergejoin = off;</code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: primarily Nested Loop</span>
+<span class="cm">-- Hash Join: 8.0.18+ (hash_join optimizer hint)</span>
+<span class="cm">-- Merge Join: not directly controllable</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Hash Join vs Nested Loop</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Hash Join</span>
+        <span class="plan-node-meta"> cost=100..5000 rows=10000 width=120</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Hash Cond: (a.id = b.id)</div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>a</code>
+        <span class="plan-node-meta"> cost=0..100 rows=10000</span>
+      </div></div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Hash</span>
+        <span class="plan-node-meta"> cost=50..50 rows=5000</span>
+      </div></div></div></div>
+</div>
+<div class="callout blue">Hash Join: Build side (5000 rows) → hash table in memory. Probe side (10000 rows) → hash probe. If hash table > work_mem → spills to disk (slow). Increase work_mem for big joins.</div>
+<div class="quiz-card" data-quiz-key="s0-q106" data-answer="0">
+      <div class="quiz-q">Hash Join spills to disk when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Hash table > work_mem</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Table > 1GB</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>No index on join key</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Join is FULL OUTER</span></div></div>
+      <div class="quiz-explain">work_mem controls hash table memory. Spill = massive slowdown. Increase work_mem or use indexes.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q107" data-answer="0">
+      <div class="quiz-q">Merge Join is chosen when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Tables already sorted on join key</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Indexes exist on join key</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both tables have ORDER BY on join key</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All of the above</span></div></div>
+      <div class="quiz-explain">Merge Join requires sorted input. Index scan or explicit sort provides ordering.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>LATERAL JOIN — Correlated Subquery in FROM</h2></div>
+    <h3>LATERAL — The Game Changer</h3>
+<div><div class="code-label"><span>lateral basics</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- For each employee, get their latest order
+SELECT e.name, o.order_date, o.total
+FROM employees e
+LEFT JOIN LATERAL (
+  SELECT * FROM orders o
+  WHERE o.emp_id = e.id
+  ORDER BY o.order_date DESC
+  LIMIT <span class="num">1</span>
+) o ON <span class="kw">true</span>;
+
+-- Equivalent correlated subquery (harder to read)
+SELECT e.name,
+  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT <span class="num">1</span>) AS latest_date,
+  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT <span class="num">1</span>) AS latest_total
+FROM employees e;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- LATERAL is PostgreSQL standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0.14+: LATERAL supported</span>
+<span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s1-q108" data-answer="1">
+      <div class="quiz-q">LATERAL subquery can reference:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only tables in same FROM</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Columns from LEFT side of join</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only columns from same subquery</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Global variables only</span></div></div>
+      <div class="quiz-explain">LATERAL allows right side to see left side columns. Like correlated subquery in FROM.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q109" data-answer="1">
+      <div class="quiz-q">CROSS JOIN LATERAL vs LEFT JOIN LATERAL:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CROSS = inner (drops left rows with no match), LEFT = preserves left</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>LEFT not allowed with LATERAL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CROSS not allowed</span></div></div>
+      <div class="quiz-explain">CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Semi/Anti Joins & Join Order</h2></div>
+    <h3>Semi-Join (EXISTS/IN) vs Anti-Join (NOT EXISTS/NOT IN)</h3>
+<div><div class="code-label"><span>semi/anti join patterns</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Semi-join: EXISTS (stops at first match)
+SELECT * FROM employees e
+WHERE EXISTS (SELECT <span class="num">1</span> FROM orders o WHERE o.emp_id = e.id);
+-- Returns employees WITH orders (no duplication)
+
+-- Anti-join: NOT EXISTS
+SELECT * FROM employees e
+WHERE NOT EXISTS (SELECT <span class="num">1</span> FROM orders o WHERE o.emp_id = e.id);
+-- Employees with NO orders
+
+-- IN semi-join (same logic)
+SELECT * FROM employees WHERE id IN (SELECT emp_id FROM orders);
+
+-- NOT IN anti-join (NULL trap!)
+SELECT * FROM employees WHERE id NOT IN (SELECT emp_id FROM orders);
+-- Watch <span class="kw">for</span> NULLs in subquery!</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL: Semi-join optimization automatic</span>
+<span class="cm">-- Hash Semi Join / Hash Anti Join in EXPLAIN</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: Semi-join optimization (8.0+)</span>
+<span class="cm">-- EXPLAIN shows 'Semi Join' or 'Anti Join'</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn"><strong>"Not In" + subquery with NULL = zero rows.</strong> Always use NOT EXISTS for anti-join. Or: <code>WHERE id NOT IN (SELECT emp_id FROM orders WHERE emp_id IS NOT NULL)</code>.</div>
+<h3>Join Order — Planner vs Hint</h3>
+<div><div class="code-label"><span>join order control</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Planner chooses order based on stats/costs
+-- Force order (PostgreSQL):
+SET join_collapse_limit = <span class="num">1</span>;  -- disable reordering
+-- Or use <span class="kw">explicit</span> parentheses:
+SELECT * FROM a JOIN (b JOIN c ON b.id = c.id) ON a.id = b.id;
+
+-- Join hints (PostgreSQL <span class="num">12</span>+ via pg_hint_plan extension)
+<span class="cm">/*+ Leading(a b c) */ SELECT * FROM a JOIN b ON ... JOIN c ON ...;</span></code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- join_collapse_limit = 1 forces written order</span>
+<span class="cm">-- pg_hint_plan for advanced control</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: STRAIGHT_JOIN forces order</span>
+SELECT STRAIGHT_JOIN * FROM a JOIN b ON ...;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q110" data-answer="2">
+      <div class="quiz-q">EXISTS vs IN semi-join: which stops at first match?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>EXISTS only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>IN only</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both stop at first match</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Neither</span></div></div>
+      <div class="quiz-explain">Both are semi-joins — stop at first match per left row. EXISTS often clearer for complex conditions.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q111" data-answer="0">
+      <div class="quiz-q">Join order hint in PostgreSQL:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>/*+ Leading(a b) */</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>/*+ JoinOrder(a,b) */</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>SET join_order = 'a,b'</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not possible</span></div></div>
+      <div class="quiz-explain">pg_hint_plan extension: /*+ Leading(a b c) */ forces join order.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Differences — Join Syntax</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM a FULL JOIN b ON a.id = b.id;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM a FULL JOIN b ON a.id = b.id;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- MySQL: no FULL JOIN
+SELECT * FROM a LEFT JOIN b ON ...
+UNION
+SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">pd.merge(a, b, on='id', how='outer')</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">session.query(A).outerjoin(B, A.id == B.id, full=True).all()</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true; -- 8.0.14+</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df.groupby('a_id').head(1)</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">lateral()</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L2 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Latest Order per Employee (LATERAL)</div>
+        <div class="prob-meta">drill · lateral-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J201"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      For each employee, show their most recent order date and total.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl1u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl1u">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Customers Without Orders (NOT EXISTS)</div>
+        <div class="prob-meta">drill · anti-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J202"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Find customers who have never placed an order.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl1v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl1v">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Top 3 Products per Category (LATERAL)</div>
+        <div class="prob-meta">drill · lateral-top-n</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J203"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      For each category, list top 3 products by sales.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl1w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl1w">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Employees With Orders in 2024 (EXISTS)</div>
+        <div class="prob-meta">drill · semi-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J204"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employees who placed at least one order in 2024.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl1x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl1x">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Products Never Ordered (Anti-Join)</div>
+        <div class="prob-meta">drill · anti-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J205"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Products that have never been ordered.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl1y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl1y">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Force Join Order (Small to Large)</div>
+        <div class="prob-meta">drill · join-order</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J206"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Join small_table (100 rows) → medium (10k) → large (1M). Force order.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl1z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl1z">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Set Operations: Active vs Inactive Users</div>
+        <div class="prob-meta">drill · except</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J207"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      User IDs in 'active' status but not in 'inactive'. Use EXCEPT.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl20" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl20">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">FULL JOIN Workaround (MySQL)</div>
+        <div class="prob-meta">drill · full-join-workaround</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J208"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnl21" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnl21">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Nested Loop: small outer + indexed inner; Hash: large both, build hash on smaller; Merge: pre-sorted</li><li>LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer</li><li>Semi-join (EXISTS/IN): left columns only, stops at first match; Anti-join (NOT EXISTS): no match</li><li>NOT IN + subquery with NULL = disaster; always NOT EXISTS for anti-join</li><li>Join order: planner decides; join_collapse_limit=1 forces written order; pg_hint_plan for hints</li><li>FULL JOIN = LEFT UNION RIGHT; MySQL 5.7 workaround: LEFT UNION RIGHT</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>nested loop join</code></td><td>For each outer row, probe inner index. Best: small outer + indexed inner.</td></tr><tr><td style="width:220px;"><code>hash join</code></td><td>Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem.</td></tr><tr><td style="width:220px;"><code>merge join</code></td><td>Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input.</td></tr><tr><td style="width:220px;"><code>lateral join</code></td><td>Right subquery references left columns. Like correlated subquery in FROM clause.</td></tr><tr><td style="width:220px;"><code>semi-join</code></td><td>EXISTS/IN pattern — returns left rows only, stops at first match per left row.</td></tr><tr><td style="width:220px;"><code>anti-join</code></td><td>NOT EXISTS pattern — returns left rows with NO match in right.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 03 · L2/INTERVIEW READY · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('joins_L2');</script>
+</body></html>

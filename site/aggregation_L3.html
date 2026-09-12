@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aggregation & Grouping — L3 ADVANCED</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="3" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 04</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">windowed aggregates, FILTER clause, approximate aggregates, percentile</span></div>
+  <h1>Aggregation & Grouping</h1>
+  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="aggregation_L1" href="aggregation_L1.html">BEGINNER</a><a class="level-pill " data-lesson="aggregation_L2" href="aggregation_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="aggregation_L3" href="aggregation_L3.html">ADVANCED</a><a class="level-pill " data-lesson="aggregation_L4" href="aggregation_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · FILTER Clause — Conditional Aggregation</a><a href="#sec-1">02 · Approximate Aggregates — HyperLogLog, Percentile</a><a href="#sec-2">03 · Advanced Aggregates — STRING_AGG, JSON_AGG, MODE</a><a href="#sec-3">04 · Dialect Differences — Percentile</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q156" data-answer="1">
+      <div class="quiz-q">FILTER clause in aggregate: SUM(salary) FILTER (WHERE dept_id=1):</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same as WHERE dept_id=1 before GROUP BY</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Conditional aggregate within group — only rows matching filter contribute</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Syntax error</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Filters the entire result set</span></div></div>
+      <div class="quiz-explain">FILTER applies condition inside aggregate — only matching rows contribute to that aggregate.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q157" data-answer="1">
+      <div class="quiz-q">percentile_cont(0.5) WITHIN GROUP (ORDER BY salary):</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Average salary</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Median salary</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>5th percentile salary</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>50% of rows</span></div></div>
+      <div class="quiz-explain">percentile_cont(0.5) = continuous percentile at 0.5 = median.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q158" data-answer="0">
+      <div class="quiz-q">approx_count_distinct(col) vs COUNT(DISTINCT col):</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same result, approx is faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>approx is exact, COUNT DISTINCT is approximate</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>approx only works on integers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>COUNT DISTINCT is deprecated</span></div></div>
+      <div class="quiz-explain">Approximate aggregates (HyperLogLog) trade small error for massive speed on large datasets.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q159" data-answer="1">
+      <div class="quiz-q">percentile_disc vs percentile_cont:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>disc = discrete (actual value), cont = interpolated</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>cont = discrete, disc = continuous</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only disc exists</span></div></div>
+      <div class="quiz-explain">disc = existing value at percentile; cont = interpolated between values.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q160" data-answer="1">
+      <div class="quiz-q">STRING_AGG(name, ', ') ORDER BY salary DESC:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Syntax error</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Concatenates names ordered by salary descending</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Orders by name</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only works with FILTER</span></div></div>
+      <div class="quiz-explain">STRING_AGG supports ORDER BY inside aggregate for custom ordering.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>FILTER Clause — Conditional Aggregation</h2></div>
+    <div class="mantra">FILTER = conditional aggregate without CASE. One scan, multiple aggregates with different conditions. Cleaner than SUM(CASE...), optimizer-friendly, index-friendly.</div>
+<div><div class="code-label"><span>filter clause</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Count active employees per dept
+SELECT dept_id,
+  COUNT(*) FILTER (WHERE status = <span class="st">'active'</span>) AS active_cnt,
+  COUNT(*) FILTER (WHERE status = <span class="st">'pending'</span>) AS pending_cnt,
+  COUNT(*) FILTER (WHERE status = <span class="st">'inactive'</span>) AS inactive_cnt
+FROM employees
+GROUP BY dept_id;
+
+-- Equivalent CASE (verbose, less readable)
+SELECT dept_id,
+  SUM(CASE WHEN status = <span class="st">'active'</span> THEN <span class="num">1</span> ELSE <span class="num">0</span> END) AS active_cnt,
+  SUM(CASE WHEN status = <span class="st">'pending'</span> THEN <span class="num">1</span> ELSE <span class="num">0</span> END) AS pending_cnt
+FROM employees GROUP BY dept_id;
+
+-- Multiple aggregates, different filters
+SELECT dept_id,
+  AVG(salary) FILTER (WHERE status = <span class="st">'active'</span>) AS avg_active,
+  AVG(salary) FILTER (WHERE status = <span class="st">'pending'</span>) AS avg_pending
+FROM employees GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- FILTER is PostgreSQL standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no FILTER clause</span>
+<span class="cm">-- Use SUM(CASE WHEN ... THEN 1 ELSE 0 END)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s0-q161" data-answer="1">
+      <div class="quiz-q">FILTER can be used with:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only COUNT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>All aggregate functions (SUM, AVG, MIN, MAX, etc.)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only COUNT and SUM</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only window functions</span></div></div>
+      <div class="quiz-explain">FILTER works with any aggregate: COUNT, SUM, AVG, MIN, MAX, STRING_AGG, percentile, etc.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q162" data-answer="1">
+      <div class="quiz-q">FILTER vs WHERE before GROUP BY:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>FILTER keeps row for other aggregates; WHERE removes row entirely</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE is faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>FILTER only works with COUNT</span></div></div>
+      <div class="quiz-explain">WHERE removes row from all aggregates. FILTER only affects that specific aggregate — row still contributes to others.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Approximate Aggregates — HyperLogLog, Percentile</h2></div>
+    <h3>Approximate Count Distinct</h3>
+<div><div class="code-label"><span>approx_count_distinct</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Exact (slow on large tables)
+SELECT COUNT(DISTINCT user_id) FROM events;
+
+-- Approximate (fast, ~<span class="num">1</span>-<span class="num">2</span>% error)
+SELECT approx_count_distinct(user_id) FROM events;
+
+-- With GROUP BY
+SELECT dept_id, approx_count_distinct(user_id)
+FROM events
+GROUP BY dept_id;
+
+-- Precision control (PostgreSQL: hyperloglog extension)
+SELECT approx_count_distinct(user_id, <span class="num">12</span>) FROM events;
+-- <span class="num">12</span> = log2m parameter, higher = more accurate, more memory</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- HyperLogLog via approx_count_distinct (requires extension)</span>
+<span class="cm">-- Or use hyperloglog extension directly</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: APPROX_COUNT_DISTINCT() (8.0.13+)</span>
+SELECT APPROX_COUNT_DISTINCT(user_id) FROM events;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Percentile Aggregates</h3>
+<div><div class="code-label"><span>percentile functions</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Continuous percentile (interpolated)
+SELECT percentile_cont(<span class="num">0.5</span>) WITHIN GROUP (ORDER BY salary) FROM employees;
+-- Median
+
+-- Discrete percentile (actual value)
+SELECT percentile_disc(<span class="num">0.5</span>) WITHIN GROUP (ORDER BY salary) FROM employees;
+
+-- Multiple percentiles
+SELECT 
+  percentile_cont(<span class="num">0.25</span>) WITHIN GROUP (ORDER BY salary) AS p25,
+  percentile_cont(<span class="num">0.50</span>) WITHIN GROUP (ORDER BY salary) AS p50,
+  percentile_cont(<span class="num">0.75</span>) WITHIN GROUP (ORDER BY salary) AS p75
+FROM employees;
+
+-- With GROUP BY
+SELECT dept_id,
+  percentile_cont(<span class="num">0.5</span>) WITHIN GROUP (ORDER BY salary) AS median_sal
+FROM employees
+GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- percentile_cont / percentile_disc standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: PERCENTILE_CONT, PERCENTILE_DISC</span>
+SELECT PERCENTILE_CONT(<span class="num">0.5</span>) WITHIN GROUP (ORDER BY salary) FROM employees;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">percentile_cont = interpolated (may return non-existent value). percentile_disc = actual value from dataset. For median of even count: cont = avg of middle two, disc = lower middle.</div>
+<div class="quiz-card" data-quiz-key="s1-q163" data-answer="1">
+      <div class="quiz-q">approx_count_distinct uses:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>B-tree index</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>HyperLogLog sketch</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Hash table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Bitmap index</span></div></div>
+      <div class="quiz-explain">HyperLogLog probabilistic counter — O(1) memory, ~1-2% error.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q164" data-answer="1">
+      <div class="quiz-q">percentile_cont(0.5) on [10, 20, 30, 40] returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>20</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>25</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>30</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>15</span></div></div>
+      <div class="quiz-explain">Even count (4): cont interpolates between 20 and 30 = 25. disc = 20 (lower middle).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Advanced Aggregates — STRING_AGG, JSON_AGG, MODE</h2></div>
+    <h3>String & JSON Aggregation</h3>
+<div><div class="code-label"><span>string_agg / json_agg</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Concatenate with delimiter
+SELECT dept_id, STRING_AGG(name, <span class="st">', '</span>) AS employees
+FROM employees
+GROUP BY dept_id;
+
+-- With ORDER BY inside aggregate
+SELECT dept_id, STRING_AGG(name, <span class="st">', '</span> ORDER BY salary DESC) AS top_paid_first
+FROM employees
+GROUP BY dept_id;
+
+-- JSON aggregation (PostgreSQL)
+SELECT dept_id, JSON_AGG(JSON_BUILD_OBJECT(<span class="st">'name', name, 'salary'</span>, salary))
+FROM employees
+GROUP BY dept_id;
+
+-- JSON object aggregation
+SELECT JSON_OBJECT_AGG(dept_id, cnt) FROM (
+  SELECT dept_id, COUNT(*) AS cnt FROM employees GROUP BY dept_id
+) t;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- STRING_AGG, JSON_AGG, JSON_OBJECT_AGG, JSONB_AGG</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- GROUP_CONCAT (no ORDER BY in 5.7, 8.0 supports)</span>
+SELECT dept_id, GROUP_CONCAT(name ORDER BY salary DESC SEPARATOR <span class="st">', '</span>) FROM employees GROUP BY dept_id;
+
+<span class="cm">-- JSON_ARRAYAGG, JSON_OBJECTAGG (8.0+)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Mode & Statistical Aggregates</h3>
+<div><div class="code-label"><span>mode / stats</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Mode (most frequent value) — PostgreSQL <span class="num">15</span>+
+SELECT mode() WITHIN GROUP (ORDER BY status) FROM employees;
+-- Per group
+SELECT dept_id, mode() WITHIN GROUP (ORDER BY status)
+FROM employees
+GROUP BY dept_id;
+
+-- Standard deviation, variance
+SELECT dept_id,
+  STDDEV(salary) AS stddev,
+  VARIANCE(salary) AS var
+FROM employees
+GROUP BY dept_id;
+
+-- Correlation
+SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- mode(), stddev, variance, corr, covar_pop, regr_*</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- STDDEV, VARIANCE, CORR (8.0+)</span>
+<span class="cm">-- No MODE() function</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q165" data-answer="1">
+      <div class="quiz-q">STRING_AGG with ORDER BY inside aggregate:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Syntax error</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Orders concatenated values by that column</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Orders groups</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only works with FILTER</span></div></div>
+      <div class="quiz-explain">STRING_AGG(x, ',' ORDER BY y) sorts the x values by y before concatenation.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q166" data-answer="1">
+      <div class="quiz-q">JSON_AGG vs JSONB_AGG:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>JSON_AGG = text, JSONB_AGG = binary (faster to process)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>JSONB_AGG deprecated</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only JSON_AGG exists</span></div></div>
+      <div class="quiz-explain">JSONB_AGG returns binary JSONB — faster to query, smaller storage.</div>
+      <div class="quiz-score"></div>
+    </div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — FILTER Aggregate</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">GroupAggregate</span>
+        <span class="plan-node-meta"> cost=100..500 rows=5 width=48</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Sort</span>
+        <span class="plan-node-meta"> cost=50..450 rows=8500 width=40</span>
+      </div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (status = 'active')</div></div></div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Differences — Percentile</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id; -- 8.0+</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df.groupby('dept_id')['salary'].quantile(0.5)</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">session.query(func.percentile_cont(0.5).within_group(Employee.salary)).group_by(Employee.dept_id)</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L3 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Conditional Counts with FILTER</div>
+        <div class="prob-meta">drill · filter-clause</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A301"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Per department: count of active, pending, inactive employees using FILTER.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnu2t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnu2t">COUNT(*) FILTER (WHERE status = 'active')</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Median Salary per Department</div>
+        <div class="prob-meta">drill · percentile</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A302"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Median salary per department using percentile_cont.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnu2u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnu2u">percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Approximate Unique Users</div>
+        <div class="prob-meta">drill · approx-aggregate</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A303"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Approximate distinct user count per day from events table.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnu2v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnu2v">approx_count_distinct(user_id)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Top 3 Earners per Dept (STRING_AGG)</div>
+        <div class="prob-meta">drill · string-agg</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A304"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Concatenate top 3 employee names by salary per department.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnu2w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnu2w">STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">JSON Payload per Department</div>
+        <div class="prob-meta">drill · json-agg</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A304"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Return JSON array of {name, salary} objects per department.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnu2x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnu2x">JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Mode Status per Department</div>
+        <div class="prob-meta">drill · mode</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A306"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Most common employee status per department (PostgreSQL 15+).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrnu2y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrnu2y">mode() WITHIN GROUP (ORDER BY status)</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>FILTER: conditional aggregate in one scan; cleaner than CASE, optimizer-friendly</li><li>percentile_cont(0.5) = median (interpolated); percentile_disc = actual value</li><li>approx_count_distinct = HyperLogLog, ~1-2% error, O(1) memory</li><li>STRING_AGG with ORDER BY inside aggregate for custom sort</li><li>JSON_AGG/JSONB_AGG for nested JSON output</li><li>mode() WITHIN GROUP = most frequent value (PG 15+)</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>FILTER clause</code></td><td>Conditional aggregate: AGG(expr) FILTER (WHERE condition). Row contributes only if condition true.</td></tr><tr><td style="width:220px;"><code>percentile_cont</code></td><td>Continuous percentile — interpolates between values for exact percentile.</td></tr><tr><td style="width:220px;"><code>percentile_disc</code></td><td>Discrete percentile — returns actual value from dataset at percentile.</td></tr><tr><td style="width:220px;"><code>HyperLogLog</code></td><td>Probabilistic algorithm for approximate distinct count with fixed memory.</td></tr><tr><td style="width:220px;"><code>STRING_AGG</code></td><td>Concatenates values with delimiter; supports ORDER BY inside aggregate.</td></tr><tr><td style="width:220px;"><code>JSON_AGG</code></td><td>Aggregates rows into JSON array; JSONB_AGG returns binary JSONB.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L4 EXPERT file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 04 · L3/ADVANCED · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('aggregation_L3');</script>
+</body></html>

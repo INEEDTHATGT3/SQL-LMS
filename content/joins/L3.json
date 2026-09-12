@@ -1,0 +1,357 @@
+{
+  "level": 3,
+  "title": "Joins & Set Operations",
+  "tagline": "join optimization, predicate pushdown, join elimination, partitioning",
+  "placementQuiz": [
+    {
+      "q": "Join elimination removes a join when:",
+      "options": [
+        "Tables are small",
+        "Foreign key guarantees match + only PK/FK columns selected",
+        "No index on join key",
+        "Using LEFT JOIN"
+      ],
+      "answer": 1,
+      "explain": "If FK→PK, only PK/FK columns needed, planner can skip join entirely (child already has FK)."
+    },
+    {
+      "q": "Predicate pushdown into subquery means:",
+      "options": [
+        "Moving WHERE filter into subquery to reduce rows early",
+        "Pushing predicates to application",
+        "Converting JOIN to WHERE",
+        "Moving ORDER BY inside"
+      ],
+      "answer": 0,
+      "explain": "Push filter into subquery/CTE — reduces rows before join. Planner does automatically but sometimes blocked."
+    },
+    {
+      "q": "Partition-wise join works when:",
+      "options": [
+        "Both tables partitioned on same key",
+        "One table partitioned",
+        "Tables have same number of rows",
+        "Using Hash Join"
+      ],
+      "answer": 0,
+      "explain": "Both tables must be partitioned on the join key. Each partition joins independently (parallel)."
+    },
+    {
+      "q": "Join collapse limit controls:",
+      "options": [
+        "How many joins to flatten into single query",
+        "Maximum join depth",
+        "Whether to reorder joins",
+        "Hash table size"
+      ],
+      "answer": 2,
+      "explain": "join_collapse_limit: max joins to reorder. Set to 1 to force written order."
+    },
+    {
+      "q": "Adaptive Join (PostgreSQL 17+) switches between:",
+      "options": [
+        "Hash and Merge",
+        "Nested Loop and Hash",
+        "Inner and Outer",
+        "Semi and Anti"
+      ],
+      "answer": 1,
+      "explain": "Adaptive Join starts as NLJ, switches to Hash if outer rows exceed threshold. Dynamic plan."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Join Elimination — When the Planner Skips the Join",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Join elimination = free performance. If child has FK to parent PK, and you only select parent PK/FK columns, planner skips parent table entirely. The FK IS the data."
+        },
+        {
+          "type": "code",
+          "label": "join elimination example",
+          "code": "-- Schema: employees.dept_id → departments.id (FK)\n-- Query only needs dept_id (already in employees!)\nSELECT dept_id FROM employees;\n-- Planner: no join needed! Seq Scan on employees only.\n\n-- But adding department name kills elimination\nSELECT e.dept_id, d.name\nFROM employees e\nJOIN departments d ON e.dept_id = d.id;\n-- Now join required\n\n-- LEFT JOIN also blocks elimination (might need NULL check)\nSELECT e.dept_id FROM employees e LEFT JOIN departments d ON ...;",
+          "pg": "-- Join elimination works for INNER JOIN on FK→PK\n-- Requires: FK not nullable, only PK/FK columns from parent",
+          "mysql": "-- MySQL 8.0.16+: Join elimination supported\n-- Similar rules: FK→PK, only PK columns from parent",
+          "py-pandas": "# No planner; just don't merge if you don't need columns"
+        },
+        {
+          "type": "query-plan",
+          "title": "Join Eliminated — Only Child Table Scanned",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "employees",
+              "Startup Cost": 0.00,
+              "Total Cost": 185.00,
+              "Plan Rows": 8500,
+              "Plan Width": 4
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "Zero join cost. Planner sees dept_id already in employees (FK). No need to touch departments table. Join elimination = zero-cost optimization for star schemas."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Join elimination requires:",
+              "options": [
+                "FK column is NOT NULL",
+                "Only parent PK columns selected",
+                "INNER JOIN (not LEFT)",
+                "All of the above"
+              ],
+              "answer": 3,
+              "explain": "FK not nullable + only PK columns from parent + INNER JOIN = safe elimination."
+            },
+            {
+              "q": "SELECT d.name FROM employees e JOIN departments d ON ... — eliminated?",
+              "options": [
+                "Yes",
+                "No — need parent non-PK column",
+                "Only if index exists",
+                "Depends on stats"
+              ],
+              "answer": 1,
+              "explain": "Need d.name (non-PK) from parent → join required. Elimination only when parent columns = PK/FK."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Predicate Pushdown — Filter Early, Join Less",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Pushdown Through Views, CTEs, Subqueries"
+        },
+        {
+          "type": "code",
+          "label": "predicate pushdown",
+          "code": "-- View with filter\nCREATE VIEW active_employees AS\nSELECT * FROM employees WHERE status = 'active';\n\n-- Query with additional filter\nSELECT * FROM active_employees WHERE dept_id = 3;\n-- Planner pushes dept_id=3 INTO view scan\n-- Single scan: status='active' AND dept_id=3\n\n-- CTE pushdown\nWITH active AS (SELECT * FROM employees WHERE status = 'active')\nSELECT * FROM active WHERE dept_id = 3;\n-- Same pushdown\n\n-- Subquery pushdown\nSELECT * FROM (SELECT * FROM employees WHERE status = 'active') e\nWHERE dept_id = 3;\n-- Pushdown works",
+          "pg": "-- Pushdown automatic in PostgreSQL\n-- Can be blocked by: VOLATILE functions, LIMIT/OFFSET in subquery, set operations",
+          "mysql": "-- MySQL 8.0+: predicate pushdown improved\n-- Derived table pushdown (merged)",
+          "py-pandas": "# Manual pushdown: filter first, then merge\nactive = employees[employees['status'] == 'active']\nresult = active[active['dept_id'] == 3]"
+        },
+{
+          "type": "callout",
+          "tone": "warn",
+          "md": "Pushdown blockers: VOLATILE functions (random(), now()), LIMIT/OFFSET in subquery, UNION/EXCEPT, window functions in subquery, set operations. Use CTEs carefully."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Predicate pushdown moves filter:",
+              "options": [
+                "From outer query INTO inner subquery/CTE",
+                "From inner TO outer",
+                "To application layer",
+                "To storage engine only"
+              ],
+              "answer": 0,
+              "explain": "Push filter down to where data originates — reduces rows before join/aggregation."
+            },
+            {
+              "q": "CTE with LIMIT blocks pushdown because:",
+              "options": [
+                "LIMIT changes semantics if pushed",
+                "CTEs are optimization fences",
+                "Both A and B",
+                "CTEs don't support pushdown"
+              ],
+              "answer": 2,
+              "explain": "In PostgreSQL, CTEs are optimization fences (materialized). LIMIT inside CTE prevents pushdown."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Partition-Wise Join — Parallel Join at Scale",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Partition-Wise Join"
+        },
+        {
+          "type": "code",
+          "label": "partition-wise join",
+          "code": "-- Both tables partitioned on same key (e.g., event_time)\nCREATE TABLE events_2024 PARTITION OF events FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');\nCREATE TABLE orders_2024 PARTITION OF orders FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');\n\n-- Join on partition key\nSELECT * FROM events e JOIN orders o ON e.user_id = o.user_id;\n-- Planner: partition-wise join\n-- Each partition joins independently (parallel!)\n\n-- Enable (default on in PG 11+)\nSET enable_partitionwise_join = on;\nSET enable_partitionwise_aggregate = on;",
+          "pg": "-- Partition-wise join (PostgreSQL 11+)\n-- Requires: same partition key, same partition bounds",
+          "mysql": "-- MySQL: no native partition-wise join\n-- Partition pruning only",
+          "py-pandas": "# Manual partition-wise: groupby partition key, join per group\nfor key, group in events.groupby('event_month'):\n    orders_m = orders[orders['month'] == key]\n    merged = group.merge(orders_m, on='user_id')"
+        },
+        {
+          "type": "query-plan",
+          "title": "Partition-Wise Join Plan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Append",
+              "Startup Cost": 0.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 100000,
+              "Plan Width": 120,
+              "Plans": [
+                {
+                  "Node Type": "Hash Join",
+                  "Relation Name": "events_2024_01",
+                  "Startup Cost": 100.00,
+                  "Total Cost": 500.00,
+                  "Plan Rows": 8333
+                },
+                {
+                  "Node Type": "Hash Join",
+                  "Relation Name": "events_2024_02",
+                  "Startup Cost": 100.00,
+                  "Total Cost": 500.00,
+                  "Plan Rows": 8333
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "Each partition joins independently → massive parallelism. 12 monthly partitions = 12 parallel joins. Linear scale-out for time-series data. enable_partitionwise_aggregate pushes GROUP BY into partitions too."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Partition-wise join requires:",
+              "options": [
+                "Same partition key on both tables",
+                "Same partition bounds",
+                "Both A and B",
+                "Different partition keys"
+              ],
+              "answer": 2,
+              "explain": "Both tables must be partitioned identically on the join key. Each partition pair joins independently."
+            },
+            {
+              "q": "enable_partitionwise_aggregate pushes:",
+              "options": [
+                "GROUP BY into partitions",
+                "ORDER BY into partitions",
+                "LIMIT into partitions",
+                "WHERE into partitions"
+              ],
+              "answer": 0,
+              "explain": "Aggregate in each partition, then combine. Massive parallel GROUP BY."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Deep Dive — Join Hints & Controls",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT /*+ Leading(a b c) */ * FROM a JOIN b ON ... JOIN c ON ...;",
+          "pg": "SELECT /*+ Leading(a b c) */ * FROM a JOIN b ...; -- pg_hint_plan",
+          "mysql": "SELECT STRAIGHT_JOIN * FROM a JOIN b ...; -- forces order",
+          "py-pandas": "df1.merge(df2).merge(df3)  # written order",
+          "py-sqlalchemy": "# No hints; merge order = written"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM a JOIN b ON a.id = b.id WHERE a.val > 100;",
+          "pg": "-- Predicate pushdown automatic",
+          "mysql": "-- Derived table pushdown (8.0+)",
+          "py-pandas": "df1.merge(df2).query('val > 100')",
+          "py-sqlalchemy": "session.query(A).join(B).filter(A.val > 100)"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L3 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "J301",
+              "tier": 3,
+              "title": "Identify Join Elimination Opportunity",
+              "platform": "drill",
+              "patterns": ["join-elimination"],
+              "statement": "Query: SELECT e.dept_id FROM employees e JOIN departments d ON e.dept_id = d.id. Is join eliminated? Why/why not?",
+              "hints": ["Only FK column from child selected → yes, eliminated"]
+            },
+            {
+              "id": "J302",
+              "tier": 3,
+              "title": "Force Predicate Pushdown",
+              "platform": "drill",
+              "patterns": ["predicate-pushdown"],
+              "statement": "View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.",
+              "hints": ["EXPLAIN SELECT * FROM active_view WHERE dept_id = 5"]
+            },
+            {
+              "id": "J303",
+              "tier": 3,
+              "title": "Design Partition-Wise Join",
+              "platform": "drill",
+              "patterns": ["partition-wise-join"],
+              "statement": "Design events and orders tables partitioned by month for partition-wise join on user_id.",
+              "hints": ["Partition both on month", "Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key"]
+            },
+            {
+              "id": "J304",
+              "tier": 3,
+              "title": "Join Collapse Limit for Forced Order",
+              "platform": "drill",
+              "patterns": ["join-order"],
+              "statement": "Force join order: small → medium → large using join_collapse_limit.",
+              "hints": ["SET join_collapse_limit = 1; write joins in desired order"]
+            },
+            {
+              "id": "J305",
+              "tier": 3,
+              "title": "Adaptive Join Behavior (PG 17+)",
+              "platform": "drill",
+              "patterns": ["adaptive-join"],
+              "statement": "Describe when Adaptive Join switches from Nested Loop to Hash Join.",
+              "hints": ["Starts as NLJ; switches when outer rows exceed threshold"]
+            },
+            {
+              "id": "J306",
+              "tier": 3,
+              "title": "Fix Blocked Pushdown",
+              "platform": "drill",
+              "patterns": ["pushdown-fix"],
+              "statement": "CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.",
+              "hints": ["Move LIMIT to outer query; use subquery instead of CTE"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Join elimination: FK→PK, only PK columns, INNER JOIN → free scan",
+    "Predicate pushdown: move filter down to data source; blocked by VOLATILE, LIMIT, CTEs",
+    "Partition-wise join: same partition key on both tables → independent parallel partition joins",
+    "join_collapse_limit=1 forces written join order; pg_hint_plan for advanced hints",
+    "Adaptive Join (PG 17+): starts NLJ, switches to Hash if outer rows exceed threshold",
+    "CTE = optimization fence (materialized); subquery = pushdown-friendly"
+  ],
+  "glossary": [
+    { "term": "join elimination", "def": "Planner removes join when child FK already contains needed parent PK data." },
+    { "term": "predicate pushdown", "def": "Moving WHERE filter down into view/CTE/subquery to reduce rows before join." },
+    { "term": "partition-wise join", "def": "Join partitioned tables partition-by-partition in parallel; requires same partition key." },
+    { "term": "join collapse limit", "def": "Max joins to reorder. Set to 1 to force written order." },
+    { "term": "adaptive join", "def": "PostgreSQL 17+: starts as Nested Loop, dynamically switches to Hash Join if outer rows exceed threshold." },
+    { "term": "optimization fence", "def": "CTE in PostgreSQL — materialized, blocks predicate pushdown and join reordering." }
+  ]
+}

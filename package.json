@@ -1,0 +1,23 @@
+{
+  "name": "sql-lms",
+  "version": "1.0.0",
+  "description": "Layered study system for SQL",
+  "type": "module",
+  "scripts": {
+    "new:module": "layered-study-new-module",
+    "lint": "layered-study-lint",
+    "build": "layered-study-build",
+    "dev": "npm run build && npx serve site -p 3000",
+    "deploy": "gh-pages -d site",
+    "upgrade": "layered-study-upgrade",
+    "seed:generate": "node content/seed-data/generators/combine.js",
+    "seed:sql": "node content/seed-data/generators/json-to-sql.js"
+  },
+  "dependencies": {
+    "@layered-study/core": "file:./vendor/core"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.0.0",
+    "serve": "^14.0.0"
+  }
+}

@@ -1,0 +1,333 @@
+{
+  "level": 1,
+  "title": "Aggregation & Grouping",
+  "tagline": "COUNT, SUM, AVG — the grammar of summarizing",
+  "placementQuiz": [
+    {
+      "q": "SELECT COUNT(*) FROM employees; returns:",
+      "options": [
+        "Number of columns",
+        "Number of rows",
+        "Sum of all values",
+        "First row only"
+      ],
+      "answer": 1,
+      "explain": "COUNT(*) counts rows. COUNT(col) counts non-NULL values in that column."
+    },
+    {
+      "q": "SUM(salary) with NULL values:",
+      "options": [
+        "Returns NULL",
+        "Ignores NULLs, sums non-NULL",
+        "Errors",
+        "Treats NULL as 0"
+      ],
+      "answer": 1,
+      "explain": "Aggregate functions (SUM, AVG, etc.) ignore NULL values automatically."
+    },
+    {
+      "q": "GROUP BY dept_id — one row per:",
+      "options": [
+        "Employee",
+        "Department",
+        "Salary value",
+        "NULL group"
+      ],
+      "answer": 1,
+      "explain": "GROUP BY collapses rows with same dept_id into one group. One output row per department."
+    },
+    {
+      "q": "WHERE vs HAVING:",
+      "options": [
+        "Same thing",
+        "WHERE filters rows; HAVING filters groups",
+        "HAVING filters rows; WHERE filters groups",
+        "WHERE for aggregates only"
+      ],
+      "answer": 1,
+      "explain": "WHERE runs before GROUP BY (row filter). HAVING runs after GROUP BY (group filter)."
+    },
+    {
+      "q": "SELECT dept_id, COUNT(*) FROM employees; without GROUP BY:",
+      "options": [
+        "Error",
+        "One row: total count, dept_id = NULL",
+        "One row per dept_id",
+        "Returns all rows"
+      ],
+      "answer": 0,
+      "explain": "Mixing aggregate (COUNT) with non-aggregated column (dept_id) without GROUP BY is invalid SQL."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — The Collapsing Funnel",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "GROUP BY is a funnel: many rows enter, they're sorted by key, identical keys merge into one row. Aggregates (COUNT, SUM, AVG) compute on each bucket."
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"stage": "Input rows", "description": "100 employee rows with dept_id", "example": "100 rows"},
+              {"stage": "Sort by key", "description": "All dept_id=1 together, then dept_id=2...", "example": "Sorted buckets"},
+              {"stage": "Collapse", "description": "Each bucket → one row + aggregates", "example": "5 rows (5 depts)"}
+            ],
+            "after": [],
+            "highlight": ["stage"]
+          }
+        },
+        {
+          "type": "list",
+          "items": [
+            "Every non-aggregate column in SELECT must be in GROUP BY",
+            "NULLs group together (all NULLs = one group)",
+            "Aggregate functions: COUNT, SUM, AVG, MIN, MAX, STRING_AGG",
+            "ORDER BY runs after GROUP BY — can use aliases"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Core Aggregates — COUNT, SUM, AVG, MIN, MAX",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "The Big Five"
+        },
+        {
+          "type": "code",
+          "label": "basic aggregates",
+          "code": "-- COUNT: row count (includes NULL rows)\nSELECT COUNT(*) FROM employees;\n-- COUNT(col): non-NULL count\nSELECT COUNT(manager_id) FROM employees;\n\n-- SUM, AVG: numeric only\nSELECT SUM(salary), AVG(salary) FROM employees;\n\n-- MIN, MAX: any comparable type\nSELECT MIN(hire_date), MAX(hire_date) FROM employees;\n\n-- Multiple aggregates at once\nSELECT dept_id,\n  COUNT(*) AS emp_count,\n  SUM(salary) AS total_pay,\n  AVG(salary) AS avg_pay,\n  MIN(salary) AS min_pay,\n  MAX(salary) AS max_pay\nFROM employees\nGROUP BY dept_id;",
+          "pg": "-- Same syntax\n-- STRING_AGG for concatenation\nSELECT dept_id, STRING_AGG(name, ', ') FROM employees GROUP BY dept_id;",
+          "mysql": "-- GROUP_CONCAT for concatenation\nSELECT dept_id, GROUP_CONCAT(name SEPARATOR ', ') FROM employees GROUP BY dept_id;",
+          "py-pandas": "# Aggregation\ngrouped = employees.groupby('dept_id').agg(\n    emp_count=('id', 'count'),\n    total_pay=('salary', 'sum'),\n    avg_pay=('salary', 'mean'),\n    min_pay=('salary', 'min'),\n    max_pay=('salary', 'max')\n).reset_index()",
+          "py-sqlalchemy": "# Multiple aggregates\nfrom sqlalchemy import func\nsession.query(\n    Employee.dept_id,\n    func.count(Employee.id),\n    func.sum(Employee.salary),\n    func.avg(Employee.salary),\n    func.min(Employee.salary),\n    func.max(Employee.salary)\n).group_by(Employee.dept_id).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "COUNT(*) vs COUNT(manager_id) when 10 employees, 3 have NULL manager:",
+              "options": [
+                "10 vs 10",
+                "10 vs 7",
+                "7 vs 7",
+                "7 vs 10"
+              ],
+              "answer": 1,
+              "explain": "COUNT(*) = all rows (10). COUNT(manager_id) = non-NULL only (7)."
+            },
+            {
+              "q": "AVG(salary) with values 50k, 100k, NULL:",
+              "options": [
+                "50k",
+                "75k",
+                "50k (NULL ignored)",
+                "NULL"
+              ],
+              "answer": 2,
+              "explain": "AVG ignores NULL. (50000 + 100000) / 2 = 75000."
+            },
+            {
+              "q": "GROUP BY dept_id, status with 5 depts and 3 statuses — max groups:",
+              "options": [
+                "5",
+                "8",
+                "15",
+                "Depends on data"
+              ],
+              "answer": 2,
+              "explain": "Max groups = 5 depts × 3 statuses = 15. Actual may be fewer if some combos missing."
+            },
+            {
+              "q": "GROUP BY EXTRACT(MONTH FROM hire_date) — groups by:",
+              "options": [
+                "Year",
+                "Month (1-12)",
+                "Day",
+                "Full date"
+              ],
+              "answer": 1,
+              "explain": "EXTRACT(MONTH FROM date) returns 1-12. Groups by month across all years."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "GROUP BY — Multiple Columns, Expressions",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Multi-Column Grouping"
+        },
+        {
+          "type": "code",
+          "label": "group by multiple",
+          "code": "-- Group by dept AND status\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY dept_id, status;\n-- One row per (dept_id, status) combination\n\n-- Group by expression\nSELECT EXTRACT(YEAR FROM hire_date) AS yr, COUNT(*)\nFROM employees\nGROUP BY EXTRACT(YEAR FROM hire_date);",
+          "pg": "-- GROUP BY can use expressions\nSELECT date_trunc('month', created_at) AS month, COUNT(*)\nFROM events\nGROUP BY date_trunc('month', created_at);",
+          "mysql": "-- Same syntax\nSELECT YEAR(hire_date) AS yr, COUNT(*) FROM employees GROUP BY YEAR(hire_date);",
+          "py-pandas": "# Multi-column groupby\ngrouped = employees.groupby(['dept_id', 'status']).size().reset_index(name='count')\n\n# Expression groupby\ngrouped = employees.groupby(employees['hire_date'].dt.year).size()"
+        },
+        {
+          "type": "heading",
+          "text": "HAVING — Filter Groups"
+        },
+        {
+          "type": "code",
+          "label": "having clause",
+          "code": "-- Departments with > 10 employees\nSELECT dept_id, COUNT(*) AS cnt\nFROM employees\nGROUP BY dept_id\nHAVING COUNT(*) > 10;\n\n-- HAVING can use aliases (PostgreSQL)\nSELECT dept_id, COUNT(*) AS cnt\nFROM employees\nGROUP BY dept_id\nHAVING cnt > 10;\n\n-- Multiple HAVING conditions\nSELECT dept_id, AVG(salary) AS avg_sal\nFROM employees\nGROUP BY dept_id\nHAVING AVG(salary) > 50000 AND COUNT(*) > 5;",
+          "pg": "-- Can use column alias in HAVING\nSELECT dept_id, COUNT(*) AS cnt FROM employees GROUP BY dept_id HAVING cnt > 10;",
+          "mysql": "-- MySQL: alias in HAVING works\nSELECT dept_id, COUNT(*) AS cnt FROM employees GROUP BY dept_id HAVING cnt > 10;",
+          "py-pandas": "# Having = filter after groupby\ngrouped = employees.groupby('dept_id').size().reset_index(name='cnt')\nresult = grouped[grouped['cnt'] > 10]"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "WHERE salary > 50000 vs HAVING AVG(salary) > 50000:",
+              "options": [
+                "Same",
+                "WHERE filters rows before grouping; HAVING filters groups after",
+                "HAVING runs first",
+                "WHERE only for aggregates"
+              ],
+              "answer": 1,
+              "explain": "WHERE = row filter (pre-GROUP BY). HAVING = group filter (post-GROUP BY)."
+            },
+            {
+              "q": "SELECT dept_id, COUNT(*) FROM employees HAVING COUNT(*) > 5; without GROUP BY:",
+              "options": [
+                "Total count if > 5, else empty",
+                "Error",
+                "One row per dept",
+                "Syntax error"
+              ],
+              "answer": 0,
+              "explain": "No GROUP BY → single group (whole table). HAVING filters that one group."
+            }
+          ]
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — GROUP BY Aggregate",
+          "plan": {
+            "Plan": {
+              "Node Type": "GroupAggregate",
+              "Strategy": "Sorted",
+              "Group Key": ["dept_id"],
+              "Startup Cost": 100.00,
+              "Total Cost": 500.00,
+              "Plan Rows": 5,
+              "Plan Width": 24,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 450.00,
+                  "Plan Rows": 8500,
+                  "Plan Width": 24,
+                  "Plans": [
+                    {
+                      "Node Type": "Seq Scan",
+                      "Relation Name": "employees",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 185.00,
+                      "Plan Rows": 8500,
+                      "Plan Width": 24
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "A101",
+              "tier": 1,
+              "title": "Employee Count per Department",
+              "platform": "drill",
+              "patterns": ["group-by"],
+              "statement": "Count employees in each department.",
+              "hints": ["GROUP BY dept_id"]
+            },
+            {
+              "id": "A102",
+              "tier": 1,
+              "title": "Average Salary per Department",
+              "platform": "drill",
+              "patterns": ["group-by", "avg"],
+              "statement": "Average salary for each department.",
+              "hints": ["AVG(salary) with GROUP BY dept_id"]
+            },
+            {
+              "id": "A103",
+              "tier": 1,
+              "title": "Total Payroll per Department",
+              "platform": "drill",
+              "patterns": ["group-by", "sum"],
+              "statement": "Sum of salaries per department.",
+              "hints": ["SUM(salary) with GROUP BY dept_id"]
+            },
+            {
+              "id": "A104",
+              "tier": 1,
+              "title": "Min/Max Salary per Department",
+              "platform": "drill",
+              "patterns": ["group-by", "min-max"],
+              "statement": "Minimum and maximum salary in each department.",
+              "hints": ["MIN(salary), MAX(salary) with GROUP BY"]
+            },
+            {
+              "id": "A105",
+              "tier": 1,
+              "title": "Departments with More Than 5 Employees",
+              "platform": "drill",
+              "patterns": ["group-by", "having"],
+              "statement": "Departments having more than 5 employees.",
+              "hints": ["GROUP BY dept_id HAVING COUNT(*) > 5"]
+            },
+            {
+              "id": "A106",
+              "tier": 1,
+              "title": "Employee Count by Dept and Status",
+              "platform": "drill",
+              "patterns": ["multi-column-group-by"],
+              "statement": "Count employees grouped by department AND status.",
+              "hints": ["GROUP BY dept_id, status"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "COUNT(*) = all rows; COUNT(col) = non-NULL only",
+    "SUM, AVG, MIN, MAX ignore NULLs",
+    "GROUP BY: non-aggregate columns in SELECT must appear in GROUP BY",
+    "WHERE = row filter (before GROUP BY); HAVING = group filter (after GROUP BY)",
+    "GROUP BY expressions allowed: EXTRACT(YEAR FROM date), dept_id + status",
+    "NULLs group together in GROUP BY"
+  ],
+  "glossary": [
+    { "term": "aggregate function", "def": "Computes single value from multiple rows: COUNT, SUM, AVG, MIN, MAX." },
+    { "term": "GROUP BY", "def": "Collapses rows with same key values into one row per group." },
+    { "term": "HAVING", "def": "Filters groups after aggregation (vs WHERE filters rows before)." },
+    { "term": "bucket", "def": "A group of rows with same GROUP BY key values." },
+    { "term": "aggregate expression", "def": "Expression containing aggregate function (e.g., COUNT(*) + 1)." },
+    { "term": "null group", "def": "All rows with NULL in GROUP BY column form one group together." }
+  ]
+}

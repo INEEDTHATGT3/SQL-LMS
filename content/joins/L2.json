@@ -1,0 +1,382 @@
+{
+  "level": 2,
+  "title": "Joins & Set Operations",
+  "tagline": "join algorithms, lateral, semi/anti joins, join order",
+  "placementQuiz": [
+    {
+      "q": "Nested Loop Join is best when:",
+      "options": [
+        "Both tables are large",
+        "One table is small, other has index on join key",
+        "No indexes exist",
+        "Joining on non-equality condition"
+      ],
+      "answer": 1,
+      "explain": "NLJ: for each outer row, probe inner index. Best when outer is small and inner has index."
+    },
+    {
+      "q": "Hash Join builds hash table on:",
+      "options": [
+        "Smaller table (build side)",
+        "Larger table",
+        "Both tables",
+        "Primary key only"
+      ],
+      "answer": 0,
+      "explain": "Hash Join: build hash on smaller (build) table, probe with larger. Memory-intensive."
+    },
+    {
+      "q": "Merge Join requires:",
+      "options": [
+        "Both tables sorted on join key",
+        "Hash indexes",
+        "No indexes",
+        "Foreign keys"
+      ],
+      "answer": 0,
+      "explain": "Merge Join: both inputs sorted on join key, then merged like merge sort. O(N+M)."
+    },
+    {
+      "q": "LATERAL JOIN allows:",
+      "options": [
+        "Right side references left side columns",
+        "Left side references right side",
+        "Joining without ON condition",
+        "Cross join optimization"
+      ],
+      "answer": 0,
+      "explain": "LATERAL: right subquery can reference columns from left. Like correlated subquery but in FROM."
+    },
+    {
+      "q": "Semi-join vs Inner Join:",
+      "options": [
+        "Same result",
+        "Semi-join returns only left columns, stops at first match",
+        "Semi-join returns duplicate left rows",
+        "Semi-join requires unique right key"
+      ],
+      "answer": 1,
+      "explain": "Semi-join (EXISTS/IN): returns left rows only, stops at first match per left row. No duplication."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Join Algorithms — How the Planner Executes",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Planner picks algorithm: Nested Loop (small + index), Hash Join (large, no index), Merge Join (pre-sorted). EXPLAIN shows which. You can influence with indexes, stats, enable_* settings."
+        },
+        {
+          "type": "code",
+          "label": "join algorithms in EXPLAIN",
+          "code": "-- Nested Loop: outer rows × index probe\nEXPLAIN SELECT * FROM small s JOIN big b ON s.id = b.sid;\n-- Nested Loop (big has index on sid)\n\n-- Hash Join: build hash on smaller, probe larger\nEXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;\n-- Hash Join (no useful indexes, both large)\n\n-- Merge Join: both sorted\nEXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;\n-- Merge Join (both have indexes on id, or pre-sorted)",
+          "pg": "-- Disable to test others\nSET enable_nestloop = off;\nSET enable_hashjoin = off;\nSET enable_mergejoin = off;",
+          "mysql": "-- MySQL: primarily Nested Loop\n-- Hash Join: 8.0.18+ (hash_join optimizer hint)\n-- Merge Join: not directly controllable",
+          "py-pandas": "# No planner, but merge = merge sort join:\npd.merge(a, b, on='key', how='inner', sort=True)  # uses sort-merge"
+        },
+        {
+          "type": "query-plan",
+          "title": "Hash Join vs Nested Loop",
+          "plan": {
+            "Plan": {
+              "Node Type": "Hash Join",
+              "Startup Cost": 100.00,
+              "Total Cost": 5000.00,
+              "Plan Rows": 10000,
+              "Plan Width": 120,
+              "Hash Cond": "(a.id = b.id)",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "a",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 100.00,
+                  "Plan Rows": 10000
+                },
+                {
+                  "Node Type": "Hash",
+                  "Startup Cost": 50.00,
+                  "Total Cost": 50.00,
+                  "Plan Rows": 5000
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "Hash Join: Build side (5000 rows) → hash table in memory. Probe side (10000 rows) → hash probe. If hash table > work_mem → spills to disk (slow). Increase work_mem for big joins."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Hash Join spills to disk when:",
+              "options": [
+                "Hash table > work_mem",
+                "Table > 1GB",
+                "No index on join key",
+                "Join is FULL OUTER"
+              ],
+              "answer": 0,
+              "explain": "work_mem controls hash table memory. Spill = massive slowdown. Increase work_mem or use indexes."
+            },
+            {
+              "q": "Merge Join is chosen when:",
+              "options": [
+                "Tables already sorted on join key",
+                "Indexes exist on join key",
+                "Both tables have ORDER BY on join key",
+                "All of the above"
+              ],
+              "answer": 0,
+              "explain": "Merge Join requires sorted input. Index scan or explicit sort provides ordering."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "LATERAL JOIN — Correlated Subquery in FROM",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "LATERAL — The Game Changer"
+        },
+        {
+          "type": "code",
+          "label": "lateral basics",
+          "code": "-- For each employee, get their latest order\nSELECT e.name, o.order_date, o.total\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT * FROM orders o\n  WHERE o.emp_id = e.id\n  ORDER BY o.order_date DESC\n  LIMIT 1\n) o ON true;\n\n-- Equivalent correlated subquery (harder to read)\nSELECT e.name,\n  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_date,\n  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_total\nFROM employees e;",
+          "pg": "-- LATERAL is PostgreSQL standard",
+          "mysql": "-- MySQL 8.0.14+: LATERAL supported\n-- Same syntax",
+          "py-pandas": "# GroupBy + head(1)\nlatest = orders.sort_values('order_date').groupby('emp_id').head(1)\nmerged = employees.merge(latest, left_on='id', right_on='emp_id', how='left')",
+          "py-sqlalchemy": "# Lateral via subquery\nfrom sqlalchemy import lateral\nsubq = session.query(Order).filter(Order.emp_id == Employee.id)\n    .order_by(Order.order_date.desc()).limit(1).lateral()\nsession.query(Employee.name, subq.c.order_date, subq.c.total).outerjoin(subq).all()"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"pattern": "LATERAL", "readability": "High — looks like regular join", "performance": "Same as correlated subquery", "use_case": "Top-N per group, complex per-row logic"},
+              {"pattern": "Correlated Subquery", "readability": "Low — nested in SELECT", "performance": "Same", "use_case": "Single column, simple"},
+              {"pattern": "Window Function", "readability": "Medium", "performance": "Better for full scan", "use_case": "All rows need rank/row_number"}
+            ],
+            "after": [],
+            "highlight": ["readability", "performance"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LATERAL subquery can reference:",
+              "options": [
+                "Only tables in same FROM",
+                "Columns from LEFT side of join",
+                "Only columns from same subquery",
+                "Global variables only"
+              ],
+              "answer": 1,
+              "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
+            },
+            {
+              "q": "CROSS JOIN LATERAL vs LEFT JOIN LATERAL:",
+              "options": [
+                "Same",
+                "CROSS = inner (drops left rows with no match), LEFT = preserves left",
+                "LEFT not allowed with LATERAL",
+                "CROSS not allowed"
+              ],
+              "answer": 1,
+              "explain": "CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Semi/Anti Joins & Join Order",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Semi-Join (EXISTS/IN) vs Anti-Join (NOT EXISTS/NOT IN)"
+        },
+        {
+          "type": "code",
+          "label": "semi/anti join patterns",
+          "code": "-- Semi-join: EXISTS (stops at first match)\nSELECT * FROM employees e\nWHERE EXISTS (SELECT 1 FROM orders o WHERE o.emp_id = e.id);\n-- Returns employees WITH orders (no duplication)\n\n-- Anti-join: NOT EXISTS\nSELECT * FROM employees e\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.emp_id = e.id);\n-- Employees with NO orders\n\n-- IN semi-join (same logic)\nSELECT * FROM employees WHERE id IN (SELECT emp_id FROM orders);\n\n-- NOT IN anti-join (NULL trap!)\nSELECT * FROM employees WHERE id NOT IN (SELECT emp_id FROM orders);\n-- Watch for NULLs in subquery!",
+          "pg": "-- PostgreSQL: Semi-join optimization automatic\n-- Hash Semi Join / Hash Anti Join in EXPLAIN",
+          "mysql": "-- MySQL: Semi-join optimization (8.0+)\n-- EXPLAIN shows 'Semi Join' or 'Anti Join'",
+          "py-pandas": "# Exists: merge + drop_duplicates on left key\nmerged = employees.merge(orders[['emp_id']].drop_duplicates(), \n                         left_on='id', right_on='emp_id', how='inner')\n\n# Anti-join (left only)\nmerged = employees.merge(orders[['emp_id']].drop_duplicates(), \n                         left_on='id', right_on='emp_id', how='left', indicator=True)\nresult = merged[merged['_merge'] == 'left_only']",
+          "py-sqlalchemy": "# EXISTS\nsession.query(Employee).filter(\n    Employee.id.in_(session.query(Order.emp_id))\n).all()\n\n# NOT EXISTS\nsession.query(Employee).filter(\n    ~Employee.id.in_(session.query(Order.emp_id))\n).all()"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**\"Not In\" + subquery with NULL = zero rows.** Always use NOT EXISTS for anti-join. Or: `WHERE id NOT IN (SELECT emp_id FROM orders WHERE emp_id IS NOT NULL)`."
+        },
+        {
+          "type": "heading",
+          "text": "Join Order — Planner vs Hint"
+        },
+        {
+          "type": "code",
+          "label": "join order control",
+          "code": "-- Planner chooses order based on stats/costs\n-- Force order (PostgreSQL):\nSET join_collapse_limit = 1;  -- disable reordering\n-- Or use explicit parentheses:\nSELECT * FROM a JOIN (b JOIN c ON b.id = c.id) ON a.id = b.id;\n\n-- Join hints (PostgreSQL 12+ via pg_hint_plan extension)\n/*+ Leading(a b c) */ SELECT * FROM a JOIN b ON ... JOIN c ON ...;",
+          "pg": "-- join_collapse_limit = 1 forces written order\n-- pg_hint_plan for advanced control",
+          "mysql": "-- MySQL: STRAIGHT_JOIN forces order\nSELECT STRAIGHT_JOIN * FROM a JOIN b ON ...;",
+          "py-pandas": "# No planner; merge order = written order\ndf1.merge(df2).merge(df3)  # left-to-right"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "EXISTS vs IN semi-join: which stops at first match?",
+              "options": [
+                "EXISTS only",
+                "IN only",
+                "Both stop at first match",
+                "Neither"
+              ],
+              "answer": 2,
+              "explain": "Both are semi-joins — stop at first match per left row. EXISTS often clearer for complex conditions."
+            },
+            {
+              "q": "Join order hint in PostgreSQL:",
+              "options": [
+                "/*+ Leading(a b) */",
+                "/*+ JoinOrder(a,b) */",
+                "SET join_order = 'a,b'",
+                "Not possible"
+              ],
+              "answer": 0,
+              "explain": "pg_hint_plan extension: /*+ Leading(a b c) */ forces join order."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Differences — Join Syntax",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM a FULL JOIN b ON a.id = b.id;",
+          "pg": "SELECT * FROM a FULL JOIN b ON a.id = b.id;",
+          "mysql": "-- MySQL: no FULL JOIN\nSELECT * FROM a LEFT JOIN b ON ...\nUNION\nSELECT * FROM a RIGHT JOIN b ON ...;",
+          "py-pandas": "pd.merge(a, b, on='id', how='outer')",
+          "py-sqlalchemy": "session.query(A).outerjoin(B, A.id == B.id, full=True).all()"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true;",
+          "pg": "SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true;",
+          "mysql": "SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true; -- 8.0.14+",
+          "py-pandas": "df.groupby('a_id').head(1)",
+          "py-sqlalchemy": "lateral()"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "J201",
+              "tier": 2,
+              "title": "Latest Order per Employee (LATERAL)",
+              "platform": "drill",
+              "patterns": ["lateral-join"],
+              "statement": "For each employee, show their most recent order date and total.",
+              "hints": ["LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"]
+            },
+            {
+              "id": "J202",
+              "tier": 2,
+              "title": "Customers Without Orders (NOT EXISTS)",
+              "platform": "drill",
+              "patterns": ["anti-join"],
+              "statement": "Find customers who have never placed an order.",
+              "hints": ["NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)"]
+            },
+            {
+              "id": "J203",
+              "tier": 2,
+              "title": "Top 3 Products per Category (LATERAL)",
+              "platform": "drill",
+              "patterns": ["lateral-top-n"],
+              "statement": "For each category, list top 3 products by sales.",
+              "hints": ["LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)"]
+            },
+            {
+              "id": "J204",
+              "tier": 2,
+              "title": "Employees With Orders in 2024 (EXISTS)",
+              "platform": "drill",
+              "patterns": ["semi-join"],
+              "statement": "Employees who placed at least one order in 2024.",
+              "hints": ["EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')"]
+            },
+            {
+              "id": "J205",
+              "tier": 2,
+              "title": "Products Never Ordered (Anti-Join)",
+              "platform": "drill",
+              "patterns": ["anti-join"],
+              "statement": "Products that have never been ordered.",
+              "hints": ["NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)"]
+            },
+            {
+              "id": "J206",
+              "tier": 2,
+              "title": "Force Join Order (Small to Large)",
+              "platform": "drill",
+              "patterns": ["join-order"],
+              "statement": "Join small_table (100 rows) → medium (10k) → large (1M). Force order.",
+              "hints": ["SET join_collapse_limit = 1; write joins in order small→medium→large"]
+            },
+            {
+              "id": "J207",
+              "tier": 2,
+              "title": "Set Operations: Active vs Inactive Users",
+              "platform": "drill",
+              "patterns": ["except"],
+              "statement": "User IDs in 'active' status but not in 'inactive'. Use EXCEPT.",
+              "hints": ["SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'"]
+            },
+            {
+              "id": "J208",
+              "tier": 2,
+              "title": "FULL JOIN Workaround (MySQL)",
+              "platform": "drill",
+              "patterns": ["full-join-workaround"],
+              "statement": "MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.",
+              "hints": ["LEFT JOIN ... UNION RIGHT JOIN ..."]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Nested Loop: small outer + indexed inner; Hash: large both, build hash on smaller; Merge: pre-sorted",
+    "LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer",
+    "Semi-join (EXISTS/IN): left columns only, stops at first match; Anti-join (NOT EXISTS): no match",
+    "NOT IN + subquery with NULL = disaster; always NOT EXISTS for anti-join",
+    "Join order: planner decides; join_collapse_limit=1 forces written order; pg_hint_plan for hints",
+    "FULL JOIN = LEFT UNION RIGHT; MySQL 5.7 workaround: LEFT UNION RIGHT"
+  ],
+  "glossary": [
+    { "term": "nested loop join", "def": "For each outer row, probe inner index. Best: small outer + indexed inner." },
+    { "term": "hash join", "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem." },
+    { "term": "merge join", "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input." },
+    { "term": "lateral join", "def": "Right subquery references left columns. Like correlated subquery in FROM clause." },
+    { "term": "semi-join", "def": "EXISTS/IN pattern — returns left rows only, stops at first match per left row." },
+    { "term": "anti-join", "def": "NOT EXISTS pattern — returns left rows with NO match in right." }
+  ]
+}

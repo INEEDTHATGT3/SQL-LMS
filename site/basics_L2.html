@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Fundamentals — L2 INTERVIEW READY</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="2" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 01</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">filter, sort, limit — the WHERE-ORDER-LIMIT triad</span></div>
+  <h1>SQL Fundamentals</h1>
+  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="basics_L1" href="basics_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="basics_L2" href="basics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="basics_L3" href="basics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="basics_L4" href="basics_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Advanced Filtering — IN, NOT IN, LIKE, BETWEEN</a><a href="#sec-1">02 · Compound Conditions — AND, OR, NOT, Precedence</a><a href="#sec-2">03 · Query Plans — Reading EXPLAIN</a><a href="#sec-3">04 · Dialect Differences — String Concatenation</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q13" data-answer="1">
+      <div class="quiz-q">Which query finds employees with salary > 50000 AND dept_id = 3?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>SELECT * FROM employees WHERE salary > 50000, dept_id = 3;</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>SELECT * FROM employees WHERE salary > 50000 AND dept_id = 3;</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>SELECT * FROM employees WHERE salary > 50000 OR dept_id = 3;</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>SELECT * FROM employees HAVING salary > 50000 AND dept_id = 3;</span></div></div>
+      <div class="quiz-explain">AND combines conditions; both must be true. Comma is not valid in WHERE.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q14" data-answer="1">
+      <div class="quiz-q">ORDER BY hire_date ASC LIMIT 1 returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Most recently hired employee</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>First employee ever hired</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Employee with highest ID</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Random employee</span></div></div>
+      <div class="quiz-explain">ASC = oldest first (earliest date). LIMIT 1 takes the first.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q15" data-answer="0">
+      <div class="quiz-q">WHERE name LIKE 'J%' matches:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Names starting with J</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Names ending with J</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Names containing J anywhere</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only the name 'J'</span></div></div>
+      <div class="quiz-explain">% is wildcard for any characters. 'J%' = starts with J.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q16" data-answer="0">
+      <div class="quiz-q">What does OFFSET 5 LIMIT 10 do?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Skips 5 rows, returns next 10</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Returns rows 5-10</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Returns first 5 rows, then 10 more</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Errors — wrong order</span></div></div>
+      <div class="quiz-explain">OFFSET skips N rows; LIMIT caps result. Standard pagination pattern.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q17" data-answer="2">
+      <div class="quiz-q">NULL = NULL evaluates to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>TRUE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>FALSE</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>UNKNOWN (NULL)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">NULL = NULL is UNKNOWN, not TRUE. Use IS NULL instead.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Advanced Filtering — IN, NOT IN, LIKE, BETWEEN</h2></div>
+    <div class="mantra"><strong>WHERE is your precision tool. IN for lists, LIKE for patterns, BETWEEN for ranges. Chain with AND/OR — parentheses control precedence.</strong></div>
+<div><div class="code-label"><span>IN / NOT IN</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Multiple values
+SELECT * FROM employees WHERE dept_id IN (<span class="num">1</span>, <span class="num">3</span>, <span class="num">5</span>);
+
+-- Exclude
+SELECT * FROM employees WHERE dept_id NOT IN (<span class="num">2</span>, <span class="num">4</span>);
+
+-- Subquery (preview)
+SELECT * FROM employees WHERE dept_id IN (SELECT id FROM departments WHERE location = <span class="st">'NYC'</span>);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>LIKE patterns</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Starts with
+SELECT * FROM employees WHERE name LIKE <span class="st">'A%'</span>;
+
+-- Ends with
+SELECT * FROM employees WHERE email LIKE <span class="st">'%@company.com'</span>;
+
+-- Contains
+SELECT * FROM employees WHERE name LIKE <span class="st">'%son%'</span>;
+
+-- Single <span class="kw">char</span> wildcard: _
+SELECT * FROM employees WHERE name LIKE <span class="st">'J_n'</span>;  -- Jan, Jon, Jun
+
+-- Case-insensitive (PostgreSQL)
+SELECT * FROM employees WHERE name ILIKE <span class="st">'a%'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Case-insensitive</span>
+SELECT * FROM employees WHERE name ILIKE <span class="st">'a%'</span>;</code></pre><pre data-lang="mysql"><code><span class="cm">-- Case-insensitive (default in MySQL)</span>
+SELECT * FROM employees WHERE name LIKE <span class="st">'a%'</span>;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s0-q18" data-answer="1">
+      <div class="quiz-q">WHERE status IN ('active', 'pending') is equivalent to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>status = 'active' AND status = 'pending'</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>status = 'active' OR status = 'pending'</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>status BETWEEN 'active' AND 'pending'</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>status LIKE 'active%'</span></div></div>
+      <div class="quiz-explain">IN is shorthand for multiple OR conditions. A row can't be both values simultaneously.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q19" data-answer="1">
+      <div class="quiz-q">LIKE '%test_' matches:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Any string containing 'test'</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Strings ending with 'test' plus one char</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Strings starting with 'test'</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Exactly 'test_'</span></div></div>
+      <div class="quiz-explain">% = any chars, _ = exactly one char. '%test_' = ends with 'test' + 1 char.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Compound Conditions — AND, OR, NOT, Precedence</h2></div>
+    <div><div class="code-label"><span>boolean logic</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- AND has higher precedence than OR
+-- This: salary > <span class="num">50000</span> AND dept = <span class="num">1</span> OR dept = <span class="num">2</span>
+-- Means: (salary > <span class="num">50000</span> AND dept = <span class="num">1</span>) OR dept = <span class="num">2</span>
+
+-- Use parentheses <span class="kw">for</span> clarity
+SELECT * FROM employees 
+WHERE (salary > <span class="num">50000</span> AND dept_id = <span class="num">1</span>) 
+   OR (salary > <span class="num">60000</span> AND dept_id = <span class="num">2</span>);
+
+-- NOT
+SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salary < <span class="num">30000</span>);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s1-q20" data-answer="1">
+      <div class="quiz-q">A AND B OR C is evaluated as:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>A AND (B OR C)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>(A AND B) OR C</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>(A OR C) AND B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error — ambiguous</span></div></div>
+      <div class="quiz-explain">AND binds tighter than OR. Use parentheses to be explicit.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q21" data-answer="1">
+      <div class="quiz-q">NOT (A OR B) is equivalent to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>NOT A OR NOT B</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>NOT A AND NOT B</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A AND B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A OR B</span></div></div>
+      <div class="quiz-explain">De Morgan's law: NOT (A OR B) = NOT A AND NOT B.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Query Plans — Reading EXPLAIN</h2></div>
+    <h3>What is a Query Plan?</h3>
+<p>EXPLAIN shows how the database *will* execute your query. It reveals: scan type (Seq Scan vs Index Scan), join method, estimated cost, and row counts. At L2, focus on: <strong>Seq Scan = full table read (slow for large tables), Index Scan = targeted lookup (fast)</strong>.</p>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Seq Scan vs Index Scan</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code> as <code>e</code>
+        <span class="plan-node-meta"> cost=0..185 rows=8500 width=72 actual time=0.024..12.45 actual rows=3200 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (salary > 50000)</div></div></div>
+</div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>With Index on salary</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Index Scan</span> on <code>employees</code> as <code>e</code>
+        <span class="plan-node-meta"> cost=0.29..42.15 rows=3200 width=72 actual time=0.018..3.12 actual rows=3200 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (salary > 50000)</div></div></div>
+</div>
+<div class="callout green"><strong>Cost dropped from 185 → 42. Time from 12ms → 3ms.</strong> Index Scan reads only matching rows; Seq Scan reads entire table. At L3 you'll learn when indexes *don't* help.</div>
+<div class="quiz-card" data-quiz-key="s2-q22" data-answer="1">
+      <div class="quiz-q">A Seq Scan reads:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only indexed columns</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Every row in the table</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only the first 100 rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Rows in index order</span></div></div>
+      <div class="quiz-explain">Sequential Scan = full table scan. Reads all pages sequentially.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q23" data-answer="1">
+      <div class="quiz-q">Index Cond in EXPLAIN means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Index is corrupted</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Index is being used for filtering</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Index needs rebuilding</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Full index scan</span></div></div>
+      <div class="quiz-explain">Index Cond shows the condition applied during index lookup.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Differences — String Concatenation</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT first_name || ' ' || last_name AS full_name FROM employees;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT first_name || ' ' || last_name AS full_name FROM employees;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employees;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">employees['full_name'] = employees['first_name'] + ' ' + employees['last_name']</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">session.query((Employee.first_name + ' ' + Employee.last_name).label('full_name')).all()</code></pre>
+      </div></div></div>
+<div class="callout blue"><strong>ANSI & PostgreSQL use ||. MySQL uses CONCAT().</strong> In MySQL, || is logical OR unless PIPES_AS_CONCAT mode enabled.</div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L2 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Employees in Dept 1, 3, or 5</div>
+        <div class="prob-meta">drill · where-in</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B201"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      List all employees in departments 1, 3, or 5.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn36" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn36">Use IN (1, 3, 5)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Names Starting with 'A' or 'B'</div>
+        <div class="prob-meta">drill · where-like</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B202"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Find employees whose name starts with A or B.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn37" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn37">Use LIKE 'A%' OR LIKE 'B%' or SIMILAR TO</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Salary 60k-80k in Dept 2</div>
+        <div class="prob-meta">drill · where-compound</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B203"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employees in department 2 with salary between 60000 and 80000.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn38" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn38">WHERE dept_id = 2 AND salary BETWEEN 60000 AND 80000</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Recent Hires (Last 2 Years)</div>
+        <div class="prob-meta">drill · where-date</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B204"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employees hired after January 1, 2023.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn39" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn39">WHERE hire_date > '2023-01-01'</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Top 3 by Salary in Each Dept (Conceptual)</div>
+        <div class="prob-meta">drill · order-by + limit</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B205"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Write the query pattern to get top 3 salaries. (Full solution at L3 with window functions)
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn3a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn3a">ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Pagination: Page 2 (20 per page)</div>
+        <div class="prob-meta">drill · limit-offset</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B206"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Get the second page of employees ordered by hire_date, 20 per page.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn3b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn3b">OFFSET 20 LIMIT 20</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Exclude Departments 4 and 6</div>
+        <div class="prob-meta">drill · where-not-in</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B207"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      All employees NOT in departments 4 or 6.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn3c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn3c">NOT IN (4, 6)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Email Domain Filter</div>
+        <div class="prob-meta">drill · where-like</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B208"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employees with company email (@company.com).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrn3d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrn3d">LIKE '%@company.com'</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>IN / NOT IN — clean list filtering; subquery preview</li><li>LIKE patterns: % = any chars, _ = one char; ILIKE for case-insensitive</li><li>AND before OR — use parentheses: (A AND B) OR C</li><li>Seq Scan = full table read; Index Scan = targeted lookup (faster)</li><li>EXPLAIN shows cost, rows, scan type — learn to spot Seq Scan</li><li>Dialect diff: || (ANSI/PG) vs CONCAT() (MySQL)</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>Seq Scan</code></td><td>Sequential scan — reads every table page; O(N) cost.</td></tr><tr><td style="width:220px;"><code>Index Scan</code></td><td>Uses B-tree index to jump directly to matching rows; O(log N) + matches.</td></tr><tr><td style="width:220px;"><code>wildcard</code></td><td>% (any chars) and _ (one char) in LIKE patterns.</td></tr><tr><td style="width:220px;"><code>precedence</code></td><td>Order of operations: NOT > AND > OR. Parentheses override.</td></tr><tr><td style="width:220px;"><code>pagination</code></td><td>LIMIT n OFFSET m — skip m rows, take n. Page k = OFFSET k*page_size.</td></tr><tr><td style="width:220px;"><code>cost</code></td><td>Planner's estimated resource units (not milliseconds). Lower = better.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 01 · L2/INTERVIEW READY · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('basics_L2');</script>
+</body></html>

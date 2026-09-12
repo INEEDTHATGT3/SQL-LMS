@@ -1,0 +1,452 @@
+{
+  "level": 2,
+  "title": "Advanced Analytics",
+  "tagline": "PIVOT, LATERAL, advanced frames, sampling — analytics beyond GROUP BY",
+  "placementQuiz": [
+    {
+      "q": "PIVOT rotates rows to columns. In PostgreSQL, PIVOT is:",
+      "options": [
+        "Built-in syntax (PIVOT ... FOR)",
+        "Done via crosstab() from tablefunc extension",
+        "Only available in MySQL",
+        "Not possible"
+      ],
+      "answer": 1,
+      "explain": "PostgreSQL uses crosstab() from tablefunc extension for pivot. MySQL has PIVOT syntax in 8.0+."
+    },
+    {
+      "q": "LATERAL join allows the right side to:",
+      "options": [
+        "Reference columns from left side",
+        "Run independently of left side",
+        "Only work with LEFT JOIN",
+        "Replace CTE"
+      ],
+      "answer": 0,
+      "explain": "LATERAL allows right subquery to reference columns from left side of join."
+    },
+    {
+      "q": "Advanced frame: ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING includes:",
+      "options": [
+        "Current row only",
+        "Current row ± 2 rows (5 rows total)",
+        "2 rows before, current, 2 rows after (5 rows total)",
+        "All rows"
+      ],
+      "answer": 2,
+      "explain": "2 PRECEDING + current + 2 FOLLOWING = 5 rows total centered on current."
+    },
+    {
+      "q": "TABLESAMPLE SYSTEM (10) returns:",
+      "options": [
+        "Exactly 10% of rows",
+        "~10% of pages (approximate 10% of rows)",
+        "First 10% of table",
+        "Random 10 rows"
+      ],
+      "answer": 1,
+      "explain": "TABLESAMPLE SYSTEM samples at page level. Returns approximate percentage."
+    },
+    {
+      "q": "LATERAL with LIMIT 1 for top-N per group — execution:",
+      "options": [
+        "Full scan per outer row",
+        "Index seek + LIMIT per outer row",
+        "Full sort per outer row",
+        "Cross join optimization"
+      ],
+      "answer": 1,
+      "explain": "LATERAL + ORDER BY + LIMIT with index on (partition, order) = index seek + LIMIT per outer row."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Advanced PIVOT — Dynamic Columns & Multi-Level",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "Static PIVOT works when categories are known. Dynamic PIVOT generates columns at runtime. Multi-level PIVOT (e.g., year → quarter → month) requires chaining or dynamic SQL. PostgreSQL: dynamic crosstab via execute format()."
+        },
+        {
+          "type": "code",
+          "label": "dynamic crosstab",
+          "code": "-- Dynamic columns: use EXECUTE format()\nDO $$\nDECLARE\n  cols TEXT;\nBEGIN\n  SELECT string_agg(DISTINCT quote_ident(quarter), ', ') INTO cols\n  FROM sales;\n  EXECUTE format(\n    'SELECT * FROM crosstab(\n      ''SELECT dept, quarter, SUM(sales) FROM sales GROUP BY dept, quarter ORDER BY 1,2'',\n      ''SELECT DISTINCT quarter FROM sales ORDER BY 1''\n    ) AS ct(dept TEXT, %s)',\n    cols\n  );\nEND $$;",
+          "pg": "-- Dynamic SQL with EXECUTE format() for unknown columns",
+          "mysql": "-- MySQL: prepared statements with dynamic SQL",
+          "py-pandas": "# Dynamic pivot\ndf.pivot_table(index='dept', columns='quarter', values='sales', aggfunc='sum')"
+        },
+        {
+          "type": "heading",
+          "text": "Multi-Level PIVOT (Year → Quarter → Month)"
+        },
+        {
+          "type": "code",
+          "label": "multi-level pivot",
+          "code": "-- Static multi-level: year → quarter\nSELECT * FROM crosstab(\n  'SELECT year, quarter, SUM(sales) FROM sales GROUP BY year, quarter ORDER BY 1,2',\n  'SELECT DISTINCT quarter FROM sales ORDER BY 1'\n) AS ct(year INT, q1 NUMERIC, q2 NUMERIC, q3 NUMERIC, q4 NUMERIC);\n\n-- True multi-level requires dynamic SQL or application-level pivot\n-- Dynamic: build column list at runtime",
+          "pg": "-- Chain crosstab calls or use dynamic SQL",
+          "mysql": "-- MySQL: multiple PIVOTs or dynamic SQL",
+          "py-pandas": "# Multi-level pivot\ndf.pivot_table(index='year', columns=['quarter', 'month'], values='sales', aggfunc='sum')"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "Static crosstab requires known columns. For dynamic categories, use EXECUTE format() with dynamic SQL. Performance: dynamic SQL prevents plan caching."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Dynamic crosstab in PostgreSQL uses:",
+              "options": [
+                "PIVOT keyword",
+                "EXECUTE format() with dynamic SQL",
+                "CTE with recursive",
+                "PL/pgSQL function only"
+              ],
+              "answer": 1,
+              "explain": "EXECUTE format() builds query string at runtime. Column list built dynamically."
+            },
+            {
+              "q": "Multi-level PIVOT (year → quarter) — static approach:",
+              "options": [
+                "Single crosstab call",
+                "Chain crosstab calls or build composite key",
+                "Not possible",
+                "Use VIEW"
+              ],
+              "answer": 1,
+              "explain": "Chain crosstab calls or build composite key (year||'-'||quarter) then pivot."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Advanced LATERAL — Top-N, Correlated, Parallel",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "LATERAL for Top-N Per Group"
+        },
+        {
+          "type": "code",
+          "label": "lateral top-n per group",
+          "code": "-- Top 3 products per category by sales\nSELECT c.name, p.name, p.sales\nFROM categories c\nLEFT JOIN LATERAL (\n  SELECT name, sales\n  FROM products p\n  WHERE p.category_id = c.id\n  ORDER BY p.sales DESC\n  LIMIT 3\n) p ON true;\n\n-- With ROW_NUMBER alternative (no LATERAL)\nWITH ranked AS (\n  SELECT p.*, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY sales DESC) AS rn\n  FROM products\n)\nSELECT * FROM ranked WHERE rn <= 3;",
+          "pg": "-- LATERAL is often clearer for top-N per group",
+          "mysql": "-- MySQL 8.0.14+: LATERAL supported\n-- ROW_NUMBER() alternative works everywhere",
+          "py-pandas": "# GroupBy + head\nproducts.sort_values('sales', ascending=False).groupby('category_id').head(3)"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "LATERAL + LIMIT is often faster than ROW_NUMBER() for Top-N: stops scanning after N rows per group. ROW_NUMBER scans all rows then filters."
+        },
+        {
+          "type": "heading",
+          "text": "LATERAL with Aggregate Subqueries"
+        },
+        {
+          "type": "code",
+          "label": "lateral + aggregate",
+          "code": "-- For each customer: total orders, avg order value, latest order date\nSELECT c.name,\n  COALESCE(oa.total_orders, 0) AS total_orders,\n  oa.avg_order,\n  oa.latest_order\nFROM customers c\nLEFT JOIN LATERAL (\n  SELECT \n    COUNT(*) AS total_orders,\n    AVG(total) AS avg_order,\n    MAX(order_date) AS latest_order\n  FROM orders o\n  WHERE o.customer_id = c.id\n) oa ON true;",
+          "pg": "-- Single LATERAL with multiple aggregates",
+          "mysql": "-- MySQL 8.0.14+: LATERAL supported",
+          "py-pandas": "# GroupBy agg\norders.groupby('customer_id').agg(\n    total_orders=('id', 'count'),\n    avg_order=('total', 'mean'),\n    latest_order=('order_date', 'max')\n).reset_index()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LATERAL vs ROW_NUMBER() for Top-N: which is faster when N is small?",
+              "options": [
+                "ROW_NUMBER() always",
+                "LATERAL with LIMIT (stops early)",
+                "Same performance",
+                "Depends on index"
+              ],
+              "answer": 1,
+              "explain": "LATERAL + LIMIT stops after N rows per group. ROW_NUMBER scans all rows first."
+            },
+            {
+              "q": "LATERAL can reference:",
+              "options": [
+                "Only tables in same FROM",
+                "Columns from LEFT side of join",
+                "Only columns from same subquery",
+                "Global variables only"
+              ],
+              "answer": 1,
+              "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "EXPLAIN — LATERAL Top-N Per Group",
+      "blocks": [
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — LATERAL Top-N Per Group",
+      "plan": {
+        "Plan": {
+          "Node Type": "Nested Loop Left Join",
+          "Startup Cost": 0,
+          "Total Cost": 5000,
+          "Plan Rows": 8500,
+          "Plan Width": 120,
+          "Join Filter": "true",
+          "Plans": [
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "categories",
+              "Startup Cost": 0,
+              "Total Cost": 185,
+              "Plan Rows": 8500,
+              "Plan Width": 72
+            },
+            {
+              "Node Type": "Subquery Scan",
+              "Startup Cost": 0.29,
+              "Total Cost": 0.55,
+              "Plan Rows": 1,
+              "Plan Width": 48,
+              "SubPlan": {
+                "Node Type": "Limit",
+                "Startup Cost": 0.29,
+                "Total Cost": 0.55,
+                "Plan Rows": 1,
+                "Plan Width": 48,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Relation Name": "products",
+                    "Index Name": "idx_products_cat_sales",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 0.55,
+                    "Plan Rows": 1,
+                    "Plan Width": 48,
+                    "Index Cond": "(category_id = categories.id)",
+                    "Order By": "sales DESC"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Advanced Frames & Sampling",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "GROUPS Frame (PostgreSQL 14+)"
+        },
+        {
+          "type": "code",
+          "label": "groups frame",
+          "code": "-- GROUPS: counts groups of peer rows (same ORDER BY value)\n-- 1 group = all rows with same ORDER BY value\nSELECT \n  salary,\n  COUNT(*) OVER (\n    ORDER BY salary\n    GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING\n  ) AS peer_count\nFROM employees;\n\n-- Useful for: percentile buckets with variable row density",
+          "pg": "-- GROUPS frame (PostgreSQL 14+)\n-- Counts peer groups (ties) not individual rows",
+          "mysql": "-- MySQL: no GROUPS frame",
+          "py-pandas": "# No direct equivalent; use rank + transform"
+        },
+        {
+          "type": "heading",
+          "text": "Advanced Sampling — SYSTEM vs BERNOULLI"
+        },
+        {
+          "type": "code",
+          "label": "sampling methods",
+          "code": "-- SYSTEM: page-level (fast, approximate)\nSELECT * FROM large_table TABLESAMPLE SYSTEM (10);\n\n-- BERNOULLI: row-level (accurate %, slower)\nSELECT * FROM large_table TABLESAMPLE BERNOULLI (10);\n\n-- REPEATABLE for deterministic results\nSELECT * FROM large_table TABLESAMPLE SYSTEM (10) REPEATABLE (42);\n\n-- With WHERE (pushdown may not work)\nSELECT * FROM large_table TABLESAMPLE SYSTEM (10) WHERE status = 'active';",
+          "pg": "-- SYSTEM = page-level (fast). BERNOULLI = row-level (accurate %)",
+          "mysql": "-- MySQL: no TABLESAMPLE\n-- Use: WHERE RAND() < 0.1",
+          "py-pandas": "# df.sample(frac=0.1) for Bernoulli\n# SYSTEM-like: df.iloc[np.random.choice(len(df)//100, size=len(df)//10)]"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "SYSTEM sampling is fast but can be skewed if data clustered on pages. BERNOULLI is statistically sound but scans all rows. REPEATABLE(seed) for reproducible samples."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "GROUPS frame counts:",
+              "options": [
+                "Individual rows",
+                "Peer groups (rows with same ORDER BY value)",
+                "Partitions",
+                "Pages"
+              ],
+              "answer": 1,
+              "explain": "GROUPS counts peer groups (rows with same ORDER BY value). Useful for percentile buckets with ties."
+            },
+            {
+              "q": "TABLESAMPLE SYSTEM vs BERNOULLI — SYSTEM is:",
+              "options": [
+                "More accurate %",
+                "Faster (page-level), may be skewed",
+                "Slower but exact",
+                "Only for small tables"
+              ],
+              "answer": 1,
+              "explain": "SYSTEM samples pages (fast, ~1% I/O). BERNOULLI samples rows (accurate %, full scan)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "X201",
+              "tier": 2,
+              "title": "Dynamic PIVOT for Unknown Categories",
+              "platform": "drill",
+              "patterns": [
+                "dynamic-pivot"
+              ],
+              "statement": "Categories unknown at design time. Write dynamic SQL to pivot sales by category.",
+              "hints": [
+                "EXECUTE format() with dynamic column list"
+              ]
+            },
+            {
+              "id": "X202",
+              "tier": 2,
+              "title": "LATERAL: Top 3 Products per Category",
+              "platform": "drill",
+              "patterns": [
+                "lateral-top-n"
+              ],
+              "statement": "For each category, list top 3 products by sales.",
+              "hints": [
+                "LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)"
+              ]
+            },
+            {
+              "id": "X203",
+              "tier": 2,
+              "title": "Running Total with RANGE Frame",
+              "platform": "drill",
+              "patterns": [
+                "frame-range"
+              ],
+              "statement": "Running total of daily sales using RANGE frame (date-based).",
+              "hints": [
+                "RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+              ]
+            },
+            {
+              "id": "X204",
+              "tier": 2,
+              "title": "GROUPS Frame for Peer Groups",
+              "platform": "drill",
+              "patterns": [
+                "groups-frame"
+              ],
+              "statement": "Count employees in same salary tier ±1 tier. Use GROUPS frame.",
+              "hints": [
+                "GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING"
+              ]
+            },
+            {
+              "id": "X205",
+              "tier": 2,
+              "title": "TABLESAMPLE for A/B Test Sampling",
+              "platform": "drill",
+              "patterns": [
+                "tablesample"
+              ],
+              "statement": "Get 10% random sample of users for A/B test. Use SYSTEM for speed.",
+              "hints": [
+                "TABLESAMPLE SYSTEM (10) REPEATABLE (42)"
+              ]
+            },
+            {
+              "id": "X206",
+              "tier": 2,
+              "title": "Dynamic Crosstab with Unknown Quarters",
+              "platform": "drill",
+              "patterns": [
+                "dynamic-crosstab"
+              ],
+              "statement": "Quarters vary by year. Build dynamic crosstab for sales by region × quarter.",
+              "hints": [
+                "EXECUTE format() with dynamic column list from distinct quarters"
+              ]
+            },
+            {
+              "id": "X207",
+              "tier": 2,
+              "title": "LATERAL: Running Total per Customer",
+              "platform": "drill",
+              "patterns": [
+                "lateral-running-total"
+              ],
+              "statement": "For each customer, show running total of order amounts over time.",
+              "hints": [
+                "LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)"
+              ]
+            },
+            {
+              "id": "X208",
+              "tier": 2,
+              "title": "Approximate Distinct Count with Sampling",
+              "platform": "drill",
+              "patterns": [
+                "approx-aggregate"
+              ],
+              "statement": "Estimate distinct users per day using 10% TABLESAMPLE. Compare with exact COUNT(DISTINCT).",
+              "hints": [
+                "TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Dynamic PIVOT: EXECUTE format() builds column list at runtime",
+    "LATERAL + LIMIT 1/3 = efficient Top-N per group; stops after N rows per group",
+    "GROUPS frame (PG14): counts peer groups (ties); great for percentile buckets",
+    "TABLESAMPLE SYSTEM = fast page-level; BERNOULLI = accurate row-level",
+    "Dynamic SQL with EXECUTE format() for runtime column generation",
+    "LATERAL + aggregate = multiple aggregates per row in single lateral subquery"
+  ],
+  "glossary": [
+    {
+      "term": "dynamic pivot",
+      "def": "PIVOT where category columns determined at runtime via dynamic SQL."
+    },
+    {
+      "term": "GROUPS frame",
+      "def": "Frame unit = peer groups (rows with same ORDER BY value). PostgreSQL 14+."
+    },
+    {
+      "term": "TABLESAMPLE SYSTEM",
+      "def": "Page-level sampling. Fast (~1% I/O) but may be skewed if data clustered on pages."
+    },
+    {
+      "term": "TABLESAMPLE BERNOULLI",
+      "def": "Row-level sampling. Statistically accurate but scans all rows."
+    },
+    {
+      "term": "REPEATABLE",
+      "def": "TABLESAMPLE option for deterministic sampling using seed."
+    },
+    {
+      "term": "dynamic SQL",
+      "def": "SQL constructed at runtime (e.g., EXECUTE format() in PostgreSQL)."
+    }
+  ]
+}

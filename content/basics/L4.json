@@ -1,0 +1,355 @@
+{
+  "level": 4,
+  "title": "SQL Fundamentals",
+  "tagline": "partitioning, parallelism, internals — production-grade fundamentals",
+  "placementQuiz": [
+    {
+      "q": "Table partitioning in PostgreSQL splits a table by:",
+      "options": [
+        "Column values (range, list, hash)",
+        "Row count automatically",
+        "Database size",
+        "Index type"
+      ],
+      "answer": 0,
+      "explain": "PARTITION BY RANGE/LIST/HASH on a partition key column."
+    },
+    {
+      "q": "Parallel query execution (PostgreSQL) is triggered when:",
+      "options": [
+        "Table has > 1 partition",
+        "Estimated cost > parallel_setup_cost + parallel_tuple_cost * rows",
+        "Index exists on filtered column",
+        "Query uses LIMIT"
+      ],
+      "answer": 1,
+      "explain": "Planner compares parallel cost vs serial. Controlled by parallel_setup_cost, parallel_tuple_cost."
+    },
+    {
+      "q": "BRIN index is ideal for:",
+      "options": [
+        "Primary key columns",
+        "Timestamp columns with natural time-order correlation",
+        "JSONB columns",
+        "Full-text search columns"
+      ],
+      "answer": 1,
+      "explain": "BRIN stores min/max per block range. Works when physical order correlates with logical (e.g., auto-increment ID, timestamps)."
+    },
+    {
+      "q": "pg_stat_statements tracks:",
+      "options": [
+        "Index usage per table",
+        "Query execution stats (calls, time, rows) across all queries",
+        "Cache hit ratios",
+        "Lock contention"
+      ],
+      "answer": 1,
+      "explain": "Extension that normalizes queries and aggregates execution statistics. Essential for finding slow queries."
+    },
+    {
+      "q": "Effective cache size affects planner by:",
+      "options": [
+        "Determining actual RAM allocated to PostgreSQL",
+        "Estimating how much data fits in OS cache (influences index vs seq scan choice)",
+        "Setting shared_buffers",
+        "Limiting result set size"
+      ],
+      "answer": 1,
+      "explain": "effective_cache_size tells planner expected OS cache. Higher = more likely to choose Index Scan (assumes cached)."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Table Partitioning — Scale Without Sharding",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**Partitioning = physical split, logical unity. Large table becomes many small tables. Planner prunes partitions automatically. Maintenance (VACUUM, indexes) per partition.**"
+        },
+        {
+          "type": "code",
+          "label": "range partitioning (PostgreSQL 11+)",
+          "code": "-- Parent table\nCREATE TABLE measurements (\n  log_id BIGSERIAL,\n  sensor_id INT NOT NULL,\n  log_time TIMESTAMPTZ NOT NULL,\n  value NUMERIC\n) PARTITION BY RANGE (log_time);\n\n-- Monthly partitions\nCREATE TABLE measurements_2024_01 PARTITION OF measurements\n  FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');\nCREATE TABLE measurements_2024_02 PARTITION OF measurements\n  FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');\n\n-- Default partition (catches strays)\nCREATE TABLE measurements_default PARTITION OF measurements DEFAULT;\n\n-- Index on parent = created on all partitions\nCREATE INDEX idx_meas_sensor_time ON measurements (sensor_id, log_time);",
+          "pg": "-- Same syntax\n-- Attach/detach for rolling windows\nALTER TABLE measurements DETACH PARTITION measurements_2023_01;\nALTER TABLE measurements ATTACH PARTITION measurements_2025_01\n  FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');",
+          "mysql": "-- MySQL 8.0+ partitioning\nCREATE TABLE measurements (\n  log_id BIGINT AUTO_INCREMENT,\n  sensor_id INT NOT NULL,\n  log_time DATETIME NOT NULL,\n  value DECIMAL(10,2),\n  PRIMARY KEY (log_id, log_time)\n) PARTITION BY RANGE (UNIX_TIMESTAMP(log_time)) (\n  PARTITION p202401 VALUES LESS THAN (UNIX_TIMESTAMP('2024-02-01')),\n  PARTITION p202402 VALUES LESS THAN (UNIX_TIMESTAMP('2024-03-01')),\n  PARTITION pmax VALUES LESS THAN MAXVALUE\n);"
+        },
+        {
+          "type": "query-plan",
+          "title": "Partition Pruning in Action",
+          "plan": {
+            "Plan": {
+              "Node Type": "Append",
+              "Startup Cost": 0.00,
+              "Total Cost": 42.15,
+              "Plan Rows": 3200,
+              "Plan Width": 72,
+              "Plans": [
+                {
+                  "Node Type": "Index Scan",
+                  "Relation Name": "measurements_2024_01",
+                  "Index Name": "idx_meas_sensor_time",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 21.07,
+                  "Plan Rows": 1600
+                },
+                {
+                  "Node Type": "Index Scan",
+                  "Relation Name": "measurements_2024_02",
+                  "Index Name": "idx_meas_sensor_time",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 21.08,
+                  "Plan Rows": 1600
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "**Partition pruning:** Only 2 of 12 monthly partitions scanned. Query on Jan-Feb touches only those partitions. Detach old partitions for instant archival."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Partition pruning works when:",
+              "options": [
+                "Query filters on partition key",
+                "Any WHERE clause is used",
+                "Index exists on partition key",
+                "Table has > 10 partitions"
+              ],
+              "answer": 0,
+              "explain": "Planner only skips partitions if WHERE clause constrains the partition key (log_time in example)."
+            },
+            {
+              "q": "Unique constraint on partitioned table requires:",
+              "options": [
+                "Partition key included in unique columns",
+                "No unique constraints allowed",
+                "Global unique index",
+                "All partitions same size"
+              ],
+              "answer": 0,
+              "explain": "PostgreSQL requires partition key in PRIMARY KEY / UNIQUE to enforce uniqueness within single partition."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Parallel Query & Cost Tuning",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Parallel Execution Basics"
+        },
+        {
+          "type": "code",
+          "label": "parallel configuration (PostgreSQL)",
+          "code": "-- Enable (default on in PG 11+)\nSET max_parallel_workers_per_gather = 4;\n\n-- Cost thresholds\nSET parallel_setup_cost = 1000;      -- default 1000\nSET parallel_tuple_cost = 0.1;       -- default 0.1\n\n-- Force parallel for testing\nSET force_parallel_mode = on;\n\n-- Check if query uses parallel\nEXPLAIN ANALYZE SELECT count(*) FROM large_table;",
+          "pg": "-- Gather/Gather Merge nodes show parallelism\n-- Workers: actual loops > 1 in EXPLAIN ANALYZE",
+          "mysql": "-- MySQL 8.0: no native parallel query\n-- Use multiple connections + UNION ALL manually"
+        },
+        {
+          "type": "query-plan",
+          "title": "Parallel Seq Scan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Gather",
+              "Startup Cost": 1000.00,
+              "Total Cost": 15000.00,
+              "Plan Rows": 1000000,
+              "Plan Width": 8,
+              "Workers Planned": 4,
+              "Plans": [
+                {
+                  "Node Type": "Parallel Seq Scan",
+                  "Relation Name": "large_table",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 14000.00,
+                  "Plan Rows": 250000,
+                  "Plan Width": 8,
+                  "Worker 0": { "Actual Rows": 250123, "Actual Loops": 1 },
+                  "Worker 1": { "Actual Rows": 249876, "Actual Loops": 1 },
+                  "Worker 2": { "Actual Rows": 250045, "Actual Loops": 1 },
+                  "Worker 3": { "Actual Rows": 249956, "Actual Loops": 1 }
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Gather node in EXPLAIN means:",
+              "options": [
+                "Parallel workers collect results to leader",
+                "Index scan gathering rows",
+                "Sort operation",
+                "Join operation"
+              ],
+              "answer": 0,
+              "explain": "Gather = leader collects tuples from parallel workers. Gather Merge = workers already sorted."
+            },
+            {
+              "q": "Increase max_parallel_workers_per_gather when:",
+              "options": [
+                "CPU cores available and I/O not saturated",
+                "Always for faster queries",
+                "Table is small",
+                "Using LIMIT 1"
+              ],
+              "answer": 0,
+              "explain": "Parallel helps when CPU-bound and enough cores. I/O-bound or small tables don't benefit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Advanced Indexing — BRIN, Expression, Concurrent",
+      "blocks": [
+        {
+          "type": "code",
+          "label": "BRIN for time-series",
+          "code": "-- Huge table, naturally ordered by time\nCREATE INDEX idx_events_ts_brin ON events USING BRIN (created_at);\n\n-- Pages per range (default 128)\nCREATE INDEX idx_events_ts_brin32 ON events USING BRIN (created_at) WITH (pages_per_range = 32);\n\n-- Size comparison\n-- B-tree: ~1.2 GB  |  BRIN: ~40 MB (for 1B rows)",
+          "pg": "-- BRIN only in PostgreSQL\n-- Best when: physical order ≈ logical order (append-only, timestamps)",
+          "mysql": "-- MySQL: no BRIN equivalent\n-- Use partitioning by time instead"
+        },
+        {
+          "type": "code",
+          "label": "expression indexes & collation",
+          "code": "-- Case-insensitive unique constraint\nCREATE UNIQUE INDEX idx_users_email_lower ON users (LOWER(email));\n\n-- Custom collation (PostgreSQL 12+)\nCREATE COLLATION case_insensitive (provider = icu, locale = 'und-u-ks-level2', deterministic = false);\nCREATE TABLE users (email TEXT COLLATE case_insensitive UNIQUE);\n\n-- JSONB path index\nCREATE INDEX idx_data_tags ON events USING GIN ((data->'tags'));\n-- Query: data->'tags' @> '[\"urgent\"]'",
+          "pg": "-- ICU collation for proper case-insensitive\n-- JSONB path indexing with jsonb_path_ops",
+          "mysql": "-- Functional index (MySQL 8.0+)\nCREATE INDEX idx_users_email_lower ON users ((LOWER(email)));\n\n-- Collation\nCREATE TABLE users (email VARCHAR(255) COLLATE utf8mb4_0900_ai_ci UNIQUE);"
+        },
+        {
+          "type": "code",
+          "label": "concurrent index creation",
+          "code": "-- Avoid table lock during index build\nCREATE INDEX CONCURRENTLY idx_big_table_col ON big_table (col);\n\n-- Trade-offs:\n-- 2x disk space during build\n-- Longer build time\n-- May fail if concurrent modifications conflict\n-- Cannot run in transaction",
+          "pg": "-- PostgreSQL specific\n-- DROP INDEX CONCURRENTLY also available",
+          "mysql": "-- MySQL 8.0: ALGORITHM=INPLACE, LOCK=NONE\nALTER TABLE big_table ADD INDEX idx_col (col), ALGORITHM=INPLACE, LOCK=NONE;"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "BRIN index size is ~1/30th of B-tree because:",
+              "options": [
+                "It uses compression",
+                "Stores only min/max per block range, not every row",
+                "Only indexes first column",
+                "Skips NULL values"
+              ],
+              "answer": 1,
+              "explain": "BRIN summarizes 128-page ranges (default) with min/max. Tiny metadata vs per-row pointers."
+            },
+            {
+              "q": "CREATE INDEX CONCURRENTLY cannot:",
+              "options": [
+                "Run inside a transaction",
+                "Be used on partitioned tables",
+                "Create unique indexes",
+                "Work on expressions"
+              ],
+              "answer": 0,
+              "explain": "Must run outside transaction. Takes share-update-exclusive lock, not exclusive."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Deep Dive — Partitioning & Parallelism",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "pg": "CREATE TABLE sales (...) PARTITION BY RANGE (sale_date);\nCREATE TABLE sales_2024_q1 PARTITION OF sales FOR VALUES FROM ('2024-01-01') TO ('2024-04-01');",
+          "mysql": "CREATE TABLE sales (...) PARTITION BY RANGE (UNIX_TIMESTAMP(sale_date)) (\n  PARTITION p2024q1 VALUES LESS THAN (UNIX_TIMESTAMP('2024-04-01')),\n  PARTITION pmax VALUES LESS THAN MAXVALUE\n);"
+        },
+        {
+          "type": "dialect-diff",
+          "pg": "SET max_parallel_workers_per_gather = 8;\nEXPLAIN ANALYZE SELECT ...; -- Shows Gather/Parallel Seq Scan",
+          "mysql": "-- No native parallel query execution\n-- Workaround: Application-level parallelism with UNION ALL"
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L4 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "B401",
+              "tier": 4,
+              "title": "Design Partitioned Event Table",
+              "platform": "drill",
+              "patterns": ["partition-design"],
+              "statement": "Design a partitioned table for 1B events/year with partition key on event_time. Include monthly partitions, default partition, and index strategy.",
+              "hints": ["PARTITION BY RANGE (event_time)", "Monthly partitions", "Default partition for strays"]
+            },
+            {
+              "id": "B402",
+              "tier": 4,
+              "title": "BRIN Index for Append-Only Logs",
+              "platform": "drill",
+              "patterns": ["brin-index"],
+              "statement": "Create BRIN index on log_table(created_at) for 500M row append-only log table. Compare size vs B-tree.",
+              "hints": ["USING BRIN (created_at)", "pages_per_range=32 for finer granularity"]
+            },
+            {
+              "id": "B403",
+              "tier": 4,
+              "title": "Concurrent Index on Production Table",
+              "platform": "drill",
+              "patterns": ["concurrent-index"],
+              "statement": "Add index on orders(customer_id, order_date) without locking the 200M row table.",
+              "hints": ["CREATE INDEX CONCURRENTLY", "Monitor pg_stat_progress_create_index"]
+            },
+            {
+              "id": "B404",
+              "tier": 4,
+              "title": "Functional Index for Case-Insensitive Search",
+              "platform": "drill",
+              "patterns": ["functional-index"],
+              "statement": "Users search by email case-insensitively. Create index to support WHERE LOWER(email) = ? efficiently.",
+              "hints": ["CREATE INDEX ON users (LOWER(email))"]
+            },
+            {
+              "id": "B405",
+              "tier": 4,
+              "title": "Analyze Parallel Query Plan",
+              "platform": "drill",
+              "patterns": ["parallel-query", "explain-analyze"],
+              "statement": "Run EXPLAIN (ANALYZE, BUFFERS) on large aggregation. Identify Gather node, worker count, and whether parallelism helped.",
+              "hints": ["SET max_parallel_workers_per_gather = 4", "Look for Parallel Seq Scan vs Seq Scan"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Partitioning: RANGE/LIST/HASH on key; planner prunes automatically; detach for archival",
+    "BRIN for huge correlated tables (time-series); pages_per_range tunes granularity",
+    "Parallel query: Gather node, workers, cost thresholds (parallel_setup/tuple_cost)",
+    "CREATE INDEX CONCURRENTLY — no exclusive lock; 2x space, slower build",
+    "Functional indexes for expressions (LOWER, JSONB paths); ICU collations for CI",
+    "effective_cache_size guides index vs seq scan choice; pg_stat_statements for monitoring"
+  ],
+  "glossary": [
+    { "term": "partition pruning", "def": "Planner excludes partitions not matching WHERE on partition key." },
+    { "term": "partition key", "def": "Column(s) used to determine which partition a row belongs to." },
+    { "term": "parallel query", "def": "Multiple workers scan/process data simultaneously; leader gathers results." },
+    { "term": "pages_per_range", "def": "BRIN parameter: how many heap pages per min/max summary. Lower = more precise, larger index." },
+    { "term": "gather merge", "def": "Parallel workers return sorted data; leader merges without re-sorting." },
+    { "term": "concurrent index", "def": "Index built without blocking writes; takes share-update-exclusive lock." }
+  ]
+}

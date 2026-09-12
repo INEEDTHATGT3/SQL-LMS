@@ -1,0 +1,42 @@
+{
+  "skillName": "SQL",
+  "storageKey": "sql_lms_progress_v1",
+  "default": "sql",
+  "languages": [
+    {
+      "id": "sql",
+      "label": "SQL (ANSI)",
+      "ext": ".sql",
+      "highlight": "sql",
+      "group": "SQL Dialects"
+    },
+    {
+      "id": "pg",
+      "label": "PostgreSQL",
+      "ext": ".sql",
+      "highlight": "sql",
+      "group": "SQL Dialects"
+    },
+    {
+      "id": "mysql",
+      "label": "MySQL",
+      "ext": ".sql",
+      "highlight": "sql",
+      "group": "SQL Dialects"
+    },
+    {
+      "id": "py-pandas",
+      "label": "Python (pandas)",
+      "ext": ".py",
+      "highlight": "python",
+      "group": "Python"
+    },
+    {
+      "id": "py-sqlalchemy",
+      "label": "Python (SQLAlchemy)",
+      "ext": ".py",
+      "highlight": "python",
+      "group": "Python"
+    }
+  ]
+}

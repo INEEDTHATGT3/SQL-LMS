@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aggregation & Grouping — L2 INTERVIEW READY</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="2" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 04</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">ROLLUP, CUBE, GROUPING SETS — multi-dimensional analysis</span></div>
+  <h1>Aggregation & Grouping</h1>
+  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="aggregation_L1" href="aggregation_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="aggregation_L2" href="aggregation_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="aggregation_L3" href="aggregation_L3.html">ADVANCED</a><a class="level-pill " data-lesson="aggregation_L4" href="aggregation_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — The Subtotal Ladder</a><a href="#sec-1">02 · ROLLUP — Hierarchical Subtotals</a><a href="#sec-2">03 · CUBE & GROUPING SETS — Full Cross-Tab</a><a href="#sec-3">04 · GROUPING() & GROUPING_ID() — Label Your Subtotals</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q145" data-answer="1">
+      <div class="quiz-q">ROLLUP(dept_id, status) produces:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only (dept_id, status) groups</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>(dept_id, status) + (dept_id) + grand total</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>All combinations of dept_id and status</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only grand total</span></div></div>
+      <div class="quiz-explain">ROLLUP creates hierarchical subtotals: detail → subtotals → grand total.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q146" data-answer="1">
+      <div class="quiz-q">CUBE(dept_id, status) produces:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same as ROLLUP</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>All 2^n combinations of grouping columns</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only (dept_id) subtotals</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only (status) subtotals</span></div></div>
+      <div class="quiz-explain">CUBE = all possible combinations: (dept,status), (dept), (status), ().</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q147" data-answer="1">
+      <div class="quiz-q">GROUPING SETS ((dept_id), (status)) produces:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same as CUBE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Only dept_id groups + only status groups</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only grand total</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">GROUPING SETS lets you pick exactly which grouping combinations you want.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q148" data-answer="1">
+      <div class="quiz-q">GROUPING(dept_id) returns 1 when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Row is a detail row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Row is a subtotal for dept_id (dept_id is NULL in result)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>dept_id is NULL in source data</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Never</span></div></div>
+      <div class="quiz-explain">GROUPING(col) = 1 for super-aggregate rows where col was rolled up (NULL in output).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q149" data-answer="2">
+      <div class="quiz-q">SELECT dept_id, COUNT(*) FROM employees GROUP BY ROLLUP(dept_id); — rows for 5 depts:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>5</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>6</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>5 detail + 1 grand total = 6</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>5 detail + 5 subtotals + 1 grand = 11</span></div></div>
+      <div class="quiz-explain">5 detail rows + 1 grand total row = 6 rows total.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Mental Model — The Subtotal Ladder</h2></div>
+    <div class="mantra">ROLLUP = hierarchical ladder (detail → subtotals → grand). CUBE = full cross-product (all combinations). GROUPING SETS = pick your own adventure. GROUPING() tells you which level you're on.</div>
+
+<ul class="notes"><li>ROLLUP: N+1 levels (N columns + grand total)</li><li>CUBE: 2^N combinations</li><li>GROUPING SETS: explicit list, most flexible</li><li>GROUPING() + GROUPING_ID() distinguish detail vs subtotal rows</li></ul>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>ROLLUP — Hierarchical Subtotals</h2></div>
+    <h3>ROLLUP Syntax & Behavior</h3>
+<div><div class="code-label"><span>rollup examples</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Single column: detail + grand total
+SELECT dept_id, COUNT(*)
+FROM employees
+GROUP BY ROLLUP(dept_id);
+-- Result: <span class="num">5</span> dept rows + <span class="num">1</span> grand total (dept_id=NULL)
+
+-- Two columns: detail + subtotals + grand
+SELECT dept_id, status, COUNT(*)
+FROM employees
+GROUP BY ROLLUP(dept_id, status);
+-- Hierarchy: (dept,status) → (dept) → ()
+
+-- Partial rollup
+SELECT dept_id, status, COUNT(*)
+FROM employees
+GROUP BY dept_id, ROLLUP(status);
+-- Detail (dept,status) + (dept) subtotals + grand total</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: ROLLUP supported</span>
+SELECT dept_id, status, COUNT(*) FROM employees GROUP BY dept_id, status WITH ROLLUP;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — ROLLUP</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">GroupAggregate</span>
+        <span class="plan-node-meta"> cost=100..500 rows=30 width=24</span>
+      </div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s1-q150" data-answer="1">
+      <div class="quiz-q">ROLLUP(a, b, c) produces how many grouping levels?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>3</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>4</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>8</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>2^3 = 8</span></div></div>
+      <div class="quiz-explain">ROLLUP: N columns = N+1 levels. (a,b,c) + (a,b) + (a) + () = 4 levels.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q151" data-answer="2">
+      <div class="quiz-q">GROUP BY a, ROLLUP(b) vs GROUP BY ROLLUP(a, b):</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>First: (a,b) + (a) + (); Second: (a,b) + (a) + ()</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>First: (a,b) + (a); Second: (a,b) + (a) + ()</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>First includes (b) subtotal</span></div></div>
+      <div class="quiz-explain">GROUP BY a, ROLLUP(b) = (a,b) + (a). GROUP BY ROLLUP(a,b) = (a,b) + (a) + ().</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>CUBE & GROUPING SETS — Full Cross-Tab</h2></div>
+    <h3>CUBE — All Combinations</h3>
+<div><div class="code-label"><span>cube examples</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Full cross-tab
+SELECT dept_id, status, COUNT(*)
+FROM employees
+GROUP BY CUBE(dept_id, status);
+-- Groups: (dept,status), (dept), (status), ()
+
+-- CUBE with <span class="num">3</span> columns = <span class="num">8</span> combinations
+SELECT a, b, c, COUNT(*)
+FROM t
+GROUP BY CUBE(a, b, c);
+-- (a,b,c), (a,b), (a,c), (b,c), (a), (b), (c), ()</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: CUBE supported</span>
+SELECT dept_id, status, COUNT(*) FROM employees GROUP BY dept_id, status WITH CUBE;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>GROUPING SETS — Pick Your Own</h3>
+<div><div class="code-label"><span>grouping sets</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Only dept subtotals + grand total (no status subtotals)
+SELECT dept_id, status, COUNT(*)
+FROM employees
+GROUP BY GROUPING SETS ((dept_id, status), (dept_id), ());
+
+-- Only status subtotals
+SELECT dept_id, status, COUNT(*)
+FROM employees
+GROUP BY GROUPING SETS ((status), ());
+
+-- Equivalent to CUBE but <span class="kw">explicit</span>
+SELECT dept_id, status, COUNT(*)
+FROM employees
+GROUP BY GROUPING SETS ((dept_id, status), (dept_id), (status), ());</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- GROUPING SETS is standard SQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: GROUPING SETS supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q152" data-answer="2">
+      <div class="quiz-q">GROUPING SETS ((a,b), (a)) produces groups:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>(a,b), (a), (b), ()</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>(a,b), (a)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>(a,b), (a), ()</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>(a,b), ()</span></div></div>
+      <div class="quiz-explain">Explicit list: (a,b) detail + (a) subtotal. Grand total () must be explicit.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q153" data-answer="1">
+      <div class="quiz-q">CUBE(a,b) equivalent GROUPING SETS:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>((a,b), (a), ())</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>((a,b), (a), (b), ())</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>((a,b), (a), (b))</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>((a), (b), ())</span></div></div>
+      <div class="quiz-explain">CUBE = all 2^N combinations. For 2 cols: (a,b), (a), (b), ().</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>GROUPING() & GROUPING_ID() — Label Your Subtotals</h2></div>
+    <h3>Identify Subtotal Rows</h3>
+<div><div class="code-label"><span>grouping functions</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- GROUPING(col): <span class="num">1</span> <span class="kw">if</span> col is NULL due to rollup, <span class="num">0</span> <span class="kw">if</span> detail
+SELECT dept_id, status,
+  GROUPING(dept_id) AS g_dept,
+  GROUPING(status) AS g_status,
+  COUNT(*)
+FROM employees
+GROUP BY ROLLUP(dept_id, status);
+
+-- GROUPING_ID: bitmask of GROUPING() values
+SELECT dept_id, status,
+  GROUPING_ID(dept_id, status) AS gid,
+  COUNT(*)
+FROM employees
+GROUP BY CUBE(dept_id, status);
+-- gid: <span class="num">0</span>=detail, <span class="num">1</span>=status rolled, <span class="num">2</span>=dept rolled, <span class="num">3</span>=grand total
+
+-- Pretty labels
+SELECT 
+  CASE WHEN GROUPING(dept_id)=<span class="num">1</span> THEN <span class="st">'ALL DEPTS'</span> ELSE dept_id END AS dept,
+  CASE WHEN GROUPING(status)=<span class="num">1</span> THEN <span class="st">'ALL STATUS'</span> ELSE status END AS status,
+  COUNT(*)
+FROM employees
+GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- GROUPING, GROUPING_ID standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: GROUPING(), GROUPING_ID() supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s3-q154" data-answer="1">
+      <div class="quiz-q">GROUPING(dept_id) = 1 means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>dept_id is NULL in source data</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Row is subtotal where dept_id was rolled up</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>dept_id = 1</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">GROUPING(col) = 1 when col is NULL because it was rolled up (subtotal/grand total).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q155" data-answer="3">
+      <div class="quiz-q">GROUPING_ID(dept, status) = 3 (binary 11) means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Detail row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>dept subtotal</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>status subtotal</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Grand total (both rolled)</span></div></div>
+      <div class="quiz-explain">Bit 0 = status rolled, Bit 1 = dept rolled. 11 = both = grand total.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L2 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Department Subtotals + Grand Total</div>
+        <div class="prob-meta">drill · rollup</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A201"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employee count per department with subtotals and grand total.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2l">GROUP BY ROLLUP(dept_id)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Dept × Status Cross-Tab</div>
+        <div class="prob-meta">drill · cube</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A202"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Full cross-tabulation: dept × status with all subtotals.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2m">GROUP BY CUBE(dept_id, status)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Custom Grouping: Dept Detail + Status Subtotal</div>
+        <div class="prob-meta">drill · grouping-sets</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A203"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Show (dept,status) detail + status subtotals + grand total.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2n">GROUPING SETS ((dept_id, status), (status), ())</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Label Subtotal Rows</div>
+        <div class="prob-meta">drill · grouping</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A204"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Add column 'level' showing 'detail', 'dept_subtotal', 'grand_total' using GROUPING().
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2o">CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ...</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Partial Rollup: Dept + Status Subtotals Only</div>
+        <div class="prob-meta">drill · partial-rollup</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A205"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Detail (dept,status) + dept subtotals. No grand total.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2p">GROUP BY dept_id, ROLLUP(status)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">GROUPING_ID for Bitmask Logic</div>
+        <div class="prob-meta">drill · grouping-id</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A206"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Decode GROUPING_ID bitmask: 0=detail, 1=status rolled, 2=dept rolled, 3=grand.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2q">CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ...</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Custom Grouping Sets: Dept Only + Status Only</div>
+        <div class="prob-meta">drill · grouping-sets</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A207"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Show dept subtotals and status subtotals, but no detail rows.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2r">GROUPING SETS ((dept_id), (status), ())</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Pretty Subtotal Labels</div>
+        <div class="prob-meta">drill · grouping-labels</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A208"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Replace NULL in subtotal rows with 'TOTAL' or 'ALL'.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrns2s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrns2s">COALESCE(dept_id, 'ALL DEPTS')</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>ROLLUP = N+1 levels (detail → subtotals → grand); CUBE = 2^N combinations</li><li>GROUPING SETS = explicit list of grouping combinations; most flexible</li><li>GROUPING(col) = 1 when col is NULL due to rollup (subtotal row)</li><li>GROUPING_ID = bitmask: bit 0 = first col rolled, bit 1 = second col, etc.</li><li>Partial ROLLUP: GROUP BY a, ROLLUP(b) = (a,b) + (a) subtotals</li><li>COALESCE with GROUPING() for pretty subtotal labels</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>ROLLUP</code></td><td>Hierarchical grouping: detail rows + progressive subtotals + grand total.</td></tr><tr><td style="width:220px;"><code>CUBE</code></td><td>Cross-tabulation: all 2^N combinations of grouping columns.</td></tr><tr><td style="width:220px;"><code>GROUPING SETS</code></td><td>Explicit list of grouping combinations to include.</td></tr><tr><td style="width:220px;"><code>GROUPING()</code></td><td>Returns 1 if column is NULL due to rollup (subtotal), 0 if detail row.</td></tr><tr><td style="width:220px;"><code>GROUPING_ID()</code></td><td>Bitmask of GROUPING() values for multiple columns. Bit i = GROUPING(col_i).</td></tr><tr><td style="width:220px;"><code>super-aggregate</code></td><td>A row produced by ROLLUP/CUBE/GROUPING SETS that represents a subtotal or grand total.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 04 · L2/INTERVIEW READY · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('aggregation_L2');</script>
+</body></html>

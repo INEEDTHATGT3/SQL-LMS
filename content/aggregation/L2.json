@@ -1,0 +1,369 @@
+{
+  "level": 2,
+  "title": "Aggregation & Grouping",
+  "tagline": "ROLLUP, CUBE, GROUPING SETS — multi-dimensional analysis",
+  "placementQuiz": [
+    {
+      "q": "ROLLUP(dept_id, status) produces:",
+      "options": [
+        "Only (dept_id, status) groups",
+        "(dept_id, status) + (dept_id) + grand total",
+        "All combinations of dept_id and status",
+        "Only grand total"
+      ],
+      "answer": 1,
+      "explain": "ROLLUP creates hierarchical subtotals: detail → subtotals → grand total."
+    },
+    {
+      "q": "CUBE(dept_id, status) produces:",
+      "options": [
+        "Same as ROLLUP",
+        "All 2^n combinations of grouping columns",
+        "Only (dept_id) subtotals",
+        "Only (status) subtotals"
+      ],
+      "answer": 1,
+      "explain": "CUBE = all possible combinations: (dept,status), (dept), (status), ()."
+    },
+    {
+      "q": "GROUPING SETS ((dept_id), (status)) produces:",
+      "options": [
+        "Same as CUBE",
+        "Only dept_id groups + only status groups",
+        "Only grand total",
+        "Error"
+      ],
+      "answer": 1,
+      "explain": "GROUPING SETS lets you pick exactly which grouping combinations you want."
+    },
+    {
+      "q": "GROUPING(dept_id) returns 1 when:",
+      "options": [
+        "Row is a detail row",
+        "Row is a subtotal for dept_id (dept_id is NULL in result)",
+        "dept_id is NULL in source data",
+        "Never"
+      ],
+      "answer": 1,
+      "explain": "GROUPING(col) = 1 for super-aggregate rows where col was rolled up (NULL in output)."
+    },
+    {
+      "q": "SELECT dept_id, COUNT(*) FROM employees GROUP BY ROLLUP(dept_id); — rows for 5 depts:",
+      "options": [
+        "5",
+        "6",
+        "5 detail + 1 grand total = 6",
+        "5 detail + 5 subtotals + 1 grand = 11"
+      ],
+      "answer": 2,
+      "explain": "5 detail rows + 1 grand total row = 6 rows total."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — The Subtotal Ladder",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "ROLLUP = hierarchical ladder (detail → subtotals → grand). CUBE = full cross-product (all combinations). GROUPING SETS = pick your own adventure. GROUPING() tells you which level you're on."
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"feature": "ROLLUP(dept, status)", "groups": "(dept,status), (dept), ()", "use_case": "Hierarchical reports"},
+              {"feature": "CUBE(dept, status)", "groups": "(dept,status), (dept), (status), ()", "use_case": "Full cross-tab"},
+              {"feature": "GROUPING SETS((dept),(status))", "groups": "(dept), (status)", "use_case": "Custom selection"},
+              {"feature": "GROUPING(col)", "groups": "1 = subtotal row, 0 = detail row", "use_case": "Label subtotal rows"}
+            ],
+            "after": [],
+            "highlight": ["groups"]
+          }
+        },
+        {
+          "type": "list",
+          "items": [
+            "ROLLUP: N+1 levels (N columns + grand total)",
+            "CUBE: 2^N combinations",
+            "GROUPING SETS: explicit list, most flexible",
+            "GROUPING() + GROUPING_ID() distinguish detail vs subtotal rows"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ROLLUP — Hierarchical Subtotals",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "ROLLUP Syntax & Behavior"
+        },
+        {
+          "type": "code",
+          "label": "rollup examples",
+          "code": "-- Single column: detail + grand total\nSELECT dept_id, COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id);\n-- Result: 5 dept rows + 1 grand total (dept_id=NULL)\n\n-- Two columns: detail + subtotals + grand\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id, status);\n-- Hierarchy: (dept,status) → (dept) → ()\n\n-- Partial rollup\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY dept_id, ROLLUP(status);\n-- Detail (dept,status) + (dept) subtotals + grand total",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: ROLLUP supported\nSELECT dept_id, status, COUNT(*) FROM employees GROUP BY dept_id, status WITH ROLLUP;",
+          "py-pandas": "# ROLLUP via pivot_table margins\ndf.pivot_table(index=['dept_id', 'status'], values='id', aggfunc='count', margins=True)"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — ROLLUP",
+          "plan": {
+            "Plan": {
+              "Node Type": "GroupAggregate",
+              "Strategy": "Sorted",
+              "Group Key": ["dept_id", "status"],
+              "Grouping Sets": "[[dept_id, status], [dept_id], []]",
+              "Startup Cost": 100.00,
+              "Total Cost": 500.00,
+              "Plan Rows": 30,
+              "Plan Width": 24
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "ROLLUP(a, b, c) produces how many grouping levels?",
+              "options": [
+                "3",
+                "4",
+                "8",
+                "2^3 = 8"
+              ],
+              "answer": 1,
+              "explain": "ROLLUP: N columns = N+1 levels. (a,b,c) + (a,b) + (a) + () = 4 levels."
+            },
+            {
+              "q": "GROUP BY a, ROLLUP(b) vs GROUP BY ROLLUP(a, b):",
+              "options": [
+                "Same",
+                "First: (a,b) + (a) + (); Second: (a,b) + (a) + ()",
+                "First: (a,b) + (a); Second: (a,b) + (a) + ()",
+                "First includes (b) subtotal"
+              ],
+              "answer": 2,
+              "explain": "GROUP BY a, ROLLUP(b) = (a,b) + (a). GROUP BY ROLLUP(a,b) = (a,b) + (a) + ()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "CUBE & GROUPING SETS — Full Cross-Tab",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CUBE — All Combinations"
+        },
+        {
+          "type": "code",
+          "label": "cube examples",
+          "code": "-- Full cross-tab\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY CUBE(dept_id, status);\n-- Groups: (dept,status), (dept), (status), ()\n\n-- CUBE with 3 columns = 8 combinations\nSELECT a, b, c, COUNT(*)\nFROM t\nGROUP BY CUBE(a, b, c);\n-- (a,b,c), (a,b), (a,c), (b,c), (a), (b), (c), ()",
+          "pg": "-- Same syntax",
+          "mysql": "-- MySQL 8.0+: CUBE supported\nSELECT dept_id, status, COUNT(*) FROM employees GROUP BY dept_id, status WITH CUBE;",
+          "py-pandas": "# CUBE via multiple pivot_tables\nimport itertools\nresults = []\nfor r in range(3):\n    for cols in itertools.combinations(['dept_id', 'status'], r+1):\n        results.append(df.groupby(list(cols)).size().reset_index(name='count'))\npd.concat(results)"
+        },
+        {
+          "type": "heading",
+          "text": "GROUPING SETS — Pick Your Own"
+        },
+        {
+          "type": "code",
+          "label": "grouping sets",
+          "code": "-- Only dept subtotals + grand total (no status subtotals)\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY GROUPING SETS ((dept_id, status), (dept_id), ());\n\n-- Only status subtotals\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY GROUPING SETS ((status), ());\n\n-- Equivalent to CUBE but explicit\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY GROUPING SETS ((dept_id, status), (dept_id), (status), ());",
+          "pg": "-- GROUPING SETS is standard SQL",
+          "mysql": "-- MySQL 8.0+: GROUPING SETS supported",
+          "py-pandas": "# Manual GROUPING SETS\nsets = [['dept_id', 'status'], ['dept_id'], ['status'], []]\nresults = [df.groupby(cols).size().reset_index(name='count') for cols in sets]\npd.concat(results, ignore_index=True)"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "GROUPING SETS ((a,b), (a)) produces groups:",
+              "options": [
+                "(a,b), (a), (b), ()",
+                "(a,b), (a)",
+                "(a,b), (a), ()",
+                "(a,b), ()"
+              ],
+              "answer": 2,
+              "explain": "Explicit list: (a,b) detail + (a) subtotal. Grand total () must be explicit."
+            },
+            {
+              "q": "CUBE(a,b) equivalent GROUPING SETS:",
+              "options": [
+                "((a,b), (a), ())",
+                "((a,b), (a), (b), ())",
+                "((a,b), (a), (b))",
+                "((a), (b), ())"
+              ],
+              "answer": 1,
+              "explain": "CUBE = all 2^N combinations. For 2 cols: (a,b), (a), (b), ()."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "GROUPING() & GROUPING_ID() — Label Your Subtotals",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Identify Subtotal Rows"
+        },
+        {
+          "type": "code",
+          "label": "grouping functions",
+          "code": "-- GROUPING(col): 1 if col is NULL due to rollup, 0 if detail\nSELECT dept_id, status,\n  GROUPING(dept_id) AS g_dept,\n  GROUPING(status) AS g_status,\n  COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id, status);\n\n-- GROUPING_ID: bitmask of GROUPING() values\nSELECT dept_id, status,\n  GROUPING_ID(dept_id, status) AS gid,\n  COUNT(*)\nFROM employees\nGROUP BY CUBE(dept_id, status);\n-- gid: 0=detail, 1=status rolled, 2=dept rolled, 3=grand total\n\n-- Pretty labels\nSELECT \n  CASE WHEN GROUPING(dept_id)=1 THEN 'ALL DEPTS' ELSE dept_id END AS dept,\n  CASE WHEN GROUPING(status)=1 THEN 'ALL STATUS' ELSE status END AS status,\n  COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id, status);",
+          "pg": "-- GROUPING, GROUPING_ID standard",
+          "mysql": "-- MySQL 8.0+: GROUPING(), GROUPING_ID() supported",
+          "py-pandas": "# No direct equivalent; use margins + detect NaN in index"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {"row_type": "Detail (dept=1, status=active)", "grouping_dept": 0, "grouping_status": 0, "grouping_id": 0},
+              {"row_type": "Subtotal (dept=1, status=NULL)", "grouping_dept": 0, "grouping_status": 1, "grouping_id": 1},
+              {"row_type": "Subtotal (dept=NULL, status=active)", "grouping_dept": 1, "grouping_status": 0, "grouping_id": 2},
+              {"row_type": "Grand Total (NULL, NULL)", "grouping_dept": 1, "grouping_status": 1, "grouping_id": 3}
+            ],
+            "after": [],
+            "highlight": ["grouping_id"]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "GROUPING(dept_id) = 1 means:",
+              "options": [
+                "dept_id is NULL in source data",
+                "Row is subtotal where dept_id was rolled up",
+                "dept_id = 1",
+                "Error"
+              ],
+              "answer": 1,
+              "explain": "GROUPING(col) = 1 when col is NULL because it was rolled up (subtotal/grand total)."
+            },
+            {
+              "q": "GROUPING_ID(dept, status) = 3 (binary 11) means:",
+              "options": [
+                "Detail row",
+                "dept subtotal",
+                "status subtotal",
+                "Grand total (both rolled)"
+              ],
+              "answer": 3,
+              "explain": "Bit 0 = status rolled, Bit 1 = dept rolled. 11 = both = grand total."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "A201",
+              "tier": 2,
+              "title": "Department Subtotals + Grand Total",
+              "platform": "drill",
+              "patterns": ["rollup"],
+              "statement": "Employee count per department with subtotals and grand total.",
+              "hints": ["GROUP BY ROLLUP(dept_id)"]
+            },
+            {
+              "id": "A202",
+              "tier": 2,
+              "title": "Dept × Status Cross-Tab",
+              "platform": "drill",
+              "patterns": ["cube"],
+              "statement": "Full cross-tabulation: dept × status with all subtotals.",
+              "hints": ["GROUP BY CUBE(dept_id, status)"]
+            },
+            {
+              "id": "A203",
+              "tier": 2,
+              "title": "Custom Grouping: Dept Detail + Status Subtotal",
+              "platform": "drill",
+              "patterns": ["grouping-sets"],
+              "statement": "Show (dept,status) detail + status subtotals + grand total.",
+              "hints": ["GROUPING SETS ((dept_id, status), (status), ())"]
+            },
+            {
+              "id": "A204",
+              "tier": 2,
+              "title": "Label Subtotal Rows",
+              "platform": "drill",
+              "patterns": ["grouping"],
+              "statement": "Add column 'level' showing 'detail', 'dept_subtotal', 'grand_total' using GROUPING().",
+              "hints": ["CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ..."]
+            },
+            {
+              "id": "A205",
+              "tier": 2,
+              "title": "Partial Rollup: Dept + Status Subtotals Only",
+              "platform": "drill",
+              "patterns": ["partial-rollup"],
+              "statement": "Detail (dept,status) + dept subtotals. No grand total.",
+              "hints": ["GROUP BY dept_id, ROLLUP(status)"]
+            },
+            {
+              "id": "A206",
+              "tier": 2,
+              "title": "GROUPING_ID for Bitmask Logic",
+              "platform": "drill",
+              "patterns": ["grouping-id"],
+              "statement": "Decode GROUPING_ID bitmask: 0=detail, 1=status rolled, 2=dept rolled, 3=grand.",
+              "hints": ["CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ..."]
+            },
+            {
+              "id": "A207",
+              "tier": 2,
+              "title": "Custom Grouping Sets: Dept Only + Status Only",
+              "platform": "drill",
+              "patterns": ["grouping-sets"],
+              "statement": "Show dept subtotals and status subtotals, but no detail rows.",
+              "hints": ["GROUPING SETS ((dept_id), (status), ())"]
+            },
+            {
+              "id": "A208",
+              "tier": 2,
+              "title": "Pretty Subtotal Labels",
+              "platform": "drill",
+              "patterns": ["grouping-labels"],
+              "statement": "Replace NULL in subtotal rows with 'TOTAL' or 'ALL'.",
+              "hints": ["COALESCE(dept_id, 'ALL DEPTS')"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "ROLLUP = N+1 levels (detail → subtotals → grand); CUBE = 2^N combinations",
+    "GROUPING SETS = explicit list of grouping combinations; most flexible",
+    "GROUPING(col) = 1 when col is NULL due to rollup (subtotal row)",
+    "GROUPING_ID = bitmask: bit 0 = first col rolled, bit 1 = second col, etc.",
+    "Partial ROLLUP: GROUP BY a, ROLLUP(b) = (a,b) + (a) subtotals",
+    "COALESCE with GROUPING() for pretty subtotal labels"
+  ],
+  "glossary": [
+    { "term": "ROLLUP", "def": "Hierarchical grouping: detail rows + progressive subtotals + grand total." },
+    { "term": "CUBE", "def": "Cross-tabulation: all 2^N combinations of grouping columns." },
+    { "term": "GROUPING SETS", "def": "Explicit list of grouping combinations to include." },
+    { "term": "GROUPING()", "def": "Returns 1 if column is NULL due to rollup (subtotal), 0 if detail row." },
+    { "term": "GROUPING_ID()", "def": "Bitmask of GROUPING() values for multiple columns. Bit i = GROUPING(col_i)." },
+    { "term": "super-aggregate", "def": "A row produced by ROLLUP/CUBE/GROUPING SETS that represents a subtotal or grand total." }
+  ]
+}

@@ -1,0 +1,379 @@
+{
+  "level": 1,
+  "title": "SQL Fundamentals",
+  "tagline": "tables as grids — master reading before writing",
+  "placementQuiz": [
+    {
+      "q": "A table in a relational database is best described as:",
+      "options": [
+        "A flat file with no structure",
+        "A grid of named columns and numbered rows",
+        "A hierarchical tree of nested objects",
+        "A key-value store with no schema"
+      ],
+      "answer": 1,
+      "explain": "Tables are 2D grids: columns have names and types; rows are records."
+    },
+    {
+      "q": "SELECT * FROM employees; returns:",
+      "options": [
+        "Only the first row",
+        "Only column names",
+        "All columns and all rows",
+        "An error — * is invalid"
+      ],
+      "answer": 2,
+      "explain": "* means \"all columns\"; no WHERE means \"all rows\"."
+    },
+    {
+      "q": "In SQL, string literals are written with:",
+      "options": [
+        "Double quotes \"hello\"",
+        "Single quotes 'hello'",
+        "Backticks `hello`",
+        "No quotes needed"
+      ],
+      "answer": 1,
+      "explain": "Standard SQL uses single quotes for strings. Double quotes are for identifiers."
+    },
+    {
+      "q": "LIMIT 5 does what?",
+      "options": [
+        "Skips the first 5 rows",
+        "Returns at most 5 rows",
+        "Returns exactly 5 rows or errors",
+        "Limits column width to 5 characters"
+      ],
+      "answer": 1,
+      "explain": "LIMIT caps the result set size. Use with ORDER BY for predictable results."
+    },
+    {
+      "q": "Which clause filters rows before grouping?",
+      "options": [
+        "HAVING",
+        "WHERE",
+        "GROUP BY",
+        "ORDER BY"
+      ],
+      "answer": 1,
+      "explain": "WHERE filters individual rows; HAVING filters groups after aggregation."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — Tables as Grids",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**A table is a grid of named columns and numbered rows. Columns have types; rows are records. No hidden magic.**"
+        },
+        {
+          "type": "visual",
+          "kind": "schema-diagram",
+          "spec": {
+            "tables": [
+              { "name": "employees", "columns": [
+                { "name": "id", "type": "INTEGER", "pk": true },
+                { "name": "name", "type": "VARCHAR(100)" },
+                { "name": "dept_id", "type": "INTEGER" },
+                { "name": "salary", "type": "DECIMAL(10,2)" },
+                { "name": "hire_date", "type": "DATE" }
+              ]},
+              { "name": "departments", "columns": [
+                { "name": "id", "type": "INTEGER", "pk": true },
+                { "name": "name", "type": "VARCHAR(100)" },
+                { "name": "location", "type": "VARCHAR(100)" }
+              ]}
+            ],
+            "relationships": [
+              { "from": "employees", "to": "departments", "label": "dept_id", "cardinality": "}o--||" }
+            ]
+          }
+        },
+        {
+          "type": "prose",
+          "md": "Think of a spreadsheet: each sheet = a table. Columns (A, B, C...) have headers and types. Rows (1, 2, 3...) hold data. SQL lets you query this grid declaratively — you say *what* you want, not *how* to scan it."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Columns = vertical: fixed name, type, position",
+            "Rows = horizontal: each row = one entity (employee, order, etc.)",
+            "No inherent row order — use ORDER BY to sort",
+            "NULL = missing/unknown value, not zero or empty string"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Core Queries — SELECT, FROM, LIMIT",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Anatomy of a SELECT"
+        },
+        {
+          "type": "code",
+          "label": "basic select",
+          "code": "-- All columns, all rows\nSELECT * FROM employees;\n\n-- Specific columns\nSELECT name, salary FROM employees;\n\n-- With alias\nSELECT name AS employee_name, salary FROM employees;\n\n-- Limit results\nSELECT * FROM employees LIMIT 10;",
+          "py-pandas": "# All columns\nemployees\n\n# Specific columns\nemployees[['name', 'salary']]\n\n# With alias\nemployees.rename(columns={'name': 'employee_name'})[['employee_name', 'salary']]\n\n# Limit\nemployees.head(10)",
+          "py-sqlalchemy": "# All columns\nsession.query(Employee).all()\n\n# Specific columns\nsession.query(Employee.name, Employee.salary).all()\n\n# With alias\nsession.query(Employee.name.label('employee_name'), Employee.salary).all()\n\n# Limit\nsession.query(Employee).limit(10).all()"
+        },
+        {
+          "type": "query-plan",
+          "title": "Simple EXPLAIN — Full Table Scan",
+          "plan": {
+            "Plan": {
+              "Node Type": "Seq Scan",
+              "Relation Name": "employees",
+              "Alias": "e",
+              "Startup Cost": 0.00,
+              "Total Cost": 18.50,
+              "Plan Rows": 850,
+              "Plan Width": 72,
+              "Actual Startup Time": 0.012,
+              "Actual Total Time": 1.24,
+              "Actual Rows": 850,
+              "Actual Loops": 1
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "SELECT name, salary FROM employees; returns:",
+              "options": [
+                "All columns for all employees",
+                "Only name and salary columns for all employees",
+                "Only name and salary for the first employee",
+                "An error — must use *"
+              ],
+              "answer": 1,
+              "explain": "Column list restricts output columns; no WHERE means all rows."
+            },
+            {
+              "q": "What does SELECT 1; return?",
+              "options": [
+                "Error — no FROM clause",
+                "A single row with value 1",
+                "All rows from table '1'",
+                "The first row of the first table"
+              ],
+              "answer": 1,
+              "explain": "SELECT without FROM is valid — returns computed values. Useful for testing functions."
+            }
+          ]
+        },
+        {
+          "type": "code",
+          "label": "expressions & literals",
+          "code": "-- String concat (ANSI)\nSELECT 'Hello, ' || name AS greeting FROM employees;\n\n-- Arithmetic\nSELECT salary * 12 AS annual_salary FROM employees;\n\n-- Literals\nSELECT 'Active' AS status, 2024 AS year FROM employees LIMIT 1;",
+          "pg": "-- String concat (PostgreSQL)\nSELECT 'Hello, ' || name AS greeting FROM employees;\n\n-- Arithmetic\nSELECT salary * 12 AS annual_salary FROM employees;",
+          "mysql": "-- String concat (MySQL)\nSELECT CONCAT('Hello, ', name) AS greeting FROM employees;\n\n-- Arithmetic\nSELECT salary * 12 AS annual_salary FROM employees;",
+          "py-pandas": "# String concat\nemployees['greeting'] = 'Hello, ' + employees['name']\n\n# Arithmetic\nemployees['annual_salary'] = employees['salary'] * 12",
+          "py-sqlalchemy": "# String concat\nsession.query(('Hello, ' + Employee.name).label('greeting')).all()\n\n# Arithmetic\nsession.query((Employee.salary * 12).label('annual_salary')).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "In standard SQL (ANSI), string concatenation uses:",
+              "options": [
+                "+",
+                "||",
+                "CONCAT()",
+                "."
+              ],
+              "answer": 1,
+              "explain": "|| is the ANSI standard. MySQL uses CONCAT(); SQL Server uses +."
+            },
+            {
+              "q": "SELECT salary * 1.1 FROM employees; computes:",
+              "options": [
+                "10% raise for each employee",
+                "Salary divided by 1.1",
+                "Error — can't multiply column by literal",
+                "Only works if salary is integer"
+              ],
+              "answer": 0,
+              "explain": "Arithmetic expressions work column-by-column. * 1.1 = 10% increase."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Filtering Basics — WHERE",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "WHERE Clause"
+        },
+        {
+          "type": "code",
+          "label": "equality & comparison",
+          "code": "-- Exact match\nSELECT * FROM employees WHERE dept_id = 3;\n\n-- Not equal\nSELECT * FROM employees WHERE dept_id <> 3;\n-- or: WHERE dept_id != 3;\n\n-- Range\nSELECT * FROM employees WHERE salary BETWEEN 50000 AND 80000;\n\n-- Greater/less\nSELECT * FROM employees WHERE hire_date > '2023-01-01';",
+          "py-pandas": "# Exact match\nemployees[employees['dept_id'] == 3]\n\n# Not equal\nemployees[employees['dept_id'] != 3]\n\n# Range\nemployees[(employees['salary'] >= 50000) & (employees['salary'] <= 80000)]\n\n# Greater/less\nemployees[employees['hire_date'] > '2023-01-01']",
+          "py-sqlalchemy": "# Exact match\nsession.query(Employee).filter(Employee.dept_id == 3).all()\n\n# Not equal\nsession.query(Employee).filter(Employee.dept_id != 3).all()\n\n# Range\nsession.query(Employee).filter(Employee.salary.between(50000, 80000)).all()\n\n# Greater/less\nsession.query(Employee).filter(Employee.hire_date > '2023-01-01').all()"
+        },
+        {
+          "type": "code",
+          "label": "NULL handling",
+          "code": "-- Find NULL\nSELECT * FROM employees WHERE manager_id IS NULL;\n\n-- Find NOT NULL\nSELECT * FROM employees WHERE manager_id IS NOT NULL;\n\n-- Common mistake: = NULL never works!\n-- SELECT * FROM employees WHERE manager_id = NULL; -- WRONG",
+          "py-pandas": "# Find NULL\nemployees[employees['manager_id'].isna()]\n\n# Find NOT NULL\nemployees[employees['manager_id'].notna()]",
+          "py-sqlalchemy": "# Find NULL\nsession.query(Employee).filter(Employee.manager_id.is_(None)).all()\n\n# Find NOT NULL\nsession.query(Employee).filter(Employee.manager_id.isnot(None)).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "To find rows where manager_id is missing, use:",
+              "options": [
+                "WHERE manager_id = NULL",
+                "WHERE manager_id IS NULL",
+                "WHERE manager_id == NULL",
+                "WHERE manager_id <> NULL"
+              ],
+              "answer": 1,
+              "explain": "NULL is not a value — it's the absence of value. Use IS NULL / IS NOT NULL."
+            },
+            {
+              "q": "BETWEEN 10 AND 20 includes:",
+              "options": [
+                "Values >10 and <20",
+                "Values ≥10 and ≤20",
+                "Only 10 and 20",
+                "Values ≥10 and <20"
+              ],
+              "answer": 1,
+              "explain": "BETWEEN is inclusive on both ends. Equivalent to col >= 10 AND col <= 20."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sorting & Limiting — ORDER BY, LIMIT",
+      "blocks": [
+        {
+          "type": "code",
+          "label": "order by & limit",
+          "code": "-- Sort ascending (default)\nSELECT * FROM employees ORDER BY salary;\n\n-- Sort descending\nSELECT * FROM employees ORDER BY salary DESC;\n\n-- Multi-column sort\nSELECT * FROM employees ORDER BY dept_id, salary DESC;\n\n-- Top 5 highest paid\nSELECT * FROM employees ORDER BY salary DESC LIMIT 5;\n\n-- Pagination: page 2, 10 per page\nSELECT * FROM employees ORDER BY id LIMIT 10 OFFSET 10;",
+          "pg": "-- Same syntax\nSELECT * FROM employees ORDER BY salary DESC LIMIT 5 OFFSET 10;",
+          "mysql": "-- Same syntax\nSELECT * FROM employees ORDER BY salary DESC LIMIT 10 OFFSET 10;",
+          "py-pandas": "# Sort ascending\nemployees.sort_values('salary')\n\n# Sort descending\nemployees.sort_values('salary', ascending=False)\n\n# Multi-column\nemployees.sort_values(['dept_id', 'salary'], ascending=[True, False])\n\n# Top 5\nemployees.nlargest(5, 'salary')\n\n# Pagination\nemployees.iloc[10:20]",
+          "py-sqlalchemy": "# Sort ascending\nsession.query(Employee).order_by(Employee.salary).all()\n\n# Sort descending\nsession.query(Employee).order_by(Employee.salary.desc()).all()\n\n# Multi-column\nsession.query(Employee).order_by(Employee.dept_id, Employee.salary.desc()).all()\n\n# Top 5\nsession.query(Employee).order_by(Employee.salary.desc()).limit(5).all()\n\n# Pagination\nsession.query(Employee).order_by(Employee.id).offset(10).limit(10).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "ORDER BY salary DESC LIMIT 3 returns:",
+              "options": [
+                "3 lowest salaries",
+                "3 highest salaries",
+                "3 random salaries",
+                "Error — need WHERE"
+              ],
+              "answer": 1,
+              "explain": "DESC = descending (high to low). LIMIT 3 takes first 3 after sort."
+            },
+            {
+              "q": "To get page 3 with 20 rows per page (0-indexed):",
+              "options": [
+                "LIMIT 20 OFFSET 3",
+                "LIMIT 20 OFFSET 40",
+                "LIMIT 20 OFFSET 60",
+                "LIMIT 3 OFFSET 20"
+              ],
+              "answer": 1,
+              "explain": "Page 3 (0-indexed) = skip 2 pages × 20 = 40 rows. OFFSET 40 LIMIT 20."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L1 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "B101",
+              "tier": 1,
+              "title": "Select All Employees",
+              "platform": "drill",
+              "patterns": ["basic-select"],
+              "statement": "Write a query to return all columns for all employees.",
+              "hints": ["Use SELECT * FROM table_name;"]
+            },
+            {
+              "id": "B102",
+              "tier": 1,
+              "title": "Select Name and Salary",
+              "platform": "drill",
+              "patterns": ["column-projection"],
+              "statement": "Return only the name and salary columns from employees.",
+              "hints": ["List columns after SELECT separated by commas."]
+            },
+            {
+              "id": "B103",
+              "tier": 1,
+              "title": "Top 10 Highest Paid",
+              "platform": "drill",
+              "patterns": ["order-by", "limit"],
+              "statement": "Find the 10 employees with the highest salary.",
+              "hints": ["ORDER BY salary DESC LIMIT 10"]
+            },
+            {
+              "id": "B104",
+              "tier": 1,
+              "title": "Employees in Department 5",
+              "platform": "drill",
+              "patterns": ["where-equality"],
+              "statement": "List all employees who work in department 5.",
+              "hints": ["WHERE dept_id = 5"]
+            },
+            {
+              "id": "B105",
+              "tier": 1,
+              "title": "Salary Range 50k-75k",
+              "platform": "drill",
+              "patterns": ["where-range"],
+              "statement": "Find employees with salary between 50000 and 75000 inclusive.",
+              "hints": ["Use BETWEEN or >= AND <="]
+            },
+            {
+              "id": "B106",
+              "tier": 1,
+              "title": "Employees Without Manager",
+              "platform": "drill",
+              "patterns": ["where-null"],
+              "statement": "Find all employees who don't have a manager (manager_id is NULL).",
+              "hints": ["Use IS NULL, not = NULL"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Tables = grids: columns (typed, named) × rows (records)",
+    "SELECT column_list FROM table — * means all columns",
+    "WHERE filters rows: =, <>, <, >, BETWEEN, IS NULL",
+    "ORDER BY col [ASC|DESC] — sorts result; LIMIT n — caps rows",
+    "NULL ≠ 0 ≠ '' — use IS NULL / IS NOT NULL to test",
+    "String concat: ANSI ||, MySQL CONCAT(), Python +"
+  ],
+  "glossary": [
+    { "term": "table", "def": "Named collection of rows with same column structure." },
+    { "term": "column", "def": "Vertical slice of a table; has name, type, position." },
+    { "term": "row", "def": "Horizontal record; one entity instance." },
+    { "term": "NULL", "def": "Missing/unknown value; not equal to anything including itself." },
+    { "term": "predicate", "def": "Boolean expression in WHERE clause that filters rows." },
+    { "term": "projection", "def": "Selecting a subset of columns (vertical filtering)." }
+  ]
+}
