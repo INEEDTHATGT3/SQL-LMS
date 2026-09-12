@@ -48,15 +48,15 @@
       "explain": "EXCLUDE TIES removes all rows with same ORDER BY value as current row (all peers)."
     },
     {
-      "q": "Window function in SELECT vs CTE for reuse:",
+      "q": "A window result needed by several outer queries — what does the planner do with a CTE referenced multiple times?",
       "options": [
-        "Same performance",
-        "CTE allows reuse + predicate pushdown",
-        "Direct SELECT faster",
-        "Window functions not allowed in CTE"
+        "Always inlines it",
+        "Materializes it once by default (PG12+)",
+        "Never allows it",
+        "Runs the window once per reference"
       ],
       "answer": 1,
-      "explain": "CTE materializes window results once. Reuse in multiple outer queries. Planner can push predicates."
+      "explain": "PG12+: a CTE referenced multiple times is materialized by default (computed once, but an optimization fence — outer predicates are NOT pushed into it); referenced once, it is inlined instead."
     },
     {
       "q": "Two window functions with same PARTITION+ORDER — execution:",
@@ -78,7 +78,7 @@
         "Not allowed"
       ],
       "answer": 1,
-      "explain": "CTE materializes window result. Outer query can filter (WHERE) on window result."
+      "explain": "The CTE's output columns (including window results) are plain columns to the outer query, so outer WHERE can filter them. When the CTE is referenced multiple times it is materialized once and the outer filter applies after the CTE scan."
     },
     {
       "q": "work_mem affects window functions by:",
@@ -163,7 +163,7 @@
                 "Not allowed"
               ],
               "answer": 1,
-              "explain": "CTE materializes window result. Outer query can filter (WHERE) on window result."
+              "explain": "The CTE's output columns (including window results) are plain columns to the outer query, so outer WHERE can filter them. Materialized multi-reference CTEs stay an optimization fence; single-reference CTEs are inlined."
             },
             {
               "q": "Two window functions in same CTE — execution:",
@@ -181,16 +181,16 @@
       ]
     },
     {
-      "title": "Performance — Work_Memory, Spills, Indexes",
+      "title": "Performance — work_mem, Spills, Indexes",
       "blocks": [
         {
           "type": "heading",
-          "text": "Work_Memory & Spilling"
+          "text": "work_mem & Spilling"
         },
         {
           "type": "code",
           "label": "work_mem tuning",
-          "code": "-- Check for spills\nEXPLAIN ANALYZE SELECT ROW_NUMBER() OVER (ORDER BY salary) FROM employees;\n-- Look for: 'Sort Method: external merge Disk: 1234kB'\n\n-- Increase work_mem\nSET work_mem = '256MB';\n\n-- For parallel: per-worker work_mem\nSET max_parallel_workers_per_gather = 4;\nSET work_mem = '64MB';  -- per worker\n\n-- Monitor\nSELECT * FROM pg_stat_clear_snapshot();\nEXPLAIN ANALYZE ...;\nSELECT * FROM pg_stat_get_db_stat();",
+          "code": "-- Check for spills\nEXPLAIN ANALYZE SELECT ROW_NUMBER() OVER (ORDER BY salary) FROM employees;\n-- Look for: 'Sort Method: external merge Disk: 1234kB'\n\n-- Increase work_mem\nSET work_mem = '256MB';\n\n-- For parallel: per-worker work_mem\nSET max_parallel_workers_per_gather = 4;\nSET work_mem = '64MB';  -- per worker\n\n-- Monitor\nSELECT pid, state, query FROM pg_stat_activity WHERE state = 'active';",
           "pg": "-- work_mem per operation. Sort/Hash/Window spills to disk if > work_mem",
           "mysql": "-- MySQL: sort_buffer_size, join_buffer_size",
           "py-pandas": "# Memory: monitor with df.memory_usage()"
@@ -246,7 +246,7 @@
                 "When CTE is not materialized"
               ],
               "answer": 3,
-              "explain": "PostgreSQL 14+ can push predicates into non-materialized CTEs. Use NOT MATERIALIZED for pushdown."
+              "explain": "Only a non-materialized (inlined, PG12+) CTE allows predicates to be pushed into it. Use NOT MATERIALIZED, or reference the CTE just once so the plan can inline it."
             },
             {
               "q": "Multiple window functions with different ORDER BY — sorts needed:",
@@ -320,7 +320,7 @@
             {
               "id": "W303",
               "tier": 3,
-              "title": "Work_Mem Tuning for Window Spill",
+              "title": "work_mem Tuning for Window Spill",
               "platform": "drill",
               "patterns": [
                 "work-mem",
@@ -439,7 +439,7 @@
     "Spill = Sort Method: external merge Disk; fix with work_mem",
     "Index on (PARTITION BY, ORDER BY) avoids sort for window functions",
     "Multiple windows with same PARTITION+ORDER = single sort, multiple WindowAgg",
-    "CTE materializes window result → allows WHERE/HAVING on window output",
+    "CTE output cols (incl. window results) are filterable in outer WHERE; pushing into the CTE needs an inlined (NOT MATERIALIZED) CTE — materialized ones are a fence",
     "GROUPS frame (PG14) counts peer groups; EXCLUDE TIES/GROUP/CURRENT ROW"
   ],
   "glossary": [
@@ -457,7 +457,7 @@
     },
     {
       "term": "CTE materialization",
-      "def": "CTE result computed once, reused. Enables predicate pushdown on window results."
+      "def": "PG12+ inlines single-reference CTEs (pushdown-friendly) and materializes multi-reference ones. A materialized CTE is computed once but acts as an optimization fence: outer predicates are not pushed into it."
     },
     {
       "term": "Sort Method: external merge",
