@@ -148,7 +148,7 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Predicate pushdown moves filter:",
+              "q": "Predicate pushdown shrinks the rows entering a join by moving the filter:",
               "options": [
                 "From outer query INTO inner subquery/CTE",
                 "From inner TO outer",
@@ -156,10 +156,10 @@
                 "To storage engine only"
               ],
               "answer": 0,
-              "explain": "Push filter down to where data originates — reduces rows before join/aggregation."
+              "explain": "Pushing the predicate into the inner subquery/CTE filters rows at the source, so fewer rows enter the join — cheaper probe/build."
             },
             {
-              "q": "CTE with LIMIT blocks pushdown because:",
+              "q": "A LIMIT inside a CTE is a pushdown boundary because:",
               "options": [
                 "LIMIT changes semantics if pushed",
                 "CTEs are optimization fences",

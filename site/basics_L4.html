@@ -311,7 +311,7 @@ SET UNIQUE_CHECKS     = 0;
     </div>
     <div class="prob-body">
       A gym books equipment with (equipment_id, start_ts, end_ts). Add a CHECK that every booking has a positive duration, and an EXCLUDE (GiST) constraint that forbids overlapping bookings of the same equipment. State which extension the equality clause requires and why.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9dwy" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9dwy">CHECK (end_ts > start_ts) for the positive-duration rule</div><button class="reveal-btn" data-target="umtydd9dw10" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9dw10">EXCLUDE USING gist (equipment_id WITH =, booked_range WITH &&)</div><button class="reveal-btn" data-target="umtydd9dw12" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydd9dw12">CREATE EXTENSION IF NOT EXISTS btree_gist; — required for = on a scalar column inside a GiST index</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsl8y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsl8y">CHECK (end_ts > start_ts) for the positive-duration rule</div><button class="reveal-btn" data-target="umtydnsl810" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsl810">EXCLUDE USING gist (equipment_id WITH =, booked_range WITH &&)</div><button class="reveal-btn" data-target="umtydnsl812" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydnsl812">CREATE EXTENSION IF NOT EXISTS btree_gist; — required for = on a scalar column inside a GiST index</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -321,7 +321,7 @@ SET UNIQUE_CHECKS     = 0;
     </div>
     <div class="prob-body">
       receipts(receipt_id, total, item_id, item_name, item_price) repeats item facts on every receipt line. Split it into receipts, items, and receipt_lines, and name the normal-form violation being fixed.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9dw13" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9dw13">item_name and item_price depend on item_id, not receipt_id — a partial dependency (2NF)</div><button class="reveal-btn" data-target="umtydd9dw15" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9dw15">receipt_lines(receipt_id, item_id, qty) with FKs to both parents</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsl813" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsl813">item_name and item_price depend on item_id, not receipt_id — a partial dependency (2NF)</div><button class="reveal-btn" data-target="umtydnsl815" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsl815">receipt_lines(receipt_id, item_id, qty) with FKs to both parents</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -331,7 +331,7 @@ SET UNIQUE_CHECKS     = 0;
     </div>
     <div class="prob-body">
       Write a policy that exposes only rows where tenant_id matches the caller's session setting, then enable and force row-level security on the table. Explain why FORCE matters and what happens without it.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9dw16" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9dw16">CREATE POLICY ... USING (tenant_id = current_setting('app.tenant_id')::int)</div><button class="reveal-btn" data-target="umtydd9dw18" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9dw18">ALTER TABLE t ENABLE ROW LEVEL SECURITY; then ALTER TABLE t FORCE ROW LEVEL SECURITY;</div><button class="reveal-btn" data-target="umtydd9dw1a" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydd9dw1a">Without FORCE, the table owner and superusers bypass the policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsl816" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsl816">CREATE POLICY ... USING (tenant_id = current_setting('app.tenant_id')::int)</div><button class="reveal-btn" data-target="umtydnsl818" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsl818">ALTER TABLE t ENABLE ROW LEVEL SECURITY; then ALTER TABLE t FORCE ROW LEVEL SECURITY;</div><button class="reveal-btn" data-target="umtydnsl81a" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydnsl81a">Without FORCE, the table owner and superusers bypass the policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -341,7 +341,7 @@ SET UNIQUE_CHECKS     = 0;
     </div>
     <div class="prob-body">
       Create base view active_sales (filters a sales table to active rows), then a second view that aggregates it per day. Explain which view flattens into the outer query and which may keep a Subquery Scan node.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9dw1b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9dw1b">Simple single-relation views flatten into the consuming query</div><button class="reveal-btn" data-target="umtydd9dw1d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9dw1d">The aggregate view is GroupAggregate over the (inlined) base; only genuinely complex views stay as Subquery Scan</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsl81b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsl81b">Simple single-relation views flatten into the consuming query</div><button class="reveal-btn" data-target="umtydnsl81d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsl81d">The aggregate view is GroupAggregate over the (inlined) base; only genuinely complex views stay as Subquery Scan</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -351,7 +351,7 @@ SET UNIQUE_CHECKS     = 0;
     </div>
     <div class="prob-body">
       products has CHECK (price > 0). Show via EXPLAIN where the Filter line appears for SELECT * FROM products WHERE price > 0, and explain how the planner exploits the constraint — including constraint exclusion on partitioned or inherited children whose CHECK contradicts a qualifier. State when no scan is needed at all.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9dw1e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9dw1e">Expect Seq Scan ... Filter: (price > 0) — the constraint is a pre-condition</div><button class="reveal-btn" data-target="umtydd9dw1g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9dw1g">A qualifier that contradicts the CHECK (e.g., price < -1) can be answered without scanning</div><button class="reveal-btn" data-target="umtydd9dw1i" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydd9dw1i">Constraint exclusion prunes partitioned/inherited children outright</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsl81e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsl81e">Expect Seq Scan ... Filter: (price > 0) — the constraint is a pre-condition</div><button class="reveal-btn" data-target="umtydnsl81g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsl81g">A qualifier that contradicts the CHECK (e.g., price < -1) can be answered without scanning</div><button class="reveal-btn" data-target="umtydnsl81i" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydnsl81i">Constraint exclusion prunes partitioned/inherited children outright</div></div>
     </div></li></ul>
   </section>
   

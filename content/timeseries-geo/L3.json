@@ -213,7 +213,7 @@
               "explain": "SUM(SUM) / SUM(COUNT) reconstructs a weighted average — keeping sufficient statistics enables higher-level rollups."
             },
             {
-              "q": "REFRESH MATERIALIZED VIEW CONCURRENTLY requires:",
+              "q": "Refreshing a time-series materialized view concurrently requires:",
               "options": [
                 "A primary key on the base table",
                 "A unique index on the materialized view",
@@ -221,7 +221,7 @@
                 "PostgreSQL 9.0"
               ],
               "answer": 1,
-              "explain": "Concurrent refresh tracks changed rows via a unique index on the matview so locks don't block readers."
+              "explain": "Concurrent refresh tracks changed rows via a unique index on the matview so readers aren't blocked during the refresh."
             }
           ]
         }

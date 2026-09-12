@@ -257,7 +257,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Employees with (salary > 100000 AND dept_id = 1) OR (salary > 70000 AND dept_id = 2).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1p">Parenthesize each AND group</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1p">Parenthesize each AND group</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -267,7 +267,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Employees NOT in departments located in 'NYC'. Use NOT EXISTS.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1q">NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1q">NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -277,7 +277,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Add column 'band': salary>=100k='high', >=70k='mid', else 'standard'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1r">CASE WHEN salary >= 100000 THEN 'high' ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1r">CASE WHEN salary >= 100000 THEN 'high' ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -287,7 +287,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Order by status (active first, pending second, inactive last), then salary DESC.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1s">CASE status WHEN 'active' THEN 1 ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1s">CASE status WHEN 'active' THEN 1 ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -297,7 +297,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Per department: count of active and pending employees.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1t">SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1t">SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -307,7 +307,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Departments without employees. Show NOT IN fails with NULL; fix with NOT EXISTS.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1u">Subquery with NULL breaks NOT IN; use NOT EXISTS</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1u">Subquery with NULL breaks NOT IN; use NOT EXISTS</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -317,7 +317,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Display name: prefer nickname, then first_name, then 'Anonymous'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1v">COALESCE(nickname, first_name, 'Anonymous')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1v">COALESCE(nickname, first_name, 'Anonymous')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -327,7 +327,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Replace empty status with 'unknown', NULL with 'unknown'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9et1w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9et1w">COALESCE(NULLIF(TRIM(status), ''), 'unknown')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsls1w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsls1w">COALESCE(NULLIF(TRIM(status), ''), 'unknown')</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">

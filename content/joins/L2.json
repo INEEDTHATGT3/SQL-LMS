@@ -190,7 +190,7 @@
           "type": "quiz",
           "items": [
             {
-              "q": "LATERAL subquery can reference:",
+              "q": "Inside FROM, a LATERAL subquery can reference:",
               "options": [
                 "Only tables in same FROM",
                 "Columns from LEFT side of join",
@@ -198,10 +198,10 @@
                 "Global variables only"
               ],
               "answer": 1,
-              "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
+              "explain": "In the join pipeline, the lateral side reads columns already produced by the LEFT side of the join — like a correlated subquery in FROM."
             },
             {
-              "q": "CROSS JOIN LATERAL vs LEFT JOIN LATERAL:",
+              "q": "Compared with CROSS JOIN LATERAL, LEFT JOIN LATERAL:",
               "options": [
                 "Same",
                 "CROSS = inner (drops left rows with no match), LEFT = preserves left",
@@ -209,7 +209,7 @@
                 "CROSS not allowed"
               ],
               "answer": 1,
-              "explain": "CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match)."
+              "explain": "In the pipeline, CROSS JOIN LATERAL = INNER JOIN LATERAL and drops left rows with no match; LEFT JOIN LATERAL preserves them (NULL if no match)."
             }
           ]
         }

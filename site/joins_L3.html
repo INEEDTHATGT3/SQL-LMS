@@ -113,12 +113,12 @@ WHERE dept_id = <span class="num">3</span>;
 <span class="cm">-- Derived table pushdown (merged)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 <div class="callout warn">Pushdown blockers: VOLATILE functions (random(), now()), LIMIT/OFFSET in subquery, UNION/EXCEPT, window functions in subquery, set operations. Use CTEs carefully.</div>
 <div class="quiz-card" data-quiz-key="s1-q119" data-answer="0">
-      <div class="quiz-q">Predicate pushdown moves filter:</div>
+      <div class="quiz-q">Predicate pushdown shrinks the rows entering a join by moving the filter:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>From outer query INTO inner subquery/CTE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>From inner TO outer</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>To application layer</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>To storage engine only</span></div></div>
-      <div class="quiz-explain">Push filter down to where data originates — reduces rows before join/aggregation.</div>
+      <div class="quiz-explain">Pushing the predicate into the inner subquery/CTE filters rows at the source, so fewer rows enter the join — cheaper probe/build.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s1-q120" data-answer="2">
-      <div class="quiz-q">CTE with LIMIT blocks pushdown because:</div>
+      <div class="quiz-q">A LIMIT inside a CTE is a pushdown boundary because:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>LIMIT changes semantics if pushed</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CTEs are optimization fences</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both A and B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CTEs don't support pushdown</span></div></div>
       <div class="quiz-explain">In PostgreSQL, CTEs are optimization fences (materialized). LIMIT inside CTE prevents pushdown.</div>
       <div class="quiz-score"></div>
@@ -250,7 +250,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Query: SELECT e.dept_id FROM employees e JOIN departments d ON e.dept_id = d.id. Is join eliminated? Why/why not?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fy2m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fy2m">Only FK column from child selected → yes, eliminated</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmz2m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmz2m">Only FK column from child selected → yes, eliminated</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -260,7 +260,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fy2n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fy2n">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmz2n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmz2n">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -270,7 +270,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Design events and orders tables partitioned by month for partition-wise join on user_id.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fy2o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fy2o">Partition both on month</div><button class="reveal-btn" data-target="umtydd9fy2q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9fy2q">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmz2o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmz2o">Partition both on month</div><button class="reveal-btn" data-target="umtydnsmz2q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsmz2q">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -280,7 +280,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Force join order: small → medium → large using join_collapse_limit.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fy2r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fy2r">SET join_collapse_limit = 1; write joins in desired order</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmz2r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmz2r">SET join_collapse_limit = 1; write joins in desired order</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -290,7 +290,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Describe when Adaptive Join switches from Nested Loop to Hash Join.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fy2s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fy2s">Starts as NLJ; switches when outer rows exceed threshold</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmz2s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmz2s">Starts as NLJ; switches when outer rows exceed threshold</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -300,7 +300,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fy2t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fy2t">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmz2t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmz2t">Move LIMIT to outer query; use subquery instead of CTE</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">

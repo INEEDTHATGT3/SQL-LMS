@@ -280,7 +280,7 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Parallel Hash Join workers each build:",
+              "q": "During a parallel hash join, each worker builds:",
               "options": [
                 "Full hash table on entire build side",
                 "Hash table on their partition of build side",
@@ -288,10 +288,10 @@
                 "No hash table — use NLJ"
               ],
               "answer": 1,
-              "explain": "Each worker builds hash on its partition of build side. No shared memory — independent."
+              "explain": "Each worker builds its own hash on its partition of the build side; workers share no hash memory."
             },
             {
-              "q": "Gather vs Gather Merge:",
+              "q": "In a parallel plan, what separates Gather from Gather Merge:",
               "options": [
                 "Same thing",
                 "Gather = unordered collect; Gather Merge = ordered merge",

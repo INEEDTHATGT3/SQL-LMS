@@ -311,7 +311,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Write a PL/pgSQL helper that pivots sales by an unknown month set, building the crosstab column list from DISTINCT months with format('%I') so identifiers are injection-safe.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx8t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx8t">string_agg(format('%I numeric', ...), ', ' ORDER BY ...)</div><button class="reveal-btn" data-target="umtydd9gx8v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx8v">RETURN QUERY EXECUTE format('... AS ct (region text, %s)', col_list)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnz8t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnz8t">string_agg(format('%I numeric', ...), ', ' ORDER BY ...)</div><button class="reveal-btn" data-target="umtydnsnz8v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnz8v">RETURN QUERY EXECUTE format('... AS ct (region text, %s)', col_list)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -321,7 +321,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Define CREATE AGGREGATE for a moving average: SFUNC/STYPE for the accumulator plus MSFUNC/MINFUNC so the WINDOW aggregate slides in O(1).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx8w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx8w">state = running sum + count; msfunc folds in, minvfunc removes</div><button class="reveal-btn" data-target="umtydd9gx8y" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx8y">CREATE AGGREGATE mov_avg(numeric) (... WINDOW = true)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnz8w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnz8w">state = running sum + count; msfunc folds in, minvfunc removes</div><button class="reveal-btn" data-target="umtydnsnz8y" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnz8y">CREATE AGGREGATE mov_avg(numeric) (... WINDOW = true)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -331,7 +331,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Bound a salary band by using RANK(x) WITHIN GROUP (ORDER BY salary) to find where the band thresholds would sit in the distribution.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx8z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx8z">RANK(low) WITHIN GROUP (ORDER BY salary) and RANK(high)</div><button class="reveal-btn" data-target="umtydd9gx91" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx91">The gap between the two ranks is the band's membership size</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnz8z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnz8z">RANK(low) WITHIN GROUP (ORDER BY salary) and RANK(high)</div><button class="reveal-btn" data-target="umtydnsnz91" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnz91">The gap between the two ranks is the band's membership size</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -341,7 +341,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Fill a sparse daily metric: LAG(col) IGNORE NULLS attaches the last reported value to NULL days so the series stays continuous without inventing values.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx92" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx92">LAG(reading) IGNORE NULLS OVER (ORDER BY day)</div><button class="reveal-btn" data-target="umtydd9gx94" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx94">COALESCE(reading, prev_reported) when a filled value is desired</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnz92" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnz92">LAG(reading) IGNORE NULLS OVER (ORDER BY day)</div><button class="reveal-btn" data-target="umtydnsnz94" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnz94">COALESCE(reading, prev_reported) when a filled value is desired</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -351,7 +351,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Add an AFTER ROW audit trigger that writes emp_audit rows and a BEFORE ROW guard that RAISE-Es when an invariant breaks — both inside the same transaction.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx95" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx95">AFTER INSERT OR UPDATE ... FOR EACH ROW EXECUTE FUNCTION log_emp_change()</div><button class="reveal-btn" data-target="umtydd9gx97" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx97">BEFORE trigger with RAISE EXCEPTION aborts and rolls back</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnz95" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnz95">AFTER INSERT OR UPDATE ... FOR EACH ROW EXECUTE FUNCTION log_emp_change()</div><button class="reveal-btn" data-target="umtydnsnz97" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnz97">BEFORE trigger with RAISE EXCEPTION aborts and rolls back</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-6">

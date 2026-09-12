@@ -177,7 +177,7 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Partial index WHERE status='active' helps query:",
+              "q": "A partial index WHERE status = 'active' is eligible only when the query predicate targets that same constant:",
               "options": [
                 "WHERE status = 'inactive'",
                 "WHERE status = 'active' AND salary > 50k",
@@ -185,7 +185,7 @@
                 "All of the above"
               ],
               "answer": 1,
-              "explain": "Partial index only contains 'active' rows. Predicate must include status='active' to match."
+              "explain": "Partial index only contains 'active' rows, so the predicate must pin status='active' to make it eligible."
             },
             {
               "q": "Functional index on (salary * 12) supports:",

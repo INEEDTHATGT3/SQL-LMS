@@ -112,9 +112,9 @@ CREATE INDEX idx ON t (col) WHERE status = <span class="st">'active'</span>;</co
 <span class="cm">-- Workaround: partitioned table or filtered index via generated column</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 
 <div class="quiz-card" data-quiz-key="s1-q75" data-answer="1">
-      <div class="quiz-q">Partial index WHERE status='active' helps query:</div>
+      <div class="quiz-q">A partial index WHERE status = 'active' is eligible only when the query predicate targets that same constant:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE status = 'inactive'</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE status = 'active' AND salary > 50k</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE salary > 50k (no status filter)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All of the above</span></div></div>
-      <div class="quiz-explain">Partial index only contains 'active' rows. Predicate must include status='active' to match.</div>
+      <div class="quiz-explain">Partial index only contains 'active' rows, so the predicate must pin status='active' to make it eligible.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s1-q76" data-answer="1">
       <div class="quiz-q">Functional index on (salary * 12) supports:</div>
@@ -252,7 +252,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Users login with email case-insensitively. Create index for WHERE LOWER(email) = ?.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb1x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb1x">CREATE INDEX ON users (LOWER(email))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmb1x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmb1x">CREATE INDEX ON users (LOWER(email))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -262,7 +262,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       95% queries filter status='active'. Create partial index on users(created_at) for active users.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb1y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb1y">WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmb1y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmb1y">WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -272,7 +272,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb1z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb1z">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmb1z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmb1z">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -282,7 +282,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Query: WHERE salary * 12 > 120000. Create functional index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb20" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb20">CREATE INDEX ON employees ((salary * 12))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmb20" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmb20">CREATE INDEX ON employees ((salary * 12))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -292,7 +292,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Allow same email for inactive users, but only one active per email.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb21" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb21">CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmb21" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmb21">CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -302,7 +302,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Rewrite to use index on salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb22" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb22">salary > 50000</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmb22" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmb22">salary > 50000</div></div>
     </div></li></ul>
   </section>
   

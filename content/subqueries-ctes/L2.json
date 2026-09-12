@@ -250,7 +250,7 @@
               "explain": "NOT MATERIALIZED = inline CTE, allowing outer predicates to push into CTE scan."
             },
             {
-              "q": "CTE with volatile function (random()) is:",
+              "q": "A CTE that calls a volatile function such as random() is:",
               "options": [
                 "Always materialized",
                 "Never materialized",

@@ -118,14 +118,14 @@ FROM employees e;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
 <span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 
 <div class="quiz-card" data-quiz-key="s1-q108" data-answer="1">
-      <div class="quiz-q">LATERAL subquery can reference:</div>
+      <div class="quiz-q">Inside FROM, a LATERAL subquery can reference:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only tables in same FROM</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Columns from LEFT side of join</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only columns from same subquery</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Global variables only</span></div></div>
-      <div class="quiz-explain">LATERAL allows right side to see left side columns. Like correlated subquery in FROM.</div>
+      <div class="quiz-explain">In the join pipeline, the lateral side reads columns already produced by the LEFT side of the join — like a correlated subquery in FROM.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s1-q109" data-answer="1">
-      <div class="quiz-q">CROSS JOIN LATERAL vs LEFT JOIN LATERAL:</div>
+      <div class="quiz-q">Compared with CROSS JOIN LATERAL, LEFT JOIN LATERAL:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CROSS = inner (drops left rows with no match), LEFT = preserves left</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>LEFT not allowed with LATERAL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CROSS not allowed</span></div></div>
-      <div class="quiz-explain">CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match).</div>
+      <div class="quiz-explain">In the pipeline, CROSS JOIN LATERAL = INNER JOIN LATERAL and drops left rows with no match; LEFT JOIN LATERAL preserves them (NULL if no match).</div>
       <div class="quiz-score"></div>
     </div>
   </section>
@@ -253,7 +253,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each employee, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2e">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2e">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -263,7 +263,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Find customers who have never placed an order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2f">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2f">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -273,7 +273,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2g">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2g">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -283,7 +283,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Employees who placed at least one order in 2024.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2h">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2h">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -293,7 +293,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Products that have never been ordered.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2i">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2i">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -303,7 +303,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Join small_table (100 rows) → medium (10k) → large (1M). Force order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2j">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2j">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -313,7 +313,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       User IDs in 'active' status but not in 'inactive'. Use EXCEPT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2k">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2k">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -323,7 +323,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2l">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsmw2l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsmw2l">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">

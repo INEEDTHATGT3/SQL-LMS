@@ -163,7 +163,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Build a sales matrix: one row per department, one column per quarter (Q1..Q4), each cell the SUM(sales) for that department and quarter.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gt79" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gt79">SUM(CASE WHEN quarter = 'Q1' THEN sales END) AS q1, ...</div><button class="reveal-btn" data-target="umtydd9gt7b" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gt7b">GROUP BY department</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnv79" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnv79">SUM(CASE WHEN quarter = 'Q1' THEN sales END) AS q1, ...</div><button class="reveal-btn" data-target="umtydnsnv7b" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnv7b">GROUP BY department</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -173,7 +173,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       For each department, compute its share of total sales as a percentage, ordered from largest to smallest share.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gt7c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gt7c">SUM(amount) / SUM(amount) OVER () * 100</div><button class="reveal-btn" data-target="umtydd9gt7e" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gt7e">ORDER BY share DESC</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnv7c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnv7c">SUM(amount) / SUM(amount) OVER () * 100</div><button class="reveal-btn" data-target="umtydnsnv7e" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnv7e">ORDER BY share DESC</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -183,7 +183,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Return a single result row with paid_orders, paid_gmv, pending_orders, and pending_gmv side by side using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gt7f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gt7f">COUNT(*) FILTER (WHERE status = 'paid')</div><button class="reveal-btn" data-target="umtydd9gt7h" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gt7h">SUM(amount) FILTER (WHERE status = 'paid')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnv7f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnv7f">COUNT(*) FILTER (WHERE status = 'paid')</div><button class="reveal-btn" data-target="umtydnsnv7h" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnv7h">SUM(amount) FILTER (WHERE status = 'paid')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -193,7 +193,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Report daily active buyers as COUNT(DISTINCT user_id) grouped by day, and explain in a comment why the DISTINCT is required for the buyer metric.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gt7i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gt7i">COUNT(DISTINCT user_id) counts users, COUNT(*) counts events</div><button class="reveal-btn" data-target="umtydd9gt7k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gt7k">One user can appear in many events on the same day</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnv7i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnv7i">COUNT(DISTINCT user_id) counts users, COUNT(*) counts events</div><button class="reveal-btn" data-target="umtydnsnv7k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnv7k">One user can appear in many events on the same day</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -203,7 +203,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Rewrite a row-per-month result into month columns (m1..m3) per region, using the CASE pivot recipe.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gt7l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gt7l">One SUM(CASE WHEN month = 'M1' THEN amount END) per target column</div><button class="reveal-btn" data-target="umtydd9gt7n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gt7n">GROUP BY region</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnv7l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnv7l">One SUM(CASE WHEN month = 'M1' THEN amount END) per target column</div><button class="reveal-btn" data-target="umtydnsnv7n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnv7n">GROUP BY region</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -213,7 +213,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Compare COUNT(*) with COUNT(ship_date) on orders where some ship_date values are NULL, and explain why the two counts diverge.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gt7o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gt7o">COUNT(*) counts rows; COUNT(ship_date) skips NULLs</div><button class="reveal-btn" data-target="umtydd9gt7q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gt7q">Unshipped orders have NULL ship_date</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnv7o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnv7o">COUNT(*) counts rows; COUNT(ship_date) skips NULLs</div><button class="reveal-btn" data-target="umtydnsnv7q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnv7q">Unshipped orders have NULL ship_date</div></div>
     </div></li></ul>
   </section>
   

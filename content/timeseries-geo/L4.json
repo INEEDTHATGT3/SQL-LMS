@@ -229,7 +229,7 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Continuous aggregate lag (end_offset) means:",
+              "q": "Seen from the query side, what does the lag (end_offset) of a continuous aggregate mean:",
               "options": [
                 "How far behind real-time",
                 "How often to refresh",
@@ -237,7 +237,7 @@
                 "Max query latency"
               ],
               "answer": 0,
-              "explain": "end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag)."
+              "explain": "end_offset = how far behind real-time the materialized summary trails; recent rows inside the lag window are served from the raw data, not the summary."
             },
             {
               "q": "Continuous aggregate combines:",
@@ -457,7 +457,7 @@
       ]
     },
     {
-      "title": "Dialect Mastery — Time-Series & Geospatial",
+      "title": "Dialect Mastery — Timescale & PostGIS Dialects",
       "blocks": [
         {
           "type": "dialect-diff",
