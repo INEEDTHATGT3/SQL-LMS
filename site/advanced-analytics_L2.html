@@ -209,7 +209,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Categories unknown at design time. Write dynamic SQL to pivot sales by category.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm65" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm65">EXECUTE format() with dynamic column list</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y65" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y65">EXECUTE format() with dynamic column list</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -219,7 +219,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm66" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm66">LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y66" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y66">LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -229,7 +229,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Running total of daily sales using RANGE frame (date-based).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm67" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm67">RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y67" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y67">RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -239,7 +239,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Count employees in same salary tier ±1 tier. Use GROUPS frame.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm68" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm68">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y68" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y68">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -249,7 +249,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Get 10% random sample of users for A/B test. Use SYSTEM for speed.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm69" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm69">TABLESAMPLE SYSTEM (10) REPEATABLE (42)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y69" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y69">TABLESAMPLE SYSTEM (10) REPEATABLE (42)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -259,7 +259,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Quarters vary by year. Build dynamic crosstab for sales by region × quarter.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm6a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm6a">EXECUTE format() with dynamic column list from distinct quarters</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6a">EXECUTE format() with dynamic column list from distinct quarters</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -269,7 +269,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       For each customer, show running total of order amounts over time.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm6b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm6b">LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6b">LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -279,7 +279,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Estimate distinct users per day using 10% TABLESAMPLE. Compare with exact COUNT(DISTINCT).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm6c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm6c">TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6c">TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)</div></div>
     </div></li></ul>
   </section>
   

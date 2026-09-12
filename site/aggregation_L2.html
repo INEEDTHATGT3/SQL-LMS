@@ -188,7 +188,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Employee count per department with subtotals and grand total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02l">GROUP BY ROLLUP(dept_id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2l">GROUP BY ROLLUP(dept_id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -198,7 +198,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Full cross-tabulation: dept × status with all subtotals.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02m">GROUP BY CUBE(dept_id, status)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2m">GROUP BY CUBE(dept_id, status)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -208,7 +208,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Show (dept,status) detail + status subtotals + grand total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02n">GROUPING SETS ((dept_id, status), (status), ())</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2n">GROUPING SETS ((dept_id, status), (status), ())</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -218,7 +218,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Add column 'level' showing 'detail', 'dept_subtotal', 'grand_total' using GROUPING().
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02o">CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2o">CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -228,7 +228,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Detail (dept,status) + dept subtotals. No grand total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02p">GROUP BY dept_id, ROLLUP(status)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2p">GROUP BY dept_id, ROLLUP(status)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -238,7 +238,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Decode GROUPING_ID bitmask: 0=detail, 1=status rolled, 2=dept rolled, 3=grand.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02q">CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2q">CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -248,7 +248,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Show dept subtotals and status subtotals, but no detail rows.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02r">GROUPING SETS ((dept_id), (status), ())</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2r">GROUPING SETS ((dept_id), (status), ())</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -258,7 +258,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Replace NULL in subtotal rows with 'TOTAL' or 'ALL'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9l02s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9l02s">COALESCE(dept_id, 'ALL DEPTS')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9a2s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9a2s">COALESCE(dept_id, 'ALL DEPTS')</div></div>
     </div></li></ul>
   </section>
   

@@ -285,7 +285,7 @@ func.st_distancesphere(Pois.geom, p)</code></pre>
     </div>
     <div class="prob-body">
       On a 500M-row append-only events table, justify when you would choose BRIN over B-tree for the ts column, and write the DDL. Include a pages_per_range trade-off note.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ls8g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ls8g">page_range=128 default</div><button class="reveal-btn" data-target="umtxzp9ls8i" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ls8i">BRIN size vs selectivity</div><button class="reveal-btn" data-target="umtxzp9ls8k" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9ls8k">out-of-order inserts break summaries</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda38g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda38g">page_range=128 default</div><button class="reveal-btn" data-target="umtxzqda38i" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqda38i">BRIN size vs selectivity</div><button class="reveal-btn" data-target="umtxzqda38k" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqda38k">out-of-order inserts break summaries</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -295,7 +295,7 @@ func.st_distancesphere(Pois.geom, p)</code></pre>
     </div>
     <div class="prob-body">
       Design a two-level rollup (hourly from raw, monthly from hourly) that preserves enough statistics to answer AVG per day and SUM per month. Provide the two CREATE MATERIALIZED VIEW statements.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ls8l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ls8l">carry COUNT/SUM/MIN/MAX</div><button class="reveal-btn" data-target="umtxzp9ls8n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ls8n">weighted average: SUM(SUM)/SUM(COUNT)</div><button class="reveal-btn" data-target="umtxzp9ls8p" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9ls8p">refresh cadence chaining</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda38l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda38l">carry COUNT/SUM/MIN/MAX</div><button class="reveal-btn" data-target="umtxzqda38n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqda38n">weighted average: SUM(SUM)/SUM(COUNT)</div><button class="reveal-btn" data-target="umtxzqda38p" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqda38p">refresh cadence chaining</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -305,7 +305,7 @@ func.st_distancesphere(Pois.geom, p)</code></pre>
     </div>
     <div class="prob-body">
       Attach the latest fx rate at-or-before each of 1M trades without a cross join. Write the pg version and the MySQL fallback, and explain the cost of the scalar-subquery form.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ls8q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ls8q">DISTINCT ON (t.ts) ORDER BY r.rate_ts DESC</div><button class="reveal-btn" data-target="umtxzp9ls8s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ls8s">correlated subquery reruns per row</div><button class="reveal-btn" data-target="umtxzp9ls8u" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9ls8u">index fx_rates(rate_ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda38q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda38q">DISTINCT ON (t.ts) ORDER BY r.rate_ts DESC</div><button class="reveal-btn" data-target="umtxzqda38s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqda38s">correlated subquery reruns per row</div><button class="reveal-btn" data-target="umtxzqda38u" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqda38u">index fx_rates(rate_ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -315,7 +315,7 @@ func.st_distancesphere(Pois.geom, p)</code></pre>
     </div>
     <div class="prob-body">
       Aggregate sales by local-business-day (America/Los_Angeles) from a UTC timestamptz column. Write the bucket expression using AT TIME ZONE and explain the DST edge cases.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ls8v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ls8v">ts AT TIME ZONE 'America/Los_Angeles'</div><button class="reveal-btn" data-target="umtxzp9ls8x" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ls8x">midnight rollover vs UTC midnight</div><button class="reveal-btn" data-target="umtxzp9ls8z" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9ls8z">store local date alongside events to avoid drift</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda38v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda38v">ts AT TIME ZONE 'America/Los_Angeles'</div><button class="reveal-btn" data-target="umtxzqda38x" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqda38x">midnight rollover vs UTC midnight</div><button class="reveal-btn" data-target="umtxzqda38z" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqda38z">store local date alongside events to avoid drift</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -325,7 +325,7 @@ func.st_distancesphere(Pois.geom, p)</code></pre>
     </div>
     <div class="prob-body">
       For a 3-probe gap, produce estimated values at each missing 5-minute slot as a weighted blend of surrounding readings, using the time-distance weights shown in the linear interpolation example.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ls90" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ls90">LAG/LEAD ... IGNORE NULLS to neighbors</div><button class="reveal-btn" data-target="umtxzp9ls92" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ls92">epoch seconds for weights</div><button class="reveal-btn" data-target="umtxzp9ls94" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9ls94">single expression, no plpgsql</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda390" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda390">LAG/LEAD ... IGNORE NULLS to neighbors</div><button class="reveal-btn" data-target="umtxzqda392" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqda392">epoch seconds for weights</div><button class="reveal-btn" data-target="umtxzqda394" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqda394">single expression, no plpgsql</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -335,7 +335,7 @@ func.st_distancesphere(Pois.geom, p)</code></pre>
     </div>
     <div class="prob-body">
       Events kept 12 months, 200M rows/month. Design monthly range partitioning so retention deletion is a DROP of a partition, and the identical age window 'last 6 months' never scans old partitions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ls95" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ls95">PARTITION BY RANGE (ts)</div><button class="reveal-btn" data-target="umtxzp9ls97" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ls97">detach + drop oldest</div><button class="reveal-btn" data-target="umtxzp9ls99" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9ls99">partition pruning by quals in WHERE</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda395" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda395">PARTITION BY RANGE (ts)</div><button class="reveal-btn" data-target="umtxzqda397" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqda397">detach + drop oldest</div><button class="reveal-btn" data-target="umtxzqda399" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqda399">partition pruning by quals in WHERE</div></div>
     </div></li></ul>
   </section>
   

@@ -252,7 +252,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Create cross-tabulation: departments as rows, quarters as columns, sales as values.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll5z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll5z">crosstab() from tablefunc</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w5z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w5z">crosstab() from tablefunc</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -262,7 +262,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       For each customer, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll60" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll60">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w60" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w60">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -272,7 +272,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Compute 4-row moving average of daily sales (current + 3 preceding).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll61" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll61">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w61" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w61">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -282,7 +282,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Sum of sales for each day + previous 6 days using RANGE.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll62" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll62">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w62" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w62">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -292,7 +292,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Assign each employee to a salary quartile (1-4) within their department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll63" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll63">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w63" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w63">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -302,7 +302,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Per department: count of active, pending, inactive employees using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll64" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll64">COUNT(*) FILTER (WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w64" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w64">COUNT(*) FILTER (WHERE status = 'active')</div></div>
     </div></li></ul>
   </section>
   

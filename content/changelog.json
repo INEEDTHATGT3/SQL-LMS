@@ -2,6 +2,18 @@
   "changelog": [
     {
       "date": "2026-09-12",
+      "type": "system",
+      "title": "Build pipeline vendored & repo bootstrapped",
+      "detail": "@layered-study/core is now vendored at vendor/core; .gitignore added; debug artifacts removed."
+    },
+    {
+      "date": "2026-09-12",
+      "type": "fix",
+      "title": "Module 09 completed; modules 10-11 folded into L4",
+      "detail": "Authored timeseries-geo L2/L3, relocated approximate-algorithms content to L4, added query-plan blocks to L1/L4. Stored procedures & functions folded into performance L4; triggers & transaction control into advanced-analytics L4."
+    },
+    {
+      "date": "2026-09-12",
       "type": "module",
       "title": "Module 09 Time-Series & Geospatial live",
       "detail": "Gap filling, interpolation, PostGIS basics, H3"

@@ -8,10 +8,7 @@
     "lint": "layered-study-lint",
     "build": "layered-study-build",
     "dev": "npm run build && npx serve site -p 3000",
-    "deploy": "gh-pages -d site",
-    "upgrade": "layered-study-upgrade",
-    "seed:generate": "node content/seed-data/generators/combine.js",
-    "seed:sql": "node content/seed-data/generators/json-to-sql.js"
+    "deploy": "gh-pages -d site"
   },
   "dependencies": {
     "@layered-study/core": "file:./vendor/core"

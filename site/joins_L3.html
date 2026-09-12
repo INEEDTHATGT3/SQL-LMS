@@ -250,7 +250,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Query: SELECT e.dept_id FROM employees e JOIN departments d ON e.dept_id = d.id. Is join eliminated? Why/why not?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9kv22" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9kv22">Only FK column from child selected → yes, eliminated</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9622" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9622">Only FK column from child selected → yes, eliminated</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -260,7 +260,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9kv23" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9kv23">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9623" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9623">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -270,7 +270,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Design events and orders tables partitioned by month for partition-wise join on user_id.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9kv24" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9kv24">Partition both on month</div><button class="reveal-btn" data-target="umtxzp9kv26" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9kv26">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9624" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9624">Partition both on month</div><button class="reveal-btn" data-target="umtxzqd9626" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9626">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -280,7 +280,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Force join order: small → medium → large using join_collapse_limit.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9kv27" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9kv27">SET join_collapse_limit = 1; write joins in desired order</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9627" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9627">SET join_collapse_limit = 1; write joins in desired order</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -290,7 +290,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Describe when Adaptive Join switches from Nested Loop to Hash Join.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9kv28" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9kv28">Starts as NLJ; switches when outer rows exceed threshold</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9628" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9628">Starts as NLJ; switches when outer rows exceed threshold</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -300,7 +300,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9kv29" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9kv29">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9629" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9629">Move LIMIT to outer query; use subquery instead of CTE</div></div>
     </div></li></ul>
   </section>
   

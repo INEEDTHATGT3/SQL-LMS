@@ -267,7 +267,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Design a partitioned table for 1B events/year with partition key on event_time. Include monthly partitions, default partition, and index strategy.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9li56" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9li56">PARTITION BY RANGE (event_time)</div><button class="reveal-btn" data-target="umtxzp9li58" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9li58">Monthly partitions</div><button class="reveal-btn" data-target="umtxzp9li5a" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9li5a">Default partition for strays</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9t56" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9t56">PARTITION BY RANGE (event_time)</div><button class="reveal-btn" data-target="umtxzqd9t58" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9t58">Monthly partitions</div><button class="reveal-btn" data-target="umtxzqd9t5a" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqd9t5a">Default partition for strays</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -277,7 +277,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Create BRIN index on log_table(created_at) for 500M row append-only log table. Compare size vs B-tree.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9li5b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9li5b">USING BRIN (created_at)</div><button class="reveal-btn" data-target="umtxzp9li5d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9li5d">pages_per_range=32 for finer granularity</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9t5b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9t5b">USING BRIN (created_at)</div><button class="reveal-btn" data-target="umtxzqd9t5d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9t5d">pages_per_range=32 for finer granularity</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -287,7 +287,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Add index on orders(customer_id, order_date) without locking the 200M row table.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9li5e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9li5e">CREATE INDEX CONCURRENTLY</div><button class="reveal-btn" data-target="umtxzp9li5g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9li5g">Monitor pg_stat_progress_create_index</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9t5e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9t5e">CREATE INDEX CONCURRENTLY</div><button class="reveal-btn" data-target="umtxzqd9t5g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9t5g">Monitor pg_stat_progress_create_index</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -297,7 +297,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Users login with email case-insensitively. Create index for WHERE LOWER(email) = ? efficiently.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9li5h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9li5h">CREATE INDEX ON users (LOWER(email))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9t5h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9t5h">CREATE INDEX ON users (LOWER(email))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -307,7 +307,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Allow same email for inactive users, but only one active per email.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9li5i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9li5i">CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9t5i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9t5i">CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -317,7 +317,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9li5j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9li5j">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9t5j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9t5j">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
     </div></li></ul>
   </section>
   
