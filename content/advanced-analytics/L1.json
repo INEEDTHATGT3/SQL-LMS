@@ -316,19 +316,6 @@
           "mysql": "-- MySQL 8.0+: no FILTER; use SUM(CASE...)\n-- PERCENTILE_CONT/DISC in 8.0+",
           "py-pandas": "# FILTER equivalent\nactive_cnt = df[df['status']=='active'].groupby('dept_id').size()\n\n# Quantiles\ndf.groupby('dept_id')['salary'].quantile(0.5)"
         },
-{
-          "type": "code",
-          "label": "ntile",
-          "code": "-- Quartiles (4 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(4) OVER (ORDER BY salary) AS quartile\nFROM employees;\n\n-- Deciles (10 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(10) OVER (ORDER BY salary) AS decile\nFROM employees;\n\n-- Per department\nSELECT \n  dept_id,\n  name,\n  salary,\n  NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary) AS dept_quartile\nFROM employees;",
-          "pg": "-- Same syntax",
-          "mysql": "-- MySQL 8.0+: NTILE supported",
-          "py-pandas": "# Quantile bins\ndf['quartile'] = pd.qcut(df['salary'], 4, labels=[1,2,3,4])\n\n# Per group\ndf['dept_quartile'] = df.groupby('dept_id')['salary'].transform(lambda x: pd.qcut(x, 4, labels=[1,2,3,4]))"
-        },
-        {
-          "type": "callout",
-          "tone": "warn",
-          "md": "NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows."
-        },
         {
           "type": "query-plan",
           "title": "EXPLAIN — NTILE Partition Sort",
@@ -361,11 +348,6 @@
             }
           },
           "dialect": "pg"
-        },
-        {
-          "type": "callout",
-          "tone": "warn",
-          "md": "NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows."
         },
         {
           "type": "quiz",

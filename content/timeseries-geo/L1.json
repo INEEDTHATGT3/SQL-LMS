@@ -124,6 +124,31 @@
           "py-pandas": "# pandas resample\ndf.set_index('ts').resample('H').count()\n\n# date range\npd.date_range('2024-01-01', '2024-01-31', freq='D')"
         },
         {
+          "type": "query-plan",
+          "title": "EXPLAIN — Hourly Bucket Count",
+          "plan": {
+            "Plan": {
+              "Node Type": "HashAggregate",
+              "Startup Cost": 5.00,
+              "Total Cost": 7.00,
+              "Plan Rows": 96,
+              "Plan Width": 40,
+              "Group Key": "date_trunc('hour'::text, ts)",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "events",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 4.00,
+                  "Plan Rows": 240,
+                  "Plan Width": 8
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
           "type": "quiz",
           "items": [
             {

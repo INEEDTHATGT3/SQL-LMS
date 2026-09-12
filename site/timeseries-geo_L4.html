@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time-Series & Geospatial — L4 EXPERT</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="4" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 09</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">approximate algorithms, streaming pipelines, distributed spatial joins, advanced partitioning</span></div>
+  <h1>Time-Series & Geospatial</h1>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="timeseries-geo_L1" href="timeseries-geo_L1.html">BEGINNER</a><a class="level-pill " data-lesson="timeseries-geo_L2" href="timeseries-geo_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="timeseries-geo_L3" href="timeseries-geo_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="timeseries-geo_L4" href="timeseries-geo_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Approximate Algorithms — HyperLogLog, TDigest, KMV</a><a href="#sec-1">02 · Streaming Analytics — Continuous Views, PipelineDB, pg_streaming</a><a href="#sec-2">03 · Advanced Spatial Analytics — Parallel Spatial Joins, KNN, H3</a><a href="#sec-3">04 · H3 Hexagonal Grid & Geospatial Indexing</a><a href="#sec-4">05 · Dialect Mastery — Time-Series & Geospatial</a><a href="#sec-5">06 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q380" data-answer="2">
+      <div class="quiz-q">HyperLogLog (HLL) provides approximate distinct count with:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>O(N) memory</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>O(log N) memory</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>O(1) fixed memory</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>O(N log N) memory</span></div></div>
+      <div class="quiz-explain">HyperLogLog uses fixed-size registers (e.g., 2^14 = 16KB) regardless of cardinality.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q381" data-answer="1">
+      <div class="quiz-q">TDigest algorithm is used for:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Approximate distinct count</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Approximate percentiles/quantiles</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Exact median</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Top-K frequent items</span></div></div>
+      <div class="quiz-explain">TDigest is a streaming percentile algorithm with bounded error (~1%) and O(1) memory.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q382" data-answer="3">
+      <div class="quiz-q">KMV (K Minimum Values) sketch is used for:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Distinct counting</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Percentile estimation</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Top-K frequent items</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Both distinct counting and top-K</span></div></div>
+      <div class="quiz-explain">KMV maintains K minimum hash values — supports distinct count, top-K, and set operations.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q383" data-answer="1">
+      <div class="quiz-q">Continuous aggregate (TimescaleDB) refresh policy:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Manual only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Automatic background refresh with configurable lag</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Real-time only</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Requires manual trigger</span></div></div>
+      <div class="quiz-explain">Continuous aggregates auto-refresh via background workers with configurable lag and schedule.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q384" data-answer="1">
+      <div class="quiz-q">Streaming aggregate vs continuous aggregate:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same thing</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Streaming = push-based, continuous = pull-based with materialization</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Streaming = pull-based, continuous = push-based</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No difference</span></div></div>
+      <div class="quiz-explain">Streaming processes events as they arrive (push). Continuous aggregates materialize incrementally on schedule (pull).</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Approximate Algorithms — HyperLogLog, TDigest, KMV</h2></div>
+    <div class="mantra"><strong>Exact COUNT(DISTINCT) = O(N) memory. Approximate = O(1) memory, ~1-2% error. HyperLogLog for distinct count, TDigest for percentiles, KMV for top-K. Essential for 1B+ row datasets.</strong></div>
+<div><div class="code-label"><span>hyperloglog distinct count</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- PostgreSQL: HyperLogLog extension
+CREATE EXTENSION IF NOT EXISTS hll;
+
+-- Create HLL sketch
+SELECT hll_add_agg(hll_empty(), user_id) FROM events;
+
+-- Distinct count from sketch
+hll_cardinality(hll_add_agg(hll_empty(), user_id));
+
+-- Merge sketches (parallel/distributed)
+hll_union(hll_sketch1, hll_sketch2);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- hll extension: hll_add_agg, hll_cardinality, hll_union</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: APPROX_COUNT_DISTINCT() (8.0.13+)</span>
+SELECT APPROX_COUNT_DISTINCT(user_id) FROM events;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>tdigest percentile</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- TDigest <span class="kw">for</span> approximate percentiles
+SELECT tdigest_agg(value) FROM measurements;
+
+-- Query percentiles from sketch
+SELECT percentile(t, <span class="num">0.5</span>) FROM (SELECT tdigest_agg(value) AS t FROM measurements) s;
+
+-- Merge sketches (distributed)
+tdigest_union(sketch1, sketch2);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- TDigest via extension or custom aggregate</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native TDigest</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s0-q385" data-answer="1">
+      <div class="quiz-q">HyperLogLog uses O(1) memory because:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>It samples data</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Fixed-size register array (2^p registers)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>It compresses data</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>It uses sampling</span></div></div>
+      <div class="quiz-explain">HLL uses fixed register array (2^p registers). Memory constant regardless of cardinality.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q386" data-answer="1">
+      <div class="quiz-q">TDigest provides:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exact percentiles</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Approximate percentiles with bounded error</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only median</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only for integers</span></div></div>
+      <div class="quiz-explain">TDigest approximates the CDF with compressed centroids. ~1% error, constant memory.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Streaming Analytics — Continuous Views, PipelineDB, pg_streaming</h2></div>
+    <h3>Continuous Aggregates (TimescaleDB)</h3>
+<div><div class="code-label"><span>continuous aggregate</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- TimescaleDB continuous aggregate
+CREATE MATERIALIZED VIEW hourly_events
+WITH (timescaledb.continuous) AS
+SELECT time_bucket(<span class="st">'1 hour'</span>, time) AS bucket,
+  device_id,
+  COUNT(*) AS event_count,
+  AVG(value) AS avg_value
+FROM events
+GROUP BY bucket, device_id;
+
+-- Automatic refresh (background)
+SELECT add_continuous_aggregate_policy(<span class="st">'hourly_events'</span>,
+  start_offset => INTERVAL <span class="st">'3 hours'</span>,
+  end_offset => INTERVAL <span class="st">'1 hour'</span>,
+  schedule_interval => INTERVAL <span class="st">'1 hour'</span>);
+
+-- Real-time view (combines materialized + raw)
+SELECT * FROM hourly_events WHERE bucket > now() - INTERVAL <span class="st">'1 day'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- TimescaleDB: continuous aggregates + real-time views</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native continuous aggregates</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Streaming Aggregation (pg_streaming / PipelineDB)</h3>
+<div><div class="code-label"><span>streaming aggregate concept</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Concept: aggregate as data flows in
+-- PipelineDB (PostgreSQL extension) / pg_streaming
+
+-- Continuous view
+CREATE CONTINUOUS VIEW page_views_1min AS
+SELECT site_id, COUNT(*) AS views
+FROM page_views
+GROUP BY site_id, time_bucket(<span class="st">'1 minute'</span>, ts);
+
+-- Query continuous view (always up-to-date)
+SELECT * FROM page_views_1min WHERE site_id = <span class="num">123</span>;
+
+-- Combines: materialized (historical) + streaming (recent)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PipelineDB / pg_streaming for streaming SQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- No native streaming SQL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue">Real-world: TimescaleDB continuous aggregates = 99% of streaming use cases. PipelineDB deprecated. For custom: Kafka + Flink/Spark Streaming + sink to DB.</div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Continuous Aggregate Real-Time View</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Custom Scan</span>
+        <span class="plan-node-meta"> cost=100..30000 rows=800000 width=64</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Append</span>
+        <span class="plan-node-meta"> cost=100..30000 rows=800000 width=64</span>
+      </div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Custom Scan</span> on <code>_mat_hypertable_hourly</code>
+        <span class="plan-node-meta"> cost=90..25000 rows=700000 width=64</span>
+      </div></div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>events</code>
+        <span class="plan-node-meta"> cost=10..4500 rows=100000 width=64</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: ((bucket_time >= (now() - '1 day'::interval)) AND (bucket_time <= now()))</div></div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s1-q387" data-answer="0">
+      <div class="quiz-q">Continuous aggregate lag (end_offset) means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>How far behind real-time</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>How often to refresh</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>How much history to keep</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Max query latency</span></div></div>
+      <div class="quiz-explain">end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q388" data-answer="0">
+      <div class="quiz-q">Continuous aggregate combines:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Materialized view + raw tail</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Two materialized views</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>View + trigger</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index + partition</span></div></div>
+      <div class="quiz-explain">Real-time view = materialized (historical) + raw tail (recent data).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Advanced Spatial Analytics — Parallel Spatial Joins, KNN, H3</h2></div>
+    <h3>Parallel Spatial Joins & KNN</h3>
+<div><div class="code-label"><span>parallel spatial join</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Parallel spatial join (PostgreSQL <span class="num">13</span>+)
+SET max_parallel_workers_per_gather = <span class="num">4</span>;
+
+EXPLAIN ANALYZE
+SELECT a.id, b.id
+FROM a
+JOIN b ON ST_DWithin(a.geom, b.geom, <span class="num">1000</span>);
+-- Plan shows: Parallel Seq Scan + Gather Merge</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Parallel spatial join (PG 13+)</span>
+<span class="cm">-- enable_parallel_append for partitioned tables</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no parallel spatial join</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Parallel Spatial Join (ST_DWithin)</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Gather Merge</span>
+        <span class="plan-node-meta"> cost=10000..52000 rows=500000 width=16 actual time=120.5..480.2 actual rows=485000 loops=1</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Nested Loop</span>
+        <span class="plan-node-meta"> cost=100..51000 rows=500000 width=16</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Join Filter: ST_DWithin(a.geom, b.geom, '1000'::double precision)</div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Parallel Seq Scan</span> on <code>building</code> as <code>a</code>
+        <span class="plan-node-meta"> cost=0..8500 rows=500000 width=76</span>
+      </div></div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Index Scan</span> on <code>parcel</code> as <code>b</code>
+        <span class="plan-node-meta"> cost=0..800 rows=1 width=76</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: ((b.geom && ST_Expand(a.geom, '1000'::double precision)))</div></div></div></div></div>
+</div>
+<h3>KNN Search with <-> Operator</h3>
+<div><div class="code-label"><span>KNN search</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- KNN: find <span class="num">5</span> nearest neighbors
+SELECT id, name, geom <-> ST_MakePoint(-<span class="num">122.4</span>, <span class="num">37.7</span>) AS dist
+FROM pois
+ORDER BY geom <-> ST_MakePoint(-<span class="num">122.4</span>, <span class="num">37.7</span>)
+LIMIT <span class="num">5</span>;
+
+-- GiST index required <span class="kw">for</span> <->
+CREATE INDEX idx_pois_geom ON pois USING GIST (geom);
+
+-- KNN with filter
+SELECT * FROM pois
+WHERE category = <span class="st">'restaurant'</span>
+ORDER BY geom <-> ST_MakePoint(-<span class="num">122.4</span>, <span class="num">37.7</span>)
+LIMIT <span class="num">10</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- <-> = KNN distance operator (GiST index)</span>
+<span class="cm">-- Supports LIMIT for early termination</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native KNN operator</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue"><strong>KNN <-> operator uses GiST index for O(log N) search.</strong> Early termination with LIMIT avoids full scan. Composite index (category, geom) for filtered KNN.</div>
+<div class="quiz-card" data-quiz-key="s2-q389" data-answer="1">
+      <div class="quiz-q">KNN <-> operator requires:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>B-tree index</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>GiST index on geometry</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Hash index</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>BRIN index</span></div></div>
+      <div class="quiz-explain"><-> operator requires GiST index on geometry column for O(log N) KNN search.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q390" data-answer="1">
+      <div class="quiz-q">Parallel spatial join (PG 13+) uses:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Single worker</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Multiple workers with Gather Merge</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Single worker with parallel scan</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Sequential scan only</span></div></div>
+      <div class="quiz-explain">Parallel spatial join uses multiple workers, each processing a partition, then Gather Merge combines results.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>H3 Hexagonal Grid & Geospatial Indexing</h2></div>
+    <h3>H3 Hexagonal Hierarchical Grid</h3>
+<div><div class="code-label"><span>h3 functions</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- H3 cell from lat/lng (resolution <span class="num">0</span>-<span class="num">15</span>)
+SELECT h3_lat_lng_to_cell(<span class="num">37.7749</span>, -<span class="num">122.4194</span>, <span class="num">8</span>) AS h3_cell;
+-- Returns: <span class="st">'8828308287fffff'</span>
+
+-- Cell to boundary (polygon)
+SELECT h3_cell_to_boundary_wkt(<span class="st">'8828308287fffff'</span>);
+
+-- Parent/children
+SELECT h3_cell_to_parent(<span class="st">'8828308287fffff'</span>, <span class="num">6</span>);  -- parent at res <span class="num">6</span>
+SELECT h3_cell_to_children(<span class="st">'8828308287fffff'</span>, <span class="num">10</span>); -- children at res <span class="num">10</span>
+
+-- Compact (merge cells)
+SELECT h3_compact_cells(ARRAY[<span class="st">'8828308287fffff', '882830828bfffff'</span>]);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- H3 via extension: CREATE EXTENSION h3;</span>
+<span class="cm">-- Resolutions 0-15 (0=coarse, 15=finest ~1m²)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- No native H3; use Python h3 library</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue">H3 advantages: equal area, hierarchical, constant-time neighbor lookup, efficient range queries. Resolution 8 = ~0.7km², Res 10 = ~15km².</div>
+<h3>H3 for Spatial Aggregation</h3>
+<div><div class="code-label"><span>h3 aggregation</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Aggregate events into H3 hexagons (resolution <span class="num">8</span>)
+SELECT h3_lat_lng_to_cell(lat, lng, <span class="num">8</span>) AS hex,
+       COUNT(*) AS event_count,
+       AVG(value) AS avg_value
+FROM events
+WHERE ts > now() - INTERVAL <span class="st">'1 day'</span>
+GROUP BY hex;
+
+-- Join with cell boundaries <span class="kw">for</span> visualization
+SELECT h.hex, h.count, h3_cell_to_boundary_wkt(h.hex) AS geom
+FROM (
+  SELECT h3_lat_lng_to_cell(lat, lng, <span class="num">8</span>) AS hex, COUNT(*)
+  FROM events GROUP BY hex
+) h;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- h3 extension: CREATE EXTENSION h3;</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- No native H3</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — H3 Hexbin Aggregation</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">HashAggregate</span>
+        <span class="plan-node-meta"> cost=15000..18000 rows=15000 width=24 actual time=45..49.5 actual rows=14230 loops=1</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>events</code>
+        <span class="plan-node-meta"> cost=0..12500 rows=1000000 width=16</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (ts > (now() - '1 day'::interval))</div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s3-q391" data-answer="0">
+      <div class="quiz-q">H3 resolution 8 cell area is approximately:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>0.7 km²</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>7 km²</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>70 km²</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>700 km²</span></div></div>
+      <div class="quiz-explain">Resolution 8 ≈ 0.7 km² per hexagon. Resolution 10 ≈ 0.01 km² (10,000 m²).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q392" data-answer="1">
+      <div class="quiz-q">h3_cell_to_children returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Parent cell</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>All child cells at target resolution</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Neighbor cells</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Boundary polygon</span></div></div>
+      <div class="quiz-explain">h3_cell_to_children returns all child cells at a finer resolution within the parent.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Dialect Mastery — Time-Series & Geospatial</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM events TABLESAMPLE SYSTEM (10) REPEATABLE (42);</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM events TABLESAMPLE SYSTEM (10) REPEATABLE (42);</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- No TABLESAMPLE
+SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df.sample(frac=0.1, random_state=42)</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT h3_lat_lng_to_cell(lat, lng, 8) FROM points;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT h3_lat_lng_to_cell(lat, lng, 8) FROM points; -- h3 extension</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- No native H3
+-- Use Python h3 library in application</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">import h3
+df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Problem Set — L4 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">HyperLogLog for Daily Active Users</div>
+        <div class="prob-meta">drill · hyperloglog</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T401"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77e">CREATE EXTENSION hll; hll_add_agg()</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">TDigest for API Latency Percentiles</div>
+        <div class="prob-meta">drill · tdigest</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T402"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Compute p50, p95, p99 latency from 10M requests using TDigest.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77f">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtxzk9w77h" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w77h">percentile(t, 0.99)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Continuous Aggregate for 5-min Metrics</div>
+        <div class="prob-meta">drill · continuous-aggregate</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T403"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77i">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzk9w77k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w77k">add_continuous_aggregate_policy</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">KNN Search for Nearest POIs</div>
+        <div class="prob-meta">drill · knn-search</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T404"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Find 10 nearest coffee shops to user location using <-> operator.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77l">geom <-> point</div><button class="reveal-btn" data-target="umtxzk9w77n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w77n">LIMIT 5</div><button class="reveal-btn" data-target="umtxzk9w77p" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzk9w77p">GiST index</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">H3 Hexbin Aggregation</div>
+        <div class="prob-meta">drill · h3-hexbin</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T405"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Aggregate 1M GPS points into H3 resolution 8 hexagons, count per hex.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77q">h3_lat_lng_to_cell(lat, lng, 8)</div><button class="reveal-btn" data-target="umtxzk9w77s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w77s">GROUP BY h3_cell</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Continuous View for Real-Time Dashboard</div>
+        <div class="prob-meta">drill · continuous-view</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T406"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create PipelineDB continuous view for per-minute page views per site.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77t">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtxzk9w77v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w77v">time_bucket('1 minute', ts)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Parallel Spatial Join</div>
+        <div class="prob-meta">drill · parallel-spatial-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T407"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Join 10M buildings with 500k parcels using parallel spatial join.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77w">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzk9w77y" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w77y">enable_parallel_append</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Streaming Percentile with TDigest</div>
+        <div class="prob-meta">drill · tdigest + streaming</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T408"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Maintain streaming p99 latency using TDigest sketch updated per request.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w77z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w77z">tdigest_agg</div><button class="reveal-btn" data-target="umtxzk9w781" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w781">tdigest_union</div><button class="reveal-btn" data-target="umtxzk9w783" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzk9w783">percentile(t, 0.99)</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>HyperLogLog: O(1) memory, ~1-2% error for COUNT(DISTINCT). hll extension.</li><li>TDigest: streaming percentile algorithm, O(1) memory, ~1% error.</li><li>Continuous aggregates (TimescaleDB): auto-refreshed MV with incremental refresh.</li><li>Streaming aggregates: continuous view = materialized + raw tail; PipelineDB/pg_streaming.</li><li>KNN <-> operator: GiST index, O(log N) search, LIMIT for early termination.</li><li>H3 hexagons: hierarchical, equal-area, hierarchical. Res 8=0.7km², Res 10=15km².</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>HyperLogLog</code></td><td>Probabilistic algorithm for approximate distinct count with fixed memory.</td></tr><tr><td style="width:220px;"><code>TDigest</code></td><td>Streaming percentile algorithm with O(1) memory and bounded error.</td></tr><tr><td style="width:220px;"><code>continuous aggregate</code></td><td>TimescaleDB: automatically maintained materialized view with incremental refresh.</td></tr><tr><td style="width:220px;"><code>continuous view</code></td><td>PipelineDB/pg_streaming: real-time view combining materialized history + streaming tail.</td></tr><tr><td style="width:220px;"><code>KNN search</code></td><td>K-Nearest Neighbors via GiST index and <-> operator (PostgreSQL).</td></tr><tr><td style="width:220px;"><code>H3</code></td><td>Uber's hexagonal hierarchical grid system. Equal-area, hierarchical, constant-time neighbor lookup.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: next MODULE</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 09 · L4/EXPERT · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('timeseries-geo_L4');</script>
+</body></html>

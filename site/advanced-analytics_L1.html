@@ -209,28 +209,6 @@ SELECT dept_id,
 FROM employees
 GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- FILTER is PostgreSQL standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: no FILTER; use SUM(CASE...)</span>
 <span class="cm">-- PERCENTILE_CONT/DISC in 8.0+</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div><div class="code-label"><span>ntile</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Quartiles (<span class="num">4</span> buckets)
-SELECT 
-  name,
-  salary,
-  NTILE(<span class="num">4</span>) OVER (ORDER BY salary) AS quartile
-FROM employees;
-
--- Deciles (<span class="num">10</span> buckets)
-SELECT 
-  name,
-  salary,
-  NTILE(<span class="num">10</span>) OVER (ORDER BY salary) AS decile
-FROM employees;
-
--- Per department
-SELECT 
-  dept_id,
-  name,
-  salary,
-  NTILE(<span class="num">4</span>) OVER (PARTITION BY dept_id ORDER BY salary) AS dept_quartile
-FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: NTILE supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="callout warn">NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows.</div>
 
 <div class="code-block">
   <div class="code-label">
@@ -251,7 +229,6 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
         <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
       </div></div></div></div></div>
 </div>
-<div class="callout warn">NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows.</div>
 <div class="quiz-card" data-quiz-key="s3-q332" data-answer="1">
       <div class="quiz-q">percentile_cont(0.5) on [10, 20, 30, 40] returns:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>20</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>25</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>30</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>15</span></div></div>
@@ -275,7 +252,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Create cross-tabulation: departments as rows, quarters as columns, sales as values.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrog5z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrog5z">crosstab() from tablefunc</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w15z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w15z">crosstab() from tablefunc</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -285,7 +262,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       For each customer, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrog60" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrog60">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w160" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w160">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -295,7 +272,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Compute 4-row moving average of daily sales (current + 3 preceding).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrog61" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrog61">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w161" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w161">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -305,7 +282,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Sum of sales for each day + previous 6 days using RANGE.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrog62" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrog62">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w162" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w162">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -315,7 +292,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Assign each employee to a salary quartile (1-4) within their department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrog63" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrog63">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w163" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w163">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -325,7 +302,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Per department: count of active, pending, inactive employees using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrog64" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrog64">COUNT(*) FILTER (WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w164" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w164">COUNT(*) FILTER (WHERE status = 'active')</div></div>
     </div></li></ul>
   </section>
   

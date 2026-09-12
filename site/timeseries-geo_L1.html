@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time-Series & Geospatial — L1 BEGINNER</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="1" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 09</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">time as a dimension — ordering events and locating them in space</span></div>
+  <h1>Time-Series & Geospatial</h1>
+  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="level-strip"><a class="level-pill current" data-lesson="timeseries-geo_L1" href="timeseries-geo_L1.html">BEGINNER</a><a class="level-pill " data-lesson="timeseries-geo_L2" href="timeseries-geo_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="timeseries-geo_L3" href="timeseries-geo_L3.html">ADVANCED</a><a class="level-pill " data-lesson="timeseries-geo_L4" href="timeseries-geo_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — Time as a Dimension</a><a href="#sec-1">02 · Time-Series Fundamentals — Timestamps, Intervals, Granularity</a><a href="#sec-2">03 · Geospatial Fundamentals — Points, Lines, Polygons</a><a href="#sec-3">04 · Spatio-Temporal Queries — Time + Space</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q369" data-answer="0">
+      <div class="quiz-q">A time-series is fundamentally:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>A sequence of data points indexed in time order</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>A spatial dataset with coordinates</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A hierarchical data structure</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A graph with temporal edges</span></div></div>
+      <div class="quiz-explain">A time-series is a sequence of data points collected at successive time intervals, where time is the primary index.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q370" data-answer="3">
+      <div class="quiz-q">Which SQL function extracts the year from a timestamp?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>YEAR(timestamp)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>EXTRACT(YEAR FROM timestamp)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>DATEPART(year, timestamp)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All of the above (dialect dependent)</span></div></div>
+      <div class="quiz-explain">All three work depending on dialect: YEAR() in MySQL, EXTRACT() in PostgreSQL, DATEPART() in SQL Server.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q371" data-answer="0">
+      <div class="quiz-q">What is a geospatial point represented as in PostGIS?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>POINT(longitude latitude)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>POINT(latitude longitude)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>POINT(x y) where x=latitude, y=longitude</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>LATLON(lat, lon)</span></div></div>
+      <div class="quiz-explain">PostGIS uses POINT(longitude latitude) - x=longitude, y=latitude, following the OGC standard.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q372" data-answer="1">
+      <div class="quiz-q">A time-series with regular intervals is called:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Irregular time-series</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Regular time-series</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Sparse time-series</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Dense time-series</span></div></div>
+      <div class="quiz-explain">Regular time-series have observations at consistent, predictable intervals (e.g., hourly sensor readings).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q373" data-answer="0">
+      <div class="quiz-q">Which operation finds the nearest neighbor in geospatial data?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ST_Distance</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ST_DWithin</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ST_Contains</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>ST_Intersects</span></div></div>
+      <div class="quiz-explain">ST_Distance calculates the distance between geometries, commonly used with ORDER BY and LIMIT for nearest neighbor searches.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Mental Model — Time as a Dimension</h2></div>
+    <div class="mantra"><strong>Time-series data adds a temporal dimension to your data — every observation has a 'when' alongside its 'what' and 'where'.</strong></div>
+
+<p>Think of time-series data as a movie rather than a photograph. Each frame has a timestamp, and the sequence reveals patterns — trends, cycles, anomalies — that a single snapshot cannot. Add location, and you get spatio-temporal data: a storm's path, a delivery truck's route, a disease outbreak's spread.</p>
+<ul class="notes"><li>Time is ordered — observations have a natural sequence</li><li>Intervals can be regular (hourly) or irregular (event-driven)</li><li>Spatial data adds geometry: points, lines, polygons</li><li>Spatio-temporal = time-series + geometry per observation</li></ul>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Time-Series Fundamentals — Timestamps, Intervals, Granularity</h2></div>
+    <h3>Timestamp Representations</h3>
+<div><div class="code-label"><span>timestamp types</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- PostgreSQL
+TIMESTAMP           -- no timezone, <span class="num">8</span> bytes
+TIMESTAMPTZ         -- with timezone, <span class="num">8</span> bytes
+DATE                -- date only, <span class="num">4</span> bytes
+
+-- MySQL
+DATETIME            -- no timezone, <span class="num">8</span> bytes
+TIMESTAMP           -- converts to/from UTC, <span class="num">4</span> bytes
+
+-- SQL Server
+DATETIME2           -- high precision, <span class="num">6</span>-<span class="num">8</span> bytes
+DATETIMEOFFSET      -- with timezone offset</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL: TIMESTAMPTZ is preferred for timezone-aware apps</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: TIMESTAMP auto-converts to/from UTC</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Intervals & Granularity</h3>
+<div><div class="code-label"><span>intervals & date math</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- PostgreSQL intervals
+SELECT now() - INTERVAL <span class="st">'1 day'</span>;
+SELECT now() - INTERVAL <span class="st">'3 months'</span>;
+
+-- Date truncation (granularity)
+SELECT date_trunc(<span class="st">'hour'</span>, ts) AS hour_bucket,
+       COUNT(*)
+FROM events
+GROUP BY hour_bucket;
+
+-- Generate series (regular intervals)
+SELECT generate_series(<span class="st">'2024-01-01'</span>::date,
+                        <span class="st">'2024-01-31'</span>::date,
+                        INTERVAL <span class="st">'1 day'</span>) AS day;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- date_trunc truncates to bucket boundary</span>
+<span class="cm">-- generate_series creates regular sequences</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL</span>
+SELECT DATE_SUB(NOW(), INTERVAL <span class="num">1</span> DAY);
+SELECT DATE_TRUNC(<span class="st">'hour'</span>, ts) FROM events;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Hourly Bucket Count</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">HashAggregate</span>
+        <span class="plan-node-meta"> cost=5..7 rows=96 width=40</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>events</code>
+        <span class="plan-node-meta"> cost=0..4 rows=240 width=8</span>
+      </div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s1-q374" data-answer="1">
+      <div class="quiz-q">What does date_trunc('month', '2024-01-15') return?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>2024-01-15 00:00:00</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>2024-01-01 00:00:00</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>2024-02-01 00:00:00</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">date_trunc truncates to the start of the specified unit (month start).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q375" data-answer="0">
+      <div class="quiz-q">A sensor records every 30 seconds. What granularity?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Second-level</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Minute-level</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Hour-level</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Day-level</span></div></div>
+      <div class="quiz-explain">30-second intervals = second-level granularity (sub-minute).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Geospatial Fundamentals — Points, Lines, Polygons</h2></div>
+    <h3>Geometry Types (OGC Standard)</h3>
+<div><div class="code-label"><span>PostGIS geometry types</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Point: single coordinate pair
+SELECT ST_MakePoint(-<span class="num">122.4194</span>, <span class="num">37.7749</span>) AS sf;
+-- LINESTRING: ordered sequence of points
+SELECT ST_MakeLine(ARRAY[ST_MakePoint(<span class="num">0</span>,<span class="num">0</span>), ST_MakePoint(<span class="num">1</span>,<span class="num">1</span>)]);
+-- POLYGON: closed ring (first=last)
+SELECT ST_MakePolygon(ST_GeomFromText(<span class="st">'LINESTRING(0 0, 1 0, 1 1, 0 1, 0 0)'</span>));
+-- MULTI* variants <span class="kw">for</span> collections</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostGIS implements OGC Simple Features</span>
+<span class="cm">-- SRID required for geodesic calculations</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: ST_PointFromText, ST_LineFromText, ST_PolygonFromText</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<h3>Coordinate Systems (SRID)</h3>
+<p>Every geometry has an SRID (Spatial Reference System Identifier). SRID 4326 = WGS 84 (GPS lat/lon). SRID 3857 = Web Mercator (web maps). Always set SRID for distance/area calculations to be meaningful.</p>
+<div><div class="code-label"><span>setting & transforming SRID</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Set SRID on geometry
+SELECT ST_SetSRID(ST_MakePoint(-<span class="num">122.4</span>, <span class="num">37.7</span>), <span class="num">4326</span>);
+
+-- Transform to Web Mercator (meters)
+SELECT ST_Transform(geom, <span class="num">3857</span>);
+
+-- Distance in meters (requires projected CRS)
+SELECT ST_Distance(
+  ST_Transform(a.geom, <span class="num">3857</span>),
+  ST_Transform(b.geom, <span class="num">3857</span>)
+) FROM a, b;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Always use ST_Transform for distance/area</span>
+<span class="cm">-- 4326 = degrees (not meters!)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: ST_SRID, ST_Transform (8.0+)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q376" data-answer="1">
+      <div class="quiz-q">SRID 4326 represents:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Web Mercator projection</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WGS 84 (GPS latitude/longitude)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>UTM Zone 10N</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>State Plane California</span></div></div>
+      <div class="quiz-explain">SRID 4326 = WGS 84 geographic coordinate system (latitude/longitude in degrees).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q377" data-answer="1">
+      <div class="quiz-q">ST_Distance on SRID 4326 returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Meters</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Degrees</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Kilometers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Radians</span></div></div>
+      <div class="quiz-explain">In geographic CRS (4326), ST_Distance returns degrees. Use ST_Transform to a projected CRS (e.g., 3857) for meters.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Spatio-Temporal Queries — Time + Space</h2></div>
+    <h3>Moving Object Trajectories</h3>
+<div><div class="code-label"><span>trajectory as linestring</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Build trajectory from point observations
+SELECT vehicle_id,
+       ST_MakeLine(geom ORDER BY ts) AS trajectory,
+       MIN(ts) AS start_time,
+       MAX(ts) AS end_time
+FROM gps_points
+WHERE vehicle_id = <span class="st">'V123'</span>
+GROUP BY vehicle_id;
+
+-- Segment trajectory by speed
+SELECT ST_Segmentize(trajectory, <span class="num">100</span>) AS segmented
+FROM trajectories;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- ST_MakeLine with ORDER BY creates trajectory</span>
+<span class="cm">-- ST_Length on geography = meters</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: ST_MakeLine not available; use ST_LineFromText on WKT</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Spatio-Temporal Joins</h3>
+<div><div class="code-label"><span>find events near a moving object</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Find sensors within 1km of vehicle at each timestamp
+SELECT s.sensor_id, v.vehicle_id, v.ts
+FROM vehicles v
+JOIN sensors s
+  ON ST_DWithin(
+    ST_Transform(v.geom, <span class="num">3857</span>),
+    ST_Transform(s.geom, <span class="num">3857</span>),
+    <span class="num">1000</span>  -- 1km in meters (<span class="num">3857</span> = meters)
+)
+WHERE v.ts BETWEEN <span class="st">'2024-01-01' AND '2024-01-02'</span>;
+
+-- Time-windowed spatial join
+SELECT * FROM events e
+JOIN sensors s
+  ON ST_DWithin(e.geom, s.geom, <span class="num">500</span>)
+ AND e.ts BETWEEN s.active_from AND s.active_to;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- ST_DWithin with transformed geometries for meter-based distance</span>
+<span class="cm">-- Time window + spatial filter = spatio-temporal join</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: ST_Distance_Sphere for approximate distance</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s3-q378" data-answer="1">
+      <div class="quiz-q">To build a trajectory from GPS points, you need:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ST_MakePoint + GROUP BY</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ST_MakeLine with ORDER BY timestamp</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ST_Collect + GROUP BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>ST_Union + ORDER BY</span></div></div>
+      <div class="quiz-explain">ST_MakeLine with ORDER BY timestamp creates a proper trajectory linestring.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q379" data-answer="1">
+      <div class="quiz-q">Why use ST_Transform to 3857 before ST_Distance?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>3857 is faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>4326 returns degrees; 3857 returns meters</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>3857 is more accurate</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Required by ST_DWithin</span></div></div>
+      <div class="quiz-explain">SRID 4326 uses degrees; 3857 (Web Mercator) uses meters. ST_Distance on 4326 returns degrees.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L1 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Parse and Extract Timestamp Parts</div>
+        <div class="prob-meta">drill · timestamp-extraction</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T101"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      From a TIMESTAMPTZ column, extract year, month, day, hour, and day-of-week.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w670" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w670">EXTRACT(field FROM timestamp)</div><button class="reveal-btn" data-target="umtxzk9w672" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w672">date_trunc('unit', timestamp)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Create Point from Lat/Lon</div>
+        <div class="prob-meta">drill · point-creation</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T102"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create a POINT geometry from longitude -122.4194 and latitude 37.7749 with SRID 4326.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w673" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w673">ST_MakePoint(lon, lat)</div><button class="reveal-btn" data-target="umtxzk9w675" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w675">ST_SetSRID(geom, 4326)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Distance Between Two Points</div>
+        <div class="prob-meta">drill · distance-calculation</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T103"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Calculate distance in meters between two WGS84 points.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w676" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w676">ST_Transform to 3857</div><button class="reveal-btn" data-target="umtxzk9w678" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w678">ST_Distance on geography type</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Points Within Radius</div>
+        <div class="prob-meta">drill · spatial-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T104"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Find all POIs within 500m of a given location.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w679" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w679">ST_DWithin with geography or ST_Transform to 3857</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Hourly Bucketing of Events</div>
+        <div class="prob-meta">drill · time-bucketing</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T105"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Count events per hour for the last 7 days.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w67a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w67a">date_trunc('hour', ts)</div><button class="reveal-btn" data-target="umtxzk9w67c" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w67c">GROUP BY hour_bucket</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Build Trajectory from GPS Points</div>
+        <div class="prob-meta">drill · trajectory-construction</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T106"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create a LINESTRING trajectory from GPS points ordered by timestamp.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w67d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w67d">ST_MakeLine(geom ORDER BY ts)</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>TIMESTAMPTZ vs TIMESTAMP vs DATE — choose based on timezone needs</li><li>date_trunc('unit', ts) truncates to bucket boundary (hour, day, month)</li><li>generate_series creates regular time sequences; date_trunc buckets timestamps</li><li>PostGIS: POINT(lon lat), LINESTRING, POLYGON — SRID 4326 = WGS84</li><li>ST_Distance on geography = meters; on geometry(4326) = degrees</li><li>ST_DWithin + ST_Transform(3857) for meter-based radius searches</li><li>ST_MakeLine(geom ORDER BY ts) builds trajectories from points</li><li>date_trunc + GROUP BY = time bucketing; generate_series = gap filling</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>TIMESTAMPTZ</code></td><td>Timestamp with timezone — stored as UTC, displayed in session timezone.</td></tr><tr><td style="width:220px;"><code>date_trunc</code></td><td>Truncates timestamp to specified precision (hour, day, month, etc.).</td></tr><tr><td style="width:220px;"><code>generate_series</code></td><td>Generates a series of values (dates, numbers) — useful for gap filling.</td></tr><tr><td style="width:220px;"><code>SRID</code></td><td>Spatial Reference System Identifier — defines coordinate system (4326 = WGS84).</td></tr><tr><td style="width:220px;"><code>geography type</code></td><td>PostGIS type for geodesic calculations on sphere (meters, degrees).</td></tr><tr><td style="width:220px;"><code>geometry type</code></td><td>PostGIS type for planar calculations on projected coordinates.</td></tr><tr><td style="width:220px;"><code>ST_DWithin</code></td><td>Returns true if geometries are within specified distance (supports geography).</td></tr><tr><td style="width:220px;"><code>ST_Transform</code></td><td>Converts geometry between coordinate systems (SRIDs).</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L2 INTERVIEW READY file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 09 · L1/BEGINNER · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('timeseries-geo_L1');</script>
+</body></html>

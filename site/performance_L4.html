@@ -288,7 +288,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzgrof5m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzgrof5m">work_mem</div><button class="reveal-btn" data-target="umtxzgrof5o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzgrof5o">min_parallel_table_scan_size</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w05k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w05k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzk9w05m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w05m">work_mem</div><button class="reveal-btn" data-target="umtxzk9w05o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzk9w05o">min_parallel_table_scan_size</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -298,7 +298,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Create MV for daily sales by region with zero-downtime refresh.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w05p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w05p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -308,7 +308,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzgrof5s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzgrof5s">add_continuous_aggregate_policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w05q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w05q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzk9w05s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w05s">add_continuous_aggregate_policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -318,7 +318,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Design incremental daily sales agg using pgoutput logical replication for CDC.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtxzgrof5v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzgrof5v">pgoutput plugin</div><button class="reveal-btn" data-target="umtxzgrof5x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzgrof5x">apply delta to agg table</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w05t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w05t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtxzk9w05v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzk9w05v">pgoutput plugin</div><button class="reveal-btn" data-target="umtxzk9w05x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzk9w05x">apply delta to agg table</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -328,7 +328,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Explain when right-deep join tree enables better parallel aggregate distribution.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzgrof5y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzgrof5y">Build side on right (smaller), probe on left</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9w05y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9w05y">Build side on right (smaller), probe on left</div></div>
     </div></li></ul>
   </section>
   

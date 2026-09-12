@@ -86,7 +86,7 @@
       "title": "Stored Procedures & Functions",
       "subtitle": "CREATE PROCEDURE/FUNCTION, params, returns, transactions, cursors",
       "deps": ["advanced-analytics"],
-      "status": "active"
+      "status": "draft"
     },
     {
       "id": "triggers",
@@ -94,7 +94,7 @@
       "title": "Triggers & Transaction Control",
       "subtitle": "CREATE TRIGGER, BEFORE/AFTER/INSTEAD OF, audit, constraints",
       "deps": ["stored-procs"],
-      "status": "active"
+      "status": "draft"
     }
   ],
   "levels": [
