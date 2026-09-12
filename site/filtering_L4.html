@@ -263,7 +263,7 @@ ANALYZE users;</code></pre>
     </div>
     <div class="prob-body">
       Table users(city, zip_code) — queries filter both. Create extended stats for dependency.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9v81j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9v81j">CREATE STATISTICS s (DEPENDENCIES) ON city, zip_code FROM users;</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznol61j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznol61j">CREATE STATISTICS s (DEPENDENCIES) ON city, zip_code FROM users;</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -273,7 +273,7 @@ ANALYZE users;</code></pre>
     </div>
     <div class="prob-body">
       Create index for WHERE first_name || ' ' || last_name ILIKE 'john%'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9v81k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9v81k">CREATE INDEX ON users ((first_name || ' ' || last_name))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznol61k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznol61k">CREATE INDEX ON users ((first_name || ' ' || last_name))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -283,7 +283,7 @@ ANALYZE users;</code></pre>
     </div>
     <div class="prob-body">
       Create partial index on orders(created_at) WHERE status IN ('shipped','delivered'). Why can't we use NOW()?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9v81l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9v81l">Predicate must be immutable; NOW() is volatile</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznol61l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznol61l">Predicate must be immutable; NOW() is volatile</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -293,7 +293,7 @@ ANALYZE users;</code></pre>
     </div>
     <div class="prob-body">
       status column has 3 values but 90%='active'. Create MCV stats for better estimates.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9v81m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9v81m">CREATE STATISTICS s (MCV) ON status FROM users;</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznol61m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznol61m">CREATE STATISTICS s (MCV) ON status FROM users;</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -303,7 +303,7 @@ ANALYZE users;</code></pre>
     </div>
     <div class="prob-body">
       GROUP BY dept_id, role — planner underestimates groups. Create NDISTINCT stats.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9v81n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9v81n">CREATE STATISTICS s (NDISTINCT) ON dept_id, role FROM employees;</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznol61n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznol61n">CREATE STATISTICS s (NDISTINCT) ON dept_id, role FROM employees;</div></div>
     </div></li></ul>
   </section>
   

@@ -1,0 +1,420 @@
+{
+  "level": 3,
+  "title": "Time-Series & Geospatial",
+  "tagline": "BRIN indexing, downsampling, pre-aggregation, ASOF gaps, dialect mastery",
+  "placementQuiz": [
+    {
+      "q": "Which index is ideal for Append-Only chronological data that is rarely updated in place?",
+      "options": [
+        "Hash index",
+        "BRIN (Block Range INdex)",
+        "Full-text GIN",
+        "No index at all"
+      ],
+      "answer": 1,
+      "explain": "BRIN stores per-block summaries (min/max), tiny and fast for columnar-ordered-by-time data; updates scattered across time degrade it."
+    },
+    {
+      "q": "A materialized view in time-series pipelines mainly solves:",
+      "options": [
+        "Security",
+        "Repeated expensive aggregation over the same historical window",
+        "Data validation",
+        "Referential integrity"
+      ],
+      "answer": 1,
+      "explain": "Pre-aggregation turns repeated heavy GROUP BYs into point queries over stored summaries."
+    },
+    {
+      "q": "ASOF JOIN semantics match two time series by:",
+      "options": [
+        "Exact timestamp equality",
+        "Each row of A pairing with the latest row of B at or before its timestamp",
+        "Rounding timestamps to minutes",
+        "Cross join with a distance cutoff"
+      ],
+      "answer": 1,
+      "explain": "ASOF pairs A's row with B's most recent row whose time key is <= A's — the standard 'attach latest state' operation."
+    },
+    {
+      "q": "Downsampling 1-minute data to 1-hour means:",
+      "options": [
+        "Randomly dropping 59 rows per hour",
+        "Aggregating 60 points into 1 summarizing row per hour",
+        "Indexing only hourly points",
+        "Rounding timestamps up"
+      ],
+      "answer": 1,
+      "explain": "Downsampling reduces resolution by grouping and summarizing (avg/sum/min/max), shrinking storage and speeding scans without losing trend."
+    },
+    {
+      "q": "For a 12-month retention window on append-only logs, which storage path helps the most?",
+      "options": [
+        "Vertical scaling of one table",
+        "Partitioning by month + per-partition indexes",
+        "Adding more columns",
+        "Removing the primary key"
+      ],
+      "answer": 1,
+      "explain": "Time partitioning prunes whole chunks for retention deletion and range queries; the dominant win in production time-series stores."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — Cost, Not Cardinality",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**Beginner SQL optimizes query text; advanced SQL optimizes storage layout. Time-series is a storage problem first, a query problem second.**"
+        },
+        {
+          "type": "prose",
+          "md": "Append-only chronological data has a special shape: rows are written in near-time order and rarely updated. That single fact changes everything — BRIN beats B-tree for scans, partitions beat a single giant heap, and precomputed aggregates beat recomputation. Learn to think: *what does the storage already know about the time order?*"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Time-ordered writes => block-level summaries make sense (BRIN)",
+            "Retention windows => partition pruning beats DELETE + VACUUM",
+            "Repeated analytics => materialize the heavy aggregation",
+            "Point lookups ('latest per id') => a different beast: b-tree / DISTINCT ON"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Indexing Time-Series — BRIN vs B-Tree",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Why B-tree is often the wrong default"
+        },
+        {
+          "type": "prose",
+          "md": "A B-tree on ts gives fast point and range lookups but its leaf pages grow with every insert, and on a 10B-row table the tree is deep and cache-hostile. BRIN instead records, per 128-page block range, the min and max ts. For a range query the planner skips whole ranges with no match — reading only the ranges that intersect your window."
+        },
+        {
+          "type": "code",
+          "label": "BRIN vs B-Tree",
+          "code": "-- Block Range Index on append-only time column\nCREATE INDEX events_ts_brin ON events\n  USING brin (ts) WITH (pages_per_range = 128);\n\n-- B-tree for comparison (point / eq / prefix lookups)\nCREATE INDEX events_ts_btree ON events USING btree (ts);\n\n-- Inspect sizes: BRIN is tens of KB on a 100 GB table\n-- vs B-tree at tens of MB and climbing on every write\nSELECT pg_relation_size('events_ts_brin')  AS brin_bytes,\n       pg_relation_size('events_ts_btree') AS btree_bytes;",
+          "pg": "-- BRIN shines on >1B rows, append-heavy, time-ordered\n-- Brin: pages_per_range trades index size vs scan selectivity",
+          "mysql": "-- MySQL: no BRIN. Clustered PK on time + partition pruning mimics it",
+          "py-pandas": "# pandas has no index-assisted block skipping here;\n# the analogue is parquet row-group min/max stats at file level\nimport pyarrow.parquet as pq"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — BRIN range scan on 1B rows",
+          "plan": {
+            "Plan": {
+              "Node Type": "Bitmap Heap Scan",
+              "Relation Name": "events",
+              "Startup Cost": 30.00,
+              "Total Cost": 8000.00,
+              "Plan Rows": 1200000,
+              "Plan Width": 24,
+              "Recheck Cond": "(ts >= '2024-01-01'::timestamptz AND ts < '2024-02-01'::timestamptz)",
+              "Actual Startup Time": 50.0,
+              "Actual Total Time": 700.0,
+              "Actual Rows": 1184453,
+              "Actual Loops": 1,
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Index Scan",
+                  "Relation Name": "events_ts_brin",
+                  "Startup Cost": 0.00,
+                  "Total Cost": 25.00,
+                  "Plan Rows": 1200000,
+                  "Plan Width": 0,
+                  "Index Cond": "(ts >= '2024-01-01'::timestamptz AND ts < '2024-02-01'::timestamptz)"
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**BRIN degrades if rows are inserted out of time order** (backfilled history, imports, reindex). Reordering or partitioning per time chunk keeps block summaries honest."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "BRIN indexes are most effective when:",
+              "options": [
+                "Rows are randomly distributed by key",
+                "Rows arrive roughly time-ordered and are rarely updated",
+                "The table is small",
+                "The lookup key is a UUID"
+              ],
+              "answer": 1,
+              "explain": "Block-range min/max summaries only help when similar keys cluster in the same blocks — true for append-ordered time data."
+            },
+            {
+              "q": "A BRIN scan skips a block range when:",
+              "options": [
+                "The range is locked",
+                "The range's recorded min/max does not overlap the WHERE window",
+                "The range has no index entries",
+                "The range exceeds pages_per_range"
+              ],
+              "answer": 1,
+              "explain": "Pruning is exactly that: the planner checks each range's min/max against the predicate and discards non-overlapping ranges."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Downsampling & Pre-aggregation at Scale",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Rollup tables & continuous aggregates"
+        },
+        {
+          "type": "code",
+          "label": "hourly rollup materialized view",
+          "code": "-- Materialized hourly rollup (12 months retention)\nCREATE MATERIALIZED VIEW hourly_metric AS\nSELECT date_trunc('hour', ts) AS hour_bucket,\n       entity_id,\n       COUNT(*)    AS n,\n       SUM(value)  AS sum,\n       MIN(value)  AS min,\n       MAX(value)  AS max,\n       AVG(value)  AS avg\nFROM raw_metric\nWHERE ts > now() - INTERVAL '12 months'\nGROUP BY 1, 2;\n\n-- Refresh per hour (incremental vs full rewrite — see note)\nREFRESH MATERIALIZED VIEW CONCURRENTLY hourly_metric;",
+          "pg": "-- REFRESH CONCURRENTLY needs a unique index on the matview\n-- TimescaleDB: CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)",
+          "mysql": "-- MySQL: no materialized views; schedule INSERT ... SELECT\n-- into a rollup table, or use a scheduled event",
+          "py-pandas": "hourly = (df.set_index('ts')\n            .resample('1h')\n            .agg(n=('value','size'),\n                 sum=('value','sum'),\n                 min=('value','min'),\n                 max=('value','max'))\n            .reset_index())"
+        },
+        {
+          "type": "heading",
+          "text": "Pre-filter before you aggregate"
+        },
+        {
+          "type": "code",
+          "label": "two-stage filter",
+          "code": "-- 1) Coarse window filter on a tiny index/column\n-- 2) Precise predicate only inside the window\nSELECT date_trunc('day', ts) AS day_bucket, AVG(value)\nFROM events\nWHERE ts >= now() - INTERVAL '90 days'\n  AND ts <  now()             -- coarse\n  AND value IS NOT NULL       -- precise\nGROUP BY day_bucket;",
+          "pg": "-- planner orders filters by cost; make coarse cheap",
+          "mysql": "-- same principle: push the partitioning predicate first",
+          "py-pandas": "mask = (df['ts'] >= end - pd.Timedelta('90D')) & df['value'].notna()\ndf[mask].set_index('ts').resample('1D')['value'].mean()"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "Rule of thumb: **materialize the summary the analyst asks for every week, not the one they ask for once.** Rollups pay for themselves on the 2nd repeated query."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "A rollup view storing COUNT/SUM/MIN/MAX per hour:",
+              "options": [
+                "Cannot answer AVG per day",
+                "Can answer AVG per day via SUM/COUNT aggregates",
+                "Loses all ability to filter",
+                "Must store raw rows too"
+              ],
+              "answer": 1,
+              "explain": "SUM(SUM) / SUM(COUNT) reconstructs a weighted average — keeping sufficient statistics enables higher-level rollups."
+            },
+            {
+              "q": "REFRESH MATERIALIZED VIEW CONCURRENTLY requires:",
+              "options": [
+                "A primary key on the base table",
+                "A unique index on the materialized view",
+                "The view to be a view, not a table",
+                "PostgreSQL 9.0"
+              ],
+              "answer": 1,
+              "explain": "Concurrent refresh tracks changed rows via a unique index on the matview so locks don't block readers."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Advanced Gap Filling & ASOF Joins",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "ASOF: attach the latest known state"
+        },
+        {
+          "type": "code",
+          "label": "ASOF join via DISTINCT ON",
+          "code": "-- For each price tick, attach the latest rate at or before it\nWITH prices AS (\n  SELECT ts, price FROM trades\n), rates AS (\n  SELECT ts AS rate_ts, rate FROM fx_rates\n)\nSELECT DISTINCT ON (p.ts)\n  p.ts, p.price,\n  r.rate\nFROM prices p\nLEFT JOIN rates r ON r.rate_ts <= p.ts\nORDER BY p.ts, r.rate_ts DESC;",
+          "pg": "-- DISTINCT ON picks the closest preceding rate row\n-- PostgreSQL's classic ASOF; kysoh/join-expansion for big data",
+          "mysql": "-- MySQL: correlated scalar subquery\nSELECT p.ts, p.price,\n  (SELECT r.rate FROM fx_rates r\n   WHERE r.rate_ts <= p.ts ORDER BY r.rate_ts DESC LIMIT 1) AS rate\nFROM trades p;",
+          "py-pandas": "# pandas merge_asof\nimport pandas as pd\nmerge_asof(prices.sort_values('ts'), rates.sort_values('ts'),\n           on='ts', direction='backward')"
+        },
+        {
+          "type": "heading",
+          "text": "Interpolate: not just carry, estimate"
+        },
+        {
+          "type": "code",
+          "label": "linear interpolation",
+          "code": "-- Linear interpolation between surrounding observations\n-- (weighted split of the interval by time distance)\nWITH filled AS (\n  SELECT\n    ts,\n    value,\n    LAG(value IGNORE NULLS)  OVER (ORDER BY ts) AS prev_val,\n    LAG(ts     IGNORE NULLS)  OVER (ORDER BY ts) AS prev_ts,\n    LEAD(value IGNORE NULLS) OVER (ORDER BY ts) AS next_val,\n    LEAD(ts     IGNORE NULLS) OVER (ORDER BY ts) AS next_ts\n  FROM measurements\n)\nSELECT\n  ts,\n  value,\n  COALESCE(value,\n    prev_val + (next_val - prev_val) *\n      (EXTRACT(EPOCH FROM (ts - prev_ts)) /\n       EXTRACT(EPOCH FROM (next_ts - prev_ts)))\n  ) AS interp\nFROM filled;",
+          "pg": "-- IGNORE NULLS lets LAG skip NULLs (PG 10+)",
+          "mysql": "-- MySQL: fill via correlated subqueries to next/prev non-null",
+          "py-pandas": "df['interp'] = df['value'].interpolate(method='linear', limit_direction='both')"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "Interpolation assumes continuity; ASOF assumes 'latest state applies'. **Pick by domain.** Financial rates are usually ASOF; temperature is usually linear. Encoding the wrong assumption invalidates the model downstream."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "merge_asof(direction='backward') is the pandas sibling of:",
+              "options": [
+                "RANGE window frame",
+                "The SQL ASOF join (latest on-or-before)",
+                "LOCF on a single series",
+                "A cross join"
+              ],
+              "answer": 1,
+              "explain": "Both pair each A-row with the most recent B-row whose key is <=; pandas names it direction='backward'."
+            },
+            {
+              "q": "DISTINCT ON (p.ts) ... ORDER BY p.ts, r.rate_ts DESC picks:",
+              "options": [
+                "The earliest rate row",
+                "The latest rate row at or before p.ts",
+                "A random rate row",
+                "The largest value rate"
+              ],
+              "answer": 1,
+              "explain": "DISTINCT ON keeps the first row per p.ts after ORDER BY sorts rates newest-first within the on-or-before set."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Dialect Mastery — Time-Series & Geospatial",
+      "blocks": [
+        {
+          "type": "dialect-diff",
+          "sql": "SELECT date_trunc('hour', ts) AS h, COUNT(*) FROM events GROUP BY h;",
+          "pg": "SELECT date_trunc('hour', ts) AS h, COUNT(*) FROM events GROUP BY h;",
+          "mysql": "SELECT DATE_FORMAT(ts, '%Y-%m-%d %H:00:00') AS h, COUNT(*) FROM events GROUP BY h;",
+          "py-pandas": "df.set_index('ts').resample('1H').size().rename('count')",
+          "py-sqlalchemy": "# sqlalchemy: func.date_trunc('hour', ts) / DATE_FORMAT for mysql\nselect(func.date_trunc('hour', Events.ts).label('h'), func.count().label('count')).group_by('h')"
+        },
+        {
+          "type": "dialect-diff",
+          "sql": "-- nearest neighbor by distance (ANSI: full sort)\nSELECT id FROM pois ORDER BY distance(point) LIMIT 5;",
+          "pg": "SELECT id FROM pois ORDER BY geom <-> :p LIMIT 5; -- GiST KNN",
+          "mysql": "SELECT id FROM pois ORDER BY ST_Distance_Sphere(geom, :p) LIMIT 5;",
+          "py-pandas": "# GeoPandas sindex.nearest\nidx = pois.sindex.nearest(point, num_results=5)\npois.iloc[idx]",
+          "py-sqlalchemy": "# sqlalchemy func.sqla_utils: direct ORDER BY expression or raw\nfunc.st_distancesphere(Pois.geom, p)"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Which dialect-family performs KNN via <-> (GiST)?",
+              "options": [
+                "MySQL only",
+                "PostgreSQL only",
+                "ANSI standard",
+                "SQL Server"
+              ],
+              "answer": 1,
+              "explain": "The <-> operator is a PostGIS/PostgreSQL native — other engines need explicit distance-sorted plans."
+            },
+            {
+              "q": "MySQL's bucket label for an hour is made with:",
+              "options": [
+                "date_trunc('hour', ts)",
+                "DATE_FORMAT(ts, '%Y-%m-%d %H:00:00')",
+                "HOUR(ts) || ':00'",
+                "CAST(ts AS HOUR)"
+              ],
+              "answer": 1,
+              "explain": "DATE_FORMAT renders a string bucket; it prevents index usage, so combine with a date range predicate for pruning."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L3 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "T301",
+              "tier": 3,
+              "title": "BRIN vs B-tree benchmark",
+              "platform": "drill",
+              "patterns": ["indexing", "brin"],
+              "statement": "On a 500M-row append-only events table, justify when you would choose BRIN over B-tree for the ts column, and write the DDL. Include a pages_per_range trade-off note.",
+              "hints": ["page_range=128 default", "BRIN size vs selectivity", "out-of-order inserts break summaries"]
+            },
+            {
+              "id": "T302",
+              "tier": 3,
+              "title": "Hourly+monthly rollup ladder",
+              "platform": "drill",
+              "patterns": ["rollup", "materialized-view"],
+              "statement": "Design a two-level rollup (hourly from raw, monthly from hourly) that preserves enough statistics to answer AVG per day and SUM per month. Provide the two CREATE MATERIALIZED VIEW statements.",
+              "hints": ["carry COUNT/SUM/MIN/MAX", "weighted average: SUM(SUM)/SUM(COUNT)", "refresh cadence chaining"]
+            },
+            {
+              "id": "T303",
+              "tier": 3,
+              "title": "ASOF trade-rate attach",
+              "platform": "drill",
+              "patterns": ["asof", "distinct-on"],
+              "statement": "Attach the latest fx rate at-or-before each of 1M trades without a cross join. Write the pg version and the MySQL fallback, and explain the cost of the scalar-subquery form.",
+              "hints": ["DISTINCT ON (t.ts) ORDER BY r.rate_ts DESC", "correlated subquery reruns per row", "index fx_rates(rate_ts)"]
+            },
+            {
+              "id": "T304",
+              "tier": 3,
+              "title": "Seasonal bucketing with correct boundaries",
+              "platform": "drill",
+              "patterns": ["bucketing", "timezone"],
+              "statement": "Aggregate sales by local-business-day (America/Los_Angeles) from a UTC timestamptz column. Write the bucket expression using AT TIME ZONE and explain the DST edge cases.",
+              "hints": ["ts AT TIME ZONE 'America/Los_Angeles'", "midnight rollover vs UTC midnight", "store local date alongside events to avoid drift"]
+            },
+            {
+              "id": "T305",
+              "tier": 3,
+              "title": "Interpolate with fade between probes",
+              "platform": "drill",
+              "patterns": ["interpolation", "gaps"],
+              "statement": "For a 3-probe gap, produce estimated values at each missing 5-minute slot as a weighted blend of surrounding readings, using the time-distance weights shown in the linear interpolation example.",
+              "hints": ["LAG/LEAD ... IGNORE NULLS to neighbors", "epoch seconds for weights", "single expression, no plpgsql"]
+            },
+            {
+              "id": "T306",
+              "tier": 3,
+              "title": "Partition monthly retention delete",
+              "platform": "drill",
+              "patterns": ["partitioning", "retention"],
+              "statement": "Events kept 12 months, 200M rows/month. Design monthly range partitioning so retention deletion is a DROP of a partition, and the identical age window 'last 6 months' never scans old partitions.",
+              "hints": ["PARTITION BY RANGE (ts)", "detach + drop oldest", "partition pruning by quals in WHERE"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "BRIN (block-range min/max) beats B-tree for scans on append-ordered time data; breaks on out-of-order inserts.",
+    "Storage layout decides query speed: partition by time, index per partition, keep columns narrow.",
+    "Rollups: materialize hourly from raw, monthly from hourly; carry COUNT/SUM/MIN/MAX so higher levels stay derivable.",
+    "ASOF = attach latest on-or-before state; DISTINCT ON in pg, correlated subquery in MySQL, merge_asof in pandas.",
+    "Interpolation vs ASOF is a domain decision — continuity vs 'latest state applies'.",
+    "Dialect gaps: date_trunc (pg) vs DATE_FORMAT (mysql) vs resample (pandas); KNN <-> is pg-only."
+  ],
+  "glossary": [
+    { "term": "BRIN", "def": "Block Range INdex storing per-range min/max; compact scans for naturally time-sorted data." },
+    { "term": "pages_per_range", "def": "BRIN tuning knob = blocks summarized per index entry; higher = smaller index, coarser pruning." },
+    { "term": "ASOF join", "def": "Joins each A-row to the latest B-row with key <= A's, attaching the 'current state'." },
+    { "term": "Rollup", "def": "Precomputed aggregate table reducing raw volume into summaries at coarser granularity." },
+    { "term": "Partition pruning", "def": "Planner dropping irrelevant partitions from a range-partitioned table based on WHERE quals." },
+    { "term": "merge_asof", "def": "pandas function implementing backward/forward ASOF semantics with log10 tolerance." }
+  ]
+}

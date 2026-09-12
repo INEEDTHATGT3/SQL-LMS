@@ -339,7 +339,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       LATERAL join on orders table with LIMIT 1. Design index for optimal performance.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vu4n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vu4n">CREATE INDEX ON orders (emp_id, order_date DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolt4n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolt4n">CREATE INDEX ON orders (emp_id, order_date DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -349,7 +349,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       Explain Working Table vs Recursive Table in PostgreSQL recursive CTE execution.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vu4o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vu4o">Working table = previous iteration; Recursive table = accumulated results</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolt4o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolt4o">Working table = previous iteration; Recursive table = accumulated results</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -359,7 +359,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       EXPLAIN shows CTE Scan startup=1000, total=1500. Explain components.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vu4p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vu4p">Startup = materialization; Run = scan of materialized results</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolt4p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolt4p">Startup = materialization; Run = scan of materialized results</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -369,7 +369,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       CTE with NOT MATERIALIZED + outer WHERE. Explain pushdown conditions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vu4q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vu4q">No volatile, no LIMIT, single ref, safe to inline</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolt4q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolt4q">No volatile, no LIMIT, single ref, safe to inline</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -379,7 +379,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       Compare MySQL QUALIFY vs PostgreSQL CTE for filtering ROW_NUMBER() results.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vu4r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vu4r">QUALIFY filters without CTE; CTE required in PG</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolt4r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolt4r">QUALIFY filters without CTE; CTE required in PG</div></div>
     </div></li></ul>
   </section>
   

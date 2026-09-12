@@ -249,7 +249,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Find employees earning more than the company average salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vr43" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vr43">WHERE salary > (SELECT AVG(salary) FROM employees)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolp43" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolp43">WHERE salary > (SELECT AVG(salary) FROM employees)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -259,7 +259,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Find departments that have at least one employee.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vr44" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vr44">EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolp44" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolp44">EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -269,7 +269,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Find employees who have never placed an order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vr45" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vr45">NOT EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolp45" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolp45">NOT EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -279,7 +279,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Show employees who earn the maximum salary in their department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vr46" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vr46">WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolp46" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolp46">WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -289,7 +289,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Use CTE to compute avg salary per department, then show departments above 75000.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vr47" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vr47">WITH dept_avg AS (...) SELECT * FROM dept_avg WHERE avg_sal > 75000</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolp47" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolp47">WITH dept_avg AS (...) SELECT * FROM dept_avg WHERE avg_sal > 75000</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -299,7 +299,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Employees whose department is active (status='active' in departments).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vr48" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vr48">WHERE dept_id IN (SELECT id FROM departments WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolp48" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolp48">WHERE dept_id IN (SELECT id FROM departments WHERE status = 'active')</div></div>
     </div></li></ul>
   </section>
   

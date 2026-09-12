@@ -251,7 +251,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Compute 3-period moving average of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vo3s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vo3s">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolm3s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolm3s">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -261,7 +261,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Running sum of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vo3t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vo3t">SUM(rn) OVER (ORDER BY rn)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolm3t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolm3t">SUM(rn) OVER (ORDER BY rn)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -271,7 +271,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vo3u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vo3u">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolm3u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolm3u">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -281,7 +281,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vo3v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vo3v">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolm3v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolm3v">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -291,7 +291,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Rank employees by their running total of salary (ordered by hire_date).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vo3w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vo3w">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolm3w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolm3w">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -301,7 +301,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vo3x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vo3x">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolm3x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolm3x">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
     </div></li></ul>
   </section>
   

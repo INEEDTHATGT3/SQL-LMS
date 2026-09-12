@@ -263,7 +263,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Create a B-tree index on employees.salary to speed up range queries.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9uxe" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9uxe">CREATE INDEX idx_emp_salary ON employees (salary);</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznokwe" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznokwe">CREATE INDEX idx_emp_salary ON employees (salary);</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -273,7 +273,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Create composite index for queries filtering by dept_id then ordering by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9uxf" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9uxf">Column order matters: equality first (dept_id), then range (salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznokwf" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznokwf">Column order matters: equality first (dept_id), then range (salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -283,7 +283,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       90% of queries filter status='active'. Create partial index on salary for active employees only.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9uxg" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9uxg">WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznokwg" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznokwg">WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -293,7 +293,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Query: SELECT name, salary FROM employees WHERE salary > 50000. Create covering index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9uxh" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9uxh">INCLUDE (name) in PostgreSQL; (salary, name) in MySQL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznokwh" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznokwh">INCLUDE (name) in PostgreSQL; (salary, name) in MySQL</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -303,7 +303,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Run EXPLAIN ANALYZE on: SELECT * FROM employees WHERE dept_id = 3 AND salary > 60000. Note: Seq Scan vs Index Scan, actual rows.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9uxi" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9uxi">EXPLAIN (ANALYZE, BUFFERS) ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznokwi" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznokwi">EXPLAIN (ANALYZE, BUFFERS) ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -313,7 +313,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Query: SELECT * FROM employees WHERE LOWER(email) = 'alice@company.com'. Create index to support this.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9uxj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9uxj">Functional index on LOWER(email)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznokwj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznokwj">Functional index on LOWER(email)</div></div>
     </div></li></ul>
   </section>
   

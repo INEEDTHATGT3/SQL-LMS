@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time-Series & Geospatial — L3 ADVANCED</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="3" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 09</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">BRIN indexing, downsampling, pre-aggregation, ASOF gaps, dialect mastery</span></div>
+  <h1>Time-Series & Geospatial</h1>
+  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="timeseries-geo_L1" href="timeseries-geo_L1.html">BEGINNER</a><a class="level-pill " data-lesson="timeseries-geo_L2" href="timeseries-geo_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="timeseries-geo_L3" href="timeseries-geo_L3.html">ADVANCED</a><a class="level-pill " data-lesson="timeseries-geo_L4" href="timeseries-geo_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — Cost, Not Cardinality</a><a href="#sec-1">02 · Indexing Time-Series — BRIN vs B-Tree</a><a href="#sec-2">03 · Downsampling & Pre-aggregation at Scale</a><a href="#sec-3">04 · Advanced Gap Filling & ASOF Joins</a><a href="#sec-4">05 · Dialect Mastery — Time-Series & Geospatial</a><a href="#sec-5">06 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q393" data-answer="1">
+      <div class="quiz-q">Which index is ideal for Append-Only chronological data that is rarely updated in place?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Hash index</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>BRIN (Block Range INdex)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Full-text GIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No index at all</span></div></div>
+      <div class="quiz-explain">BRIN stores per-block summaries (min/max), tiny and fast for columnar-ordered-by-time data; updates scattered across time degrade it.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q394" data-answer="1">
+      <div class="quiz-q">A materialized view in time-series pipelines mainly solves:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Security</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Repeated expensive aggregation over the same historical window</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Data validation</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Referential integrity</span></div></div>
+      <div class="quiz-explain">Pre-aggregation turns repeated heavy GROUP BYs into point queries over stored summaries.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q395" data-answer="1">
+      <div class="quiz-q">ASOF JOIN semantics match two time series by:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exact timestamp equality</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Each row of A pairing with the latest row of B at or before its timestamp</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Rounding timestamps to minutes</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Cross join with a distance cutoff</span></div></div>
+      <div class="quiz-explain">ASOF pairs A's row with B's most recent row whose time key is <= A's — the standard 'attach latest state' operation.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q396" data-answer="1">
+      <div class="quiz-q">Downsampling 1-minute data to 1-hour means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Randomly dropping 59 rows per hour</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Aggregating 60 points into 1 summarizing row per hour</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Indexing only hourly points</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Rounding timestamps up</span></div></div>
+      <div class="quiz-explain">Downsampling reduces resolution by grouping and summarizing (avg/sum/min/max), shrinking storage and speeding scans without losing trend.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q397" data-answer="1">
+      <div class="quiz-q">For a 12-month retention window on append-only logs, which storage path helps the most?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Vertical scaling of one table</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Partitioning by month + per-partition indexes</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Adding more columns</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Removing the primary key</span></div></div>
+      <div class="quiz-explain">Time partitioning prunes whole chunks for retention deletion and range queries; the dominant win in production time-series stores.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Mental Model — Cost, Not Cardinality</h2></div>
+    <div class="mantra"><strong>Beginner SQL optimizes query text; advanced SQL optimizes storage layout. Time-series is a storage problem first, a query problem second.</strong></div>
+<p>Append-only chronological data has a special shape: rows are written in near-time order and rarely updated. That single fact changes everything — BRIN beats B-tree for scans, partitions beat a single giant heap, and precomputed aggregates beat recomputation. Learn to think: *what does the storage already know about the time order?*</p>
+<ul class="notes"><li>Time-ordered writes => block-level summaries make sense (BRIN)</li><li>Retention windows => partition pruning beats DELETE + VACUUM</li><li>Repeated analytics => materialize the heavy aggregation</li><li>Point lookups ('latest per id') => a different beast: b-tree / DISTINCT ON</li></ul>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Indexing Time-Series — BRIN vs B-Tree</h2></div>
+    <h3>Why B-tree is often the wrong default</h3>
+<p>A B-tree on ts gives fast point and range lookups but its leaf pages grow with every insert, and on a 10B-row table the tree is deep and cache-hostile. BRIN instead records, per 128-page block range, the min and max ts. For a range query the planner skips whole ranges with no match — reading only the ranges that intersect your window.</p>
+<div><div class="code-label"><span>BRIN vs B-Tree</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Block Range Index on append-only time column
+CREATE INDEX events_ts_brin ON events
+  USING brin (ts) WITH (pages_per_range = <span class="num">128</span>);
+
+-- B-tree <span class="kw">for</span> comparison (point / eq / prefix lookups)
+CREATE INDEX events_ts_btree ON events USING btree (ts);
+
+-- Inspect sizes: BRIN is tens of KB on a <span class="num">100</span> GB table
+-- vs B-tree at tens of MB and climbing on every write
+SELECT pg_relation_size(<span class="st">'events_ts_brin'</span>)  AS brin_bytes,
+       pg_relation_size(<span class="st">'events_ts_btree'</span>) AS btree_bytes;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- BRIN shines on >1B rows, append-heavy, time-ordered</span>
+<span class="cm">-- Brin: pages_per_range trades index size vs scan selectivity</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no BRIN. Clustered PK on time + partition pruning mimics it</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — BRIN range scan on 1B rows</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Bitmap Heap Scan</span> on <code>events</code>
+        <span class="plan-node-meta"> cost=30..8000 rows=1200000 width=24 actual time=50..700 actual rows=1184453 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Recheck Cond: (ts >= '2024-01-01'::timestamptz AND ts < '2024-02-01'::timestamptz)</div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Bitmap Index Scan</span> on <code>events_ts_brin</code>
+        <span class="plan-node-meta"> cost=0..25 rows=1200000 width=0</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (ts >= '2024-01-01'::timestamptz AND ts < '2024-02-01'::timestamptz)</div></div></div></div>
+</div>
+<div class="callout warn"><strong>BRIN degrades if rows are inserted out of time order</strong> (backfilled history, imports, reindex). Reordering or partitioning per time chunk keeps block summaries honest.</div>
+<div class="quiz-card" data-quiz-key="s1-q398" data-answer="1">
+      <div class="quiz-q">BRIN indexes are most effective when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Rows are randomly distributed by key</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Rows arrive roughly time-ordered and are rarely updated</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>The table is small</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>The lookup key is a UUID</span></div></div>
+      <div class="quiz-explain">Block-range min/max summaries only help when similar keys cluster in the same blocks — true for append-ordered time data.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q399" data-answer="1">
+      <div class="quiz-q">A BRIN scan skips a block range when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>The range is locked</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>The range's recorded min/max does not overlap the WHERE window</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>The range has no index entries</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>The range exceeds pages_per_range</span></div></div>
+      <div class="quiz-explain">Pruning is exactly that: the planner checks each range's min/max against the predicate and discards non-overlapping ranges.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Downsampling & Pre-aggregation at Scale</h2></div>
+    <h3>Rollup tables & continuous aggregates</h3>
+<div><div class="code-label"><span>hourly rollup materialized view</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Materialized hourly rollup (<span class="num">12</span> months retention)
+CREATE MATERIALIZED VIEW hourly_metric AS
+SELECT date_trunc(<span class="st">'hour'</span>, ts) AS hour_bucket,
+       entity_id,
+       COUNT(*)    AS n,
+       SUM(value)  AS sum,
+       MIN(value)  AS min,
+       MAX(value)  AS max,
+       AVG(value)  AS avg
+FROM raw_metric
+WHERE ts > now() - INTERVAL <span class="st">'12 months'</span>
+GROUP BY <span class="num">1</span>, <span class="num">2</span>;
+
+-- Refresh per hour (incremental vs full rewrite — see note)
+REFRESH MATERIALIZED VIEW CONCURRENTLY hourly_metric;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- REFRESH CONCURRENTLY needs a unique index on the matview</span>
+<span class="cm">-- TimescaleDB: CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no materialized views; schedule INSERT ... SELECT</span>
+<span class="cm">-- into a rollup table, or use a scheduled event</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Pre-filter before you aggregate</h3>
+<div><div class="code-label"><span>two-stage filter</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- <span class="num">1</span>) Coarse window filter on a tiny index/column
+-- <span class="num">2</span>) Precise predicate only inside the window
+SELECT date_trunc(<span class="st">'day'</span>, ts) AS day_bucket, AVG(value)
+FROM events
+WHERE ts >= now() - INTERVAL <span class="st">'90 days'</span>
+  AND ts <  now()             -- coarse
+  AND value IS NOT NULL       -- precise
+GROUP BY day_bucket;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- planner orders filters by cost; make coarse cheap</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- same principle: push the partitioning predicate first</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue">Rule of thumb: <strong>materialize the summary the analyst asks for every week, not the one they ask for once.</strong> Rollups pay for themselves on the 2nd repeated query.</div>
+<div class="quiz-card" data-quiz-key="s2-q400" data-answer="1">
+      <div class="quiz-q">A rollup view storing COUNT/SUM/MIN/MAX per hour:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Cannot answer AVG per day</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Can answer AVG per day via SUM/COUNT aggregates</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Loses all ability to filter</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Must store raw rows too</span></div></div>
+      <div class="quiz-explain">SUM(SUM) / SUM(COUNT) reconstructs a weighted average — keeping sufficient statistics enables higher-level rollups.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q401" data-answer="1">
+      <div class="quiz-q">REFRESH MATERIALIZED VIEW CONCURRENTLY requires:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>A primary key on the base table</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>A unique index on the materialized view</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>The view to be a view, not a table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>PostgreSQL 9.0</span></div></div>
+      <div class="quiz-explain">Concurrent refresh tracks changed rows via a unique index on the matview so locks don't block readers.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Advanced Gap Filling & ASOF Joins</h2></div>
+    <h3>ASOF: attach the latest known state</h3>
+<div><div class="code-label"><span>ASOF join via DISTINCT ON</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- For each price tick, attach the latest rate at or before it
+WITH prices AS (
+  SELECT ts, price FROM trades
+), rates AS (
+  SELECT ts AS rate_ts, rate FROM fx_rates
+)
+SELECT DISTINCT ON (p.ts)
+  p.ts, p.price,
+  r.rate
+FROM prices p
+LEFT JOIN rates r ON r.rate_ts <= p.ts
+ORDER BY p.ts, r.rate_ts DESC;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- DISTINCT ON picks the closest preceding rate row</span>
+<span class="cm">-- PostgreSQL's classic ASOF; kysoh/join-expansion for big data</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: correlated scalar subquery</span>
+SELECT p.ts, p.price,
+  (SELECT r.rate FROM fx_rates r
+   WHERE r.rate_ts <= p.ts ORDER BY r.rate_ts DESC LIMIT <span class="num">1</span>) AS rate
+FROM trades p;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Interpolate: not just carry, estimate</h3>
+<div><div class="code-label"><span>linear interpolation</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Linear interpolation between surrounding observations
+-- (weighted split of the interval by time distance)
+WITH filled AS (
+  SELECT
+    ts,
+    value,
+    LAG(value IGNORE NULLS)  OVER (ORDER BY ts) AS prev_val,
+    LAG(ts     IGNORE NULLS)  OVER (ORDER BY ts) AS prev_ts,
+    LEAD(value IGNORE NULLS) OVER (ORDER BY ts) AS next_val,
+    LEAD(ts     IGNORE NULLS) OVER (ORDER BY ts) AS next_ts
+  FROM measurements
+)
+SELECT
+  ts,
+  value,
+  COALESCE(value,
+    prev_val + (next_val - prev_val) *
+      (EXTRACT(EPOCH FROM (ts - prev_ts)) /
+       EXTRACT(EPOCH FROM (next_ts - prev_ts)))
+  ) AS interp
+FROM filled;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- IGNORE NULLS lets LAG skip NULLs (PG 10+)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: fill via correlated subqueries to next/prev non-null</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">Interpolation assumes continuity; ASOF assumes 'latest state applies'. <strong>Pick by domain.</strong> Financial rates are usually ASOF; temperature is usually linear. Encoding the wrong assumption invalidates the model downstream.</div>
+<div class="quiz-card" data-quiz-key="s3-q402" data-answer="1">
+      <div class="quiz-q">merge_asof(direction='backward') is the pandas sibling of:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>RANGE window frame</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>The SQL ASOF join (latest on-or-before)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>LOCF on a single series</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A cross join</span></div></div>
+      <div class="quiz-explain">Both pair each A-row with the most recent B-row whose key is <=; pandas names it direction='backward'.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q403" data-answer="1">
+      <div class="quiz-q">DISTINCT ON (p.ts) ... ORDER BY p.ts, r.rate_ts DESC picks:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>The earliest rate row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>The latest rate row at or before p.ts</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A random rate row</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>The largest value rate</span></div></div>
+      <div class="quiz-explain">DISTINCT ON keeps the first row per p.ts after ORDER BY sorts rates newest-first within the on-or-before set.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Dialect Mastery — Time-Series & Geospatial</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT date_trunc('hour', ts) AS h, COUNT(*) FROM events GROUP BY h;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT date_trunc('hour', ts) AS h, COUNT(*) FROM events GROUP BY h;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT DATE_FORMAT(ts, '%Y-%m-%d %H:00:00') AS h, COUNT(*) FROM events GROUP BY h;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df.set_index('ts').resample('1H').size().rename('count')</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python"># sqlalchemy: func.date_trunc('hour', ts) / DATE_FORMAT for mysql
+select(func.date_trunc('hour', Events.ts).label('h'), func.count().label('count')).group_by('h')</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- nearest neighbor by distance (ANSI: full sort)
+SELECT id FROM pois ORDER BY distance(point) LIMIT 5;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT id FROM pois ORDER BY geom <-> :p LIMIT 5; -- GiST KNN</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT id FROM pois ORDER BY ST_Distance_Sphere(geom, :p) LIMIT 5;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python"># GeoPandas sindex.nearest
+idx = pois.sindex.nearest(point, num_results=5)
+pois.iloc[idx]</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python"># sqlalchemy func.sqla_utils: direct ORDER BY expression or raw
+func.st_distancesphere(Pois.geom, p)</code></pre>
+      </div></div></div>
+<div class="quiz-card" data-quiz-key="s4-q404" data-answer="1">
+      <div class="quiz-q">Which dialect-family performs KNN via <-> (GiST)?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>MySQL only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>PostgreSQL only</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ANSI standard</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>SQL Server</span></div></div>
+      <div class="quiz-explain">The <-> operator is a PostGIS/PostgreSQL native — other engines need explicit distance-sorted plans.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s4-q405" data-answer="1">
+      <div class="quiz-q">MySQL's bucket label for an hour is made with:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>date_trunc('hour', ts)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>DATE_FORMAT(ts, '%Y-%m-%d %H:00:00')</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>HOUR(ts) || ':00'</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CAST(ts AS HOUR)</span></div></div>
+      <div class="quiz-explain">DATE_FORMAT renders a string bucket; it prevents index usage, so combine with a date range predicate for pruning.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Problem Set — L3 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">BRIN vs B-tree benchmark</div>
+        <div class="prob-meta">drill · indexing + brin</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T301"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      On a 500M-row append-only events table, justify when you would choose BRIN over B-tree for the ts column, and write the DDL. Include a pages_per_range trade-off note.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznomc8g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznomc8g">page_range=128 default</div><button class="reveal-btn" data-target="umtxznomc8i" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznomc8i">BRIN size vs selectivity</div><button class="reveal-btn" data-target="umtxznomc8k" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznomc8k">out-of-order inserts break summaries</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Hourly+monthly rollup ladder</div>
+        <div class="prob-meta">drill · rollup + materialized-view</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T302"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Design a two-level rollup (hourly from raw, monthly from hourly) that preserves enough statistics to answer AVG per day and SUM per month. Provide the two CREATE MATERIALIZED VIEW statements.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznomc8l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznomc8l">carry COUNT/SUM/MIN/MAX</div><button class="reveal-btn" data-target="umtxznomc8n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznomc8n">weighted average: SUM(SUM)/SUM(COUNT)</div><button class="reveal-btn" data-target="umtxznomc8p" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznomc8p">refresh cadence chaining</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">ASOF trade-rate attach</div>
+        <div class="prob-meta">drill · asof + distinct-on</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T303"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Attach the latest fx rate at-or-before each of 1M trades without a cross join. Write the pg version and the MySQL fallback, and explain the cost of the scalar-subquery form.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznomc8q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznomc8q">DISTINCT ON (t.ts) ORDER BY r.rate_ts DESC</div><button class="reveal-btn" data-target="umtxznomc8s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznomc8s">correlated subquery reruns per row</div><button class="reveal-btn" data-target="umtxznomc8u" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznomc8u">index fx_rates(rate_ts)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Seasonal bucketing with correct boundaries</div>
+        <div class="prob-meta">drill · bucketing + timezone</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T304"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Aggregate sales by local-business-day (America/Los_Angeles) from a UTC timestamptz column. Write the bucket expression using AT TIME ZONE and explain the DST edge cases.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznomc8v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznomc8v">ts AT TIME ZONE 'America/Los_Angeles'</div><button class="reveal-btn" data-target="umtxznomc8x" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznomc8x">midnight rollover vs UTC midnight</div><button class="reveal-btn" data-target="umtxznomc8z" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznomc8z">store local date alongside events to avoid drift</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Interpolate with fade between probes</div>
+        <div class="prob-meta">drill · interpolation + gaps</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T305"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      For a 3-probe gap, produce estimated values at each missing 5-minute slot as a weighted blend of surrounding readings, using the time-distance weights shown in the linear interpolation example.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznomc90" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznomc90">LAG/LEAD ... IGNORE NULLS to neighbors</div><button class="reveal-btn" data-target="umtxznomc92" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznomc92">epoch seconds for weights</div><button class="reveal-btn" data-target="umtxznomc94" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznomc94">single expression, no plpgsql</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Partition monthly retention delete</div>
+        <div class="prob-meta">drill · partitioning + retention</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="T306"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Events kept 12 months, 200M rows/month. Design monthly range partitioning so retention deletion is a DROP of a partition, and the identical age window 'last 6 months' never scans old partitions.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznomc95" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznomc95">PARTITION BY RANGE (ts)</div><button class="reveal-btn" data-target="umtxznomc97" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznomc97">detach + drop oldest</div><button class="reveal-btn" data-target="umtxznomc99" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznomc99">partition pruning by quals in WHERE</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>BRIN (block-range min/max) beats B-tree for scans on append-ordered time data; breaks on out-of-order inserts.</li><li>Storage layout decides query speed: partition by time, index per partition, keep columns narrow.</li><li>Rollups: materialize hourly from raw, monthly from hourly; carry COUNT/SUM/MIN/MAX so higher levels stay derivable.</li><li>ASOF = attach latest on-or-before state; DISTINCT ON in pg, correlated subquery in MySQL, merge_asof in pandas.</li><li>Interpolation vs ASOF is a domain decision — continuity vs 'latest state applies'.</li><li>Dialect gaps: date_trunc (pg) vs DATE_FORMAT (mysql) vs resample (pandas); KNN <-> is pg-only.</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>BRIN</code></td><td>Block Range INdex storing per-range min/max; compact scans for naturally time-sorted data.</td></tr><tr><td style="width:220px;"><code>pages_per_range</code></td><td>BRIN tuning knob = blocks summarized per index entry; higher = smaller index, coarser pruning.</td></tr><tr><td style="width:220px;"><code>ASOF join</code></td><td>Joins each A-row to the latest B-row with key <= A's, attaching the 'current state'.</td></tr><tr><td style="width:220px;"><code>Rollup</code></td><td>Precomputed aggregate table reducing raw volume into summaries at coarser granularity.</td></tr><tr><td style="width:220px;"><code>Partition pruning</code></td><td>Planner dropping irrelevant partitions from a range-partitioned table based on WHERE quals.</td></tr><tr><td style="width:220px;"><code>merge_asof</code></td><td>pandas function implementing backward/forward ASOF semantics with log10 tolerance.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L4 EXPERT file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 09 · L3/ADVANCED · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('timeseries-geo_L3');</script>
+</body></html>

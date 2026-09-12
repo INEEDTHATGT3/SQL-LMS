@@ -1,6 +1,12 @@
 {
   "changelog": [
     {
+      "date": "2026-09-12",
+      "type": "module",
+      "title": "Module 09 Time-Series & Geospatial live",
+      "detail": "Gap filling, interpolation, PostGIS basics, H3"
+    },
+    {
       "date": "2026-09-03",
       "type": "module",
       "title": "Module 08 Advanced Analytics live",

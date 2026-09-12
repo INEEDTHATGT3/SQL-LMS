@@ -1,0 +1,488 @@
+{
+  "level": 2,
+  "title": "Time-Series & Geospatial",
+  "tagline": "date_trunc bucketing, gap filling, interpolation, rolling windows, proximity queries",
+  "placementQuiz": [
+    {
+      "q": "Which window function gives you the previous row's value without a self-join?",
+      "options": [
+        "ROW_NUMBER()",
+        "LAG()",
+        "COUNT() OVER ()",
+        "DENSE_RANK()"
+      ],
+      "answer": 1,
+      "explain": "LAG(col, n) peers back n rows in the window frame — the standard way to compute deltas between consecutive observations."
+    },
+    {
+      "q": "A RANGE BETWEEN INTERVAL '1 hour' PRECEDING AND CURRENT ROW frame includes:",
+      "options": [
+        "Exactly 2 rows",
+        "All rows within 1 hour of the current row by time",
+        "All rows before the current row",
+        "Only the current row"
+      ],
+      "answer": 1,
+      "explain": "RANGE frames match by value distance, not row count — ideal for irregular time-series where rows are not equidistant."
+    },
+    {
+      "q": "Which function turns a timestamp into the start of its hour in PostgreSQL?",
+      "options": [
+        "DATE_PART('hour', ts)",
+        "HOUR(ts)",
+        "date_trunc('hour', ts)",
+        "TRUNC(ts)"
+      ],
+      "answer": 2,
+      "explain": "date_trunc(unit, ts) returns the bucket start. DATE_PART extracts a number, HOUR() is MySQL-only."
+    },
+    {
+      "q": "To find every point within 1 km of a fixed location, you should first:",
+      "options": [
+        "Compute ST_Distance for every row",
+        "Use ST_DWithin as a spatial pre-filter (GiST-aware)",
+        "Use ORDER BY longitude only",
+        "Cast coordinates to strings and compare"
+      ],
+      "answer": 1,
+      "explain": "ST_DWithin can use a spatial index; computing raw ST_Distance on every row is a full scan."
+    },
+    {
+      "q": "What does this do: SELECT generate_series('2024-01-01'::date, '2024-01-07'::date, INTERVAL '1 day')?",
+      "options": [
+        "Errors",
+        "Returns 7 dates, one per day",
+        "Returns one date",
+        "Returns a sum of dates"
+      ],
+      "answer": 1,
+      "explain": "generate_series emits a row per step between the bounds — the canonical tool for gap filling."
+    }
+  ],
+  "sections": [
+    {
+      "title": "Mental Model — Time as a First-Class Citizen",
+      "blocks": [
+        {
+          "type": "mantra",
+          "md": "**Querying time is not about WHERE clauses alone — it is about bucketing, framing, and filling. Think in intervals, not instants.**"
+        },
+        {
+          "type": "prose",
+          "md": "Every time-series problem decomposes into three moves: **align** timestamps to a common grid (bucketing), **frame** rows relative to each other (windows over time), and **fill** missing slots so the grid stays dense (gap filling). Geospatial adds a fourth move — **proximity** — which is just a WHERE clause that a spatial index can accelerate."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Bucketing: collapse timestamps into fixed intervals (hour, day, week)",
+            "Framing: LAG/LEAD/rolling frames over time-ordered rows",
+            "Filling: synthesize missing buckets so analysts see zeros, not gaps",
+            "Proximity: filter by distance using ST_DWithin before expensive ST_Distance"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Time Bucketing & Resampling",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "date_trunc buckets"
+        },
+        {
+          "type": "code",
+          "label": "hourly buckets",
+          "code": "-- Bucket every event into its hour, then count\nSELECT\n  date_trunc('hour', ts) AS hour_bucket,\n  COUNT(*)              AS events\nFROM page_views\nWHERE ts >= now() - INTERVAL '7 days'\nGROUP BY hour_bucket\nORDER BY hour_bucket;\n\n-- Interesting: buckets with ZERO events are absent",
+          "pg": "-- date_trunc('hour', ts) is the workhorse\n-- For table-native bucketing with time chunks, often combined with timestamptz columns",
+          "mysql": "-- MySQL: use DATE_FORMAT\nSELECT\n  DATE_FORMAT(ts, '%Y-%m-%d %H:00:00') AS hour_bucket,\n  COUNT(*) AS events\nFROM page_views\nGROUP BY hour_bucket\nORDER BY hour_bucket;",
+          "py-pandas": "# df['ts'] = pd.to_datetime(df['ts'])\ndf.set_index('ts').resample('1h').size()"
+        },
+        {
+          "type": "heading",
+          "text": "Bucketing by business calendar"
+        },
+        {
+          "type": "code",
+          "label": "calendar buckets",
+          "code": "-- ISO week + day-of-week labels\nSELECT\n  date_trunc('week', ts)          AS week_start,\n  EXTRACT(ISODOW FROM ts)         AS dow,       -- 1=Mon .. 7=Sun\n  COUNT(*)                        AS events\nFROM page_views\nGROUP BY week_start, dow\nORDER BY week_start, dow;\n\n-- Bucket by weekday vs weekend\nSELECT\n  CASE WHEN EXTRACT(ISODOW FROM ts) IN (6,7)\n       THEN 'weekend' ELSE 'weekday' END AS day_type,\n  COUNT(*) AS events\nFROM page_views\nGROUP BY day_type;",
+          "pg": "-- EXTRACT(ISODOW FROM ts): 1..7 (Mon..Sun)\n-- EXTRACT(DOW FROM ts): 0..6 (Sun..Sat)",
+          "mysql": "-- DAYOFWEEK(ts): 1=Sunday..7=Saturday\n-- WEEK(ts, 3): ISO week\nSELECT DAYOFWEEK(ts) AS dow, COUNT(*) FROM page_views GROUP BY dow;",
+          "py-pandas": "df['dow'] = df['ts'].dt.dayofweek   # 0=Mon..6=Sun\ndf['day_type'] = np.where(df['dow'].isin([5,6]), 'weekend', 'weekday')\ndf.groupby('day_type').size()"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Hourly Bucket Count (index-backed)",
+          "plan": {
+            "Plan": {
+              "Node Type": "HashAggregate",
+              "Startup Cost": 10.00,
+              "Total Cost": 50.00,
+              "Plan Rows": 168,
+              "Plan Width": 44,
+              "Group Key": "date_trunc('hour'::text, ts)",
+              "Actual Startup Time": 1.2,
+              "Actual Total Time": 2.0,
+              "Actual Rows": 168,
+              "Actual Loops": 1,
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Heap Scan",
+                  "Relation Name": "page_views",
+                  "Startup Cost": 5.00,
+                  "Total Cost": 45.00,
+                  "Plan Rows": 20000,
+                  "Plan Width": 8,
+                  "Recheck Cond": "(ts >= (now() - '7 days'::interval))",
+                  "Actual Startup Time": 0.4,
+                  "Actual Total Time": 1.5,
+                  "Actual Rows": 20310,
+                  "Actual Loops": 1,
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Relation Name": "page_views_ts_idx",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 5.00,
+                      "Plan Rows": 20000,
+                      "Plan Width": 0,
+                      "Index Cond": "(ts >= (now() - '7 days'::interval))"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "GROUP BY date_trunc('hour', ts) returns one row per:",
+              "options": [
+                "Event",
+                "Hour that has at least one event",
+                "Hour of the day (0-23)",
+                "Day"
+              ],
+              "answer": 1,
+              "explain": "Grouping produces only buckets with data. Empty hours are missing entirely — that is why gap filling (next section) exists."
+            },
+            {
+              "q": "Which is fastest for finding a 7-day slice on a 10B-row events table?",
+              "options": [
+                "Seq Scan with WHERE ts filter",
+                "Index Scan on ts then aggregate",
+                "Scan every partition",
+                "Compute in the application layer"
+              ],
+              "answer": 1,
+              "explain": "A timestamp index prunes to the 7-day range; the bitmap scan above reads only matching pages and still does one cheap aggregation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Gap Filling & Interpolation",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Sparse data in, dense grid out"
+        },
+        {
+          "type": "prose",
+          "md": "Sensors go down, dashboards hide zeros, joins lose matches. The fix is to **generate the full calendar** and left-join reality onto it. Analytics consumers expect one row per bucket — with zero counts, not missing rows."
+        },
+        {
+          "type": "code",
+          "label": "fill empty buckets",
+          "code": "-- Step 1: generate all hours for the window\nWITH hours AS (\n  SELECT generate_series(\n    date_trunc('hour', now()) - INTERVAL '23 hours',\n    date_trunc('hour', now()),\n    INTERVAL '1 hour'\n  ) AS hour_bucket\n)\n-- Step 2: left join real counts onto the grid\nSELECT h.hour_bucket, COALESCE(c.events, 0) AS events\nFROM hours h\nLEFT JOIN (\n  SELECT date_trunc('hour', ts) AS hour_bucket, COUNT(*) AS events\n  FROM page_views\n  WHERE ts >= now() - INTERVAL '24 hours'\n  GROUP BY 1\n) c ON c.hour_bucket = h.hour_bucket\nORDER BY h.hour_bucket;",
+          "pg": "-- generate_series(x, y, INTERVAL '1 hour')\n-- LEFT JOIN + COALESCE(..., 0) = dense grid",
+          "mysql": "-- MySQL has no generate_series; build a numbers/tally table\nSELECT DATE_ADD('2024-01-01', INTERVAL n DAY) AS d\nFROM numbers_tally\nWHERE n BETWEEN 0 AND 30;",
+          "py-pandas": "# reindex missing buckets with 0\ns = df.set_index('ts').resample('1h').size()\ns = s.reindex(pd.date_range(min, max, freq='h'), fill_value=0)"
+        },
+        {
+          "type": "heading",
+          "text": "Forward-fill (LOCF) & interpolation"
+        },
+        {
+          "type": "code",
+          "label": "last observation carried forward",
+          "code": "-- LOCF: repeat the last known value across gaps\n-- PostgreSQL 10+ supports IGNORE NULLS\nSELECT\n  ts,\n  temp_c,\n  COALESCE(\n    temp_c,\n    LAST_VALUE(temp_c IGNORE NULLS)\n      OVER (ORDER BY ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)\n  ) AS temp_filled\nFROM sensor_readings\nORDER BY ts;\n\n-- Linear interpolation (simple two-probe version):\n-- assign gaps to the mid-point between neighbors",
+          "pg": "-- IGNORE NULLS is PostgreSQL 10+ syntax\n-- For cross-dialect fill, join the probe grid to readings and use LAG",
+          "mysql": "-- MySQL 8.0: no IGNORE NULLS; emulate with a correlated subquery\nSELECT r.ts,\n  COALESCE(r.temp_c, (\n    SELECT rr.temp_c FROM sensor_readings rr\n    WHERE rr.ts <= r.ts AND rr.temp_c IS NOT NULL\n    ORDER BY rr.ts DESC LIMIT 1\n  )) AS temp_filled\nFROM sensor_readings r;",
+          "py-pandas": "df['temp_filled'] = df['temp_c'].ffill()   # LOCF\n# linear\n# df['temp_filled'] = df['temp_c'].interpolate(method='linear')"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**LOCF hides missingness.** Always record `is_filled` (or a flag) alongside the fill so downstream models can distinguish observed values from imputed ones. A silent fill is a silent bug."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "After LEFT JOIN to generated hours, missing hours appear with:",
+              "options": [
+                "NULL, unless COALESCE'd to 0",
+                "A random token",
+                "The previous value",
+                "An error"
+              ],
+              "answer": 0,
+              "explain": "Unmatched rows yield NULL for the aggregated column; COALESCE(events, 0) renders them as explicit zero."
+            },
+            {
+              "q": "WHY_HIDDEN: LOCF differs from linear interpolation because LOCF:",
+              "options": [
+                "Changes timestamps",
+                "Reuses the last observed value, not the arithmetic mean",
+                "Only works on integers",
+                "Deletes rows"
+              ],
+              "answer": 1,
+              "explain": "LOCF copies the previous value forward; linear interpolation estimates between two neighbors. Choose by domain semantics."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Rolling Windows over Time",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Moving averages on irregular clocks"
+        },
+        {
+          "type": "code",
+          "label": "rolling average",
+          "code": "-- 7-point moving average (row-count frame)\nSELECT\n  ts,\n  value,\n  ROUND(AVG(value) OVER (\n    ORDER BY ts ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n  ), 2) AS ma_7\nFROM metrics\nORDER BY ts;\n\n-- 24h moving average (time-based frame)\nSELECT\n  ts,\n  value,\n  ROUND(AVG(value) OVER (\n    ORDER BY ts RANGE BETWEEN INTERVAL '1 day' PRECEDING AND CURRENT ROW\n  ), 2) AS ma_24h\nFROM metrics\nORDER BY ts;",
+          "pg": "-- RANGE with INTERVAL needs a numeric/date ordering key\n-- ROWS counts physical rows; RANGE counts value distance",
+          "mysql": "-- MySQL 8.0 supports ROWS but RANGE+INTERVAL via ROWS instead:\n-- express as ROWS BETWEEN N PRECEDING AND CURRENT ROW",
+          "py-pandas": "df['ma_7'] = df['value'].rolling(7, min_periods=1).mean()\ndf['ma_24h'] = df.set_index('ts')['value'].rolling('24h').mean().values"
+        },
+        {
+          "type": "code",
+          "label": "delta vs previous",
+          "code": "-- Per-point delta and growth\nSELECT\n  ts,\n  price,\n  price - LAG(price)  OVER (ORDER BY ts)  AS delta,\n  ROUND(\n    100.0 * (price - LAG(price) OVER (ORDER BY ts))\n      / NULLIF(LAG(price) OVER (ORDER BY ts), 0),\n    2\n  ) AS pct_change\nFROM prices\nORDER BY ts;",
+          "pg": "-- multiple LAG(...) OVER (ORDER BY ts) calls;\n-- or use a CTE + one window to avoid repetition",
+          "mysql": "-- MySQL 8.0+: LAG/LEAD supported",
+          "py-pandas": "df['delta'] = df['price'].diff()\ndf['pct_change'] = df['price'].pct_change() * 100"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "RANGE BETWEEN INTERVAL '1 day' PRECEDING includes:",
+              "options": [
+                "Exactly 24 rows",
+                "All rows whose timestamp is within the last 24h per row",
+                "The whole table",
+                "Only rows from the same hour"
+              ],
+              "answer": 1,
+              "explain": "RANGE frame memberships depend on value distance. With missing hours you get fewer than 24 rows — exactly what time-series needs."
+            },
+            {
+              "q": "The first row's LAG(price) is:",
+              "options": [
+                "0",
+                "NULL",
+                "The row itself",
+                "An error"
+              ],
+              "answer": 1,
+              "explain": "There is no prior row, so LAG returns NULL — guard divides with NULLIF or COALESCE."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Spatial Proximity — Distance, Buffers, Nearest",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Distance in meters, not degrees"
+        },
+        {
+          "type": "prose",
+          "md": "A lat/lon pair is stored as degrees (SRID 4326). Distance in degrees is meaningless for humans. Transform to a projected CRS — or use geography — before comparing meters."
+        },
+        {
+          "type": "code",
+          "label": "distance & within",
+          "code": "-- Distance between two points (projected, meters)\nSELECT\n  ST_Distance(\n    ST_Transform(a.geom, 3857),\n    ST_Transform(b.geom, 3857)\n  ) AS meters\nFROM places a, places b\nWHERE a.id = 1 AND b.id = 2;\n\n-- Pre-filter with DWithin (index-friendly), then refine\nSELECT p.id, p.name\nFROM pois p\nWHERE ST_DWithin(\n  p.geom::geography,\n  ST_SetSRID(ST_MakePoint(-122.4194, 37.7749), 4326)::geography,\n  1000\n)\nAND ST_Distance(p.geom::geography,\n                ST_SetSRID(ST_MakePoint(-122.4194, 37.7749), 4326)::geography) < 1000;",
+          "pg": "-- geography uses great-circle meters directly\n-- ST_DWithin(geog, geog, meters) uses GiST index when present",
+          "mysql": "-- ST_Distance_Sphere returns meters\nSELECT id, name\nFROM pois\nWHERE ST_Distance_Sphere(geom,\n  ST_GeomFromText('POINT(-122.4194 37.7749)', 4326)) < 1000;",
+          "py-pandas": "# GeoPandas: sjoin radius filter\nfrom shapely.geometry import Point\nimport geopandas as gpd\npt = gpd.GeoSeries([Point(-122.4194, 37.7749)], crs='EPSG:4326')\nnear = pois[pois.geometry.distance(pt.iloc[0]) <= 0.01]"
+        },
+        {
+          "type": "heading",
+          "text": "Nearest neighbor without the killer sort"
+        },
+        {
+          "type": "code",
+          "label": "nearest k",
+          "code": "-- Nearest 5, ordered by distance\nSELECT id, name,\n  ST_Distance(\n    geom::geography,\n    ST_SetSRID(ST_MakePoint(-122.4194, 37.7749), 4326)::geography\n  ) AS meters\nFROM pois\nORDER BY\n  geom <-> ST_SetSRID(ST_MakePoint(-122.4194, 37.7749), 4326)\nLIMIT 5;\n\n-- <-> is the KNN operator: index-assisted, no full sort",
+          "pg": "-- <-> requires a GiST index on geom\n-- ORDER BY distance + LIMIT => early termination",
+          "mysql": "-- MySQL: no KNN operator; ST_Distance_Sphere + LIMIT (full sort)\nSELECT id, name,\n  ST_Distance_Sphere(geom, ST_GeomFromText('POINT(-122.4194 37.7749)', 4326)) AS meters\nFROM pois\nORDER BY meters\nLIMIT 5;",
+          "py-pandas": "# KNN via spatial index\nfrom rtree import index\nidx = index.Index()\nfor i, g in enumerate(pois.geometry): idx.insert(i, g.bounds)\nnear_ids = list(idx.nearest(pt.bounds, 5))"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "**`<->` is the pg-only KNN operator.** It turns 'sort all rows by distance' into 'walk the GiST index in order'. MySQL needs a plain sort — fine for small tables, deadly on millions."
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — KNN via GiST (pg)",
+          "plan": {
+            "Plan": {
+              "Node Type": "Index Scan",
+              "Relation Name": "pois",
+              "Alias": "p",
+              "Startup Cost": 0.00,
+              "Total Cost": 20.40,
+              "Plan Rows": 5,
+              "Plan Width": 64,
+              "Order By": "((geom <-> '0101000020E6100000...'::geometry))",
+              "Actual Startup Time": 0.03,
+              "Actual Total Time": 0.05,
+              "Actual Rows": 5,
+              "Actual Loops": 1
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "ST_DWithin is preferred over ST_Distance for filtering because:",
+              "options": [
+                "It is more accurate",
+                "It can use a spatial index",
+                "It always returns meters",
+                "It avoids NULLs"
+              ],
+              "answer": 1,
+              "explain": "ST_DWithin is a candidate for GiST/BRIN index acceleration; ST_Distance on every row is a sequential scan."
+            },
+            {
+              "q": "The <-> KNN operator avoids a full ORDER BY by:",
+              "options": [
+                "Sampling rows",
+                "Walking the GiST index in distance order",
+                "Caching results",
+                "Using a hash index"
+              ],
+              "answer": 1,
+              "explain": "The index returns rows in increasing distance; combined with LIMIT the planner stops early."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Problem Set — L2 Drills",
+      "blocks": [
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "T201",
+              "tier": 2,
+              "title": "Daily Active Users per day",
+              "platform": "drill",
+              "patterns": ["bucketing", "distinct"],
+              "statement": "Count distinct users per day for the last 30 days from a 20M-row events table (user_id, ts). Return every day, including days with zero activity.",
+              "hints": ["generate_series for the 30-day grid", "left join the daily distinct counts", "COALESCE(..., 0)"]
+            },
+            {
+              "id": "T202",
+              "tier": 2,
+              "title": "Hourly fill for the last 24h",
+              "platform": "drill",
+              "patterns": ["gap-filling", "left-join"],
+              "statement": "A weather sensor publishes readings every 5 minutes but drops occasionally. Return one row per hour for the last 24 hours with the reading count, filling missing hours with 0.",
+              "hints": ["date_trunc('hour', ts)", "generate_series window", "count the readings inside each hour"]
+            },
+            {
+              "id": "T203",
+              "tier": 2,
+              "title": "LOCF for missing sensor values",
+              "platform": "drill",
+              "patterns": ["locf", "windows"],
+              "statement": "Load readings (ts, temp_c) with sparse NULLs. Produce temp_c_filled that carries forward the last observed value, and flag which rows were imputed.",
+              "hints": ["LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY ts)", "compare temp_c IS NULL to build the flag"]
+            },
+            {
+              "id": "T204",
+              "tier": 2,
+              "title": "7-day moving average with holiday holes",
+              "platform": "drill",
+              "patterns": ["rolling-window"],
+              "statement": "Compute a 7-day moving average of daily revenue. Some days have no transactions. Decide between ROWS and RANGE and explain which is correct for 'last 7 calendar days'.",
+              "hints": ["RANGE BETWEEN INTERVAL '7 day' PRECEDING", "ROWS counts trading days, not calendar days", "fill the calendar first for ROWS equivalence"]
+            },
+            {
+              "id": "T205",
+              "tier": 2,
+              "title": "Nearest café from a coordinate",
+              "platform": "drill",
+              "patterns": ["knn", "proximity"],
+              "statement": "Given cafés (id, name, geom) and a user point, return the 3 nearest cafés with distance in meters. Use the fast path in pg and the portable fallback for MySQL.",
+              "hints": ["geom <-> point in ORDER BY", "GiST index on geom", "ST_Distance(geom::geography, p) for meters"]
+            },
+            {
+              "id": "T206",
+              "tier": 2,
+              "title": "Radius banding for delivery zones",
+              "platform": "drill",
+              "patterns": ["proximity", "case"],
+              "statement": "Tag each restaurant with a band (within 1km / within 5km / farther) relative to a fixed hub point, using an index-friendly pre-filter.",
+              "hints": ["ST_DWithin(geog, hub, 1000) then 5000", "CASE over two DWithin tests", "order evaluation cheap-first"]
+            },
+            {
+              "id": "T207",
+              "tier": 2,
+              "title": "Growth rate by week",
+              "platform": "drill",
+              "patterns": ["lag", "bucketing"],
+              "statement": "Weekly signups for 12 weeks. Compute week-over-week percentage change, skipping the first row gracefully.",
+              "hints": ["LAG(signups) OVER (ORDER BY week)", "NULLIF for divide-by-zero", "pct = 100.0 * (cur - prev) / prev"]
+            },
+            {
+              "id": "T208",
+              "tier": 2,
+              "title": "Interpolated mid-point for temp gaps",
+              "platform": "drill",
+              "patterns": ["interpolation"],
+              "statement": "For two consecutive readings surrounding a gap of exactly one missing probe, estimate the missing value as the linear mid-point between them.",
+              "hints": ["self-join next/prev non-null", "AVG(prev, nxt) over the gap", "target only rows where temp_c IS NULL"]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "revisionCard": [
+    "Bucketing: date_trunc('hour', ts) collapses timestamps; empty buckets vanish from GROUP BY.",
+    "Gap filling: generate_series drives a calendar grid; LEFT JOIN + COALESCE(...) restores zeros.",
+    "LOCF: LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY ts) carries the last observation; flag imputed rows.",
+    "Rolling frames: ROWS counts physical rows, RANGE counts value distance — choose per semantics.",
+    "Proximity: ST_DWithin(geog, p, 1000) filtiers with the spatial index; ST_Distance measures.",
+    "KNN: pg <-> operator + GiST index = index-ordered walk; MySQL falls back to a full sort."
+  ],
+  "glossary": [
+    { "term": "date_trunc", "def": "PostgreSQL function returning the start of a time bucket (hour, day, month...)." },
+    { "term": "generate_series", "def": "Set-returning function that emits one row per step; used to build calendar grids for gap filling." },
+    { "term": "LOCF", "def": "Last Observation Carried Forward — fills NULLs by repeating the most recent non-null value." },
+    { "term": "RANGE frame", "def": "Window frame defined by value distance (e.g., last 24h) rather than row count." },
+    { "term": "ST_DWithin", "def": "Spatial predicate filtering geometries within a distance; index-friendly and cheaper than computing exact distance." },
+    { "term": "KNN operator (<->)", "def": "PostgreSQL GiST operator ordering rows by distance, enabling LIMIT-truncated nearest searches." }
+  ]
+}

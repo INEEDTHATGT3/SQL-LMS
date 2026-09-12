@@ -156,7 +156,7 @@ DROP INDEX idx_emp_salary;</code></pre><pre data-lang="py" class="py-missing"><c
     </div>
     <div class="prob-body">
       Run EXPLAIN on SELECT * FROM employees WHERE dept_id = 3. Identify scan type.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vv4s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vv4s">Look for Seq Scan vs Index Scan</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolu4s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolu4s">Look for Seq Scan vs Index Scan</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -166,7 +166,7 @@ DROP INDEX idx_emp_salary;</code></pre><pre data-lang="py" class="py-missing"><c
     </div>
     <div class="prob-body">
       Create index to speed up WHERE dept_id = 5.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vv4t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vv4t">CREATE INDEX ON employees (dept_id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolu4t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolu4t">CREATE INDEX ON employees (dept_id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -176,7 +176,7 @@ DROP INDEX idx_emp_salary;</code></pre><pre data-lang="py" class="py-missing"><c
     </div>
     <div class="prob-body">
       Optimize: WHERE dept_id = 3 ORDER BY salary DESC LIMIT 5.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vv4u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vv4u">CREATE INDEX ON employees (dept_id, salary DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolu4u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolu4u">CREATE INDEX ON employees (dept_id, salary DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -186,7 +186,7 @@ DROP INDEX idx_emp_salary;</code></pre><pre data-lang="py" class="py-missing"><c
     </div>
     <div class="prob-body">
       90% queries filter status='active'. Create partial index on users(last_login).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vv4v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vv4v">WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolu4v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolu4v">WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -196,7 +196,7 @@ DROP INDEX idx_emp_salary;</code></pre><pre data-lang="py" class="py-missing"><c
     </div>
     <div class="prob-body">
       Query: SELECT name FROM users WHERE id = 123. Create covering index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vv4w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vv4w">INCLUDE (name)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolu4w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolu4w">INCLUDE (name)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -206,7 +206,7 @@ DROP INDEX idx_emp_salary;</code></pre><pre data-lang="py" class="py-missing"><c
     </div>
     <div class="prob-body">
       Speed up: WHERE email LIKE '%@company.com'. Use expression index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzk9vv4x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzk9vv4x">CREATE INDEX ON users ((SUBSTRING(email FROM '@.*')))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznolu4x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznolu4x">CREATE INDEX ON users ((SUBSTRING(email FROM '@.*')))</div></div>
     </div></li></ul>
   </section>
   
