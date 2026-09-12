@@ -250,7 +250,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Query: SELECT e.dept_id FROM employees e JOIN departments d ON e.dept_id = d.id. Is join eliminated? Why/why not?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslia2m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslia2m">Only FK column from child selected → yes, eliminated</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuur2m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuur2m">Only FK column from child selected → yes, eliminated</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -260,7 +260,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslia2n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslia2n">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuur2n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuur2n">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -270,7 +270,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Design events and orders tables partitioned by month for partition-wise join on user_id.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslia2o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslia2o">Partition both on month</div><button class="reveal-btn" data-target="umtydslia2q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslia2q">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuur2o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuur2o">Partition both on month</div><button class="reveal-btn" data-target="umtyemuur2q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuur2q">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -280,7 +280,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Force join order: small → medium → large using join_collapse_limit.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslia2r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslia2r">SET join_collapse_limit = 1; write joins in desired order</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuur2r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuur2r">SET join_collapse_limit = 1; write joins in desired order</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -290,7 +290,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Describe when Adaptive Join switches from Nested Loop to Hash Join.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslia2s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslia2s">Starts as NLJ; switches when outer rows exceed threshold</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuur2s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuur2s">Starts as NLJ; switches when outer rows exceed threshold</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -300,18 +300,68 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslia2t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslia2t">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuur2t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuur2t">Move LIMIT to outer query; use subquery instead of CTE</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">
     <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
-    <div class="callout blue">1 sourced problem from HackerRank SQL. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+    <div class="callout blue">6 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
       <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Symmetric Pairs</a></div>
         <div class="prob-meta">hackerrank · #053 · hackerrank-sql-58 · self-join + pair-dedupe</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-HR053"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/team-scores-in-football-tournament/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Team Scores in Football Tournament</a></div>
+        <div class="prob-meta">leetcode · #1212 · medium · leetcode-advanced-sql-50 · self-join,group-by,case-sum</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1212"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/page-recommendations/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Page Recommendations</a></div>
+        <div class="prob-meta">leetcode · #1264 · medium · leetcode-advanced-sql-50 · self-join,distinct,exclude-self</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1264"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/evaluate-boolean-expression/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Evaluate Boolean Expression</a></div>
+        <div class="prob-meta">leetcode · #1440 · medium · leetcode-advanced-sql-50 · join,case-operator,null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1440"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/countries-you-can-safely-invest-in/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Countries You Can Safely Invest In</a></div>
+        <div class="prob-meta">leetcode · #1501 · medium · leetcode-advanced-sql-50 · join,group-by,having</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1501"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/leetflex-banned-accounts/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Leetflex Banned Accounts</a></div>
+        <div class="prob-meta">leetcode · #1747 · medium · leetcode-advanced-sql-50 · self-join,interval-overlap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1747"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       

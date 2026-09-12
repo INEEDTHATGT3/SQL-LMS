@@ -9,7 +9,7 @@
   <div class="promise">Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="subqueries-ctes_L1" href="subqueries-ctes_L1.html">BEGINNER</a><a class="level-pill " data-lesson="subqueries-ctes_L2" href="subqueries-ctes_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="subqueries-ctes_L3" href="subqueries-ctes_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="subqueries-ctes_L4" href="subqueries-ctes_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · LATERAL Join Internals & Optimization</a><a href="#sec-1">02 · Recursive CTE Internals — Working Table Iteration</a><a href="#sec-2">03 · CTE Scan Cost Model & Materialization</a><a href="#sec-3">04 · Custom Subquery/CTE Extensions</a><a href="#sec-4">05 · Dialect Mastery — Subquery/CTE Gaps</a><a href="#sec-5">06 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · LATERAL Join Internals & Optimization</a><a href="#sec-1">02 · Recursive CTE Internals — Working Table Iteration</a><a href="#sec-2">03 · CTE Scan Cost Model & Materialization</a><a href="#sec-3">04 · Custom Subquery/CTE Extensions</a><a href="#sec-4">05 · Dialect Mastery — Subquery/CTE Gaps</a><a href="#sec-5">06 · Problem Set — L4 Drills</a><a href="#sec-6">07 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -339,7 +339,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       LATERAL join on orders table with LIMIT 1. Design index for optimal performance.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj157" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj157">CREATE INDEX ON orders (emp_id, order_date DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuvv57" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuvv57">CREATE INDEX ON orders (emp_id, order_date DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -349,7 +349,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       Explain Working Table vs Recursive Table in PostgreSQL recursive CTE execution.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj158" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj158">Working table = previous iteration; Recursive table = accumulated results</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuvv58" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuvv58">Working table = previous iteration; Recursive table = accumulated results</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -359,7 +359,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       EXPLAIN shows CTE Scan startup=1000, total=1500. Explain components.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj159" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj159">Startup = materialization; Run = scan of materialized results</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuvv59" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuvv59">Startup = materialization; Run = scan of materialized results</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -369,7 +369,7 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       CTE with NOT MATERIALIZED + outer WHERE. Explain pushdown conditions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj15a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj15a">No volatile, no LIMIT, single ref, safe to inline</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuvv5a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuvv5a">No volatile, no LIMIT, single ref, safe to inline</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -379,12 +379,37 @@ result = cte[cte['y'] == 1]</code></pre>
     </div>
     <div class="prob-body">
       Compare MySQL QUALIFY vs PostgreSQL CTE for filtering ROW_NUMBER() results.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj15b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj15b">QUALIFY filters without CTE; CTE required in PG</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuvv5b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuvv5b">QUALIFY filters without CTE; CTE required in PG</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-6">
+    <div class="section-header"><span class="section-num">07 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">2 sourced problems from LeetCode Advanced SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/all-people-report-to-the-given-manager/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">All People Report to the Given Manager</a></div>
+        <div class="prob-meta">leetcode · #1270 · medium · leetcode-advanced-sql-50 · recursive-cte</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S4-LC1270"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/find-the-subtasks-that-did-not-execute/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Find the Subtasks That Did Not Execute</a></div>
+        <div class="prob-meta">leetcode · #1767 · hard · leetcode-advanced-sql-50 · recursive-cte,not-exists</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S4-LC1767"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">08 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>LATERAL: correlated subquery in FROM; index on (partition, order) + LIMIT = O(log N) per left row</li><li>Recursive CTE: working table (prev iter) → recursive table (accumulated); WorkTable Scan in EXPLAIN</li><li>CTE Scan cost: startup = materialization; run = scan; NOT MATERIALIZED removes CTE Scan</li><li>PG 17+: predicate pushdown through NOT MATERIALIZED CTEs when safe</li><li>VOLATILE functions force materialization; NOT MATERIALIZED blocked by volatile/LIMIT/multi-ref</li><li>QUALIFY (MySQL/Snowflake) = CTE filter for window functions; PG uses CTE pattern</li></ul></div>
     <h3>Glossary</h3>

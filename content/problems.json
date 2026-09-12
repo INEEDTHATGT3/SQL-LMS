@@ -17,7 +17,7 @@
   "sources": {
     "leetcode-sql-50": {
       "role": "spine",
-      "title": "LeetCode \u2014 SQL 50",
+      "title": "LeetCode — SQL 50",
       "url": "https://leetcode.com/studyplan/top-sql-50/",
       "access": "free",
       "count": 50,
@@ -32,11 +32,11 @@
         "Subqueries",
         "Advanced String Functions / Regex / Clause"
       ],
-      "analogue": "Striver A2Z \u2014 ordered, finite, judge-backed, the thing you finish."
+      "analogue": "Striver A2Z — ordered, finite, judge-backed, the thing you finish."
     },
     "hackerrank-sql-58": {
       "role": "volume overlay (L1)",
-      "title": "HackerRank \u2014 SQL track",
+      "title": "HackerRank — SQL track",
       "url": "https://www.hackerrank.com/domains/sql",
       "access": "free",
       "count": 58,
@@ -50,22 +50,22 @@
         "Advanced Join (5)",
         "Alternative Queries (3)"
       ],
-      "analogue": "Babbar FINAL450 \u2014 breadth and reps, weaker ordering.",
+      "analogue": "Babbar FINAL450 — breadth and reps, weaker ordering.",
       "urlCaveat": "Per-challenge slugs are not recorded; each entry links to its subdomain listing. Open by title."
     },
     "leetcode-advanced-sql-50": {
       "role": "L3/L4 spine extension",
-      "title": "LeetCode \u2014 Advanced SQL 50",
+      "title": "LeetCode — Advanced SQL 50",
       "url": "https://leetcode.com/studyplan/premium-sql-50/",
       "access": "premium",
       "count": 50,
-      "enumerated": false,
+      "enumerated": true,
       "authority": "Defines the L3 tier boundary once enumerated.",
       "blockedOn": "LeetCode Premium. Enumerate from the account, then append with sheet='leetcode-advanced-sql-50'."
     },
     "datalemur": {
       "role": "company-realism overlay (L3/L4)",
-      "title": "DataLemur \u2014 SQL Interview Questions",
+      "title": "DataLemur — SQL Interview Questions",
       "url": "https://datalemur.com/questions",
       "access": "freemium",
       "enumerated": false,
@@ -74,7 +74,7 @@
     },
     "stratascratch": {
       "role": "company-realism overlay (L3/L4)",
-      "title": "StrataScratch \u2014 real company SQL questions",
+      "title": "StrataScratch — real company SQL questions",
       "url": "https://platform.stratascratch.com/coding",
       "access": "freemium",
       "enumerated": false,
@@ -95,18 +95,19 @@
         "date": "https://pgexercises.com/questions/date/",
         "string": "https://pgexercises.com/questions/string/",
         "recursive": "https://pgexercises.com/questions/recursive/"
-      }
+      },
+      "count": 12
     },
     "reference-ankit-bansal": {
       "role": "explanation reference (not a problem source)",
-      "title": "Ankit Bansal \u2014 SQL / analytics SQL",
+      "title": "Ankit Bansal — SQL / analytics SQL",
       "url": "https://www.youtube.com/@ankitbansal6",
       "access": "free",
       "authority": "None over ordering. Cited per-module for intuition on window functions, self-joins and analytics framing."
     },
     "reference-techtfq": {
       "role": "explanation reference (not a problem source)",
-      "title": "techTFQ (Thoufiq Mohammed) \u2014 SQL tutorials",
+      "title": "techTFQ (Thoufiq Mohammed) — SQL tutorials",
       "url": "https://www.youtube.com/@techTFQ",
       "access": "free",
       "authority": "None over ordering. Cited per-module for CTEs, recursion and query-writing method."
@@ -565,6 +566,25 @@
         ]
       },
       {
+        "module": "filtering",
+        "id": "F1-LC1873",
+        "tier": 1,
+        "title": "Calculate Special Bonus",
+        "platform": "leetcode",
+        "ref": "1873",
+        "url": "https://leetcode.com/problems/calculate-special-bonus/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Select",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "conditional-agg",
+            "case-when",
+            "null-guard"
+          ]
+        ]
+      },
+      {
         "id": "F1-LC584",
         "tier": 1,
         "title": "Find Customer Referee",
@@ -606,6 +626,60 @@
         "patterns": [
           "modulo-filter",
           "order-by"
+        ]
+      },
+      {
+        "module": "filtering",
+        "id": "F1-PGwhere",
+        "tier": 1,
+        "title": "Control Which Rows Are Retrieved",
+        "platform": "pgexercises",
+        "ref": "where",
+        "url": "https://pgexercises.com/questions/basic/where.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Basic SELECT",
+        "difficulty": null,
+        "patterns": [
+          [
+            "select-where",
+            "row-filter"
+          ]
+        ]
+      },
+      {
+        "module": "filtering",
+        "id": "F1-PGwhere2",
+        "tier": 1,
+        "title": "Control Which Rows Are Retrieved - Part 2",
+        "platform": "pgexercises",
+        "ref": "where2",
+        "url": "https://pgexercises.com/questions/basic/where2.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Basic SELECT",
+        "difficulty": null,
+        "patterns": [
+          [
+            "select-where",
+            "row-filter"
+          ]
+        ]
+      },
+      {
+        "module": "filtering",
+        "id": "F1-PGwhere4",
+        "tier": 1,
+        "title": "Matching Against Multiple Possible Values",
+        "platform": "pgexercises",
+        "ref": "where4",
+        "url": "https://pgexercises.com/questions/basic/where4.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Basic SELECT",
+        "difficulty": null,
+        "patterns": [
+          [
+            "in-list",
+            "row-filter"
+          ]
         ]
       },
       {
@@ -667,6 +741,61 @@
         "patterns": [
           "bucketing",
           "zero-row-union"
+        ]
+      },
+      {
+        "module": "filtering",
+        "id": "F2-PGclassify",
+        "tier": 2,
+        "title": "Classify Results Into Buckets",
+        "platform": "pgexercises",
+        "ref": "classify",
+        "url": "https://pgexercises.com/questions/basic/classify.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Basic SELECT",
+        "difficulty": null,
+        "patterns": [
+          [
+            "case-when",
+            "bucket"
+          ]
+        ]
+      },
+      {
+        "module": "filtering",
+        "id": "F2-PGwhere3",
+        "tier": 2,
+        "title": "Basic String Searches",
+        "platform": "pgexercises",
+        "ref": "where3",
+        "url": "https://pgexercises.com/questions/basic/where3.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Basic SELECT",
+        "difficulty": null,
+        "patterns": [
+          [
+            "string-pattern",
+            "like",
+            "row-filter"
+          ]
+        ]
+      },
+      {
+        "module": "filtering",
+        "id": "F3-PGunion",
+        "tier": 3,
+        "title": "Combining Results From Multiple Queries",
+        "platform": "pgexercises",
+        "ref": "union",
+        "url": "https://pgexercises.com/questions/basic/union.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Basic SELECT",
+        "difficulty": null,
+        "patterns": [
+          [
+            "union-all",
+            "set-operations"
+          ]
         ]
       }
     ],
@@ -733,6 +862,24 @@
         ]
       },
       {
+        "module": "joins",
+        "id": "J1-LC1350",
+        "tier": 1,
+        "title": "Students With Invalid Departments",
+        "platform": "leetcode",
+        "ref": "1350",
+        "url": "https://leetcode.com/problems/students-with-invalid-departments/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "left-join",
+            "null-trap"
+          ]
+        ]
+      },
+      {
         "id": "J1-LC1378",
         "tier": 1,
         "title": "Replace Employee ID With The Unique Identifier",
@@ -744,6 +891,44 @@
         "difficulty": "easy",
         "patterns": [
           "left-join"
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J1-LC1407",
+        "tier": 1,
+        "title": "Top Travellers",
+        "platform": "leetcode",
+        "ref": "1407",
+        "url": "https://leetcode.com/problems/top-travellers/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "left-join",
+            "group-by",
+            "sum"
+          ]
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J1-LC1495",
+        "tier": 1,
+        "title": "Friendly Movies Streamed Last Month",
+        "platform": "leetcode",
+        "ref": "1495",
+        "url": "https://leetcode.com/problems/friendly-movies-streamed-last-month/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "join",
+            "date-range",
+            "distinct"
+          ]
         ]
       },
       {
@@ -762,6 +947,62 @@
         ]
       },
       {
+        "module": "joins",
+        "id": "J1-LC1607",
+        "tier": 1,
+        "title": "Sellers With No Sales",
+        "platform": "leetcode",
+        "ref": "1607",
+        "url": "https://leetcode.com/problems/sellers-with-no-sales/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "anti-join",
+            "not-in-subquery"
+          ]
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J1-LC175",
+        "tier": 1,
+        "title": "Combine Two Tables",
+        "platform": "leetcode",
+        "ref": "175",
+        "url": "https://leetcode.com/problems/combine-two-tables/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "left-join",
+            "coalesce",
+            "null-trap"
+          ]
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J1-LC183",
+        "tier": 1,
+        "title": "Customers Who Never Order",
+        "platform": "leetcode",
+        "ref": "183",
+        "url": "https://leetcode.com/problems/customers-who-never-order/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "anti-join",
+            "not-in-subquery",
+            "null-trap"
+          ]
+        ]
+      },
+      {
         "id": "J1-LC577",
         "tier": 1,
         "title": "Employee Bonus",
@@ -774,6 +1015,25 @@
         "patterns": [
           "left-join",
           "null-filter"
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J1-LC607",
+        "tier": 1,
+        "title": "Sales Person",
+        "platform": "leetcode",
+        "ref": "607",
+        "url": "https://leetcode.com/problems/sales-person/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "anti-join",
+            "not-in-subquery",
+            "null-trap"
+          ]
         ]
       },
       {
@@ -905,6 +1165,25 @@
         ]
       },
       {
+        "module": "joins",
+        "id": "J2-LC1571",
+        "tier": 2,
+        "title": "Warehouse Manager",
+        "platform": "leetcode",
+        "ref": "1571",
+        "url": "https://leetcode.com/problems/warehouse-manager/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "inner-join",
+            "arithmetic",
+            "group-by"
+          ]
+        ]
+      },
+      {
         "id": "J2-LC1661",
         "tier": 2,
         "title": "Average Time of Process per Machine",
@@ -917,6 +1196,25 @@
         "patterns": [
           "self-join",
           "conditional-agg"
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J2-LC1699",
+        "tier": 2,
+        "title": "Number of Calls Between Two Persons",
+        "platform": "leetcode",
+        "ref": "1699",
+        "url": "https://leetcode.com/problems/number-of-calls-between-two-persons/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "self-join",
+            "least-greatest",
+            "group-by"
+          ]
         ]
       },
       {
@@ -965,6 +1263,25 @@
         ]
       },
       {
+        "module": "joins",
+        "id": "J2-LC1965",
+        "tier": 2,
+        "title": "Employees With Missing Information",
+        "platform": "leetcode",
+        "ref": "1965",
+        "url": "https://leetcode.com/problems/employees-with-missing-information/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "full-outer-join",
+            "coalesce",
+            "null-trap"
+          ]
+        ]
+      },
+      {
         "id": "J2-LC197",
         "tier": 2,
         "title": "Rising Temperature",
@@ -1009,6 +1326,100 @@
           "pair-dedupe"
         ],
         "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "module": "joins",
+        "id": "J3-LC1212",
+        "tier": 3,
+        "title": "Team Scores in Football Tournament",
+        "platform": "leetcode",
+        "ref": "1212",
+        "url": "https://leetcode.com/problems/team-scores-in-football-tournament/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "self-join",
+            "group-by",
+            "case-sum"
+          ]
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J3-LC1264",
+        "tier": 3,
+        "title": "Page Recommendations",
+        "platform": "leetcode",
+        "ref": "1264",
+        "url": "https://leetcode.com/problems/page-recommendations/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "self-join",
+            "distinct",
+            "exclude-self"
+          ]
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J3-LC1440",
+        "tier": 3,
+        "title": "Evaluate Boolean Expression",
+        "platform": "leetcode",
+        "ref": "1440",
+        "url": "https://leetcode.com/problems/evaluate-boolean-expression/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "join",
+            "case-operator",
+            "null-trap"
+          ]
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J3-LC1501",
+        "tier": 3,
+        "title": "Countries You Can Safely Invest In",
+        "platform": "leetcode",
+        "ref": "1501",
+        "url": "https://leetcode.com/problems/countries-you-can-safely-invest-in/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "join",
+            "group-by",
+            "having"
+          ]
+        ]
+      },
+      {
+        "module": "joins",
+        "id": "J3-LC1747",
+        "tier": 3,
+        "title": "Leetflex Banned Accounts",
+        "platform": "leetcode",
+        "ref": "1747",
+        "url": "https://leetcode.com/problems/leetflex-banned-accounts/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "self-join",
+            "interval-overlap"
+          ]
+        ]
       }
     ],
     "aggregation": [
@@ -1304,6 +1715,43 @@
         ]
       },
       {
+        "module": "aggregation",
+        "id": "A1-LC1741",
+        "tier": 1,
+        "title": "Find Total Time Spent by Each Employee",
+        "platform": "leetcode",
+        "ref": "1741",
+        "url": "https://leetcode.com/problems/find-total-time-spent-by-each-employee/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "group-by",
+            "sum"
+          ]
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A1-LC182",
+        "tier": 1,
+        "title": "Duplicate Emails",
+        "platform": "leetcode",
+        "ref": "182",
+        "url": "https://leetcode.com/problems/duplicate-emails/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "group-by",
+            "having",
+            "count"
+          ]
+        ]
+      },
+      {
         "id": "A1-LC2356",
         "tier": 1,
         "title": "Number of Unique Subjects Taught by Each Teacher",
@@ -1315,6 +1763,43 @@
         "difficulty": "easy",
         "patterns": [
           "count-distinct"
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A1-LC511",
+        "tier": 1,
+        "title": "Game Play Analysis I",
+        "platform": "leetcode",
+        "ref": "511",
+        "url": "https://leetcode.com/problems/game-play-analysis-i/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "group-by",
+            "min"
+          ]
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A1-LC586",
+        "tier": 1,
+        "title": "Customer Placing the Largest Number of Orders",
+        "platform": "leetcode",
+        "ref": "586",
+        "url": "https://leetcode.com/problems/customer-placing-the-largest-number-of-orders/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "group-by",
+            "order-by",
+            "limit"
+          ]
         ]
       },
       {
@@ -1379,6 +1864,25 @@
         ]
       },
       {
+        "module": "aggregation",
+        "id": "A2-LC1050",
+        "tier": 2,
+        "title": "Actors and Directors Who Cooperated At Least Three Times",
+        "platform": "leetcode",
+        "ref": "1050",
+        "url": "https://leetcode.com/problems/actors-and-directors-who-cooperated-at-least-three-times/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "group-by",
+            "having",
+            "distinct-count"
+          ]
+        ]
+      },
+      {
         "id": "A2-LC1070",
         "tier": 2,
         "title": "Product Sales Analysis III",
@@ -1391,6 +1895,24 @@
         "patterns": [
           "first-per-group",
           "min-group"
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A2-LC1173",
+        "tier": 2,
+        "title": "Immediate Food Delivery I",
+        "platform": "leetcode",
+        "ref": "1173",
+        "url": "https://leetcode.com/problems/immediate-food-delivery-i/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "conditional-avg",
+            "case-when"
+          ]
         ]
       },
       {
@@ -1468,6 +1990,82 @@
         ]
       },
       {
+        "module": "aggregation",
+        "id": "A2-LC1511",
+        "tier": 2,
+        "title": "Customer Order Frequency",
+        "platform": "leetcode",
+        "ref": "1511",
+        "url": "https://leetcode.com/problems/customer-order-frequency/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "join",
+            "group-by",
+            "having",
+            "date-range"
+          ]
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A2-LC1587",
+        "tier": 2,
+        "title": "Bank Account Summary II",
+        "platform": "leetcode",
+        "ref": "1587",
+        "url": "https://leetcode.com/problems/bank-account-summary-ii/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "join",
+            "group-by",
+            "having"
+          ]
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A2-LC1693",
+        "tier": 2,
+        "title": "Daily Leads and Partners",
+        "platform": "leetcode",
+        "ref": "1693",
+        "url": "https://leetcode.com/problems/daily-leads-and-partners/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "group-by",
+            "distinct-count"
+          ]
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A2-LC1821",
+        "tier": 2,
+        "title": "Find Customers With Positive Revenue this Year",
+        "platform": "leetcode",
+        "ref": "1821",
+        "url": "https://leetcode.com/problems/find-customers-with-positive-revenue-this-year/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "group-by",
+            "having",
+            "date-filter"
+          ]
+        ]
+      },
+      {
         "id": "A2-LC602",
         "tier": 2,
         "title": "Friend Requests II: Who Has the Most Friends",
@@ -1532,6 +2130,45 @@
         "note": "URL points to the subdomain listing; open the challenge by title."
       },
       {
+        "module": "aggregation",
+        "id": "A3-LC1398",
+        "tier": 3,
+        "title": "Customers Who Bought Products A and B but Not C",
+        "platform": "leetcode",
+        "ref": "1398",
+        "url": "https://leetcode.com/problems/customers-who-bought-products-a-and-b-but-not-c/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "group-by",
+            "having",
+            "distinct-count",
+            "case-when"
+          ]
+        ]
+      },
+      {
+        "module": "aggregation",
+        "id": "A3-LC1783",
+        "tier": 3,
+        "title": "Grand Slam Titles",
+        "platform": "leetcode",
+        "ref": "1783",
+        "url": "https://leetcode.com/problems/grand-slam-titles/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "union",
+            "group-by",
+            "count"
+          ]
+        ]
+      },
+      {
         "id": "A3-LC550",
         "tier": 3,
         "title": "Game Play Analysis IV",
@@ -1565,6 +2202,23 @@
         ]
       },
       {
+        "module": "window-functions",
+        "id": "W2-LC1303",
+        "tier": 2,
+        "title": "Find the Team Size",
+        "platform": "leetcode",
+        "ref": "1303",
+        "url": "https://leetcode.com/problems/find-the-team-size/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "count-over-partition"
+          ]
+        ]
+      },
+      {
         "id": "W2-LC180",
         "tier": 2,
         "title": "Consecutive Numbers",
@@ -1595,6 +2249,60 @@
         ]
       },
       {
+        "module": "window-functions",
+        "id": "W2-LC512",
+        "tier": 2,
+        "title": "Game Play Analysis II",
+        "platform": "leetcode",
+        "ref": "512",
+        "url": "https://leetcode.com/problems/game-play-analysis-ii/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "first-value",
+            "partition"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W2-LC603",
+        "tier": 2,
+        "title": "Consecutive Available Seats",
+        "platform": "leetcode",
+        "ref": "603",
+        "url": "https://leetcode.com/problems/consecutive-available-seats/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "lag",
+            "lead"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W2-LC613",
+        "tier": 2,
+        "title": "Shortest Distance in a Line",
+        "platform": "leetcode",
+        "ref": "613",
+        "url": "https://leetcode.com/problems/shortest-distance-in-a-line/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "lag",
+            "abs-difference"
+          ]
+        ]
+      },
+      {
         "id": "W3-HR051",
         "tier": 3,
         "title": "SQL Project Planning",
@@ -1609,6 +2317,44 @@
           "consecutive-runs"
         ],
         "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1077",
+        "tier": 3,
+        "title": "Project Employees III",
+        "platform": "leetcode",
+        "ref": "1077",
+        "url": "https://leetcode.com/problems/project-employees-iii/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "dense-rank",
+            "partition",
+            "join"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1112",
+        "tier": 3,
+        "title": "Highest Grade For Each Student",
+        "platform": "leetcode",
+        "ref": "1112",
+        "url": "https://leetcode.com/problems/highest-grade-for-each-student/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "row-number",
+            "partition",
+            "order-by"
+          ]
+        ]
       },
       {
         "id": "W3-LC1164",
@@ -1626,6 +2372,24 @@
         ]
       },
       {
+        "module": "window-functions",
+        "id": "W3-LC1285",
+        "tier": 3,
+        "title": "Find the Start and End Number of Continuous Ranges",
+        "platform": "leetcode",
+        "ref": "1285",
+        "url": "https://leetcode.com/problems/find-the-start-and-end-number-of-continuous-ranges/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "gaps-and-islands",
+            "row-number"
+          ]
+        ]
+      },
+      {
         "id": "W3-LC1321",
         "tier": 3,
         "title": "Restaurant Growth",
@@ -1638,6 +2402,191 @@
         "patterns": [
           "moving-average",
           "rows-frame"
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1412",
+        "tier": 3,
+        "title": "Find the Quiet Students in All Exams",
+        "platform": "leetcode",
+        "ref": "1412",
+        "url": "https://leetcode.com/problems/find-the-quiet-students-in-all-exams/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "dense-rank",
+            "min-max"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1532",
+        "tier": 3,
+        "title": "The Most Recent Three Orders",
+        "platform": "leetcode",
+        "ref": "1532",
+        "url": "https://leetcode.com/problems/the-most-recent-three-orders/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "row-number",
+            "partition"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1549",
+        "tier": 3,
+        "title": "The Most Recent Orders for Each Product",
+        "platform": "leetcode",
+        "ref": "1549",
+        "url": "https://leetcode.com/problems/the-most-recent-orders-for-each-product/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "row-number",
+            "partition"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1596",
+        "tier": 3,
+        "title": "The Most Frequently Ordered Products for Each Customer",
+        "platform": "leetcode",
+        "ref": "1596",
+        "url": "https://leetcode.com/problems/the-most-frequently-ordered-products-for-each-customer/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "dense-rank",
+            "partition",
+            "group-by"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1709",
+        "tier": 3,
+        "title": "Biggest Window Between Visits",
+        "platform": "leetcode",
+        "ref": "1709",
+        "url": "https://leetcode.com/problems/biggest-window-between-visits/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "lag",
+            "date-difference"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1831",
+        "tier": 3,
+        "title": "Maximum Transaction Each Day",
+        "platform": "leetcode",
+        "ref": "1831",
+        "url": "https://leetcode.com/problems/maximum-transaction-each-day/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "row-number",
+            "partition",
+            "date"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC184",
+        "tier": 3,
+        "title": "Department Highest Salary",
+        "platform": "leetcode",
+        "ref": "184",
+        "url": "https://leetcode.com/problems/department-highest-salary/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "dense-rank",
+            "partition",
+            "join"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC1890",
+        "tier": 3,
+        "title": "The Latest Login in 2020",
+        "platform": "leetcode",
+        "ref": "1890",
+        "url": "https://leetcode.com/problems/the-latest-login-in-2020/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "row-number",
+            "partition",
+            "date-filter"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W3-LC534",
+        "tier": 3,
+        "title": "Game Play Analysis III",
+        "platform": "leetcode",
+        "ref": "534",
+        "url": "https://leetcode.com/problems/game-play-analysis-iii/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "running-sum",
+            "frame"
+          ]
+        ]
+      },
+      {
+        "module": "window-functions",
+        "id": "W4-LC1225",
+        "tier": 4,
+        "title": "Report Contiguous Dates",
+        "platform": "leetcode",
+        "ref": "1225",
+        "url": "https://leetcode.com/problems/report-contiguous-dates/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "hard",
+        "patterns": [
+          [
+            "gaps-and-islands",
+            "dense-rank",
+            "date"
+          ]
         ]
       }
     ],
@@ -1689,6 +2638,25 @@
         ]
       },
       {
+        "module": "subqueries-ctes",
+        "id": "S2-LC608",
+        "tier": 2,
+        "title": "Tree Node",
+        "platform": "leetcode",
+        "ref": "608",
+        "url": "https://leetcode.com/problems/tree-node/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "correlated-subquery",
+            "exists",
+            "case-when"
+          ]
+        ]
+      },
+      {
         "id": "S2-LC626",
         "tier": 2,
         "title": "Exchange Seats",
@@ -1732,9 +2700,63 @@
           "multi-condition-subquery",
           "dedupe-by-key"
         ]
+      },
+      {
+        "module": "subqueries-ctes",
+        "id": "S4-LC1270",
+        "tier": 4,
+        "title": "All People Report to the Given Manager",
+        "platform": "leetcode",
+        "ref": "1270",
+        "url": "https://leetcode.com/problems/all-people-report-to-the-given-manager/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "recursive-cte"
+          ]
+        ]
+      },
+      {
+        "module": "subqueries-ctes",
+        "id": "S4-LC1767",
+        "tier": 4,
+        "title": "Find the Subtasks That Did Not Execute",
+        "platform": "leetcode",
+        "ref": "1767",
+        "url": "https://leetcode.com/problems/find-the-subtasks-that-did-not-execute/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "hard",
+        "patterns": [
+          [
+            "recursive-cte",
+            "not-exists"
+          ]
+        ]
       }
     ],
     "advanced-analytics": [
+      {
+        "module": "advanced-analytics",
+        "id": "X1-LC1795",
+        "tier": 1,
+        "title": "Rearrange Products Table",
+        "platform": "leetcode",
+        "ref": "1795",
+        "url": "https://leetcode.com/problems/rearrange-products-table/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          [
+            "unpivot",
+            "union-all",
+            "transpose"
+          ]
+        ]
+      },
       {
         "id": "X2-HR023",
         "tier": 2,
@@ -1750,6 +2772,24 @@
           "row-number-pivot"
         ],
         "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "module": "advanced-analytics",
+        "id": "X2-LC1445",
+        "tier": 2,
+        "title": "Apples & Oranges",
+        "platform": "leetcode",
+        "ref": "1445",
+        "url": "https://leetcode.com/problems/apples-oranges/",
+        "sheet": "leetcode-advanced-sql-50",
+        "sheetSection": "Aggregate Functions",
+        "difficulty": "medium",
+        "patterns": [
+          [
+            "case-pivot",
+            "conditional-agg"
+          ]
+        ]
       },
       {
         "id": "X4-HR056",
@@ -1802,7 +2842,120 @@
       }
     ],
     "performance": [],
-    "timeseries-geo": []
+    "timeseries-geo": [
+      {
+        "module": "timeseries-geo",
+        "id": "T2-PGbookingspermonth",
+        "tier": 2,
+        "title": "Return a Count of Bookings for Each Month",
+        "platform": "pgexercises",
+        "ref": "bookingspermonth",
+        "url": "https://pgexercises.com/questions/date/bookingspermonth.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Working with Timestamps",
+        "difficulty": null,
+        "patterns": [
+          [
+            "date-trunc",
+            "group-by",
+            "count"
+          ]
+        ]
+      },
+      {
+        "module": "timeseries-geo",
+        "id": "T2-PGdaysinmonth",
+        "tier": 2,
+        "title": "Work Out the Number of Days in Each Month of 2012",
+        "platform": "pgexercises",
+        "ref": "daysinmonth",
+        "url": "https://pgexercises.com/questions/date/daysinmonth.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Working with Timestamps",
+        "difficulty": null,
+        "patterns": [
+          [
+            "date-trunc",
+            "generate-series",
+            "extract"
+          ]
+        ]
+      },
+      {
+        "module": "timeseries-geo",
+        "id": "T2-PGendtimes",
+        "tier": 2,
+        "title": "Work Out the End Time of Bookings",
+        "platform": "pgexercises",
+        "ref": "endtimes",
+        "url": "https://pgexercises.com/questions/date/endtimes.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Working with Timestamps",
+        "difficulty": null,
+        "patterns": [
+          [
+            "date-arithmetic",
+            "add-interval"
+          ]
+        ]
+      },
+      {
+        "module": "timeseries-geo",
+        "id": "T2-PGinterval2",
+        "tier": 2,
+        "title": "Work Out the Number of Seconds Between Timestamps",
+        "platform": "pgexercises",
+        "ref": "interval2",
+        "url": "https://pgexercises.com/questions/date/interval2.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Working with Timestamps",
+        "difficulty": null,
+        "patterns": [
+          [
+            "interval",
+            "date-arithmetic",
+            "extract"
+          ]
+        ]
+      },
+      {
+        "module": "timeseries-geo",
+        "id": "T2-PGseries",
+        "tier": 2,
+        "title": "Generate a List of All the Dates in October 2012",
+        "platform": "pgexercises",
+        "ref": "series",
+        "url": "https://pgexercises.com/questions/date/series.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Working with Timestamps",
+        "difficulty": null,
+        "patterns": [
+          [
+            "generate-series",
+            "date"
+          ]
+        ]
+      },
+      {
+        "module": "timeseries-geo",
+        "id": "T2-PGutilisationpermonth",
+        "tier": 2,
+        "title": "Work Out the Utilisation Percentage for Each Facility by Month",
+        "platform": "pgexercises",
+        "ref": "utilisationpermonth",
+        "url": "https://pgexercises.com/questions/date/utilisationpermonth.html",
+        "sheet": "pgexercises",
+        "sheetSection": "Working with Timestamps",
+        "difficulty": null,
+        "patterns": [
+          [
+            "date-trunc",
+            "group-by",
+            "ratio"
+          ]
+        ]
+      }
+    ]
   },
   "coverage": {
     "basics": {
@@ -1828,16 +2981,18 @@
       }
     },
     "filtering": {
-      "sourced": 20,
+      "sourced": 27,
       "byTier": {
-        "1": 16,
-        "2": 4,
-        "3": 0,
+        "1": 20,
+        "2": 6,
+        "3": 1,
         "4": 0
       },
       "bySheet": {
         "hackerrank-sql-58": 13,
-        "leetcode-sql-50": 7
+        "leetcode-sql-50": 7,
+        "leetcode-advanced-sql-50": 1,
+        "pgexercises": 6
       },
       "overlay": {
         "pgexercises": [
@@ -1851,16 +3006,17 @@
       }
     },
     "joins": {
-      "sourced": 22,
+      "sourced": 37,
       "byTier": {
-        "1": 7,
-        "2": 14,
-        "3": 1,
+        "1": 14,
+        "2": 17,
+        "3": 6,
         "4": 0
       },
       "bySheet": {
         "hackerrank-sql-58": 11,
-        "leetcode-sql-50": 11
+        "leetcode-sql-50": 11,
+        "leetcode-advanced-sql-50": 15
       },
       "overlay": {
         "pgexercises": [
@@ -1873,16 +3029,17 @@
       }
     },
     "aggregation": {
-      "sourced": 35,
+      "sourced": 47,
       "byTier": {
-        "1": 21,
-        "2": 11,
-        "3": 3,
+        "1": 25,
+        "2": 17,
+        "3": 5,
         "4": 0
       },
       "bySheet": {
         "hackerrank-sql-58": 19,
-        "leetcode-sql-50": 16
+        "leetcode-sql-50": 16,
+        "leetcode-advanced-sql-50": 12
       },
       "overlay": {
         "pgexercises": [
@@ -1895,15 +3052,16 @@
       }
     },
     "window-functions": {
-      "sourced": 6,
+      "sourced": 23,
       "byTier": {
         "1": 0,
-        "2": 3,
-        "3": 3,
-        "4": 0
+        "2": 7,
+        "3": 15,
+        "4": 1
       },
       "bySheet": {
         "leetcode-sql-50": 5,
+        "leetcode-advanced-sql-50": 17,
         "hackerrank-sql-58": 1
       },
       "overlay": {
@@ -1917,16 +3075,17 @@
       }
     },
     "subqueries-ctes": {
-      "sourced": 6,
+      "sourced": 9,
       "byTier": {
         "1": 1,
-        "2": 3,
+        "2": 4,
         "3": 2,
-        "4": 0
+        "4": 2
       },
       "bySheet": {
         "leetcode-sql-50": 5,
-        "hackerrank-sql-58": 1
+        "hackerrank-sql-58": 1,
+        "leetcode-advanced-sql-50": 3
       },
       "overlay": {
         "pgexercises": [
@@ -1939,14 +3098,15 @@
       }
     },
     "advanced-analytics": {
-      "sourced": 4,
+      "sourced": 6,
       "byTier": {
-        "1": 0,
-        "2": 1,
+        "1": 1,
+        "2": 2,
         "3": 0,
         "4": 3
       },
       "bySheet": {
+        "leetcode-advanced-sql-50": 2,
         "hackerrank-sql-58": 4
       },
       "overlay": {
@@ -1976,14 +3136,16 @@
       }
     },
     "timeseries-geo": {
-      "sourced": 0,
+      "sourced": 6,
       "byTier": {
         "1": 0,
-        "2": 0,
+        "2": 6,
         "3": 0,
         "4": 0
       },
-      "bySheet": {},
+      "bySheet": {
+        "pgexercises": 6
+      },
       "overlay": {
         "pgexercises": [
           "date"
@@ -1997,7 +3159,7 @@
     {
       "module": "performance",
       "severity": "high",
-      "problem": "No free judge-backed sheet tests EXPLAIN reading, index selection or plan forcing \u2014 LeetCode and HackerRank grade output, not plans.",
+      "problem": "No free judge-backed sheet tests EXPLAIN reading, index selection or plan forcing — LeetCode and HackerRank grade output, not plans.",
       "fill": "Keep the synthesised drills as the primary source here. Add PGExercises-style local exercises against a seeded Postgres, graded by plan shape rather than result set. Cite Use The Index, Luke (https://use-the-index-luke.com/) as the reference text."
     },
     {
@@ -2022,7 +3184,7 @@
       "tier": "L4",
       "severity": "medium",
       "problem": "Only 3 sourced L4 problems exist across the whole bank (HackerRank Alternative Queries).",
-      "fill": "L4 is constraint-driven and internals-heavy by design \u2014 it stays predominantly synthesised. Do not force external sourcing here."
+      "fill": "L4 is constraint-driven and internals-heavy by design — it stays predominantly synthesised. Do not force external sourcing here."
     }
   ],
   "rules": [

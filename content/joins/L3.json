@@ -368,7 +368,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "1 sourced problem from HackerRank SQL. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "6 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -385,6 +385,95 @@
               "patterns": [
                 "self-join",
                 "pair-dedupe"
+              ]
+            },
+            {
+              "id": "J3-LC1212",
+              "tier": 3,
+              "title": "Team Scores in Football Tournament",
+              "platform": "leetcode",
+              "ref": "1212",
+              "url": "https://leetcode.com/problems/team-scores-in-football-tournament/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "self-join",
+                  "group-by",
+                  "case-sum"
+                ]
+              ]
+            },
+            {
+              "id": "J3-LC1264",
+              "tier": 3,
+              "title": "Page Recommendations",
+              "platform": "leetcode",
+              "ref": "1264",
+              "url": "https://leetcode.com/problems/page-recommendations/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "self-join",
+                  "distinct",
+                  "exclude-self"
+                ]
+              ]
+            },
+            {
+              "id": "J3-LC1440",
+              "tier": 3,
+              "title": "Evaluate Boolean Expression",
+              "platform": "leetcode",
+              "ref": "1440",
+              "url": "https://leetcode.com/problems/evaluate-boolean-expression/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "join",
+                  "case-operator",
+                  "null-trap"
+                ]
+              ]
+            },
+            {
+              "id": "J3-LC1501",
+              "tier": 3,
+              "title": "Countries You Can Safely Invest In",
+              "platform": "leetcode",
+              "ref": "1501",
+              "url": "https://leetcode.com/problems/countries-you-can-safely-invest-in/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "join",
+                  "group-by",
+                  "having"
+                ]
+              ]
+            },
+            {
+              "id": "J3-LC1747",
+              "tier": 3,
+              "title": "Leetflex Banned Accounts",
+              "platform": "leetcode",
+              "ref": "1747",
+              "url": "https://leetcode.com/problems/leetflex-banned-accounts/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "self-join",
+                  "interval-overlap"
+                ]
               ]
             }
           ]

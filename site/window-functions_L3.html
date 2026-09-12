@@ -249,7 +249,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Compute 3-period moving average of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4c">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuve4c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuve4c">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -259,7 +259,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Running sum of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4d">SUM(rn) OVER (ORDER BY rn)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuve4d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuve4d">SUM(rn) OVER (ORDER BY rn)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -269,7 +269,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4e">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuve4e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuve4e">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -279,7 +279,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4f">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuve4f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuve4f">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -289,7 +289,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Rank employees by their running total of salary (ordered by hire_date).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4g">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuve4g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuve4g">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -299,18 +299,38 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4h">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuve4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuve4h">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-4">
     <div class="section-header"><span class="section-num">05 //</span><h2>Sourced Problem Set</h2></div>
-    <div class="callout blue">3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+    <div class="callout blue">15 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50 · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
       <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">SQL Project Planning</a></div>
         <div class="prob-meta">hackerrank · #051 · hackerrank-sql-58 · gaps-and-islands + consecutive-runs</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-HR051"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/project-employees-iii/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Project Employees III</a></div>
+        <div class="prob-meta">leetcode · #1077 · medium · leetcode-advanced-sql-50 · dense-rank,partition,join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1077"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/highest-grade-for-each-student/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Highest Grade For Each Student</a></div>
+        <div class="prob-meta">leetcode · #1112 · medium · leetcode-advanced-sql-50 · row-number,partition,order-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1112"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       
@@ -328,9 +348,109 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/find-the-start-and-end-number-of-continuous-ranges/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Find the Start and End Number of Continuous Ranges</a></div>
+        <div class="prob-meta">leetcode · #1285 · medium · leetcode-advanced-sql-50 · gaps-and-islands,row-number</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1285"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/restaurant-growth/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Restaurant Growth</a></div>
         <div class="prob-meta">leetcode · #1321 · medium · leetcode-sql-50 · moving-average + rows-frame</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1321"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/find-the-quiet-students-in-all-exams/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Find the Quiet Students in All Exams</a></div>
+        <div class="prob-meta">leetcode · #1412 · medium · leetcode-advanced-sql-50 · dense-rank,min-max</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1412"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-most-recent-three-orders/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Most Recent Three Orders</a></div>
+        <div class="prob-meta">leetcode · #1532 · medium · leetcode-advanced-sql-50 · row-number,partition</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1532"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-most-recent-orders-for-each-product/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Most Recent Orders for Each Product</a></div>
+        <div class="prob-meta">leetcode · #1549 · medium · leetcode-advanced-sql-50 · row-number,partition</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1549"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-most-frequently-ordered-products-for-each-customer/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Most Frequently Ordered Products for Each Customer</a></div>
+        <div class="prob-meta">leetcode · #1596 · medium · leetcode-advanced-sql-50 · dense-rank,partition,group-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1596"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/biggest-window-between-visits/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Biggest Window Between Visits</a></div>
+        <div class="prob-meta">leetcode · #1709 · medium · leetcode-advanced-sql-50 · lag,date-difference</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1709"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/maximum-transaction-each-day/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Maximum Transaction Each Day</a></div>
+        <div class="prob-meta">leetcode · #1831 · medium · leetcode-advanced-sql-50 · row-number,partition,date</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1831"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/department-highest-salary/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Department Highest Salary</a></div>
+        <div class="prob-meta">leetcode · #184 · medium · leetcode-advanced-sql-50 · dense-rank,partition,join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC184"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-latest-login-in-2020/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Latest Login in 2020</a></div>
+        <div class="prob-meta">leetcode · #1890 · easy · leetcode-advanced-sql-50 · row-number,partition,date-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1890"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/game-play-analysis-iii/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Game Play Analysis III</a></div>
+        <div class="prob-meta">leetcode · #534 · medium · leetcode-advanced-sql-50 · running-sum,frame</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC534"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       

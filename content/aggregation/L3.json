@@ -397,7 +397,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "5 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50 · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -430,6 +430,43 @@
                 "running-distinct",
                 "max-per-group",
                 "correlated-subquery"
+              ]
+            },
+            {
+              "id": "A3-LC1398",
+              "tier": 3,
+              "title": "Customers Who Bought Products A and B but Not C",
+              "platform": "leetcode",
+              "ref": "1398",
+              "url": "https://leetcode.com/problems/customers-who-bought-products-a-and-b-but-not-c/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Aggregate Functions",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "group-by",
+                  "having",
+                  "distinct-count",
+                  "case-when"
+                ]
+              ]
+            },
+            {
+              "id": "A3-LC1783",
+              "tier": 3,
+              "title": "Grand Slam Titles",
+              "platform": "leetcode",
+              "ref": "1783",
+              "url": "https://leetcode.com/problems/grand-slam-titles/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Aggregate Functions",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "union",
+                  "group-by",
+                  "count"
+                ]
               ]
             },
             {

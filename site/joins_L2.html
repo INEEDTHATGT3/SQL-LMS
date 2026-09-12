@@ -253,7 +253,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each employee, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82e">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2e">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -263,7 +263,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Find customers who have never placed an order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82f">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2f">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -273,7 +273,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82g">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2g">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -283,7 +283,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Employees who placed at least one order in 2024.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82h">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2h">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -293,7 +293,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Products that have never been ordered.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82i">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2i">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -303,7 +303,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Join small_table (100 rows) → medium (10k) → large (1M). Force order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82j">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2j">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -313,7 +313,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       User IDs in 'active' status but not in 'inactive'. Use EXCEPT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82k">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2k">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -323,12 +323,12 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli82l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli82l">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuo2l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuo2l">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">
     <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
-    <div class="callout blue">14 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+    <div class="callout blue">17 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -412,9 +412,29 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/warehouse-manager/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Warehouse Manager</a></div>
+        <div class="prob-meta">leetcode · #1571 · easy · leetcode-advanced-sql-50 · inner-join,arithmetic,group-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1571"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/average-time-of-process-per-machine/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Average Time of Process per Machine</a></div>
         <div class="prob-meta">leetcode · #1661 · easy · leetcode-sql-50 · self-join + conditional-agg</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1661"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/number-of-calls-between-two-persons/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Number of Calls Between Two Persons</a></div>
+        <div class="prob-meta">leetcode · #1699 · medium · leetcode-advanced-sql-50 · self-join,least-greatest,group-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1699"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       
@@ -445,6 +465,16 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/confirmation-rate/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Confirmation Rate</a></div>
         <div class="prob-meta">leetcode · #1934 · medium · leetcode-sql-50 · left-join + conditional-agg</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1934"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/employees-with-missing-information/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Employees With Missing Information</a></div>
+        <div class="prob-meta">leetcode · #1965 · easy · leetcode-advanced-sql-50 · full-outer-join,coalesce,null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1965"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       

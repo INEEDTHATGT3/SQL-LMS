@@ -380,7 +380,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "15 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50 · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -400,6 +400,42 @@
               ]
             },
             {
+              "id": "W3-LC1077",
+              "tier": 3,
+              "title": "Project Employees III",
+              "platform": "leetcode",
+              "ref": "1077",
+              "url": "https://leetcode.com/problems/project-employees-iii/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "dense-rank",
+                  "partition",
+                  "join"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC1112",
+              "tier": 3,
+              "title": "Highest Grade For Each Student",
+              "platform": "leetcode",
+              "ref": "1112",
+              "url": "https://leetcode.com/problems/highest-grade-for-each-student/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "row-number",
+                  "partition",
+                  "order-by"
+                ]
+              ]
+            },
+            {
               "id": "W3-LC1164",
               "tier": 3,
               "title": "Product Price at a Given Date",
@@ -415,6 +451,23 @@
               ]
             },
             {
+              "id": "W3-LC1285",
+              "tier": 3,
+              "title": "Find the Start and End Number of Continuous Ranges",
+              "platform": "leetcode",
+              "ref": "1285",
+              "url": "https://leetcode.com/problems/find-the-start-and-end-number-of-continuous-ranges/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "gaps-and-islands",
+                  "row-number"
+                ]
+              ]
+            },
+            {
               "id": "W3-LC1321",
               "tier": 3,
               "title": "Restaurant Growth",
@@ -427,6 +480,163 @@
               "patterns": [
                 "moving-average",
                 "rows-frame"
+              ]
+            },
+            {
+              "id": "W3-LC1412",
+              "tier": 3,
+              "title": "Find the Quiet Students in All Exams",
+              "platform": "leetcode",
+              "ref": "1412",
+              "url": "https://leetcode.com/problems/find-the-quiet-students-in-all-exams/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "dense-rank",
+                  "min-max"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC1532",
+              "tier": 3,
+              "title": "The Most Recent Three Orders",
+              "platform": "leetcode",
+              "ref": "1532",
+              "url": "https://leetcode.com/problems/the-most-recent-three-orders/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "row-number",
+                  "partition"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC1549",
+              "tier": 3,
+              "title": "The Most Recent Orders for Each Product",
+              "platform": "leetcode",
+              "ref": "1549",
+              "url": "https://leetcode.com/problems/the-most-recent-orders-for-each-product/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "row-number",
+                  "partition"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC1596",
+              "tier": 3,
+              "title": "The Most Frequently Ordered Products for Each Customer",
+              "platform": "leetcode",
+              "ref": "1596",
+              "url": "https://leetcode.com/problems/the-most-frequently-ordered-products-for-each-customer/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "dense-rank",
+                  "partition",
+                  "group-by"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC1709",
+              "tier": 3,
+              "title": "Biggest Window Between Visits",
+              "platform": "leetcode",
+              "ref": "1709",
+              "url": "https://leetcode.com/problems/biggest-window-between-visits/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "lag",
+                  "date-difference"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC1831",
+              "tier": 3,
+              "title": "Maximum Transaction Each Day",
+              "platform": "leetcode",
+              "ref": "1831",
+              "url": "https://leetcode.com/problems/maximum-transaction-each-day/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "row-number",
+                  "partition",
+                  "date"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC184",
+              "tier": 3,
+              "title": "Department Highest Salary",
+              "platform": "leetcode",
+              "ref": "184",
+              "url": "https://leetcode.com/problems/department-highest-salary/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "dense-rank",
+                  "partition",
+                  "join"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC1890",
+              "tier": 3,
+              "title": "The Latest Login in 2020",
+              "platform": "leetcode",
+              "ref": "1890",
+              "url": "https://leetcode.com/problems/the-latest-login-in-2020/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "row-number",
+                  "partition",
+                  "date-filter"
+                ]
+              ]
+            },
+            {
+              "id": "W3-LC534",
+              "tier": 3,
+              "title": "Game Play Analysis III",
+              "platform": "leetcode",
+              "ref": "534",
+              "url": "https://leetcode.com/problems/game-play-analysis-iii/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "running-sum",
+                  "frame"
+                ]
               ]
             }
           ]

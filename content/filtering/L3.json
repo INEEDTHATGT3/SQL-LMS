@@ -386,6 +386,37 @@
           ]
         }
       ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "1 sourced problem from PGExercises. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "F3-PGunion",
+              "tier": 3,
+              "title": "Combining Results From Multiple Queries",
+              "platform": "pgexercises",
+              "ref": "union",
+              "url": "https://pgexercises.com/questions/basic/union.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Basic SELECT",
+              "patterns": [
+                [
+                  "union-all",
+                  "set-operations"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "revisionCard": [

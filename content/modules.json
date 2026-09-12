@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "orderSource": "LeetCode SQL 50 \u2014 7 sections, 50 problems, free and judge-backed. Modules 01-06 follow it; 07-09 are deliberate off-spine extensions. Volume from HackerRank SQL (58); company realism from DataLemur/StrataScratch; Postgres-native and recursive from PGExercises. Full rationale and precedence rules: content/SOURCING.md.",
+  "orderSource": "LeetCode SQL 50 — 7 sections, 50 problems, free and judge-backed. Modules 01-06 follow it; 07-09 are deliberate off-spine extensions. Volume from HackerRank SQL (58); company realism from DataLemur/StrataScratch; Postgres-native and recursive from PGExercises. Full rationale and precedence rules: content/SOURCING.md.",
   "sourcing": {
     "doc": "content/SOURCING.md",
     "bank": "content/problems.json",
@@ -24,7 +24,7 @@
     "L1": "Single concept, guided. Boundary = LeetCode SQL 50 Easy + HackerRank Basic Select/Aggregation.",
     "L2": "Combinations and standard patterns, first EXPLAIN. Boundary = LeetCode SQL 50 Medium + HackerRank Basic/Advanced Join.",
     "L3": "Optimization trade-offs, dialect differences, internals. Boundary = LeetCode SQL 50 Hard + Advanced SQL 50 + DataLemur Hard.",
-    "L4": "Constraint-driven techniques, plan forcing, partitioning. Predominantly synthesised \u2014 no free sheet reaches here."
+    "L4": "Constraint-driven techniques, plan forcing, partitioning. Predominantly synthesised — no free sheet reaches here."
   },
   "modules": [
     {
@@ -34,7 +34,7 @@
       "subtitle": "SELECT, WHERE, ORDER BY, LIMIT, string functions",
       "deps": [],
       "status": "active",
-      "spinePosition": "LC50 \u00a71 Select",
+      "spinePosition": "LC50 §1 Select",
       "sheetSections": [
         "LC50: Select",
         "LC50: Advanced String Functions / Regex / Clause",
@@ -63,7 +63,7 @@
         "basics"
       ],
       "status": "active",
-      "spinePosition": "LC50 \u00a71 Select / \u00a77 String",
+      "spinePosition": "LC50 §1 Select / §7 String",
       "sheetSections": [
         "LC50: Select",
         "LC50: Basic Aggregate Functions",
@@ -73,16 +73,18 @@
         "HR: Advanced Select"
       ],
       "sourced": {
-        "count": 20,
+        "count": 27,
         "byTier": {
-          "1": 16,
-          "2": 4,
-          "3": 0,
+          "1": 20,
+          "2": 6,
+          "3": 1,
           "4": 0
         },
         "bySheet": {
           "hackerrank-sql-58": 13,
-          "leetcode-sql-50": 7
+          "leetcode-sql-50": 7,
+          "leetcode-advanced-sql-50": 1,
+          "pgexercises": 6
         }
       }
     },
@@ -95,7 +97,7 @@
         "filtering"
       ],
       "status": "active",
-      "spinePosition": "LC50 \u00a72 Basic Joins",
+      "spinePosition": "LC50 §2 Basic Joins",
       "sheetSections": [
         "LC50: Basic Joins",
         "LC50: Advanced Select and Joins",
@@ -104,16 +106,17 @@
         "HR: Advanced Select"
       ],
       "sourced": {
-        "count": 22,
+        "count": 37,
         "byTier": {
-          "1": 7,
-          "2": 14,
-          "3": 1,
+          "1": 14,
+          "2": 17,
+          "3": 6,
           "4": 0
         },
         "bySheet": {
           "hackerrank-sql-58": 11,
-          "leetcode-sql-50": 11
+          "leetcode-sql-50": 11,
+          "leetcode-advanced-sql-50": 15
         }
       }
     },
@@ -126,7 +129,7 @@
         "joins"
       ],
       "status": "active",
-      "spinePosition": "LC50 \u00a73 Basic Aggregates / \u00a74 Sorting and Grouping",
+      "spinePosition": "LC50 §3 Basic Aggregates / §4 Sorting and Grouping",
       "sheetSections": [
         "LC50: Basic Aggregate Functions",
         "LC50: Sorting and Grouping",
@@ -136,16 +139,17 @@
         "HR: Advanced Join"
       ],
       "sourced": {
-        "count": 35,
+        "count": 47,
         "byTier": {
-          "1": 21,
-          "2": 11,
-          "3": 3,
+          "1": 25,
+          "2": 17,
+          "3": 5,
           "4": 0
         },
         "bySheet": {
           "hackerrank-sql-58": 19,
-          "leetcode-sql-50": 16
+          "leetcode-sql-50": 16,
+          "leetcode-advanced-sql-50": 12
         }
       }
     },
@@ -158,22 +162,23 @@
         "aggregation"
       ],
       "status": "active",
-      "spinePosition": "LC50 \u00a75 Advanced Select and Joins",
+      "spinePosition": "LC50 §5 Advanced Select and Joins",
       "sheetSections": [
         "LC50: Advanced Select and Joins",
         "LC50: Subqueries",
         "HR: Advanced Join"
       ],
       "sourced": {
-        "count": 6,
+        "count": 23,
         "byTier": {
           "1": 0,
-          "2": 3,
-          "3": 3,
-          "4": 0
+          "2": 7,
+          "3": 15,
+          "4": 1
         },
         "bySheet": {
           "leetcode-sql-50": 5,
+          "leetcode-advanced-sql-50": 17,
           "hackerrank-sql-58": 1
         }
       }
@@ -187,23 +192,24 @@
         "window-functions"
       ],
       "status": "active",
-      "spinePosition": "LC50 \u00a76 Subqueries",
+      "spinePosition": "LC50 §6 Subqueries",
       "sheetSections": [
         "LC50: Subqueries",
         "LC50: Advanced String Functions / Regex / Clause",
         "HR: Advanced Select"
       ],
       "sourced": {
-        "count": 6,
+        "count": 9,
         "byTier": {
           "1": 1,
-          "2": 3,
+          "2": 4,
           "3": 2,
-          "4": 0
+          "4": 2
         },
         "bySheet": {
           "leetcode-sql-50": 5,
-          "hackerrank-sql-58": 1
+          "hackerrank-sql-58": 1,
+          "leetcode-advanced-sql-50": 3
         }
       }
     },
@@ -244,14 +250,15 @@
         "HR: Alternative Queries"
       ],
       "sourced": {
-        "count": 4,
+        "count": 6,
         "byTier": {
-          "1": 0,
-          "2": 1,
+          "1": 1,
+          "2": 2,
           "3": 0,
           "4": 3
         },
         "bySheet": {
+          "leetcode-advanced-sql-50": 2,
           "hackerrank-sql-58": 4
         }
       }
@@ -268,14 +275,16 @@
       "spinePosition": "off-spine",
       "sheetSections": [],
       "sourced": {
-        "count": 0,
+        "count": 6,
         "byTier": {
           "1": 0,
-          "2": 0,
+          "2": 6,
           "3": 0,
           "4": 0
         },
-        "bySheet": {}
+        "bySheet": {
+          "pgexercises": 6
+        }
       }
     }
   ],
@@ -302,7 +311,7 @@
       "level": 4,
       "name": "EXPERT",
       "color": "#0077b6",
-      "promise": "Execution plans, partitioning, stored procs, triggers. Constraint-driven \u2014 mostly beyond any public sheet."
+      "promise": "Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet."
     }
   ]
 }

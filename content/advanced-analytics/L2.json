@@ -497,7 +497,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "1 sourced problem from HackerRank SQL. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "2 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -514,6 +514,23 @@
               "patterns": [
                 "pivot",
                 "row-number-pivot"
+              ]
+            },
+            {
+              "id": "X2-LC1445",
+              "tier": 2,
+              "title": "Apples & Oranges",
+              "platform": "leetcode",
+              "ref": "1445",
+              "url": "https://leetcode.com/problems/apples-oranges/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Aggregate Functions",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "case-pivot",
+                  "conditional-agg"
+                ]
               ]
             }
           ]

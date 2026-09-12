@@ -467,6 +467,39 @@
           ]
         }
       ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "1 sourced problem from LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "W4-LC1225",
+              "tier": 4,
+              "title": "Report Contiguous Dates",
+              "platform": "leetcode",
+              "ref": "1225",
+              "url": "https://leetcode.com/problems/report-contiguous-dates/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "hard",
+              "patterns": [
+                [
+                  "gaps-and-islands",
+                  "dense-rank",
+                  "date"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "revisionCard": [

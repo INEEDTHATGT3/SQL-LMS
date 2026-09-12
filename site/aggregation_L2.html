@@ -188,7 +188,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Employee count per department with subtotals and grand total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih35" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih35">GROUP BY ROLLUP(dept_id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy35" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy35">GROUP BY ROLLUP(dept_id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -198,7 +198,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Full cross-tabulation: dept × status with all subtotals.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih36" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih36">GROUP BY CUBE(dept_id, status)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy36" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy36">GROUP BY CUBE(dept_id, status)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -208,7 +208,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Show (dept,status) detail + status subtotals + grand total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih37" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih37">GROUPING SETS ((dept_id, status), (status), ())</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy37" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy37">GROUPING SETS ((dept_id, status), (status), ())</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -218,7 +218,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Add column 'level' showing 'detail', 'dept_subtotal', 'grand_total' using GROUPING().
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih38" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih38">CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy38" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy38">CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -228,7 +228,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Detail (dept,status) + dept subtotals. No grand total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih39" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih39">GROUP BY dept_id, ROLLUP(status)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy39" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy39">GROUP BY dept_id, ROLLUP(status)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -238,7 +238,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Decode GROUPING_ID bitmask: 0=detail, 1=status rolled, 2=dept rolled, 3=grand.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih3a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih3a">CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy3a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy3a">CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -248,7 +248,7 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Show dept subtotals and status subtotals, but no detail rows.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih3b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih3b">GROUPING SETS ((dept_id), (status), ())</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy3b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy3b">GROUPING SETS ((dept_id), (status), ())</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -258,12 +258,12 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div>
     <div class="prob-body">
       Replace NULL in subtotal rows with 'TOTAL' or 'ALL'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslih3c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslih3c">COALESCE(dept_id, 'ALL DEPTS')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuuy3c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuuy3c">COALESCE(dept_id, 'ALL DEPTS')</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">
     <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
-    <div class="callout blue">11 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+    <div class="callout blue">17 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -297,9 +297,29 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/actors-and-directors-who-cooperated-at-least-three-times/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Actors and Directors Who Cooperated At Least Three Times</a></div>
+        <div class="prob-meta">leetcode · #1050 · easy · leetcode-advanced-sql-50 · group-by,having,distinct-count</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1050"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/product-sales-analysis-iii/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Product Sales Analysis III</a></div>
         <div class="prob-meta">leetcode · #1070 · medium · leetcode-sql-50 · first-per-group + min-group</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1070"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/immediate-food-delivery-i/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Immediate Food Delivery I</a></div>
+        <div class="prob-meta">leetcode · #1173 · easy · leetcode-advanced-sql-50 · conditional-avg,case-when</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1173"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       
@@ -350,6 +370,46 @@ GROUP BY ROLLUP(dept_id, status);</code></pre><pre data-lang="py" class="py-miss
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/group-sold-products-by-the-date/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Group Sold Products By The Date</a></div>
         <div class="prob-meta">leetcode · #1484 · easy · leetcode-sql-50 · string-agg + group-concat</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1484"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/customer-order-frequency/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Customer Order Frequency</a></div>
+        <div class="prob-meta">leetcode · #1511 · easy · leetcode-advanced-sql-50 · join,group-by,having,date-range</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1511"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/bank-account-summary-ii/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Bank Account Summary II</a></div>
+        <div class="prob-meta">leetcode · #1587 · easy · leetcode-advanced-sql-50 · join,group-by,having</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1587"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/daily-leads-and-partners/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Daily Leads and Partners</a></div>
+        <div class="prob-meta">leetcode · #1693 · easy · leetcode-advanced-sql-50 · group-by,distinct-count</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1693"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/find-customers-with-positive-revenue-this-year/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Find Customers With Positive Revenue this Year</a></div>
+        <div class="prob-meta">leetcode · #1821 · easy · leetcode-advanced-sql-50 · group-by,having,date-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A2-LC1821"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       

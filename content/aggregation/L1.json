@@ -363,7 +363,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "21 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "25 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -630,6 +630,41 @@
               ]
             },
             {
+              "id": "A1-LC1741",
+              "tier": 1,
+              "title": "Find Total Time Spent by Each Employee",
+              "platform": "leetcode",
+              "ref": "1741",
+              "url": "https://leetcode.com/problems/find-total-time-spent-by-each-employee/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "group-by",
+                  "sum"
+                ]
+              ]
+            },
+            {
+              "id": "A1-LC182",
+              "tier": 1,
+              "title": "Duplicate Emails",
+              "platform": "leetcode",
+              "ref": "182",
+              "url": "https://leetcode.com/problems/duplicate-emails/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "group-by",
+                  "having",
+                  "count"
+                ]
+              ]
+            },
+            {
               "id": "A1-LC2356",
               "tier": 1,
               "title": "Number of Unique Subjects Taught by Each Teacher",
@@ -641,6 +676,41 @@
               "difficulty": "easy",
               "patterns": [
                 "count-distinct"
+              ]
+            },
+            {
+              "id": "A1-LC511",
+              "tier": 1,
+              "title": "Game Play Analysis I",
+              "platform": "leetcode",
+              "ref": "511",
+              "url": "https://leetcode.com/problems/game-play-analysis-i/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "group-by",
+                  "min"
+                ]
+              ]
+            },
+            {
+              "id": "A1-LC586",
+              "tier": 1,
+              "title": "Customer Placing the Largest Number of Orders",
+              "platform": "leetcode",
+              "ref": "586",
+              "url": "https://leetcode.com/problems/customer-placing-the-largest-number-of-orders/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "group-by",
+                  "order-by",
+                  "limit"
+                ]
               ]
             },
             {

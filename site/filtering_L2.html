@@ -257,7 +257,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Employees with (salary > 100000 AND dept_id = 1) OR (salary > 70000 AND dept_id = 2).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1p">Parenthesize each AND group</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1p">Parenthesize each AND group</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -267,7 +267,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Employees NOT in departments located in 'NYC'. Use NOT EXISTS.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1q">NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1q">NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -277,7 +277,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Add column 'band': salary>=100k='high', >=70k='mid', else 'standard'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1r">CASE WHEN salary >= 100000 THEN 'high' ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1r">CASE WHEN salary >= 100000 THEN 'high' ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -287,7 +287,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Order by status (active first, pending second, inactive last), then salary DESC.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1s">CASE status WHEN 'active' THEN 1 ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1s">CASE status WHEN 'active' THEN 1 ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -297,7 +297,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Per department: count of active and pending employees.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1t">SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1t">SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -307,7 +307,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Departments without employees. Show NOT IN fails with NULL; fix with NOT EXISTS.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1u">Subquery with NULL breaks NOT IN; use NOT EXISTS</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1u">Subquery with NULL breaks NOT IN; use NOT EXISTS</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -317,7 +317,7 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Display name: prefer nickname, then first_name, then 'Anonymous'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1v">COALESCE(nickname, first_name, 'Anonymous')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1v">COALESCE(nickname, first_name, 'Anonymous')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -327,12 +327,12 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
     </div>
     <div class="prob-body">
       Replace empty status with 'unknown', NULL with 'unknown'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhm1w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhm1w">COALESCE(NULLIF(TRIM(status), ''), 'unknown')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuud1w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuud1w">COALESCE(NULLIF(TRIM(status), ''), 'unknown')</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">
     <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
-    <div class="callout blue">4 sourced problems from HackerRank SQL ¬∑ LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> ‚Äî do not hand-edit this section.</div>
+    <div class="callout blue">6 sourced problems from HackerRank SQL ¬∑ LeetCode SQL 50 ¬∑ PGExercises. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> ‚Äî do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -369,6 +369,26 @@ FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">‚è
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/count-salary-categories/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Count Salary Categories</a></div>
         <div class="prob-meta">leetcode ¬∑ #1907 ¬∑ medium ¬∑ leetcode-sql-50 ¬∑ bucketing + zero-row-union</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F2-LC1907"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://pgexercises.com/questions/basic/classify.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Classify Results Into Buckets</a></div>
+        <div class="prob-meta">pgexercises ¬∑ #classify ¬∑ pgexercises ¬∑ case-when,bucket</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F2-PGclassify"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://pgexercises.com/questions/basic/where3.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Basic String Searches</a></div>
+        <div class="prob-meta">pgexercises ¬∑ #where3 ¬∑ pgexercises ¬∑ string-pattern,like,row-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F2-PGwhere3"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       

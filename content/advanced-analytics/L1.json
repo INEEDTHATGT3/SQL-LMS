@@ -419,6 +419,39 @@
           ]
         }
       ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "1 sourced problem from LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "X1-LC1795",
+              "tier": 1,
+              "title": "Rearrange Products Table",
+              "platform": "leetcode",
+              "ref": "1795",
+              "url": "https://leetcode.com/problems/rearrange-products-table/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "unpivot",
+                  "union-all",
+                  "transpose"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "revisionCard": [

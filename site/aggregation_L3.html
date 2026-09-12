@@ -254,7 +254,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Per department: count of active, pending, inactive employees using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3d">COUNT(*) FILTER (WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuv33d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuv33d">COUNT(*) FILTER (WHERE status = 'active')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -264,7 +264,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Median salary per department using percentile_cont.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3e">percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuv33e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuv33e">percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -274,7 +274,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Approximate distinct user count per day from events table.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3f">approx_count_distinct(user_id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuv33f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuv33f">approx_count_distinct(user_id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -284,7 +284,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Concatenate top 3 employee names by salary per department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3g">STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuv33g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuv33g">STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -294,7 +294,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Return JSON array of {name, salary} objects per department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3h">JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuv33h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuv33h">JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -304,12 +304,12 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Most common employee status per department (PostgreSQL 15+).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3i">mode() WITHIN GROUP (ORDER BY status)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuv33i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuv33i">mode() WITHIN GROUP (ORDER BY status)</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">
     <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
-    <div class="callout blue">3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+    <div class="callout blue">5 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50 · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -326,6 +326,26 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
       <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">15 Days of Learning SQL</a></div>
         <div class="prob-meta">hackerrank · #055 · hackerrank-sql-58 · running-distinct + max-per-group + correlated-subquery</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A3-HR055"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/customers-who-bought-products-a-and-b-but-not-c/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Customers Who Bought Products A and B but Not C</a></div>
+        <div class="prob-meta">leetcode · #1398 · medium · leetcode-advanced-sql-50 · group-by,having,distinct-count,case-when</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A3-LC1398"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/grand-slam-titles/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Grand Slam Titles</a></div>
+        <div class="prob-meta">leetcode · #1783 · medium · leetcode-advanced-sql-50 · union,group-by,count</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="A3-LC1783"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       

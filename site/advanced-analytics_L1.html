@@ -9,7 +9,7 @@
   <div class="promise">Core syntax, mental models. Tables as grids. Every problem is solvable with one SELECT.</div>
   <div class="level-strip"><a class="level-pill current" data-lesson="advanced-analytics_L1" href="advanced-analytics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="advanced-analytics_L2" href="advanced-analytics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="advanced-analytics_L3" href="advanced-analytics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="advanced-analytics_L4" href="advanced-analytics_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Mental Model — Events → Decision Tables</a><a href="#sec-1">02 · Metrics, Dimensions & Grain</a><a href="#sec-2">03 · Conditional Aggregates — FILTER & CASE</a><a href="#sec-3">04 · Cross-Tabs — CASE Pivot & crosstab()</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — Events → Decision Tables</a><a href="#sec-1">02 · Metrics, Dimensions & Grain</a><a href="#sec-2">03 · Conditional Aggregates — FILTER & CASE</a><a href="#sec-3">04 · Cross-Tabs — CASE Pivot & crosstab()</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -163,7 +163,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Build a sales matrix: one row per department, one column per quarter (Q1..Q4), each cell the SUM(sales) for that department and quarter.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj979" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj979">SUM(CASE WHEN quarter = 'Q1' THEN sales END) AS q1, ...</div><button class="reveal-btn" data-target="umtydslj97b" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj97b">GROUP BY department</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux179" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux179">SUM(CASE WHEN quarter = 'Q1' THEN sales END) AS q1, ...</div><button class="reveal-btn" data-target="umtyemux17b" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux17b">GROUP BY department</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -173,7 +173,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       For each department, compute its share of total sales as a percentage, ordered from largest to smallest share.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj97c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj97c">SUM(amount) / SUM(amount) OVER () * 100</div><button class="reveal-btn" data-target="umtydslj97e" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj97e">ORDER BY share DESC</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux17c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux17c">SUM(amount) / SUM(amount) OVER () * 100</div><button class="reveal-btn" data-target="umtyemux17e" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux17e">ORDER BY share DESC</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -183,7 +183,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Return a single result row with paid_orders, paid_gmv, pending_orders, and pending_gmv side by side using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj97f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj97f">COUNT(*) FILTER (WHERE status = 'paid')</div><button class="reveal-btn" data-target="umtydslj97h" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj97h">SUM(amount) FILTER (WHERE status = 'paid')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux17f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux17f">COUNT(*) FILTER (WHERE status = 'paid')</div><button class="reveal-btn" data-target="umtyemux17h" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux17h">SUM(amount) FILTER (WHERE status = 'paid')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -193,7 +193,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Report daily active buyers as COUNT(DISTINCT user_id) grouped by day, and explain in a comment why the DISTINCT is required for the buyer metric.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj97i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj97i">COUNT(DISTINCT user_id) counts users, COUNT(*) counts events</div><button class="reveal-btn" data-target="umtydslj97k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj97k">One user can appear in many events on the same day</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux17i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux17i">COUNT(DISTINCT user_id) counts users, COUNT(*) counts events</div><button class="reveal-btn" data-target="umtyemux17k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux17k">One user can appear in many events on the same day</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -203,7 +203,7 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Rewrite a row-per-month result into month columns (m1..m3) per region, using the CASE pivot recipe.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj97l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj97l">One SUM(CASE WHEN month = 'M1' THEN amount END) per target column</div><button class="reveal-btn" data-target="umtydslj97n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj97n">GROUP BY region</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux17l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux17l">One SUM(CASE WHEN month = 'M1' THEN amount END) per target column</div><button class="reveal-btn" data-target="umtyemux17n" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux17n">GROUP BY region</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -213,12 +213,27 @@ FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, orde
     </div>
     <div class="prob-body">
       Compare COUNT(*) with COUNT(ship_date) on orders where some ship_date values are NULL, and explain why the two counts diverge.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj97o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj97o">COUNT(*) counts rows; COUNT(ship_date) skips NULLs</div><button class="reveal-btn" data-target="umtydslj97q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj97q">Unshipped orders have NULL ship_date</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux17o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux17o">COUNT(*) counts rows; COUNT(ship_date) skips NULLs</div><button class="reveal-btn" data-target="umtyemux17q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux17q">Unshipped orders have NULL ship_date</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">1 sourced problem from LeetCode Advanced SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/rearrange-products-table/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Rearrange Products Table</a></div>
+        <div class="prob-meta">leetcode · #1795 · easy · leetcode-advanced-sql-50 · unpivot,union-all,transpose</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X1-LC1795"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Grain = the unit of observation a result row is unique by (e.g. one row per (day, country)); pick it before writing SQL</li><li>COUNT(*) counts rows; COUNT(column) skips NULLs; COUNT(DISTINCT column) counts unique non-null values</li><li>FILTER (WHERE …) scopes one aggregate; CASE scopes one value — identical math, FILTER is the modern spelling</li><li>CASE pivot: one SUM(CASE …) per column inside GROUP BY; crosstab() rotates without hand-written expressions</li><li>crosstab() output columns must be declared in AS ct (…); the category query decides which columns exist</li></ul></div>
     <h3>Glossary</h3>

@@ -469,7 +469,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "7 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "14 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -530,6 +530,23 @@
               ]
             },
             {
+              "id": "J1-LC1350",
+              "tier": 1,
+              "title": "Students With Invalid Departments",
+              "platform": "leetcode",
+              "ref": "1350",
+              "url": "https://leetcode.com/problems/students-with-invalid-departments/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "left-join",
+                  "null-trap"
+                ]
+              ]
+            },
+            {
               "id": "J1-LC1378",
               "tier": 1,
               "title": "Replace Employee ID With The Unique Identifier",
@@ -541,6 +558,42 @@
               "difficulty": "easy",
               "patterns": [
                 "left-join"
+              ]
+            },
+            {
+              "id": "J1-LC1407",
+              "tier": 1,
+              "title": "Top Travellers",
+              "platform": "leetcode",
+              "ref": "1407",
+              "url": "https://leetcode.com/problems/top-travellers/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "left-join",
+                  "group-by",
+                  "sum"
+                ]
+              ]
+            },
+            {
+              "id": "J1-LC1495",
+              "tier": 1,
+              "title": "Friendly Movies Streamed Last Month",
+              "platform": "leetcode",
+              "ref": "1495",
+              "url": "https://leetcode.com/problems/friendly-movies-streamed-last-month/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "join",
+                  "date-range",
+                  "distinct"
+                ]
               ]
             },
             {
@@ -559,6 +612,59 @@
               ]
             },
             {
+              "id": "J1-LC1607",
+              "tier": 1,
+              "title": "Sellers With No Sales",
+              "platform": "leetcode",
+              "ref": "1607",
+              "url": "https://leetcode.com/problems/sellers-with-no-sales/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "anti-join",
+                  "not-in-subquery"
+                ]
+              ]
+            },
+            {
+              "id": "J1-LC175",
+              "tier": 1,
+              "title": "Combine Two Tables",
+              "platform": "leetcode",
+              "ref": "175",
+              "url": "https://leetcode.com/problems/combine-two-tables/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "left-join",
+                  "coalesce",
+                  "null-trap"
+                ]
+              ]
+            },
+            {
+              "id": "J1-LC183",
+              "tier": 1,
+              "title": "Customers Who Never Order",
+              "platform": "leetcode",
+              "ref": "183",
+              "url": "https://leetcode.com/problems/customers-who-never-order/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "anti-join",
+                  "not-in-subquery",
+                  "null-trap"
+                ]
+              ]
+            },
+            {
               "id": "J1-LC577",
               "tier": 1,
               "title": "Employee Bonus",
@@ -571,6 +677,24 @@
               "patterns": [
                 "left-join",
                 "null-filter"
+              ]
+            },
+            {
+              "id": "J1-LC607",
+              "tier": 1,
+              "title": "Sales Person",
+              "platform": "leetcode",
+              "ref": "607",
+              "url": "https://leetcode.com/problems/sales-person/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "anti-join",
+                  "not-in-subquery",
+                  "null-trap"
+                ]
               ]
             }
           ]

@@ -307,7 +307,7 @@ SELECT '' IS NULL;     -- 0: empty string is a value, not NULL
     </div>
     <div class="prob-body">
       A table stores timestamps as text. <code>WHERE created = '2024-01-15'</code> silently misses rows whose stored value is '2024-01-15 10:30:00'. Explain why, then fix it with an explicit cast.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhce" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhce">The comparison is text = text: '2024-01-15' does not equal '2024-01-15 10:30:00' as a string</div><button class="reveal-btn" data-target="umtydslhcg" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslhcg">Use CAST(created AS timestamp) with a typed boundary, or store a real timestamptz column</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuu5e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuu5e">The comparison is text = text: '2024-01-15' does not equal '2024-01-15 10:30:00' as a string</div><button class="reveal-btn" data-target="umtyemuu5g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuu5g">Use CAST(created AS timestamp) with a typed boundary, or store a real timestamptz column</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -317,7 +317,7 @@ SELECT '' IS NULL;     -- 0: empty string is a value, not NULL
     </div>
     <div class="prob-body">
       <code>SELECT * FROM users WHERE deactivated_at = NULL;</code> returns zero rows even though deactivated users exist. Fix the predicate and explain why the original matches nothing.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhch" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhch">NULL = NULL evaluates to UNKNOWN, which WHERE rejects</div><button class="reveal-btn" data-target="umtydslhcj" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslhcj">Use IS NULL or IS NOT NULL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuu5h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuu5h">NULL = NULL evaluates to UNKNOWN, which WHERE rejects</div><button class="reveal-btn" data-target="umtyemuu5j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuu5j">Use IS NULL or IS NOT NULL</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -327,7 +327,7 @@ SELECT '' IS NULL;     -- 0: empty string is a value, not NULL
     </div>
     <div class="prob-body">
       Classify each expression as TRUE, FALSE, or UNKNOWN: NULL AND TRUE, NULL OR TRUE, NULL AND FALSE, NOT NULL. Which single one is TRUE, and why?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhck" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhck">OR TRUE short-circuits to TRUE</div><button class="reveal-btn" data-target="umtydslhcm" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslhcm">AND FALSE short-circuits to FALSE</div><button class="reveal-btn" data-target="umtydslhco" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydslhco">NOT NULL stays NULL (UNKNOWN)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuu5k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuu5k">OR TRUE short-circuits to TRUE</div><button class="reveal-btn" data-target="umtyemuu5m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuu5m">AND FALSE short-circuits to FALSE</div><button class="reveal-btn" data-target="umtyemuu5o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyemuu5o">NOT NULL stays NULL (UNKNOWN)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -337,7 +337,7 @@ SELECT '' IS NULL;     -- 0: empty string is a value, not NULL
     </div>
     <div class="prob-body">
       In one transaction: insert an order, mark a savepoint, update stock for sku 'TS1', then decide the stock update was wrong and roll back only that statement while still committing the insert. Write the statements in order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhcp" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhcp">BEGIN; ... INSERT ...; SAVEPOINT p1; UPDATE ...; ROLLBACK TO p1; COMMIT;</div><button class="reveal-btn" data-target="umtydslhcr" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslhcr">ROLLBACK TO keeps the transaction alive; only the post-savepoint work is undone</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuu5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuu5p">BEGIN; ... INSERT ...; SAVEPOINT p1; UPDATE ...; ROLLBACK TO p1; COMMIT;</div><button class="reveal-btn" data-target="umtyemuu5r" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuu5r">ROLLBACK TO keeps the transaction alive; only the post-savepoint work is undone</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -347,7 +347,7 @@ SELECT '' IS NULL;     -- 0: empty string is a value, not NULL
     </div>
     <div class="prob-body">
       On one table, count(*) returns 1,000 but count(phone) returns 940. Explain the discrepancy and write the query that reports both numbers side by side.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhcs" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhcs">count(phone) skips NULLs; count(*) counts every row</div><button class="reveal-btn" data-target="umtydslhcu" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslhcu">SELECT count(*) AS total, count(phone) AS with_phone FROM t;</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuu5s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuu5s">count(phone) skips NULLs; count(*) counts every row</div><button class="reveal-btn" data-target="umtyemuu5u" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuu5u">SELECT count(*) AS total, count(phone) AS with_phone FROM t;</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -357,7 +357,7 @@ SELECT '' IS NULL;     -- 0: empty string is a value, not NULL
     </div>
     <div class="prob-body">
       SELECT amount * 1.1 AS gross FROM invoice WHERE gross > 100; refuses or misbehaves. Diagnose it against the logical evaluation order and produce a working query with the same intent.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslhcv" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslhcv">SELECT aliases are computed after WHERE, so WHERE gross cannot see the alias</div><button class="reveal-btn" data-target="umtydslhcx" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslhcx">Recompute the predicate: WHERE amount * 1.1 > 100 — or wrap it: SELECT * FROM (SELECT amount * 1.1 AS gross FROM invoice) t WHERE gross > 100;</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuu5v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuu5v">SELECT aliases are computed after WHERE, so WHERE gross cannot see the alias</div><button class="reveal-btn" data-target="umtyemuu5x" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemuu5x">Recompute the predicate: WHERE amount * 1.1 > 100 — or wrap it: SELECT * FROM (SELECT amount * 1.1 AS gross FROM invoice) t WHERE gross > 100;</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-7">

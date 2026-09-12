@@ -418,7 +418,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "16 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "20 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50 · PGExercises. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -617,6 +617,24 @@
               ]
             },
             {
+              "id": "F1-LC1873",
+              "tier": 1,
+              "title": "Calculate Special Bonus",
+              "platform": "leetcode",
+              "ref": "1873",
+              "url": "https://leetcode.com/problems/calculate-special-bonus/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Select",
+              "difficulty": "easy",
+              "patterns": [
+                [
+                  "conditional-agg",
+                  "case-when",
+                  "null-guard"
+                ]
+              ]
+            },
+            {
               "id": "F1-LC584",
               "tier": 1,
               "title": "Find Customer Referee",
@@ -658,6 +676,54 @@
               "patterns": [
                 "modulo-filter",
                 "order-by"
+              ]
+            },
+            {
+              "id": "F1-PGwhere",
+              "tier": 1,
+              "title": "Control Which Rows Are Retrieved",
+              "platform": "pgexercises",
+              "ref": "where",
+              "url": "https://pgexercises.com/questions/basic/where.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Basic SELECT",
+              "patterns": [
+                [
+                  "select-where",
+                  "row-filter"
+                ]
+              ]
+            },
+            {
+              "id": "F1-PGwhere2",
+              "tier": 1,
+              "title": "Control Which Rows Are Retrieved - Part 2",
+              "platform": "pgexercises",
+              "ref": "where2",
+              "url": "https://pgexercises.com/questions/basic/where2.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Basic SELECT",
+              "patterns": [
+                [
+                  "select-where",
+                  "row-filter"
+                ]
+              ]
+            },
+            {
+              "id": "F1-PGwhere4",
+              "tier": 1,
+              "title": "Matching Against Multiple Possible Values",
+              "platform": "pgexercises",
+              "ref": "where4",
+              "url": "https://pgexercises.com/questions/basic/where4.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Basic SELECT",
+              "patterns": [
+                [
+                  "in-list",
+                  "row-filter"
+                ]
               ]
             }
           ]

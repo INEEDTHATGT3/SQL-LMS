@@ -516,6 +516,54 @@
           ]
         }
       ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "2 sourced problems from LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S4-LC1270",
+              "tier": 4,
+              "title": "All People Report to the Given Manager",
+              "platform": "leetcode",
+              "ref": "1270",
+              "url": "https://leetcode.com/problems/all-people-report-to-the-given-manager/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "medium",
+              "patterns": [
+                [
+                  "recursive-cte"
+                ]
+              ]
+            },
+            {
+              "id": "S4-LC1767",
+              "tier": 4,
+              "title": "Find the Subtasks That Did Not Execute",
+              "platform": "leetcode",
+              "ref": "1767",
+              "url": "https://leetcode.com/problems/find-the-subtasks-that-did-not-execute/",
+              "sheet": "leetcode-advanced-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "hard",
+              "patterns": [
+                [
+                  "recursive-cte",
+                  "not-exists"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "revisionCard": [

@@ -520,6 +520,121 @@
           ]
         }
       ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "6 sourced problems from PGExercises. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "T2-PGbookingspermonth",
+              "tier": 2,
+              "title": "Return a Count of Bookings for Each Month",
+              "platform": "pgexercises",
+              "ref": "bookingspermonth",
+              "url": "https://pgexercises.com/questions/date/bookingspermonth.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Working with Timestamps",
+              "patterns": [
+                [
+                  "date-trunc",
+                  "group-by",
+                  "count"
+                ]
+              ]
+            },
+            {
+              "id": "T2-PGdaysinmonth",
+              "tier": 2,
+              "title": "Work Out the Number of Days in Each Month of 2012",
+              "platform": "pgexercises",
+              "ref": "daysinmonth",
+              "url": "https://pgexercises.com/questions/date/daysinmonth.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Working with Timestamps",
+              "patterns": [
+                [
+                  "date-trunc",
+                  "generate-series",
+                  "extract"
+                ]
+              ]
+            },
+            {
+              "id": "T2-PGendtimes",
+              "tier": 2,
+              "title": "Work Out the End Time of Bookings",
+              "platform": "pgexercises",
+              "ref": "endtimes",
+              "url": "https://pgexercises.com/questions/date/endtimes.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Working with Timestamps",
+              "patterns": [
+                [
+                  "date-arithmetic",
+                  "add-interval"
+                ]
+              ]
+            },
+            {
+              "id": "T2-PGinterval2",
+              "tier": 2,
+              "title": "Work Out the Number of Seconds Between Timestamps",
+              "platform": "pgexercises",
+              "ref": "interval2",
+              "url": "https://pgexercises.com/questions/date/interval2.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Working with Timestamps",
+              "patterns": [
+                [
+                  "interval",
+                  "date-arithmetic",
+                  "extract"
+                ]
+              ]
+            },
+            {
+              "id": "T2-PGseries",
+              "tier": 2,
+              "title": "Generate a List of All the Dates in October 2012",
+              "platform": "pgexercises",
+              "ref": "series",
+              "url": "https://pgexercises.com/questions/date/series.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Working with Timestamps",
+              "patterns": [
+                [
+                  "generate-series",
+                  "date"
+                ]
+              ]
+            },
+            {
+              "id": "T2-PGutilisationpermonth",
+              "tier": 2,
+              "title": "Work Out the Utilisation Percentage for Each Facility by Month",
+              "platform": "pgexercises",
+              "ref": "utilisationpermonth",
+              "url": "https://pgexercises.com/questions/date/utilisationpermonth.html",
+              "sheet": "pgexercises",
+              "sheetSection": "Working with Timestamps",
+              "patterns": [
+                [
+                  "date-trunc",
+                  "group-by",
+                  "ratio"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "revisionCard": [

@@ -194,7 +194,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       List employee name and their department name.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli628" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli628">INNER JOIN employees e ON e.dept_id = d.id</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuum28" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuum28">INNER JOIN employees e ON e.dept_id = d.id</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -204,7 +204,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       List all employees with department name. Show NULL for employees without department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli629" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli629">LEFT JOIN departments</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuum29" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuum29">LEFT JOIN departments</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -214,7 +214,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       Find departments that have no employees.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli62a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli62a">LEFT JOIN employees ... WHERE e.id IS NULL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuum2a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuum2a">LEFT JOIN employees ... WHERE e.id IS NULL</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -224,7 +224,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       List each employee with their manager's name.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli62b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli62b">Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuum2b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuum2b">Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -234,7 +234,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       Combine employee and contractor names, remove duplicates.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli62c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli62c">UNION (not UNION ALL)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuum2c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuum2c">UNION (not UNION ALL)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -244,12 +244,12 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       Same as J103 but using RIGHT JOIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsli62d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsli62d">RIGHT JOIN employees ON ... WHERE e.id IS NULL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemuum2d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemuum2d">RIGHT JOIN employees ON ... WHERE e.id IS NULL</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">
     <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
-    <div class="callout blue">7 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+    <div class="callout blue">14 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -293,9 +293,39 @@ SELECT dept_id FROM employees;
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/students-with-invalid-departments/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Students With Invalid Departments</a></div>
+        <div class="prob-meta">leetcode · #1350 · easy · leetcode-advanced-sql-50 · left-join,null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1350"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/replace-employee-id-with-the-unique-identifier/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Replace Employee ID With The Unique Identifier</a></div>
         <div class="prob-meta">leetcode · #1378 · easy · leetcode-sql-50 · left-join</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1378"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/top-travellers/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Top Travellers</a></div>
+        <div class="prob-meta">leetcode · #1407 · easy · leetcode-advanced-sql-50 · left-join,group-by,sum</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1407"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/friendly-movies-streamed-last-month/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Friendly Movies Streamed Last Month</a></div>
+        <div class="prob-meta">leetcode · #1495 · easy · leetcode-advanced-sql-50 · join,date-range,distinct</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1495"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       
@@ -313,9 +343,49 @@ SELECT dept_id FROM employees;
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/sellers-with-no-sales/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Sellers With No Sales</a></div>
+        <div class="prob-meta">leetcode · #1607 · easy · leetcode-advanced-sql-50 · anti-join,not-in-subquery</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1607"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/combine-two-tables/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Combine Two Tables</a></div>
+        <div class="prob-meta">leetcode · #175 · easy · leetcode-advanced-sql-50 · left-join,coalesce,null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC175"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/customers-who-never-order/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Customers Who Never Order</a></div>
+        <div class="prob-meta">leetcode · #183 · easy · leetcode-advanced-sql-50 · anti-join,not-in-subquery,null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC183"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
       <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/employee-bonus/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Employee Bonus</a></div>
         <div class="prob-meta">leetcode · #577 · easy · leetcode-sql-50 · left-join + null-filter</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC577"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/sales-person/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Sales Person</a></div>
+        <div class="prob-meta">leetcode · #607 · easy · leetcode-advanced-sql-50 · anti-join,not-in-subquery,null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC607"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       

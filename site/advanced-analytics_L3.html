@@ -264,7 +264,7 @@ FROM events;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
     </div>
     <div class="prob-body">
       Build a weekly revenue table with a midweek-aligned day spine: generate every day, LEFT JOIN orders, aggregate by ISO week, then LAG(week_sum, 1) for the aligned week-over-week comparison.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsljc8b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsljc8b">generate_series spine + LEFT JOIN keeps zero-week rows</div><button class="reveal-btn" data-target="umtydsljc8d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydsljc8d">date_trunc('week', ts)::date as iso_week before LAG</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux58b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux58b">generate_series spine + LEFT JOIN keeps zero-week rows</div><button class="reveal-btn" data-target="umtyemux58d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux58d">date_trunc('week', ts)::date as iso_week before LAG</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -274,7 +274,7 @@ FROM events;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
     </div>
     <div class="prob-body">
       Produce a cohort × week retention matrix with ROUND(pct, 2): cohort = first order week, denominator = cohort size, and guard the ratio with NULLIF.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsljc8e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsljc8e">MIN(order_date) per user defines the cohort</div><button class="reveal-btn" data-target="umtydsljc8g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydsljc8g">ROUND(100.0 * retained / NULLIF(cohort_size, 0), 2)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux58e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux58e">MIN(order_date) per user defines the cohort</div><button class="reveal-btn" data-target="umtyemux58g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux58g">ROUND(100.0 * retained / NULLIF(cohort_size, 0), 2)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -284,7 +284,7 @@ FROM events;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
     </div>
     <div class="prob-body">
       For a 4-step funnel (view → cart → checkout → purchase), report per-step distinct users and the step-to-step conversion percent between consecutive steps.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsljc8h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsljc8h">ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts) ranks one path</div><button class="reveal-btn" data-target="umtydsljc8j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydsljc8j">conversion_i = users_i / users_(i-1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux58h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux58h">ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts) ranks one path</div><button class="reveal-btn" data-target="umtyemux58j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux58j">conversion_i = users_i / users_(i-1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -294,7 +294,7 @@ FROM events;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
     </div>
     <div class="prob-body">
       Estimate daily active users on a huge events table with APPROX_COUNT_DISTINCT (or hll) and quantify the difference versus exact COUNT(DISTINCT) on a sample.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsljc8k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsljc8k">SELECT APPROX_COUNT_DISTINCT(user_id) vs COUNT(DISTINCT user_id)</div><button class="reveal-btn" data-target="umtydsljc8m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydsljc8m">HLL error is bounded (~1%); exact count on a slice to measure it</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux58k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux58k">SELECT APPROX_COUNT_DISTINCT(user_id) vs COUNT(DISTINCT user_id)</div><button class="reveal-btn" data-target="umtyemux58m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux58m">HLL error is bounded (~1%); exact count on a slice to measure it</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -304,7 +304,7 @@ FROM events;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
     </div>
     <div class="prob-body">
       Compute a year-to-date revenue running total: SUM(amount) OVER (PARTITION BY year ORDER BY day) with a calendar spine so every trading day appears.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsljc8n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsljc8n">PARTITION BY extract(year from day) resets the running total each year</div><button class="reveal-btn" data-target="umtydsljc8p" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydsljc8p">calendar spine LEFT JOIN keeps the zero-revenue days</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux58n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux58n">PARTITION BY extract(year from day) resets the running total each year</div><button class="reveal-btn" data-target="umtyemux58p" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux58p">calendar spine LEFT JOIN keeps the zero-revenue days</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -314,7 +314,7 @@ FROM events;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
     </div>
     <div class="prob-body">
       Show how cohort revenue persists: for each cohort month, report revenue in the first month vs each later month using a first-order join to realign months.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydsljc8q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydsljc8q">first_order = MIN(order_date) per user; months_since = month(order) - month(first)</div><button class="reveal-btn" data-target="umtydsljc8s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydsljc8s">GROUP BY cohort_month, months_since; SUM(amount)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyemux58q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyemux58q">first_order = MIN(order_date) per user; months_since = month(order) - month(first)</div><button class="reveal-btn" data-target="umtyemux58s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyemux58s">GROUP BY cohort_month, months_since; SUM(amount)</div></div>
     </div></li></ul>
   </section>
   
