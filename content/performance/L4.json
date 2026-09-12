@@ -413,6 +413,104 @@
       ]
     },
     {
+      "title": "Stored Procedures & Functions — PL/pgSQL at Scale",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Function vs Procedure — and SETOF returns"
+        },
+        {
+          "type": "code",
+          "label": "function & procedure",
+          "code": "-- FUNCTION returns a value / table; used inside SQL\nCREATE FUNCTION dept_stats(dept_id int)\nRETURNS TABLE(department int, avg_sal numeric, cnt bigint)\nLANGUAGE sql\nSTABLE AS $$\n  SELECT dept_id, AVG(salary)::numeric, COUNT(*)\n  FROM employees WHERE dept_id = dept_stats.dept_id\n  GROUP BY dept_id;\n$$;\n\n-- PROCEDURE can manage transactions (BEGIN/COMMIT)\nCREATE PROCEDURE monthly_archive(m_thru date)\nLANGUAGE plpgsql AS $$\nBEGIN\n  INSERT INTO archive SELECT * FROM events WHERE ts < m_thru;\n  DELETE FROM events WHERE ts < m_thru;\nEND;\n$$;\n\nCALL monthly_archive('2024-01-01');",
+          "pg": "-- LANGUAGE sql vs plpgsql; VOLATILE/STABLE/IMMUTABLE\n-- CALL for procedures; SELECT f() for functions",
+          "mysql": "-- CREATE PROCEDURE ... BEGIN ... END\n-- DELIMITER $$ required in the CLI; returns via OUT params",
+          "py-pandas": "# Engine-agnostic: pandas can't call procs directly,\n# but SQLAlchemy text() runs CALL/EXEC seamlessly"
+        },
+        {
+          "type": "heading",
+          "text": "Plan caching: the hidden performance lever"
+        },
+        {
+          "type": "prose",
+          "md": "PL/pgSQL caches the *plan template* per statement/key. A **one-size-fits-all plan** stays cached for the session — great for uniform workloads, a trap for skewed values. Parameters matter: generic plans win when statistics say the same plan fits all inputs; custom plans win on skew."
+        },
+        {
+          "type": "code",
+          "label": "cached vs custom plan",
+          "code": "-- Generic plan reused for every call\nPREPARE lookup(int) AS SELECT * FROM emp WHERE id = $1;\nEXECUTE lookup(1);\n-- after 5 calls, planner commits to a generic plan\n\n-- Prepared inside PL/pgSQL: same idea, automatic\nCREATE FUNCTION emp_lookup(eid int)\nRETURNS emp LANGUAGE plpgsql STABLE AS $$\n  -- first 5 calls use custom; then generic unless re-prepared\n  SELECT * INTO r FROM emp WHERE id = eid;\n  RETURN r;\n$$\n-- re-plan on: schema change, ANALYZE, plan invalidation",
+          "pg": "-- plan_cache_mode = auto / force_generic_plan / force_custom_plan",
+          "mysql": "-- MySQL: statement cache + query cache (deprecated);\n-- PREPARE/EXECUTE also caches, but revalidates by table",
+          "py-pandas": "# pythonic analog: precompile the statement\nstmt = pre.compile(\"SELECT * FROM emp WHERE id = :id\")"
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — Index Scan replayed from the proc cache",
+          "plan": {
+            "Plan": {
+              "Node Type": "Index Scan",
+              "Relation Name": "employees",
+              "Alias": "e",
+              "Startup Cost": 0.29,
+              "Total Cost": 8.30,
+              "Plan Rows": 1,
+              "Plan Width": 48,
+              "Index Cond": "(id = $1)",
+              "Actual Startup Time": 0.02,
+              "Actual Total Time": 0.03,
+              "Actual Rows": 1,
+              "Actual Loops": 1
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "**Prepared plans go stale**: after bulk loads or schema changes the cached plan's row estimates are wrong. Watch for 'generic plan' with wildly off row counts in procs and re-prepare or bump `plan_cache_mode`."
+        },
+        {
+          "type": "heading",
+          "text": "Cursors, transactions, and SECURITY DEFINER"
+        },
+        {
+          "type": "code",
+          "label": "cursor + transaction + definer",
+          "code": "-- Streaming a large result set with a cursor\nDECLARE cur CURSOR FOR\n  SELECT id FROM payments WHERE settled_at IS NULL;\n-- fetch in batches inside a procedure loop\n\n-- Transactional work inside a procedure\nCREATE PROCEDURE settle_batch() LANGUAGE plpgsql AS $$\nBEGIN\n  BEGIN\n    UPDATE payments SET settled_at = now() WHERE id = cur_rec.id;\n    COMMIT;  -- allowed only in PROCEDURE, not FUNCTION\n  END;\nEND;\n$$;\n\n-- SECURITY DEFINER: run as the owner, not the caller\nCREATE FUNCTION set_balance(acct int, amt numeric)\nRETURNS void\nLANGUAGE plpgsql\nSECURITY DEFINER SET search_path = public AS $$\n  UPDATE accounts SET balance = amt WHERE id = acct;\n$$;",
+          "pg": "-- SECURITY DEFINER runs with owner rights;\n-- ALWAYS pin search_path to avoid hijack",
+          "mysql": "-- MySQL: cursors via DECLARE cur CURSOR FOR ...;\n-- SECURITY v/SQL SECURITY DEFINER on CREATE FUNCTION",
+          "py-pandas": "# Cursors/DML are far from pandas' model;\n# SQLAlchemy: connection.execute(batch) with server-side cursors"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "A PROCEDURE differs from a FUNCTION in pg because it:",
+              "options": [
+                "Returns tables",
+                "Can run transaction control (COMMIT/ROLLBACK)",
+                "Cannot take parameters",
+                "Is always SECURITY DEFINER"
+              ],
+              "answer": 1,
+              "explain": "Top-level transaction control (COMMIT) is only allowed in PROCEDURE bodies, never inside a FUNCTION called from a query."
+            },
+            {
+              "q": "Prepared/plan-cached generic plans are dangerous when:",
+              "options": [
+                "Input values are uniform",
+                "Inputs are heavily skewed and the plan is one-size-fits-all",
+                "The table is small",
+                "Indexes are missing"
+              ],
+              "answer": 1,
+              "explain": "A single cached plan optimized for an average value mis-executes on outliers — consider custom plans for skewed keys."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "Problem Set \u2014 L4 Drills",
       "blocks": [
         {

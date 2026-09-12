@@ -16,27 +16,27 @@
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q323" data-answer="1">
+    <div class="quiz-card" data-quiz-key="place-q325" data-answer="1">
       <div class="quiz-q">PIVOT rotates rows to columns. In PostgreSQL, PIVOT is:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Built-in syntax (PIVOT ... FOR)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Done via crosstab() from tablefunc extension</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only available in MySQL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not possible</span></div></div>
       <div class="quiz-explain">PostgreSQL uses crosstab() from tablefunc extension for pivot. MySQL has PIVOT syntax in 8.0+.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q324" data-answer="0">
+    </div><div class="quiz-card" data-quiz-key="place-q326" data-answer="0">
       <div class="quiz-q">LATERAL join allows the right side to:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Reference columns from left side</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Run independently of left side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only work with LEFT JOIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Replace CTE</span></div></div>
       <div class="quiz-explain">LATERAL allows right subquery to reference columns from left side of join.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q325" data-answer="2">
+    </div><div class="quiz-card" data-quiz-key="place-q327" data-answer="2">
       <div class="quiz-q">Advanced frame: ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING includes:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Current row only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Current row ± 2 rows (5 rows total)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>2 rows before, current, 2 rows after (5 rows total)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All rows</span></div></div>
       <div class="quiz-explain">2 PRECEDING + current + 2 FOLLOWING = 5 rows total centered on current.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q326" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q328" data-answer="1">
       <div class="quiz-q">TABLESAMPLE SYSTEM (10) returns:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exactly 10% of rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>~10% of pages (approximate 10% of rows)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>First 10% of table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Random 10 rows</span></div></div>
       <div class="quiz-explain">TABLESAMPLE SYSTEM samples at page level. Returns approximate percentage.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q327" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q329" data-answer="1">
       <div class="quiz-q">LATERAL with LIMIT 1 for top-N per group — execution:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Full scan per outer row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Index seek + LIMIT per outer row</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Full sort per outer row</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Cross join optimization</span></div></div>
       <div class="quiz-explain">LATERAL + ORDER BY + LIMIT 1 with index on (partition, order) = index seek + LIMIT per outer row.</div>
@@ -87,12 +87,12 @@ SELECT e.name,
 FROM employees e;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- LATERAL is PostgreSQL standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0.14+: LATERAL supported</span>
 <span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 
-<div class="quiz-card" data-quiz-key="s1-q328" data-answer="1">
+<div class="quiz-card" data-quiz-key="s1-q330" data-answer="1">
       <div class="quiz-q">LATERAL subquery can reference:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only tables in same FROM</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Columns from LEFT side of join</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only columns from same subquery</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Global variables only</span></div></div>
       <div class="quiz-explain">LATERAL allows right side to see left side columns. Like correlated subquery in FROM.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q329" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s1-q331" data-answer="1">
       <div class="quiz-q">CROSS JOIN LATERAL vs LEFT JOIN LATERAL:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CROSS = inner (drops left rows with no match), LEFT = preserves left</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>LEFT not allowed with LATERAL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CROSS not allowed</span></div></div>
       <div class="quiz-explain">CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match).</div>
@@ -140,12 +140,12 @@ SUM(amount) OVER (
   ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
 ) AS total_so_far</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: frame clauses supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 
-<div class="quiz-card" data-quiz-key="s2-q330" data-answer="1">
+<div class="quiz-card" data-quiz-key="s2-q332" data-answer="1">
       <div class="quiz-q">RANGE INTERVAL '1 day' PRECEDING with ORDER BY ts includes:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exactly 1 row before</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>All rows where ts >= current_ts - 1 day</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Current row only</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
       <div class="quiz-explain">RANGE uses value semantics. All rows with ts within 1 day of current row's ts.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s2-q331" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s2-q333" data-answer="1">
       <div class="quiz-q">ROWS 1 PRECEDING vs RANGE 1 PRECEDING with ORDER BY salary:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ROWS = 1 row before; RANGE = salaries within 1 of current</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>RANGE = 1 row; ROWS = salary ± 1</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Both invalid</span></div></div>
       <div class="quiz-explain">ROWS counts rows. RANGE uses ORDER BY value difference (salary ± 1).</div>
@@ -229,12 +229,12 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
         <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
       </div></div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s3-q332" data-answer="1">
+<div class="quiz-card" data-quiz-key="s3-q334" data-answer="1">
       <div class="quiz-q">percentile_cont(0.5) on [10, 20, 30, 40] returns:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>20</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>25</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>30</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>15</span></div></div>
       <div class="quiz-explain">Even count (4): cont interpolates between 20 and 30 = 25. disc = 20 (lower middle).</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s3-q333" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s3-q335" data-answer="1">
       <div class="quiz-q">STRING_AGG with ORDER BY inside aggregate:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Syntax error</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Orders concatenated values by that column</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Orders groups</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only works with FILTER</span></div></div>
       <div class="quiz-explain">STRING_AGG(x, ',' ORDER BY y) sorts the x values by y before concatenation.</div>
@@ -252,7 +252,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Create cross-tabulation: departments as rows, quarters as columns, sales as values.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom35z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom35z">crosstab() from tablefunc</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll5z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll5z">crosstab() from tablefunc</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -262,7 +262,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       For each customer, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom360" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom360">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll60" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll60">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -272,7 +272,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Compute 4-row moving average of daily sales (current + 3 preceding).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom361" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom361">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll61" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll61">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -282,7 +282,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Sum of sales for each day + previous 6 days using RANGE.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom362" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom362">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll62" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll62">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -292,7 +292,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Assign each employee to a salary quartile (1-4) within their department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom363" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom363">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll63" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll63">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -302,7 +302,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Per department: count of active, pending, inactive employees using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom364" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom364">COUNT(*) FILTER (WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ll64" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ll64">COUNT(*) FILTER (WHERE status = 'active')</div></div>
     </div></li></ul>
   </section>
   

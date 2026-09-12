@@ -16,27 +16,27 @@
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q406" data-answer="2">
+    <div class="quiz-card" data-quiz-key="place-q410" data-answer="2">
       <div class="quiz-q">HyperLogLog (HLL) provides approximate distinct count with:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>O(N) memory</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>O(log N) memory</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>O(1) fixed memory</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>O(N log N) memory</span></div></div>
       <div class="quiz-explain">HyperLogLog uses fixed-size registers (e.g., 2^14 = 16KB) regardless of cardinality.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q407" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q411" data-answer="1">
       <div class="quiz-q">TDigest algorithm is used for:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Approximate distinct count</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Approximate percentiles/quantiles</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Exact median</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Top-K frequent items</span></div></div>
       <div class="quiz-explain">TDigest is a streaming percentile algorithm with bounded error (~1%) and O(1) memory.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q408" data-answer="3">
+    </div><div class="quiz-card" data-quiz-key="place-q412" data-answer="3">
       <div class="quiz-q">KMV (K Minimum Values) sketch is used for:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Distinct counting</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Percentile estimation</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Top-K frequent items</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Both distinct counting and top-K</span></div></div>
       <div class="quiz-explain">KMV maintains K minimum hash values — supports distinct count, top-K, and set operations.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q409" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q413" data-answer="1">
       <div class="quiz-q">Continuous aggregate (TimescaleDB) refresh policy:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Manual only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Automatic background refresh with configurable lag</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Real-time only</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Requires manual trigger</span></div></div>
       <div class="quiz-explain">Continuous aggregates auto-refresh via background workers with configurable lag and schedule.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q410" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q414" data-answer="1">
       <div class="quiz-q">Streaming aggregate vs continuous aggregate:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same thing</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Streaming = push-based, continuous = pull-based with materialization</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Streaming = pull-based, continuous = push-based</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No difference</span></div></div>
       <div class="quiz-explain">Streaming processes events as they arrive (push). Continuous aggregates materialize incrementally on schedule (pull).</div>
@@ -69,12 +69,12 @@ SELECT percentile(t, <span class="num">0.5</span>) FROM (SELECT tdigest_agg(valu
 -- Merge sketches (distributed)
 tdigest_union(sketch1, sketch2);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- TDigest via extension or custom aggregate</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native TDigest</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 
-<div class="quiz-card" data-quiz-key="s0-q411" data-answer="1">
+<div class="quiz-card" data-quiz-key="s0-q415" data-answer="1">
       <div class="quiz-q">HyperLogLog uses O(1) memory because:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>It samples data</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Fixed-size register array (2^p registers)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>It compresses data</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>It uses sampling</span></div></div>
       <div class="quiz-explain">HLL uses fixed register array (2^p registers). Memory constant regardless of cardinality.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q412" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s0-q416" data-answer="1">
       <div class="quiz-q">TDigest provides:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exact percentiles</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Approximate percentiles with bounded error</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only median</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only for integers</span></div></div>
       <div class="quiz-explain">TDigest approximates the CDF with compressed centroids. ~1% error, constant memory.</div>
@@ -141,12 +141,12 @@ SELECT * FROM page_views_1min WHERE site_id = <span class="num">123</span>;
         <span class="plan-node-meta"> cost=10..4500 rows=100000 width=64</span>
       </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: ((bucket_time >= (now() - '1 day'::interval)) AND (bucket_time <= now()))</div></div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s1-q413" data-answer="0">
+<div class="quiz-card" data-quiz-key="s1-q417" data-answer="0">
       <div class="quiz-q">Continuous aggregate lag (end_offset) means:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>How far behind real-time</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>How often to refresh</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>How much history to keep</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Max query latency</span></div></div>
       <div class="quiz-explain">end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag).</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q414" data-answer="0">
+    </div><div class="quiz-card" data-quiz-key="s1-q418" data-answer="0">
       <div class="quiz-q">Continuous aggregate combines:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Materialized view + raw tail</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Two materialized views</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>View + trigger</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index + partition</span></div></div>
       <div class="quiz-explain">Real-time view = materialized (historical) + raw tail (recent data).</div>
@@ -206,12 +206,12 @@ ORDER BY geom <-> ST_MakePoint(-<span class="num">122.4</span>, <span class="num
 LIMIT <span class="num">10</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- <-> = KNN distance operator (GiST index)</span>
 <span class="cm">-- Supports LIMIT for early termination</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native KNN operator</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 <div class="callout blue"><strong>KNN <-> operator uses GiST index for O(log N) search.</strong> Early termination with LIMIT avoids full scan. Composite index (category, geom) for filtered KNN.</div>
-<div class="quiz-card" data-quiz-key="s2-q415" data-answer="1">
+<div class="quiz-card" data-quiz-key="s2-q419" data-answer="1">
       <div class="quiz-q">KNN <-> operator requires:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>B-tree index</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>GiST index on geometry</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Hash index</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>BRIN index</span></div></div>
       <div class="quiz-explain"><-> operator requires GiST index on geometry column for O(log N) KNN search.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s2-q416" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s2-q420" data-answer="1">
       <div class="quiz-q">Parallel spatial join (PG 13+) uses:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Single worker</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Multiple workers with Gather Merge</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Single worker with parallel scan</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Sequential scan only</span></div></div>
       <div class="quiz-explain">Parallel spatial join uses multiple workers, each processing a partition, then Gather Merge combines results.</div>
@@ -267,12 +267,12 @@ FROM (
         <span class="plan-node-meta"> cost=0..12500 rows=1000000 width=16</span>
       </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (ts > (now() - '1 day'::interval))</div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s3-q417" data-answer="0">
+<div class="quiz-card" data-quiz-key="s3-q421" data-answer="0">
       <div class="quiz-q">H3 resolution 8 cell area is approximately:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>0.7 km²</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>7 km²</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>70 km²</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>700 km²</span></div></div>
       <div class="quiz-explain">Resolution 8 ≈ 0.7 km² per hexagon. Resolution 10 ≈ 0.01 km² (10,000 m²).</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s3-q418" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s3-q422" data-answer="1">
       <div class="quiz-q">h3_cell_to_children returns:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Parent cell</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>All child cells at target resolution</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Neighbor cells</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Boundary polygon</span></div></div>
       <div class="quiz-explain">h3_cell_to_children returns all child cells at a finer resolution within the parent.</div>
@@ -346,7 +346,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9a">CREATE EXTENSION hll; hll_add_agg()</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9a">CREATE EXTENSION hll; hll_add_agg()</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -356,7 +356,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Compute p50, p95, p99 latency from 10M requests using TDigest.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9b">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtxznome9d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznome9d">percentile(t, 0.99)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9b">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtxzp9lt9d" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lt9d">percentile(t, 0.99)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -366,7 +366,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9e">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxznome9g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznome9g">add_continuous_aggregate_policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9e">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzp9lt9g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lt9g">add_continuous_aggregate_policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -376,7 +376,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Find 10 nearest coffee shops to user location using <-> operator.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9h">geom <-> point</div><button class="reveal-btn" data-target="umtxznome9j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznome9j">LIMIT 5</div><button class="reveal-btn" data-target="umtxznome9l" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznome9l">GiST index</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9h">geom <-> point</div><button class="reveal-btn" data-target="umtxzp9lt9j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lt9j">LIMIT 5</div><button class="reveal-btn" data-target="umtxzp9lt9l" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9lt9l">GiST index</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -386,7 +386,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Aggregate 1M GPS points into H3 resolution 8 hexagons, count per hex.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9m">h3_lat_lng_to_cell(lat, lng, 8)</div><button class="reveal-btn" data-target="umtxznome9o" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznome9o">GROUP BY h3_cell</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9m">h3_lat_lng_to_cell(lat, lng, 8)</div><button class="reveal-btn" data-target="umtxzp9lt9o" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lt9o">GROUP BY h3_cell</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -396,7 +396,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Create PipelineDB continuous view for per-minute page views per site.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9p">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtxznome9r" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznome9r">time_bucket('1 minute', ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9p">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtxzp9lt9r" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lt9r">time_bucket('1 minute', ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -406,7 +406,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Join 10M buildings with 500k parcels using parallel spatial join.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9s">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxznome9u" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznome9u">enable_parallel_append</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9s">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzp9lt9u" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lt9u">enable_parallel_append</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -416,7 +416,7 @@ df['h3'] = df.apply(lambda r: h3.latlng_to_cell(r.lat, r.lng, 8), axis=1)</code>
     </div>
     <div class="prob-body">
       Maintain streaming p99 latency using TDigest sketch updated per request.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznome9v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznome9v">tdigest_agg</div><button class="reveal-btn" data-target="umtxznome9x" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznome9x">tdigest_union</div><button class="reveal-btn" data-target="umtxznome9z" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznome9z">percentile(t, 0.99)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lt9v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lt9v">tdigest_agg</div><button class="reveal-btn" data-target="umtxzp9lt9x" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lt9x">tdigest_union</div><button class="reveal-btn" data-target="umtxzp9lt9z" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9lt9z">percentile(t, 0.99)</div></div>
     </div></li></ul>
   </section>
   

@@ -16,27 +16,27 @@
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q334" data-answer="1">
+    <div class="quiz-card" data-quiz-key="place-q336" data-answer="1">
       <div class="quiz-q">PIVOT rotates rows to columns. In PostgreSQL, PIVOT is:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Built-in syntax (PIVOT ... FOR)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Done via crosstab() from tablefunc extension</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only available in MySQL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not possible</span></div></div>
       <div class="quiz-explain">PostgreSQL uses crosstab() from tablefunc extension for pivot. MySQL has PIVOT syntax in 8.0+.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q335" data-answer="0">
+    </div><div class="quiz-card" data-quiz-key="place-q337" data-answer="0">
       <div class="quiz-q">LATERAL join allows the right side to:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Reference columns from left side</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Run independently of left side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only work with LEFT JOIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Replace CTE</span></div></div>
       <div class="quiz-explain">LATERAL allows right subquery to reference columns from left side of join.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q336" data-answer="2">
+    </div><div class="quiz-card" data-quiz-key="place-q338" data-answer="2">
       <div class="quiz-q">Advanced frame: ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING includes:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Current row only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Current row ± 2 rows (5 rows total)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>2 rows before, current, 2 rows after (5 rows total)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All rows</span></div></div>
       <div class="quiz-explain">2 PRECEDING + current + 2 FOLLOWING = 5 rows total centered on current.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q337" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q339" data-answer="1">
       <div class="quiz-q">TABLESAMPLE SYSTEM (10) returns:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exactly 10% of rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>~10% of pages (approximate 10% of rows)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>First 10% of table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Random 10 rows</span></div></div>
       <div class="quiz-explain">TABLESAMPLE SYSTEM samples at page level. Returns approximate percentage.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q338" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q340" data-answer="1">
       <div class="quiz-q">LATERAL with LIMIT 1 for top-N per group — execution:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Full scan per outer row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Index seek + LIMIT per outer row</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Full sort per outer row</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Cross join optimization</span></div></div>
       <div class="quiz-explain">LATERAL + ORDER BY + LIMIT with index on (partition, order) = index seek + LIMIT per outer row.</div>
@@ -73,12 +73,12 @@ SELECT * FROM crosstab(
 -- True multi-level requires dynamic SQL or application-level pivot
 -- Dynamic: build column list at runtime</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Chain crosstab calls or use dynamic SQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: multiple PIVOTs or dynamic SQL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 <div class="callout warn">Static crosstab requires known columns. For dynamic categories, use EXECUTE format() with dynamic SQL. Performance: dynamic SQL prevents plan caching.</div>
-<div class="quiz-card" data-quiz-key="s0-q339" data-answer="1">
+<div class="quiz-card" data-quiz-key="s0-q341" data-answer="1">
       <div class="quiz-q">Dynamic crosstab in PostgreSQL uses:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>PIVOT keyword</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>EXECUTE format() with dynamic SQL</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>CTE with recursive</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>PL/pgSQL function only</span></div></div>
       <div class="quiz-explain">EXECUTE format() builds query string at runtime. Column list built dynamically.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q340" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s0-q342" data-answer="1">
       <div class="quiz-q">Multi-level PIVOT (year → quarter) — static approach:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Single crosstab call</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Chain crosstab calls or build composite key</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Not possible</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Use VIEW</span></div></div>
       <div class="quiz-explain">Chain crosstab calls or build composite key (year||'-'||quarter) then pivot.</div>
@@ -122,12 +122,12 @@ LEFT JOIN LATERAL (
   FROM orders o
   WHERE o.customer_id = c.id
 ) oa ON <span class="kw">true</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Single LATERAL with multiple aggregates</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0.14+: LATERAL supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="quiz-card" data-quiz-key="s1-q341" data-answer="1">
+<div class="quiz-card" data-quiz-key="s1-q343" data-answer="1">
       <div class="quiz-q">LATERAL vs ROW_NUMBER() for Top-N: which is faster when N is small?</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ROW_NUMBER() always</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>LATERAL with LIMIT (stops early)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Same performance</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Depends on index</span></div></div>
       <div class="quiz-explain">LATERAL + LIMIT stops after N rows per group. ROW_NUMBER scans all rows first.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q342" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s1-q344" data-answer="1">
       <div class="quiz-q">LATERAL can reference:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only tables in same FROM</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Columns from LEFT side of join</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only columns from same subquery</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Global variables only</span></div></div>
       <div class="quiz-explain">LATERAL allows right side to see left side columns. Like correlated subquery in FROM.</div>
@@ -186,12 +186,12 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) REPEA
 SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE status = <span class="st">'active'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- SYSTEM = page-level (fast). BERNOULLI = row-level (accurate %)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no TABLESAMPLE</span>
 <span class="cm">-- Use: WHERE RAND() < 0.1</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 <div class="callout warn">SYSTEM sampling is fast but can be skewed if data clustered on pages. BERNOULLI is statistically sound but scans all rows. REPEATABLE(seed) for reproducible samples.</div>
-<div class="quiz-card" data-quiz-key="s3-q343" data-answer="1">
+<div class="quiz-card" data-quiz-key="s3-q345" data-answer="1">
       <div class="quiz-q">GROUPS frame counts:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Individual rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Peer groups (rows with same ORDER BY value)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Partitions</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Pages</span></div></div>
       <div class="quiz-explain">GROUPS counts peer groups (rows with same ORDER BY value). Useful for percentile buckets with ties.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s3-q344" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s3-q346" data-answer="1">
       <div class="quiz-q">TABLESAMPLE SYSTEM vs BERNOULLI — SYSTEM is:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>More accurate %</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Faster (page-level), may be skewed</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Slower but exact</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only for small tables</span></div></div>
       <div class="quiz-explain">SYSTEM samples pages (fast, ~1% I/O). BERNOULLI samples rows (accurate %, full scan).</div>
@@ -209,7 +209,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Categories unknown at design time. Write dynamic SQL to pivot sales by category.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom565" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom565">EXECUTE format() with dynamic column list</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm65" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm65">EXECUTE format() with dynamic column list</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -219,7 +219,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom566" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom566">LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm66" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm66">LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -229,7 +229,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Running total of daily sales using RANGE frame (date-based).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom567" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom567">RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm67" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm67">RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -239,7 +239,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Count employees in same salary tier ±1 tier. Use GROUPS frame.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom568" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom568">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm68" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm68">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -249,7 +249,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Get 10% random sample of users for A/B test. Use SYSTEM for speed.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom569" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom569">TABLESAMPLE SYSTEM (10) REPEATABLE (42)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm69" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm69">TABLESAMPLE SYSTEM (10) REPEATABLE (42)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -259,7 +259,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Quarters vary by year. Build dynamic crosstab for sales by region × quarter.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom56a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom56a">EXECUTE format() with dynamic column list from distinct quarters</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm6a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm6a">EXECUTE format() with dynamic column list from distinct quarters</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -269,7 +269,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       For each customer, show running total of order amounts over time.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom56b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom56b">LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm6b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm6b">LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -279,7 +279,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Estimate distinct users per day using 10% TABLESAMPLE. Compare with exact COUNT(DISTINCT).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom56c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom56c">TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lm6c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lm6c">TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)</div></div>
     </div></li></ul>
   </section>
   

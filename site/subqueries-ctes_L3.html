@@ -274,7 +274,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznols4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznols4h">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9le4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9le4h">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -284,7 +284,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE filters status='active'. Outer adds dept_id=5. Rewrite with NOT MATERIALIZED.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznols4i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznols4i">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9le4i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9le4i">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -294,7 +294,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Graph edges table (from_id, to_id). Find all paths from A to B with cycle detection.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznols4j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznols4j">Track path in ARRAY, check <code>WHERE next_id != ALL(path)</code></div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9le4j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9le4j">Track path in ARRAY, check <code>WHERE next_id != ALL(path)</code></div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -304,7 +304,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE computes expensive aggregation. Referenced 3 times. Force MATERIALIZED.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznols4k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznols4k">WITH cte AS MATERIALIZED (SELECT ...)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9le4k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9le4k">WITH cte AS MATERIALIZED (SELECT ...)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -314,7 +314,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Explain how recursive CTE finds shortest path in unweighted graph.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznols4l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznols4l">BFS via recursive CTE level expansion; first hit = shortest</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9le4l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9le4l">BFS via recursive CTE level expansion; first hit = shortest</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -324,7 +324,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznols4m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznols4m">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9le4m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9le4m">Move LIMIT to outer query; use subquery instead of CTE</div></div>
     </div></li></ul>
   </section>
   

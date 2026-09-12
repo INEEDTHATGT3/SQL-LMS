@@ -353,6 +353,95 @@
       ]
     },
     {
+      "title": "Triggers & Transaction Control — Audit, Constraints, Cascades",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CREATE TRIGGER — BEFORE / AFTER / INSTEAD OF"
+        },
+        {
+          "type": "code",
+          "label": "audit triggers",
+          "code": "-- AFTER ROW: capture who changed what\nCREATE TABLE emp_audit (\n  op      text NOT NULL,\n  emp_id  int  NOT NULL,\n  changed_at timestamptz NOT NULL DEFAULT now(),\n  changed_by text NOT NULL DEFAULT current_user\n);\n\nCREATE FUNCTION log_emp_change() RETURNS trigger\nLANGUAGE plpgsql AS $$\nBEGIN\n  INSERT INTO emp_audit VALUES (TG_OP, NEW.id);\n  RETURN NEW;\nEND;\n$$;\n\nCREATE TRIGGER emp_audit_ai\nAFTER INSERT OR UPDATE ON employees\nFOR EACH ROW EXECUTE FUNCTION log_emp_change();",
+          "pg": "-- FOR EACH ROW vs FOR EACH STATEMENT;\n-- BEFORE can mutate NEW; AFTER can't change rows",
+          "mysql": "-- CREATE TRIGGER ... BEFORE INSERT ON t FOR EACH ROW\n-- only one trigger per timing/event/table, OLD/NEW row",
+          "py-pandas": "# pandas has no triggers; application-layer hooks\n# (SQLAlchemy events) are the pythonic equivalent"
+        },
+        {
+          "type": "heading",
+          "text": "INSTEAD OF on views"
+        },
+        {
+          "type": "code",
+          "label": "instead of trigger",
+          "code": "-- Make a view writable via INSTEAD OF\nCREATE VIEW emp_full AS\nSELECT e.id, e.name, d.name AS dept\nFROM employees e JOIN departments d ON d.id = e.dept_id;\n\nCREATE FUNCTION emp_full_insert() RETURNS trigger\nLANGUAGE plpgsql AS $$\nBEGIN\n  INSERT INTO departments(name) VALUES (NEW.dept)\n    ON CONFLICT (name) DO NOTHING;\n  INSERT INTO employees(id, name, dept_id)\n    SELECT NEW.id, NEW.name, id FROM departments WHERE name = NEW.dept;\n  RETURN NEW;\nEND;\n$$;\n\nCREATE TRIGGER emp_full_ioi\nINSTEAD OF INSERT ON emp_full\nFOR EACH ROW EXECUTE FUNCTION emp_full_insert();",
+          "pg": "-- INSTEAD OF triggers exist only on views (not tables)\n-- keep the view INSIDE the trigger simply and idempotent",
+          "mysql": "-- INSTEAD OF works on views in MySQL too",
+          "py-pandas": "# view writes stay a DB concept; pandas reads views,\n# writes go to tables via the ORM/engine"
+        },
+        {
+          "type": "heading",
+          "text": "Constraint enforcement & audit hygiene"
+        },
+        {
+          "type": "code",
+          "label": "validation trigger",
+          "code": "-- Cross-table invariant a plain FK can't express\nCREATE FUNCTION check_room_capacity() RETURNS trigger\nLANGUAGE plpgsql AS $$\nDECLARE cap int;\nBEGIN\n  SELECT capacity INTO cap FROM rooms WHERE id = NEW.room_id;\n  IF (SELECT COUNT(*) FROM bookings\n       WHERE room_id = NEW.room_id\n         AND tstzrange(date, date + duration) &&\n             tstzrange(NEW.date, NEW.date + NEW.duration)) >= cap\n  THEN\n    RAISE EXCEPTION 'room % is over capacity', NEW.room_id;\n  END IF;\n  RETURN NEW;\nEND;\n$$;\n\nCREATE TRIGGER bookings_cap_before\nBEFORE INSERT OR UPDATE ON bookings\nFOR EACH ROW EXECUTE FUNCTION check_room_capacity();",
+          "pg": "-- RAISE EXCEPTION aborts the transaction\n-- RANGE overlap (&&) checks availability",
+          "mysql": "-- SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '...'",
+          "py-pandas": "# validation in pandas: assert on the frame before DML"
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "**Triggers are invisible to EXPLAIN's node tree** — the plan shows the driving DML only. Use EXPLAIN ANALYZE's trailing `Triggers:` section to time them, and keep trigger bodies thin: they run inside the transaction and every row waits on them."
+        },
+        {
+          "type": "query-plan",
+          "title": "EXPLAIN — UPDATE (fires AFTER ROW audit trigger)",
+          "plan": {
+            "Plan": {
+              "Node Type": "Update",
+              "Relation Name": "employees",
+              "Alias": "employees",
+              "Startup Cost": 0.00,
+              "Total Cost": 12.00,
+              "Plan Rows": 0,
+              "Plan Width": 0
+            }
+          },
+          "dialect": "pg"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "INSTEAD OF triggers can only be created on:",
+              "options": [
+                "Tables",
+                "Views",
+                "Materialized views",
+                "Indexes"
+              ],
+              "answer": 1,
+              "explain": "INSTEAD OF is the view-writability mechanism; tables get BEFORE/AFTER row triggers."
+            },
+            {
+              "q": "RAISE EXCEPTION inside a BEFORE trigger:",
+              "options": [
+                "Continues the INSERT",
+                "Aborts the statement and rolls back the transaction",
+                "Only logs a warning",
+                "Skips the row silently"
+              ],
+              "answer": 1,
+              "explain": "An uncaught exception aborts the transaction — the standard way to enforce invariants beyond FK constraints."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "Problem Set — L4 Drills",
       "blocks": [
         {

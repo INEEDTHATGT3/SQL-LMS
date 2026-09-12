@@ -9,7 +9,7 @@
   <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="performance_L1" href="performance_L1.html">BEGINNER</a><a class="level-pill " data-lesson="performance_L2" href="performance_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="performance_L3" href="performance_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="performance_L4" href="performance_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Parallel Aggregation — Multi-Core GROUP BY</a><a href="#sec-1">02 · Materialized Views & Continuous Aggregates</a><a href="#sec-2">03 · Advanced Patterns — Incremental, Streaming, Parallel</a><a href="#sec-3">04 · EXPLAIN — Incremental Aggregate Upsert</a><a href="#sec-4">05 · Dialect Mastery — Enterprise Aggregation</a><a href="#sec-5">06 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Parallel Aggregation — Multi-Core GROUP BY</a><a href="#sec-1">02 · Materialized Views & Continuous Aggregates</a><a href="#sec-2">03 · Advanced Patterns — Incremental, Streaming, Parallel</a><a href="#sec-3">04 · EXPLAIN — Incremental Aggregate Upsert</a><a href="#sec-4">05 · Dialect Mastery — Enterprise Aggregation</a><a href="#sec-5">06 · Stored Procedures & Functions — PL/pgSQL at Scale</a><a href="#sec-6">07 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -278,7 +278,98 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
       </div></div></div>
   </section>
   <section class="section" id="sec-5">
-    <div class="section-header"><span class="section-num">06 //</span><h2>Problem Set — L4 Drills</h2></div>
+    <div class="section-header"><span class="section-num">06 //</span><h2>Stored Procedures & Functions — PL/pgSQL at Scale</h2></div>
+    <h3>Function vs Procedure — and SETOF returns</h3>
+<div><div class="code-label"><span>function & procedure</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- FUNCTION returns a value / table; used inside SQL
+CREATE FUNCTION dept_stats(dept_id <span class="kw">int</span>)
+RETURNS TABLE(department <span class="kw">int</span>, avg_sal numeric, cnt bigint)
+LANGUAGE sql
+STABLE AS $$
+  SELECT dept_id, AVG(salary)::numeric, COUNT(*)
+  FROM employees WHERE dept_id = dept_stats.dept_id
+  GROUP BY dept_id;
+$$;
+
+-- PROCEDURE can manage transactions (BEGIN/COMMIT)
+CREATE PROCEDURE monthly_archive(m_thru date)
+LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO archive SELECT * FROM events WHERE ts < m_thru;
+  DELETE FROM events WHERE ts < m_thru;
+END;
+$$;
+
+CALL monthly_archive(<span class="st">'2024-01-01'</span>);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- LANGUAGE sql vs plpgsql; VOLATILE/STABLE/IMMUTABLE</span>
+<span class="cm">-- CALL for procedures; SELECT f() for functions</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- CREATE PROCEDURE ... BEGIN ... END</span>
+<span class="cm">-- DELIMITER $$ required in the CLI; returns via OUT params</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Plan caching: the hidden performance lever</h3>
+<p>PL/pgSQL caches the *plan template* per statement/key. A <strong>one-size-fits-all plan</strong> stays cached for the session — great for uniform workloads, a trap for skewed values. Parameters matter: generic plans win when statistics say the same plan fits all inputs; custom plans win on skew.</p>
+<div><div class="code-label"><span>cached vs custom plan</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Generic plan reused <span class="kw">for</span> every call
+PREPARE lookup(<span class="kw">int</span>) AS SELECT * FROM emp WHERE id = $<span class="num">1</span>;
+EXECUTE lookup(<span class="num">1</span>);
+-- after <span class="num">5</span> calls, planner commits to a generic plan
+
+-- Prepared inside PL/pgSQL: same idea, automatic
+CREATE FUNCTION emp_lookup(eid <span class="kw">int</span>)
+RETURNS emp LANGUAGE plpgsql STABLE AS $$
+  -- first <span class="num">5</span> calls use custom; then generic unless re-prepared
+  SELECT * INTO r FROM emp WHERE id = eid;
+  RETURN r;
+$$
+-- re-plan on: schema change, ANALYZE, plan invalidation</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- plan_cache_mode = auto / force_generic_plan / force_custom_plan</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: statement cache + query cache (deprecated);</span>
+<span class="cm">-- PREPARE/EXECUTE also caches, but revalidates by table</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Index Scan replayed from the proc cache</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Index Scan</span> on <code>employees</code> as <code>e</code>
+        <span class="plan-node-meta"> cost=0.29..8.3 rows=1 width=48 actual time=0.02..0.03 actual rows=1 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (id = $1)</div></div></div>
+</div>
+<div class="callout warn"><strong>Prepared plans go stale</strong>: after bulk loads or schema changes the cached plan's row estimates are wrong. Watch for 'generic plan' with wildly off row counts in procs and re-prepare or bump <code>plan_cache_mode</code>.</div>
+<h3>Cursors, transactions, and SECURITY DEFINER</h3>
+<div><div class="code-label"><span>cursor + transaction + definer</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Streaming a large result set with a cursor
+DECLARE cur CURSOR FOR
+  SELECT id FROM payments WHERE settled_at IS NULL;
+-- fetch in batches inside a procedure loop
+
+-- Transactional work inside a procedure
+CREATE PROCEDURE settle_batch() LANGUAGE plpgsql AS $$
+BEGIN
+  BEGIN
+    UPDATE payments SET settled_at = now() WHERE id = cur_rec.id;
+    COMMIT;  -- allowed only in PROCEDURE, not FUNCTION
+  END;
+END;
+$$;
+
+-- SECURITY DEFINER: run as the owner, not the caller
+CREATE FUNCTION set_balance(acct <span class="kw">int</span>, amt numeric)
+RETURNS <span class="kw">void</span>
+LANGUAGE plpgsql
+SECURITY DEFINER SET search_path = <span class="kw">public</span> AS $$
+  UPDATE accounts SET balance = amt WHERE id = acct;
+$$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- SECURITY DEFINER runs with owner rights;</span>
+<span class="cm">-- ALWAYS pin search_path to avoid hijack</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: cursors via DECLARE cur CURSOR FOR ...;</span>
+<span class="cm">-- SECURITY v/SQL SECURITY DEFINER on CREATE FUNCTION</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s5-q323" data-answer="1">
+      <div class="quiz-q">A PROCEDURE differs from a FUNCTION in pg because it:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Returns tables</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Can run transaction control (COMMIT/ROLLBACK)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Cannot take parameters</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Is always SECURITY DEFINER</span></div></div>
+      <div class="quiz-explain">Top-level transaction control (COMMIT) is only allowed in PROCEDURE bodies, never inside a FUNCTION called from a query.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s5-q324" data-answer="1">
+      <div class="quiz-q">Prepared/plan-cached generic plans are dangerous when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Input values are uniform</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Inputs are heavily skewed and the plan is one-size-fits-all</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>The table is small</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Indexes are missing</span></div></div>
+      <div class="quiz-explain">A single cached plan optimized for an average value mis-executes on outliers — consider custom plans for skewed keys.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-6">
+    <div class="section-header"><span class="section-num">07 //</span><h2>Problem Set — L4 Drills</h2></div>
     <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -288,7 +379,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom05k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom05k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxznom05m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom05m">work_mem</div><button class="reveal-btn" data-target="umtxznom05o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznom05o">min_parallel_table_scan_size</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lk5k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lk5k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzp9lk5m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lk5m">work_mem</div><button class="reveal-btn" data-target="umtxzp9lk5o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9lk5o">min_parallel_table_scan_size</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -298,7 +389,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Create MV for daily sales by region with zero-downtime refresh.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom05p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom05p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lk5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lk5p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -308,7 +399,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom05q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom05q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxznom05s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom05s">add_continuous_aggregate_policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lk5q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lk5q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzp9lk5s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lk5s">add_continuous_aggregate_policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -318,7 +409,7 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Design incremental daily sales agg using pgoutput logical replication for CDC.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom05t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom05t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtxznom05v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom05v">pgoutput plugin</div><button class="reveal-btn" data-target="umtxznom05x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznom05x">apply delta to agg table</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lk5t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lk5t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtxzp9lk5v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lk5v">pgoutput plugin</div><button class="reveal-btn" data-target="umtxzp9lk5x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9lk5x">apply delta to agg table</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -328,12 +419,12 @@ CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
     </div>
     <div class="prob-body">
       Explain when right-deep join tree enables better parallel aggregate distribution.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom05y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom05y">Build side on right (smaller), probe on left</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lk5y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lk5y">Build side on right (smaller), probe on left</div></div>
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">08 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Parallel aggregate: workers do Partial Aggregate → Gather Merge combines</li><li>Materialized view + CONCURRENTLY = zero-downtime refresh (needs unique index)</li><li>Continuous aggregates (TimescaleDB): incremental, automatic, near real-time</li><li>Incremental aggregates: apply delta (INSERT/UPDATE/DELETE) to existing aggregate</li><li>Streaming aggregates: continuous view = materialized + raw tail; PipelineDB/pg_streaming</li><li>REFRESH CONCURRENTLY = brief lock swap; requires unique index on MV</li></ul></div>
     <h3>Glossary</h3>

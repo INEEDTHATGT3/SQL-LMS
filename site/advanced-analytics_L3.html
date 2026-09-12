@@ -16,27 +16,27 @@
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q345" data-answer="0">
+    <div class="quiz-card" data-quiz-key="place-q347" data-answer="0">
       <div class="quiz-q">approx_count_distinct(col) vs COUNT(DISTINCT col):</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same result, approx is faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>approx is exact, COUNT DISTINCT is approximate</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>approx only works on integers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>COUNT DISTINCT is deprecated</span></div></div>
       <div class="quiz-explain">Approximate aggregates (HyperLogLog) trade small error for massive speed on large datasets.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q346" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q348" data-answer="1">
       <div class="quiz-q">percentile_cont(0.5) WITHIN GROUP (ORDER BY salary):</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Average salary</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Median salary</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>5th percentile salary</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>50% of rows</span></div></div>
       <div class="quiz-explain">percentile_cont(0.5) = continuous percentile at 0.5 = median.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q347" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q349" data-answer="1">
       <div class="quiz-q">percentile_disc vs percentile_cont:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>disc = discrete (actual value), cont = interpolated</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>cont = discrete, disc = continuous</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only disc exists</span></div></div>
       <div class="quiz-explain">disc = existing value at percentile; cont = interpolated between values.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q348" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q350" data-answer="1">
       <div class="quiz-q">TABLESAMPLE with REPEATABLE ensures:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Faster sampling</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Same sample every run (deterministic)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Exact 10% rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No page-level bias</span></div></div>
       <div class="quiz-explain">REPEATABLE(seed) makes sampling deterministic — same sample every run.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q349" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q351" data-answer="1">
       <div class="quiz-q">Approximate percentile (TDigest) vs exact percentile:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same accuracy</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>TDigest ~1% error, O(1) memory</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>TDigest only for integers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Exact percentile always faster</span></div></div>
       <div class="quiz-explain">TDigest streaming algorithm: O(1) memory, ~1% error, merges across workers.</div>
@@ -69,12 +69,12 @@ SELECT percentile(t, <span class="num">0.5</span>) FROM (SELECT tdigest_agg(valu
 -- Merge sketches (distributed)
 tdigest_union(sketch1, sketch2);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL: tdigest extension or HyperLogLog with percentile approximation</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native TDigest</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 
-<div class="quiz-card" data-quiz-key="s0-q350" data-answer="2">
+<div class="quiz-card" data-quiz-key="s0-q352" data-answer="2">
       <div class="quiz-q">HyperLogLog memory usage is:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>O(N) where N = distinct count</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>O(log N)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>O(1) fixed size</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>O(N log N)</span></div></div>
       <div class="quiz-explain">HLL uses fixed-size registers (e.g., 2^14 registers = ~16KB). Memory constant regardless of distinct count.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q351" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s0-q353" data-answer="1">
       <div class="quiz-q">TDigest vs exact percentile_cont:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>TDigest always exact</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>TDigest ~1% error, O(1) memory</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>TDigest only for integers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Cont is deprecated</span></div></div>
       <div class="quiz-explain">TDigest approximates CDF with compressed centroids. ~1% error, constant memory.</div>
@@ -117,12 +117,12 @@ SELECT * FROM page_views_1min WHERE site_id = <span class="num">123</span>;
 
 -- Combines: materialized (historical) + streaming (recent)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PipelineDB / pg_streaming for streaming SQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- No native streaming SQL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 <div class="callout blue">Real-world: TimescaleDB continuous aggregates = 99% of streaming use cases. PipelineDB deprecated. For custom: Kafka + Flink/Spark Streaming + sink to DB.</div>
-<div class="quiz-card" data-quiz-key="s1-q352" data-answer="0">
+<div class="quiz-card" data-quiz-key="s1-q354" data-answer="0">
       <div class="quiz-q">Continuous aggregate lag (end_offset) means:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>How far behind real-time</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>How often to refresh</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>How much history to keep</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Max query latency</span></div></div>
       <div class="quiz-explain">end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag).</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q353" data-answer="0">
+    </div><div class="quiz-card" data-quiz-key="s1-q355" data-answer="0">
       <div class="quiz-q">Continuous aggregate combines:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Materialized view + raw tail</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Two materialized views</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>View + trigger</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index + partition</span></div></div>
       <div class="quiz-explain">Real-time view = materialized (historical) + raw tail (recent data).</div>
@@ -162,12 +162,12 @@ EXPLAIN ANALYZE SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;
         <span class="plan-node-meta"> cost=5000..40000 rows=250000 width=120</span>
       </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Hash Cond: (a.id = b.id)</div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s2-q354" data-answer="1">
+<div class="quiz-card" data-quiz-key="s2-q356" data-answer="1">
       <div class="quiz-q">Parallel Hash Join workers each build:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Full hash table on entire build side</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Hash table on their partition of build side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Shared hash table in shared memory</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No hash table — use NLJ</span></div></div>
       <div class="quiz-explain">Each worker builds hash on its partition of build side. No shared memory — independent.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s2-q355" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s2-q357" data-answer="1">
       <div class="quiz-q">Gather vs Gather Merge:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same thing</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Gather = unordered collect; Gather Merge = ordered merge</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Gather Merge faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Gather for Hash Join only</span></div></div>
       <div class="quiz-explain">Gather Merge: workers return sorted data, leader merges. Gather: unordered collect.</div>
@@ -239,7 +239,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom66d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom66d">CREATE EXTENSION hll; hll_add_agg()</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ln6d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ln6d">CREATE EXTENSION hll; hll_add_agg()</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -249,7 +249,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Compute p50, p95, p99 latency from 10M requests using TDigest.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom66e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom66e">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtxznom66g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom66g">percentile(t, 0.99)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ln6e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ln6e">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtxzp9ln6g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ln6g">percentile(t, 0.99)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -259,7 +259,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Design TimescaleDB continuous aggregate for 5-min metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom66h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom66h">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxznom66j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom66j">add_continuous_aggregate_policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ln6h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ln6h">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzp9ln6j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ln6j">add_continuous_aggregate_policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -269,7 +269,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Create continuous view for page views per minute per site.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom66k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom66k">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtxznom66m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom66m">time_bucket('1 minute', ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ln6k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ln6k">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtxzp9ln6m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ln6m">time_bucket('1 minute', ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -279,7 +279,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Tune parallel GROUP BY: set workers, work_mem, parallel_tuple_cost.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom66n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom66n">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxznom66p" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom66p">work_mem</div><button class="reveal-btn" data-target="umtxznom66r" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxznom66r">parallel_tuple_cost</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ln6n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ln6n">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzp9ln6p" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ln6p">work_mem</div><button class="reveal-btn" data-target="umtxzp9ln6r" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzp9ln6r">parallel_tuple_cost</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -289,7 +289,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Find top 100 most frequent IPs from 100M requests using KMV sketch.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom66s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom66s">KMV sketch</div><button class="reveal-btn" data-target="umtxznom66u" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom66u">top-K distinct</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9ln6s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9ln6s">KMV sketch</div><button class="reveal-btn" data-target="umtxzp9ln6u" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9ln6u">top-K distinct</div></div>
     </div></li></ul>
   </section>
   

@@ -16,27 +16,27 @@
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q369" data-answer="0">
+    <div class="quiz-card" data-quiz-key="place-q373" data-answer="0">
       <div class="quiz-q">A time-series is fundamentally:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>A sequence of data points indexed in time order</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>A spatial dataset with coordinates</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A hierarchical data structure</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A graph with temporal edges</span></div></div>
       <div class="quiz-explain">A time-series is a sequence of data points collected at successive time intervals, where time is the primary index.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q370" data-answer="3">
+    </div><div class="quiz-card" data-quiz-key="place-q374" data-answer="3">
       <div class="quiz-q">Which SQL function extracts the year from a timestamp?</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>YEAR(timestamp)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>EXTRACT(YEAR FROM timestamp)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>DATEPART(year, timestamp)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All of the above (dialect dependent)</span></div></div>
       <div class="quiz-explain">All three work depending on dialect: YEAR() in MySQL, EXTRACT() in PostgreSQL, DATEPART() in SQL Server.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q371" data-answer="0">
+    </div><div class="quiz-card" data-quiz-key="place-q375" data-answer="0">
       <div class="quiz-q">What is a geospatial point represented as in PostGIS?</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>POINT(longitude latitude)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>POINT(latitude longitude)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>POINT(x y) where x=latitude, y=longitude</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>LATLON(lat, lon)</span></div></div>
       <div class="quiz-explain">PostGIS uses POINT(longitude latitude) - x=longitude, y=latitude, following the OGC standard.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q372" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="place-q376" data-answer="1">
       <div class="quiz-q">A time-series with regular intervals is called:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Irregular time-series</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Regular time-series</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Sparse time-series</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Dense time-series</span></div></div>
       <div class="quiz-explain">Regular time-series have observations at consistent, predictable intervals (e.g., hourly sensor readings).</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q373" data-answer="0">
+    </div><div class="quiz-card" data-quiz-key="place-q377" data-answer="0">
       <div class="quiz-q">Which operation finds the nearest neighbor in geospatial data?</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ST_Distance</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ST_DWithin</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ST_Contains</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>ST_Intersects</span></div></div>
       <div class="quiz-explain">ST_Distance calculates the distance between geometries, commonly used with ORDER BY and LIMIT for nearest neighbor searches.</div>
@@ -101,12 +101,12 @@ SELECT DATE_TRUNC(<span class="st">'hour'</span>, ts) FROM events;</code></pre><
         <span class="plan-node-meta"> cost=0..4 rows=240 width=8</span>
       </div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s1-q374" data-answer="1">
+<div class="quiz-card" data-quiz-key="s1-q378" data-answer="1">
       <div class="quiz-q">What does date_trunc('month', '2024-01-15') return?</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>2024-01-15 00:00:00</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>2024-01-01 00:00:00</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>2024-02-01 00:00:00</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
       <div class="quiz-explain">date_trunc truncates to the start of the specified unit (month start).</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q375" data-answer="0">
+    </div><div class="quiz-card" data-quiz-key="s1-q379" data-answer="0">
       <div class="quiz-q">A sensor records every 30 seconds. What granularity?</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Second-level</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Minute-level</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Hour-level</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Day-level</span></div></div>
       <div class="quiz-explain">30-second intervals = second-level granularity (sub-minute).</div>
@@ -139,12 +139,12 @@ SELECT ST_Distance(
   ST_Transform(b.geom, <span class="num">3857</span>)
 ) FROM a, b;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Always use ST_Transform for distance/area</span>
 <span class="cm">-- 4326 = degrees (not meters!)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: ST_SRID, ST_Transform (8.0+)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="quiz-card" data-quiz-key="s2-q376" data-answer="1">
+<div class="quiz-card" data-quiz-key="s2-q380" data-answer="1">
       <div class="quiz-q">SRID 4326 represents:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Web Mercator projection</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WGS 84 (GPS latitude/longitude)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>UTM Zone 10N</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>State Plane California</span></div></div>
       <div class="quiz-explain">SRID 4326 = WGS 84 geographic coordinate system (latitude/longitude in degrees).</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s2-q377" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s2-q381" data-answer="1">
       <div class="quiz-q">ST_Distance on SRID 4326 returns:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Meters</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Degrees</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Kilometers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Radians</span></div></div>
       <div class="quiz-explain">In geographic CRS (4326), ST_Distance returns degrees. Use ST_Transform to a projected CRS (e.g., 3857) for meters.</div>
@@ -185,12 +185,12 @@ JOIN sensors s
   ON ST_DWithin(e.geom, s.geom, <span class="num">500</span>)
  AND e.ts BETWEEN s.active_from AND s.active_to;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- ST_DWithin with transformed geometries for meter-based distance</span>
 <span class="cm">-- Time window + spatial filter = spatio-temporal join</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: ST_Distance_Sphere for approximate distance</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="quiz-card" data-quiz-key="s3-q378" data-answer="1">
+<div class="quiz-card" data-quiz-key="s3-q382" data-answer="1">
       <div class="quiz-q">To build a trajectory from GPS points, you need:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ST_MakePoint + GROUP BY</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ST_MakeLine with ORDER BY timestamp</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ST_Collect + GROUP BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>ST_Union + ORDER BY</span></div></div>
       <div class="quiz-explain">ST_MakeLine with ORDER BY timestamp creates a proper trajectory linestring.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s3-q379" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s3-q383" data-answer="1">
       <div class="quiz-q">Why use ST_Transform to 3857 before ST_Distance?</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>3857 is faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>4326 returns degrees; 3857 returns meters</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>3857 is more accurate</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Required by ST_DWithin</span></div></div>
       <div class="quiz-explain">SRID 4326 uses degrees; 3857 (Web Mercator) uses meters. ST_Distance on 4326 returns degrees.</div>
@@ -208,7 +208,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       From a TIMESTAMPTZ column, extract year, month, day, hour, and day-of-week.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom970" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom970">EXTRACT(field FROM timestamp)</div><button class="reveal-btn" data-target="umtxznom972" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom972">date_trunc('unit', timestamp)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lq70" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lq70">EXTRACT(field FROM timestamp)</div><button class="reveal-btn" data-target="umtxzp9lq72" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lq72">date_trunc('unit', timestamp)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -218,7 +218,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Create a POINT geometry from longitude -122.4194 and latitude 37.7749 with SRID 4326.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom973" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom973">ST_MakePoint(lon, lat)</div><button class="reveal-btn" data-target="umtxznom975" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom975">ST_SetSRID(geom, 4326)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lq73" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lq73">ST_MakePoint(lon, lat)</div><button class="reveal-btn" data-target="umtxzp9lq75" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lq75">ST_SetSRID(geom, 4326)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -228,7 +228,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Calculate distance in meters between two WGS84 points.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom976" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom976">ST_Transform to 3857</div><button class="reveal-btn" data-target="umtxznom978" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom978">ST_Distance on geography type</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lq76" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lq76">ST_Transform to 3857</div><button class="reveal-btn" data-target="umtxzp9lq78" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lq78">ST_Distance on geography type</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -238,7 +238,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Find all POIs within 500m of a given location.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom979" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom979">ST_DWithin with geography or ST_Transform to 3857</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lq79" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lq79">ST_DWithin with geography or ST_Transform to 3857</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -248,7 +248,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Count events per hour for the last 7 days.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom97a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom97a">date_trunc('hour', ts)</div><button class="reveal-btn" data-target="umtxznom97c" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxznom97c">GROUP BY hour_bucket</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lq7a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lq7a">date_trunc('hour', ts)</div><button class="reveal-btn" data-target="umtxzp9lq7c" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzp9lq7c">GROUP BY hour_bucket</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -258,7 +258,7 @@ JOIN sensors s
     </div>
     <div class="prob-body">
       Create a LINESTRING trajectory from GPS points ordered by timestamp.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxznom97d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxznom97d">ST_MakeLine(geom ORDER BY ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzp9lq7d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzp9lq7d">ST_MakeLine(geom ORDER BY ts)</div></div>
     </div></li></ul>
   </section>
   
