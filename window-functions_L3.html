@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Window Functions — L3 ADVANCED</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="3" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 05</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">advanced frames, nested windows, performance, optimization</span></div>
+  <h1>Window Functions</h1>
+  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="window-functions_L1" href="window-functions_L1.html">BEGINNER</a><a class="level-pill " data-lesson="window-functions_L2" href="window-functions_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="window-functions_L3" href="window-functions_L3.html">ADVANCED</a><a class="level-pill " data-lesson="window-functions_L4" href="window-functions_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Nested Windows & CTE Patterns</a><a href="#sec-1">02 · Performance — Work_Memory, Spills, Indexes</a><a href="#sec-2">03 · Dialect Deep Dive — Window Function Support</a><a href="#sec-3">04 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q204" data-answer="1">
+      <div class="quiz-q">Window function in WHERE clause:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Allowed</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Not allowed - use CTE/subquery</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only with FILTER</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only in PostgreSQL</span></div></div>
+      <div class="quiz-explain">Window functions not allowed in WHERE/HAVING. Wrap in CTE/subquery and filter outer query.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q205" data-answer="1">
+      <div class="quiz-q">Performance: window function vs self-join for running total:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Self-join faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Window function faster (single scan)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Same</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Depends on data size</span></div></div>
+      <div class="quiz-explain">Window function = single pass. Self-join = N² or requires index. Window function scales O(N log N).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q206" data-answer="1">
+      <div class="quiz-q">PARTITION BY on large column (high cardinality) vs small:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>No difference</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>High cardinality = more partitions = more memory for sort</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>High cardinality = faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Low cardinality = more memory</span></div></div>
+      <div class="quiz-explain">More partitions = more sort buffers. Very high cardinality can exceed work_mem → disk spill.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q207" data-answer="1">
+      <div class="quiz-q">Frame exclusion EXCLUDE TIES with RANGE:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Excludes current row only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Excludes all rows with same ORDER BY value as current</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Excludes all rows in partition</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Syntax error</span></div></div>
+      <div class="quiz-explain">EXCLUDE TIES removes all rows with same ORDER BY value as current row (all peers).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q208" data-answer="1">
+      <div class="quiz-q">Window function in SELECT vs CTE for reuse:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same performance</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CTE allows reuse + predicate pushdown</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Direct SELECT faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Window functions not allowed in CTE</span></div></div>
+      <div class="quiz-explain">CTE materializes window results once. Reuse in multiple outer queries. Planner can push predicates.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q209" data-answer="1">
+      <div class="quiz-q">Two window functions with same PARTITION+ORDER — execution:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Two separate sorts</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Single sort, two window passes</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Single sort, single pass</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">Same PARTITION+ORDER = single sort. Each function = separate WindowAgg pass over sorted data.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q210" data-answer="1">
+      <div class="quiz-q">Window function in CTE can be referenced in outer query:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only in SELECT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>In SELECT, WHERE, ORDER BY of outer query</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only in ORDER BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not allowed</span></div></div>
+      <div class="quiz-explain">CTE materializes window result. Outer query can filter (WHERE) on window result.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q211" data-answer="1">
+      <div class="quiz-q">work_mem affects window functions by:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Controlling result set size</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Setting sort memory for WindowAgg sort phase</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Limiting output rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No effect</span></div></div>
+      <div class="quiz-explain">work_mem controls memory for sort phase of WindowAgg. Low work_mem = disk spill.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Nested Windows & CTE Patterns</h2></div>
+    <div class="mantra">Window functions can't nest directly. Use CTE to chain: inner CTE computes window, outer applies another window. This enables complex patterns like 'moving average of ranks' or 'rank of running totals'.</div>
+<div><div class="code-label"><span>nested windows via CTE</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Moving average of row numbers (smooth rank)
+WITH ranked AS (
+  SELECT 
+    name,
+    salary,
+    ROW_NUMBER() OVER (ORDER BY salary) AS rn
+  FROM employees
+)
+SELECT 
+  name,
+  salary,
+  rn,
+  AVG(rn) OVER (ORDER BY rn ROWS BETWEEN <span class="num">2</span> PRECEDING AND CURRENT ROW) AS smooth_rank
+FROM ranked;
+
+-- Running total of ranks
+WITH ranked AS (
+  SELECT *, ROW_NUMBER() OVER (ORDER BY salary) AS rn FROM employees
+)
+SELECT 
+  name,
+  rn,
+  SUM(rn) OVER (ORDER BY rn) AS running_rn
+FROM ranked;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- CTE chains for nested windows</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: CTEs supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Nested Window via CTE</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">CTE Scan</span>
+        <span class="plan-node-meta"> cost=100..500 rows=8500 width=48</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">WindowAgg</span>
+        <span class="plan-node-meta"> cost=50..200 rows=8500 width=48</span>
+      </div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Sort</span>
+        <span class="plan-node-meta"> cost=50..100 rows=8500 width=40</span>
+      </div><div class="plan-node" style="margin-left: 72px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
+      </div></div></div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s0-q212" data-answer="1">
+      <div class="quiz-q">Window function in CTE can be referenced in outer query:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only in SELECT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>In SELECT, WHERE, ORDER BY of outer query</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only in ORDER BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not allowed</span></div></div>
+      <div class="quiz-explain">CTE materializes window result. Outer query can filter (WHERE) on window result.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q213" data-answer="1">
+      <div class="quiz-q">Two window functions in same CTE — execution:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Two separate sorts</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Single sort, two window passes</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Error</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Depends on PARTITION BY</span></div></div>
+      <div class="quiz-explain">Same PARTITION BY + ORDER BY → single sort, multiple WindowAgg passes. Different partitions/orders = multiple sorts.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Performance — Work_Memory, Spills, Indexes</h2></div>
+    <h3>Work_Memory & Spilling</h3>
+<div><div class="code-label"><span>work_mem tuning</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Check <span class="kw">for</span> spills
+EXPLAIN ANALYZE SELECT ROW_NUMBER() OVER (ORDER BY salary) FROM employees;
+-- Look <span class="kw">for</span>: <span class="st">'Sort Method: external merge Disk: 1234kB'</span>
+
+-- Increase work_mem
+SET work_mem = <span class="st">'256MB'</span>;
+
+-- For parallel: per-worker work_mem
+SET max_parallel_workers_per_gather = <span class="num">4</span>;
+SET work_mem = <span class="st">'64MB'</span>;  -- per worker
+
+-- Monitor
+SELECT * FROM pg_stat_clear_snapshot();
+EXPLAIN ANALYZE ...;
+SELECT * FROM pg_stat_get_db_stat();</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- work_mem per operation. Sort/Hash/Window spills to disk if > work_mem</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: sort_buffer_size, join_buffer_size</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn"><strong>Spill = massive slowdown.</strong> Window functions sort entire partition. If partition > work_mem → disk spill. Increase work_mem or reduce partition size (add PARTITION BY).</div>
+<h3>Indexes for Window Functions</h3>
+<div><div class="code-label"><span>indexes for window functions</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Window functions benefit from indexes on:
+-- <span class="num">1</span>. PARTITION BY columns
+-- <span class="num">2</span>. ORDER BY columns
+-- <span class="num">3</span>. Composite: (partition_col, order_col)
+
+CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
+
+-- For frame clauses: ORDER BY must match index
+-- ROWS frame: any order
+-- RANGE frame: ORDER BY must match index order</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- B-tree on (partition, order) enables Index Scan instead of Seq Scan + Sort</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: same principle</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s1-q214" data-answer="0">
+      <div class="quiz-q">Window function spill indicator in EXPLAIN ANALYZE:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Sort Method: external merge Disk:</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WindowAgg: spilled</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Memory: exceeded</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Sort: disk</span></div></div>
+      <div class="quiz-explain">'Sort Method: external merge Disk: XXXkB' indicates spill to disk. Increase work_mem.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q215" data-answer="2">
+      <div class="quiz-q">Best index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC):</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>idx_salary</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>idx_dept_id</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>idx_dept_id_salary (dept_id, salary DESC)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>idx_salary_dept</span></div></div>
+      <div class="quiz-explain">Composite index matching PARTITION BY then ORDER BY enables Index Scan instead of Sort.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q216" data-answer="3">
+      <div class="quiz-q">CTE with window function allows predicate pushdown:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Never</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Always</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only in PostgreSQL 14+</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>When CTE is not materialized</span></div></div>
+      <div class="quiz-explain">PostgreSQL 14+ can push predicates into non-materialized CTEs. Use NOT MATERIALIZED for pushdown.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q217" data-answer="1">
+      <div class="quiz-q">Multiple window functions with different ORDER BY — sorts needed:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>One sort for all</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>One sort per unique ORDER BY</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>One sort per function</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No sorts needed</span></div></div>
+      <div class="quiz-explain">Each unique ORDER BY requires separate sort. Same PARTITION but different ORDER = separate sorts.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Dialect Deep Dive — Window Function Support</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) FROM emp;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">Full support: all frame types, EXCLUDE, GROUPS, IGNORE NULLS</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">MySQL 8.0+: ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, NTILE, FIRST_VALUE, LAST_VALUE, frame clauses</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df.groupby('dept')['salary'].rank()</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">func.row_number().over(partition_by=Emp.dept, order_by=Emp.salary.desc())</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">LAST_VALUE(x) OVER (ORDER BY ts ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">Requires explicit frame for LAST_VALUE. Supports IGNORE NULLS.</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">LAST_VALUE requires frame clause. No IGNORE NULLS.</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df['col'].transform('last')</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">func.last_value(Emp.col).over(...)</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Problem Set — L3 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Moving Average of Ranks</div>
+        <div class="prob-meta">drill · nested-window + cte</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W301"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Compute 3-period moving average of ROW_NUMBER() ordered by salary.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3s">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Running Total of Ranks</div>
+        <div class="prob-meta">drill · nested-window</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W302"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Running sum of ROW_NUMBER() ordered by salary.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3t">SUM(rn) OVER (ORDER BY rn)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Work_Mem Tuning for Window Spill</div>
+        <div class="prob-meta">drill · work-mem + spill</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W303"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3u">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Index for Window Function</div>
+        <div class="prob-meta">drill · index-optimization</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W304"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3v">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Nested Window: Rank of Running Total</div>
+        <div class="prob-meta">drill · nested-window</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W305"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Rank employees by their running total of salary (ordered by hire_date).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3w">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name">Filter on Window Result</div>
+        <div class="prob-meta">drill · cte-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W306"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3x">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">05 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Chain windows via CTE: inner computes, outer applies another window</li><li>Spill = Sort Method: external merge Disk; fix with work_mem</li><li>Index on (PARTITION BY, ORDER BY) avoids sort for window functions</li><li>Multiple windows with same PARTITION+ORDER = single sort, multiple WindowAgg</li><li>CTE materializes window result → allows WHERE/HAVING on window output</li><li>GROUPS frame (PG14) counts peer groups; EXCLUDE TIES/GROUP/CURRENT ROW</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>nested window</code></td><td>Window function applied to result of another window function via CTE.</td></tr><tr><td style="width:220px;"><code>WindowAgg</code></td><td>PostgreSQL executor node for window functions. Multiple passes for different functions.</td></tr><tr><td style="width:220px;"><code>work_mem</code></td><td>Memory budget for sort/hash/window operations per query. Spills to disk if exceeded.</td></tr><tr><td style="width:220px;"><code>CTE materialization</code></td><td>CTE result computed once, reused. Enables predicate pushdown on window results.</td></tr><tr><td style="width:220px;"><code>Sort Method: external merge</code></td><td>EXPLAIN ANALYZE indicator that sort spilled to disk (work_mem exceeded).</td></tr><tr><td style="width:220px;"><code>peer group</code></td><td>Rows with identical ORDER BY values. Relevant for RANGE/GROUPS frames and EXCLUDE TIES.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L4 EXPERT file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 05 · L3/ADVANCED · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('window-functions_L3');</script>
+</body></html>

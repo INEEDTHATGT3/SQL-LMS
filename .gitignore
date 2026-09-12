@@ -1,0 +1,8 @@
+node_modules/
+*.txt
+out*.txt
+*.pyc
+__pycache__/
+.DS_Store
+npm-debug.log*
+yarn-error.log*

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Filtering & Conditionals — L2 INTERVIEW READY</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="2" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 02</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">compound predicates, precedence, subquery IN, CASE tricks</span></div>
+  <h1>Filtering & Conditionals</h1>
+  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="filtering_L1" href="filtering_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="filtering_L2" href="filtering_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="filtering_L3" href="filtering_L3.html">ADVANCED</a><a class="level-pill " data-lesson="filtering_L4" href="filtering_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Compound Predicates — AND, OR, NOT, Precedence</a><a href="#sec-1">02 · Subquery IN / EXISTS — The NULL Trap</a><a href="#sec-2">03 · Advanced CASE — Expression, Nesting, Pivot Prep</a><a href="#sec-3">04 · Dialect Differences — Boolean & String</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q57" data-answer="1">
+      <div class="quiz-q">A AND B OR C is evaluated as:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>A AND (B OR C)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>(A AND B) OR C</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>(A OR C) AND B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error — ambiguous</span></div></div>
+      <div class="quiz-explain">AND binds tighter than OR. Use parentheses to be explicit.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q58" data-answer="1">
+      <div class="quiz-q">NOT (A OR B) is equivalent to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>NOT A OR NOT B</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>NOT A AND NOT B</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A AND B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A OR B</span></div></div>
+      <div class="quiz-explain">De Morgan's law: NOT (A OR B) = NOT A AND NOT B.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q59" data-answer="1">
+      <div class="quiz-q">WHERE status IN (SELECT 'active') with subquery returning NULL:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Matches 'active' rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Matches no rows (UNKNOWN)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Errors</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Matches all rows</span></div></div>
+      <div class="quiz-explain">IN with NULL in subquery returns UNKNOWN for all rows — no matches! Use EXISTS instead.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q60" data-answer="1">
+      <div class="quiz-q">CASE WHEN x > 10 THEN 'high' WHEN x > 5 THEN 'mid' ELSE 'low' END for x=8:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>high</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>mid</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>low</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>NULL</span></div></div>
+      <div class="quiz-explain">First matching WHEN wins. 8 > 5 but not > 10.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q61" data-answer="2">
+      <div class="quiz-q">COALESCE(NULL, NULLIF('', ''), 'fallback') returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>NULL</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>''</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>'fallback'</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">NULLIF('', '') = NULL; COALESCE skips NULLs, returns 'fallback'.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Compound Predicates — AND, OR, NOT, Precedence</h2></div>
+    <div class="mantra"><strong>AND before OR — always. Parentheses are documentation that the optimizer respects. Write (A AND B) OR C, not A AND B OR C.</strong></div>
+<div><div class="code-label"><span>boolean logic</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Precedence: NOT > AND > OR
+-- A AND B OR C  means  (A AND B) OR C
+
+-- Be <span class="kw">explicit</span>
+SELECT * FROM employees 
+WHERE (salary > <span class="num">50000</span> AND dept_id = <span class="num">1</span>) 
+   OR (salary > <span class="num">60000</span> AND dept_id = <span class="num">2</span>);
+
+-- NOT distributes (De Morgan)
+SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salary < <span class="num">30000</span>);
+-- Equivalent:
+SELECT * FROM employees WHERE dept_id <> <span class="num">3</span> AND salary >= <span class="num">30000</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s0-q62" data-answer="1">
+      <div class="quiz-q">NOT A AND NOT B is equivalent to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>NOT (A AND B)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>NOT (A OR B)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A OR B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A AND B</span></div></div>
+      <div class="quiz-explain">De Morgan: NOT A AND NOT B = NOT (A OR B).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q63" data-answer="0">
+      <div class="quiz-q">x > 5 AND y > 5 OR z > 5 with x=10,y=1,z=10 returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>TRUE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>FALSE</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>UNKNOWN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">(x>5 AND y>5) = FALSE; FALSE OR (z>5=TRUE) = TRUE.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Subquery IN / EXISTS — The NULL Trap</h2></div>
+    <h3>IN vs EXISTS with Subqueries</h3>
+<div><div class="code-label"><span>in with subquery</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- IN subquery
+SELECT * FROM employees 
+WHERE dept_id IN (SELECT id FROM departments WHERE location = <span class="st">'NYC'</span>);
+
+-- Equivalent EXISTS (often better)
+SELECT * FROM employees e
+WHERE EXISTS (
+  SELECT <span class="num">1</span> FROM departments d 
+  WHERE d.id = e.dept_id AND d.location = <span class="st">'NYC'</span>
+);
+
+-- NOT IN trap: <span class="kw">if</span> subquery returns ANY NULL, whole thing is UNKNOWN
+SELECT * FROM employees WHERE dept_id NOT IN (SELECT id FROM departments WHERE location = <span class="st">'NYC'</span>);
+-- If subquery has NULL → ZERO rows returned!
+
+-- Safe: NOT EXISTS
+SELECT * FROM employees e
+WHERE NOT EXISTS (
+  SELECT <span class="num">1</span> FROM departments d 
+  WHERE d.id = e.dept_id AND d.location = <span class="st">'NYC'</span>
+);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same semantics</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: NOT IN (subquery) also has NULL trap</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn"><strong>NOT IN + subquery with NULL = zero rows.</strong> The predicate becomes UNKNOWN for every row. Always use NOT EXISTS or filter NULLs from subquery. This is a classic interview gotcha.</div>
+<div class="quiz-card" data-quiz-key="s1-q64" data-answer="0">
+      <div class="quiz-q">Subquery returns (1, 2, NULL). WHERE x IN (subquery) with x=1 returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>TRUE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>FALSE</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>UNKNOWN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">x=1 matches 1 in list → TRUE. NULL in list doesn't affect positive match.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q65" data-answer="2">
+      <div class="quiz-q">Same subquery. WHERE x NOT IN (subquery) with x=5 returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>TRUE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>FALSE</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>UNKNOWN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">x=5 not equal to 1, not equal to 2, but '5 <> NULL' is UNKNOWN → whole NOT IN is UNKNOWN.</div>
+      <div class="quiz-score"></div>
+    </div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — NOT IN vs NOT EXISTS</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0..1250 rows=50 width=72</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (NOT (SubPlan 1))</div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Advanced CASE — Expression, Nesting, Pivot Prep</h2></div>
+    <h3>Searched CASE for Complex Logic</h3>
+<div><div class="code-label"><span>searched case patterns</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Multiple conditions, first match wins
+SELECT name, salary,
+  CASE
+    WHEN salary >= <span class="num">100000</span> AND dept_id = <span class="num">1</span> THEN <span class="st">'Eng Senior'</span>
+    WHEN salary >= <span class="num">100000</span> THEN <span class="st">'Senior'</span>
+    WHEN salary >= <span class="num">70000</span> THEN <span class="st">'Mid'</span>
+    ELSE <span class="st">'Junior'</span>
+  END AS level
+FROM employees;
+
+-- CASE in WHERE (filter by derived category)
+SELECT * FROM (
+  SELECT *, 
+    CASE WHEN salary >= <span class="num">100000</span> THEN <span class="st">'high' ELSE 'normal'</span> END AS pay_band
+  FROM employees
+) t WHERE pay_band = <span class="st">'high'</span>;
+
+-- CASE in ORDER BY (custom sort)
+SELECT * FROM employees
+ORDER BY 
+  CASE status WHEN <span class="st">'active' THEN 1 WHEN 'pending'</span> THEN <span class="num">2</span> ELSE <span class="num">3</span> END,
+  salary DESC;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>CASE for Pivot/Crosstab Preparation</h3>
+<div><div class="code-label"><span>conditional aggregation (pivot prep)</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Count by status per department
+SELECT dept_id,
+  COUNT(*) FILTER (WHERE status = <span class="st">'active'</span>) AS active_cnt,
+  COUNT(*) FILTER (WHERE status = <span class="st">'pending'</span>) AS pending_cnt,
+  COUNT(*) FILTER (WHERE status = <span class="st">'inactive'</span>) AS inactive_cnt
+FROM employees
+GROUP BY dept_id;
+
+-- Same with CASE (portable)
+SELECT dept_id,
+  SUM(CASE WHEN status = <span class="st">'active'</span> THEN <span class="num">1</span> ELSE <span class="num">0</span> END) AS active_cnt,
+  SUM(CASE WHEN status = <span class="st">'pending'</span> THEN <span class="num">1</span> ELSE <span class="num">0</span> END) AS pending_cnt,
+  SUM(CASE WHEN status = <span class="st">'inactive'</span> THEN <span class="num">1</span> ELSE <span class="num">0</span> END) AS inactive_cnt
+FROM employees
+GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- FILTER clause (PostgreSQL) — cleaner, index-friendly</span>
+SELECT dept_id,
+  COUNT(*) FILTER (WHERE status = <span class="st">'active'</span>) AS active_cnt
+FROM employees GROUP BY dept_id;</code></pre><pre data-lang="mysql"><code><span class="cm">-- No FILTER; use CASE</span>
+SELECT dept_id,
+  SUM(CASE WHEN status = <span class="st">'active'</span> THEN <span class="num">1</span> ELSE <span class="num">0</span> END) AS active_cnt
+FROM employees GROUP BY dept_id;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q66" data-answer="0">
+      <div class="quiz-q">CASE WHEN a THEN 1 WHEN b THEN 2 ELSE 3 END with a=TRUE,b=TRUE returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>1</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>2</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>3</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">First matching WHEN wins. a is TRUE, so returns 1.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q67" data-answer="1">
+      <div class="quiz-q">COUNT(*) FILTER (WHERE status='active') vs SUM(CASE WHEN status='active' THEN 1 ELSE 0 END):</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Different results</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Same result, FILTER is PostgreSQL-only</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>FILTER slower</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CASE is not portable</span></div></div>
+      <div class="quiz-explain">FILTER is PostgreSQL syntactic sugar; both produce same count.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Differences — Boolean & String</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM t WHERE a AND b OR c;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM t WHERE a AND b OR c; -- (a AND b) OR c</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM t WHERE a AND b OR c; -- Same precedence</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df[(df['a'] & df['b']) | df['c']]  # & before |</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">session.query(T).filter(or_(and_(T.a, T.b), T.c)).all()</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM t WHERE name LIKE 'A%'; -- case-sensitive</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM t WHERE name ILIKE 'A%'; -- case-insensitive</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM t WHERE name LIKE 'A%'; -- case-insensitive (default collation)</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">df[df['name'].str.startswith('A', case=False)]</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">session.query(T).filter(T.name.ilike('A%')).all()</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L2 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">High Salary in Dept 1 OR Mid Salary in Dept 2</div>
+        <div class="prob-meta">drill · compound-predicate</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F201"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employees with (salary > 100000 AND dept_id = 1) OR (salary > 70000 AND dept_id = 2).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w15" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w15">Parenthesize each AND group</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Not in NYC Departments (Safe)</div>
+        <div class="prob-meta">drill · not-exists</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F202"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Employees NOT in departments located in 'NYC'. Use NOT EXISTS.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w16" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w16">NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Salary Band via CASE</div>
+        <div class="prob-meta">drill · case-expression</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F203"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Add column 'band': salary>=100k='high', >=70k='mid', else 'standard'.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w17" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w17">CASE WHEN salary >= 100000 THEN 'high' ...</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Custom Sort: Active First, Then Salary DESC</div>
+        <div class="prob-meta">drill · case-order-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F204"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Order by status (active first, pending second, inactive last), then salary DESC.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w18" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w18">CASE status WHEN 'active' THEN 1 ...</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Conditional Count: Active/Pending per Dept</div>
+        <div class="prob-meta">drill · conditional-aggregation</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F205"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Per department: count of active and pending employees.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w19" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w19">SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">NULL-Safe NOT IN Subquery</div>
+        <div class="prob-meta">drill · not-in-null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F206"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Departments without employees. Show NOT IN fails with NULL; fix with NOT EXISTS.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w1a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w1a">Subquery with NULL breaks NOT IN; use NOT EXISTS</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">COALESCE Chain for Display Name</div>
+        <div class="prob-meta">drill · coalesce</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F207"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Display name: prefer nickname, then first_name, then 'Anonymous'.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w1b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w1b">COALESCE(nickname, first_name, 'Anonymous')</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Normalize Status: Empty String → 'unknown'</div>
+        <div class="prob-meta">drill · nullif-coalesce</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F208"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Replace empty status with 'unknown', NULL with 'unknown'.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8w1c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8w1c">COALESCE(NULLIF(TRIM(status), ''), 'unknown')</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Precedence: NOT > AND > OR. Parenthesize: (A AND B) OR C</li><li>De Morgan: NOT (A OR B) = NOT A AND NOT B; NOT (A AND B) = NOT A OR NOT B</li><li>NOT IN (subquery) + NULL = zero rows. Use NOT EXISTS or filter NULLs</li><li>EXISTS stops at first match; IN scans all. EXISTS often faster for NOT</li><li>CASE: first WHEN wins; use in SELECT, WHERE, ORDER BY</li><li>FILTER (PostgreSQL) = portable CASE SUM for conditional aggregation</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>short-circuit evaluation</code></td><td>AND stops at first FALSE; OR stops at first TRUE. ORDER BY CASE leverages this.</td></tr><tr><td style="width:220px;"><code>anti-join</code></td><td>NOT EXISTS pattern — returns rows with no match in subquery.</td></tr><tr><td style="width:220px;"><code>semi-join</code></td><td>EXISTS / IN pattern — returns rows with at least one match; stops at first.</td></tr><tr><td style="width:220px;"><code>three-valued logic</code></td><td>TRUE, FALSE, UNKNOWN. WHERE keeps TRUE only; CHECK constraint rejects FALSE only.</td></tr><tr><td style="width:220px;"><code>conditional aggregation</code></td><td>CASE inside SUM/COUNT to pivot rows into columns per group.</td></tr><tr><td style="width:220px;"><code>FILTER clause</code></td><td>PostgreSQL: aggregate FILTER (WHERE cond) — cleaner than CASE, index-friendly.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 02 · L2/INTERVIEW READY · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('filtering_L2');</script>
+</body></html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Window Functions — L2 INTERVIEW READY</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="2" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 05</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">frame clauses, NTILE, percentiles, frame exclusion</span></div>
+  <h1>Window Functions</h1>
+  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="window-functions_L1" href="window-functions_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="window-functions_L2" href="window-functions_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="window-functions_L3" href="window-functions_L3.html">ADVANCED</a><a class="level-pill " data-lesson="window-functions_L4" href="window-functions_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Frame Clauses — ROWS vs RANGE</a><a href="#sec-1">02 · NTILE — Bucketing Rows</a><a href="#sec-2">03 · Advanced Frames — EXCLUDE, GROUPS</a><a href="#sec-3">04 · Percentile & Distribution Functions</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q191" data-answer="1">
+      <div class="quiz-q">Default window frame is:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>RANGE UNBOUNDED PRECEDING TO CURRENT ROW</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CURRENT ROW ONLY</span></div></div>
+      <div class="quiz-explain">Default = RANGE UNBOUNDED PRECEDING TO CURRENT ROW. Includes all rows up to current row.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q192" data-answer="1">
+      <div class="quiz-q">ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING includes:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Current row only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Current row + 1 before + 1 after</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>All rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Current row + all preceding</span></div></div>
+      <div class="quiz-explain">1 PRECEDING = 1 row before; 1 FOLLOWING = 1 row after. Total 3 rows.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q193" data-answer="1">
+      <div class="quiz-q">NTILE(4) divides partition into:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>4 equal rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>4 buckets (roughly equal size)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>4 groups by value</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Quartiles only</span></div></div>
+      <div class="quiz-explain">NTILE(n) divides rows into n buckets as equally as possible. Buckets numbered 1..n.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q194" data-answer="1">
+      <div class="quiz-q">EXCLUDE CURRENT ROW in frame clause:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Removes current row from window</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Excludes current row from frame</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Syntax error</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only for RANGE</span></div></div>
+      <div class="quiz-explain">EXCLUDE CURRENT ROW omits current row from frame. Useful for 'other rows' calculations.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q195" data-answer="1">
+      <div class="quiz-q">RANGE vs ROWS with ORDER BY salary:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same always</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>RANGE uses value proximity; ROWS uses row count</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ROWS uses value; RANGE uses count</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>RANGE not allowed with salary</span></div></div>
+      <div class="quiz-explain">RANGE uses ORDER BY value + offset (e.g., salary ± 1000). ROWS uses physical row count.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Frame Clauses — ROWS vs RANGE</h2></div>
+    <div class="mantra">Frame = window boundaries. ROWS = physical row count. RANGE = ORDER BY value + offset. Default = RANGE UNBOUNDED PRECEDING TO CURRENT ROW. Always specify frame for LAST_VALUE, running totals, moving averages.</div>
+<div><div class="code-label"><span>frame syntax</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- ROWS: physical row count
+SUM(amount) OVER (
+  ORDER BY sale_date
+  ROWS BETWEEN <span class="num">3</span> PRECEDING AND CURRENT ROW
+) AS moving_sum_4days
+
+-- RANGE: value-based (ORDER BY must be numeric/date)
+SUM(amount) OVER (
+  ORDER BY sale_date
+  RANGE BETWEEN INTERVAL <span class="st">'3 days'</span> PRECEDING AND CURRENT ROW
+) AS moving_sum_3days
+
+-- Unbounded
+SUM(amount) OVER (
+  ORDER BY sale_date
+  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+) AS total_so_far</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: frame clauses supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s0-q196" data-answer="1">
+      <div class="quiz-q">RANGE INTERVAL '1 day' PRECEDING with ORDER BY ts includes:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exactly 1 row before</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>All rows where ts >= current_ts - 1 day</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Current row only</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">RANGE uses value semantics. All rows with ts within 1 day of current row's ts.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q197" data-answer="1">
+      <div class="quiz-q">ROWS 1 PRECEDING vs RANGE 1 PRECEDING with ORDER BY salary:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ROWS = 1 row before; RANGE = salaries within 1 of current</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>RANGE = 1 row; ROWS = salary ± 1</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Both invalid</span></div></div>
+      <div class="quiz-explain">ROWS counts rows. RANGE uses ORDER BY value difference (salary ± 1).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>NTILE — Bucketing Rows</h2></div>
+    <h3>NTILE(n) — Equal-Size Buckets</h3>
+<div><div class="code-label"><span>ntile</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Quartiles (<span class="num">4</span> buckets)
+SELECT 
+  name,
+  salary,
+  NTILE(<span class="num">4</span>) OVER (ORDER BY salary) AS quartile
+FROM employees;
+
+-- Deciles (<span class="num">10</span> buckets)
+SELECT 
+  name,
+  salary,
+  NTILE(<span class="num">10</span>) OVER (ORDER BY salary) AS decile
+FROM employees;
+
+-- Per department
+SELECT 
+  dept_id,
+  name,
+  salary,
+  NTILE(<span class="num">4</span>) OVER (PARTITION BY dept_id ORDER BY salary) AS dept_quartile
+FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: NTILE supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows.</div>
+<div class="quiz-card" data-quiz-key="s1-q198" data-answer="1">
+      <div class="quiz-q">NTILE(4) on 10 rows → bucket sizes:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>2,2,3,3</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>3,3,2,2</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>2,2,2,4</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>3,2,2,3</span></div></div>
+      <div class="quiz-explain">Extra rows go to first buckets. 10/4 = 2 remainder 2 → first 2 buckets get 3 rows.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q199" data-answer="1">
+      <div class="quiz-q">NTILE with PARTITION BY dept_id — buckets per partition:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Across all departments combined</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Separate buckets per department</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only works without PARTITION BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">NTILE respects PARTITION BY — each partition gets its own buckets 1..n.</div>
+      <div class="quiz-score"></div>
+    </div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — NTILE Partition Sort</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">WindowAgg</span>
+        <span class="plan-node-meta"> cost=50..300 rows=8500 width=48</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Sort</span>
+        <span class="plan-node-meta"> cost=50..200 rows=8500 width=40</span>
+      </div><div class="plan-node" style="margin-left: 48px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
+      </div></div></div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Advanced Frames — EXCLUDE, GROUPS</h2></div>
+    <h3>Frame Exclusion — EXCLUDE CURRENT ROW</h3>
+<div><div class="code-label"><span>exclude current row</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Sum of OTHER employees' salaries in same dept
+SELECT 
+  name,
+  salary,
+  SUM(salary) OVER (
+    PARTITION BY dept_id
+    ORDER BY salary
+    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+    EXCLUDE CURRENT ROW
+  ) AS sum_other_salaries
+FROM employees;
+
+-- Exclude group (all tied peers)
+SUM(salary) OVER (
+  PARTITION BY dept_id
+  ORDER BY salary
+  RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+  EXCLUDE GROUP
+) AS sum_other_tiers
+
+-- Exclude ties
+SUM(salary) OVER (
+  PARTITION BY dept_id
+  ORDER BY salary
+  RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+  EXCLUDE TIES
+) AS sum_other_tiers</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- EXCLUDE CURRENT ROW / GROUP / TIES (PostgreSQL 11+)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no EXCLUDE clause</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>GROUPS Frame (PostgreSQL 14+)</h3>
+<div><div class="code-label"><span>groups frame</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- GROUPS: counts groups of peer rows (same ORDER BY value)
+-- <span class="num">1</span> group = all rows with same ORDER BY value
+SELECT 
+  salary,
+  COUNT(*) OVER (
+    ORDER BY salary
+    GROUPS BETWEEN <span class="num">1</span> PRECEDING AND <span class="num">1</span> FOLLOWING
+  ) AS peer_count
+FROM employees;
+
+-- Useful <span class="kw">for</span>: percentile buckets with variable row density</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- GROUPS frame (PostgreSQL 14+)</span>
+<span class="cm">-- Counts peer groups (ties) not individual rows</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no GROUPS frame</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q200" data-answer="1">
+      <div class="quiz-q">EXCLUDE CURRENT ROW removes:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Current row from result set</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Current row from frame calculation</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Current partition</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Current ORDER BY</span></div></div>
+      <div class="quiz-explain">Excludes only the current row from frame calculation. Other rows with same ORDER BY value remain.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q201" data-answer="2">
+      <div class="quiz-q">GROUPS 1 PRECEDING with ORDER BY salary:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>1 row before</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>All rows with salary = current_salary - 1</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>All rows with same salary as previous distinct salary</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All rows with salary less than current</span></div></div>
+      <div class="quiz-explain">GROUPS counts distinct ORDER BY values (peer groups). 1 PRECEDING = previous distinct salary tier.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Percentile & Distribution Functions</h2></div>
+    <h3>PERCENT_RANK, CUME_DIST, PERCENTILE_CONT/DISC</h3>
+<div><div class="code-label"><span>distribution functions</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Percent rank (<span class="num">0</span> to <span class="num">1</span>)
+SELECT 
+  name,
+  salary,
+  PERCENT_RANK() OVER (ORDER BY salary) AS pct_rank,
+  CUME_DIST() OVER (ORDER BY salary) AS cume_dist
+FROM employees;
+
+-- PERCENT_RANK = (rank - <span class="num">1</span>) / (total - <span class="num">1</span>)
+-- CUME_DIST = rank / total  (includes ties)
+
+-- Percentile aggregates (ordered-set aggregates)
+SELECT 
+  percentile_cont(<span class="num">0.5</span>) WITHIN GROUP (ORDER BY salary) AS median,
+  percentile_disc(<span class="num">0.5</span>) WITHIN GROUP (ORDER BY salary) AS median_discrete,
+  percentile_cont(<span class="num">0.95</span>) WITHIN GROUP (ORDER BY salary) AS p95
+FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PERCENT_RANK, CUME_DIST, percentile_cont/disc standard</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: PERCENT_RANK, CUME_DIST, PERCENTILE_CONT/DISC</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s3-q202" data-answer="1">
+      <div class="quiz-q">PERCENT_RANK vs CUME_DIST for value at position 3 of 10:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>PERCENT_RANK=0.2, CUME_DIST=0.3</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>PERCENT_RANK=0.3, CUME_DIST=0.2</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Both 0.2</span></div></div>
+      <div class="quiz-explain">PERCENT_RANK = (rank-1)/(N-1). CUME_DIST = rank/N. For rank 3 of 10: (3-1)/9=0.22 vs 3/10=0.3.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q203" data-answer="0">
+      <div class="quiz-q">percentile_cont(0.95) returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>95th percentile (interpolated)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>95th percentile (actual value)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Top 5% rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Top 5% average</span></div></div>
+      <div class="quiz-explain">percentile_cont interpolates between values for exact percentile.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L2 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">4-Row Moving Average</div>
+        <div class="prob-meta">drill · frame-rows</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W201"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Compute 4-row moving average of daily sales (current + 3 preceding).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3k">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">7-Day Moving Sum (RANGE)</div>
+        <div class="prob-meta">drill · frame-range</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W202"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Sum of sales for each day + previous 6 days using RANGE.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3l">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Running Total with ROWS</div>
+        <div class="prob-meta">drill · frame-unbounded</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W203"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Running total of sales ordered by date using ROWS UNBOUNDED PRECEDING.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3m">ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Quartile Assignment</div>
+        <div class="prob-meta">drill · ntile</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W204"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Assign each employee to a salary quartile (1-4) within their department.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3n">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Sum of Peers (EXCLUDE GROUP)</div>
+        <div class="prob-meta">drill · exclude-group</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W205"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Sum of salaries for employees in same salary tier (excluding current tier).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3o">EXCLUDE GROUP with RANGE frame</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Percentile Rank vs Cume Dist</div>
+        <div class="prob-meta">drill · percent_rank + cume_dist</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W206"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Show both PERCENT_RANK and CUME_DIST for each employee by salary.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3p">PERCENT_RANK() OVER (ORDER BY salary)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Moving Average Excluding Current</div>
+        <div class="prob-meta">drill · exclude-current</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W207"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      3-day moving average excluding current day (previous 3 days only).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3q">ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Peer Group Count (GROUPS frame)</div>
+        <div class="prob-meta">drill · groups-frame</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W208"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Count of employees in same salary tier ±1 tier. Use GROUPS frame (PG 14+).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9g3r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9g3r">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Default frame: RANGE UNBOUNDED PRECEDING TO CURRENT ROW</li><li>ROWS = row count; RANGE = ORDER BY value distance; GROUPS = peer groups</li><li>NTILE(n) = n buckets; extra rows to first buckets</li><li>EXCLUDE CURRENT ROW / GROUP / TIES removes rows from frame</li><li>LAST_VALUE needs explicit frame: ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</li><li>RANGE = value distance; ROWS = row count; GROUPS = peer group count</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>frame clause</code></td><td>ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row.</td></tr><tr><td style="width:220px;"><code>ROWS</code></td><td>Frame unit = physical row count.</td></tr><tr><td style="width:220px;"><code>RANGE</code></td><td>Frame unit = ORDER BY value distance (numeric/date).</td></tr><tr><td style="width:220px;"><code>GROUPS</code></td><td>Frame unit = peer groups (rows with same ORDER BY value).</td></tr><tr><td style="width:220px;"><code>NTILE</code></td><td>Divides partition into n roughly equal buckets (1..n).</td></tr><tr><td style="width:220px;"><code>EXCLUDE CURRENT ROW</code></td><td>Excludes current row from frame calculation.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 05 · L2/INTERVIEW READY · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('window-functions_L2');</script>
+</body></html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Fundamentals — L4 EXPERT</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="4" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 01</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">partitioning, parallelism, internals — production-grade fundamentals</span></div>
+  <h1>SQL Fundamentals</h1>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="basics_L1" href="basics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="basics_L2" href="basics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="basics_L3" href="basics_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="basics_L4" href="basics_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Table Partitioning — Scale Without Sharding</a><a href="#sec-1">02 · Parallel Query & Cost Tuning</a><a href="#sec-2">03 · Advanced Indexing — BRIN, Expression, Concurrent</a><a href="#sec-3">04 · Dialect Deep Dive — Partitioning & Parallelism</a><a href="#sec-4">05 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q35" data-answer="0">
+      <div class="quiz-q">Table partitioning in PostgreSQL splits a table by:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Column values (range, list, hash)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Row count automatically</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Database size</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index type</span></div></div>
+      <div class="quiz-explain">PARTITION BY RANGE/LIST/HASH on a partition key column.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q36" data-answer="1">
+      <div class="quiz-q">Parallel query execution (PostgreSQL) is triggered when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Table has > 1 partition</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Estimated cost > parallel_setup_cost + parallel_tuple_cost * rows</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Index exists on filtered column</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Query uses LIMIT</span></div></div>
+      <div class="quiz-explain">Planner compares parallel cost vs serial. Controlled by parallel_setup_cost, parallel_tuple_cost.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q37" data-answer="1">
+      <div class="quiz-q">BRIN index is ideal for:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Primary key columns</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Timestamp columns with natural time-order correlation</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>JSONB columns</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Full-text search columns</span></div></div>
+      <div class="quiz-explain">BRIN stores min/max per block range. Works when physical order correlates with logical (e.g., auto-increment ID, timestamps).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q38" data-answer="1">
+      <div class="quiz-q">pg_stat_statements tracks:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Index usage per table</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Query execution stats (calls, time, rows) across all queries</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Cache hit ratios</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Lock contention</span></div></div>
+      <div class="quiz-explain">Extension that normalizes queries and aggregates execution statistics. Essential for finding slow queries.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q39" data-answer="1">
+      <div class="quiz-q">Effective cache size affects planner by:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Determining actual RAM allocated to PostgreSQL</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Estimating how much data fits in OS cache (influences index vs seq scan choice)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Setting shared_buffers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Limiting result set size</span></div></div>
+      <div class="quiz-explain">effective_cache_size tells planner expected OS cache. Higher = more likely to choose Index Scan (assumes cached).</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Table Partitioning — Scale Without Sharding</h2></div>
+    <div class="mantra"><strong>Partitioning = physical split, logical unity. Large table becomes many small tables. Planner prunes partitions automatically. Maintenance (VACUUM, indexes) per partition.</strong></div>
+<div><div class="code-label"><span>range partitioning (PostgreSQL 11+)</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Parent table
+CREATE TABLE measurements (
+  log_id BIGSERIAL,
+  sensor_id INT NOT NULL,
+  log_time TIMESTAMPTZ NOT NULL,
+  value NUMERIC
+) PARTITION BY RANGE (log_time);
+
+-- Monthly partitions
+CREATE TABLE measurements_2024_01 PARTITION OF measurements
+  FOR VALUES FROM (<span class="st">'2024-01-01') TO ('2024-02-01'</span>);
+CREATE TABLE measurements_2024_02 PARTITION OF measurements
+  FOR VALUES FROM (<span class="st">'2024-02-01') TO ('2024-03-01'</span>);
+
+-- Default partition (catches strays)
+CREATE TABLE measurements_default PARTITION OF measurements DEFAULT;
+
+-- Index on parent = created on all partitions
+CREATE INDEX idx_meas_sensor_time ON measurements (sensor_id, log_time);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span>
+<span class="cm">-- Attach/detach for rolling windows</span>
+ALTER TABLE measurements DETACH PARTITION measurements_2023_01;
+ALTER TABLE measurements ATTACH PARTITION measurements_2025_01
+  FOR VALUES FROM (<span class="st">'2025-01-01') TO ('2025-02-01'</span>);</code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+ partitioning</span>
+CREATE TABLE measurements (
+  log_id BIGINT AUTO_INCREMENT,
+  sensor_id INT NOT NULL,
+  log_time DATETIME NOT NULL,
+  value DECIMAL(<span class="num">10</span>,<span class="num">2</span>),
+  PRIMARY KEY (log_id, log_time)
+) PARTITION BY RANGE (UNIX_TIMESTAMP(log_time)) (
+  PARTITION p202401 VALUES LESS THAN (UNIX_TIMESTAMP(<span class="st">'2024-02-01'</span>)),
+  PARTITION p202402 VALUES LESS THAN (UNIX_TIMESTAMP(<span class="st">'2024-03-01'</span>)),
+  PARTITION pmax VALUES LESS THAN MAXVALUE
+);</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Partition Pruning in Action</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Append</span>
+        <span class="plan-node-meta"> cost=0..42.15 rows=3200 width=72</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Index Scan</span> on <code>measurements_2024_01</code>
+        <span class="plan-node-meta"> cost=0.29..21.07 rows=1600</span>
+      </div></div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Index Scan</span> on <code>measurements_2024_02</code>
+        <span class="plan-node-meta"> cost=0.29..21.08 rows=1600</span>
+      </div></div></div></div>
+</div>
+<div class="callout green"><strong>Partition pruning:</strong> Only 2 of 12 monthly partitions scanned. Query on Jan-Feb touches only those partitions. Detach old partitions for instant archival.</div>
+<div class="quiz-card" data-quiz-key="s0-q40" data-answer="0">
+      <div class="quiz-q">Partition pruning works when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Query filters on partition key</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Any WHERE clause is used</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Index exists on partition key</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Table has > 10 partitions</span></div></div>
+      <div class="quiz-explain">Planner only skips partitions if WHERE clause constrains the partition key (log_time in example).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q41" data-answer="0">
+      <div class="quiz-q">Unique constraint on partitioned table requires:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Partition key included in unique columns</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>No unique constraints allowed</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Global unique index</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All partitions same size</span></div></div>
+      <div class="quiz-explain">PostgreSQL requires partition key in PRIMARY KEY / UNIQUE to enforce uniqueness within single partition.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Parallel Query & Cost Tuning</h2></div>
+    <h3>Parallel Execution Basics</h3>
+<div><div class="code-label"><span>parallel configuration (PostgreSQL)</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Enable (default on in PG <span class="num">11</span>+)
+SET max_parallel_workers_per_gather = <span class="num">4</span>;
+
+-- Cost thresholds
+SET parallel_setup_cost = <span class="num">1000</span>;      -- default <span class="num">1000</span>
+SET parallel_tuple_cost = <span class="num">0.1</span>;       -- default <span class="num">0.1</span>
+
+-- Force parallel <span class="kw">for</span> testing
+SET force_parallel_mode = on;
+
+-- Check <span class="kw">if</span> query uses parallel
+EXPLAIN ANALYZE SELECT count(*) FROM large_table;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Gather/Gather Merge nodes show parallelism</span>
+<span class="cm">-- Workers: actual loops > 1 in EXPLAIN ANALYZE</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0: no native parallel query</span>
+<span class="cm">-- Use multiple connections + UNION ALL manually</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Parallel Seq Scan</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Gather</span>
+        <span class="plan-node-meta"> cost=1000..15000 rows=1000000 width=8</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Parallel Seq Scan</span> on <code>large_table</code>
+        <span class="plan-node-meta"> cost=0..14000 rows=250000 width=8</span>
+      </div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s1-q42" data-answer="0">
+      <div class="quiz-q">Gather node in EXPLAIN means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Parallel workers collect results to leader</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Index scan gathering rows</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Sort operation</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Join operation</span></div></div>
+      <div class="quiz-explain">Gather = leader collects tuples from parallel workers. Gather Merge = workers already sorted.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q43" data-answer="0">
+      <div class="quiz-q">Increase max_parallel_workers_per_gather when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>CPU cores available and I/O not saturated</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Always for faster queries</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Table is small</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Using LIMIT 1</span></div></div>
+      <div class="quiz-explain">Parallel helps when CPU-bound and enough cores. I/O-bound or small tables don't benefit.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Advanced Indexing — BRIN, Expression, Concurrent</h2></div>
+    <div><div class="code-label"><span>BRIN for time-series</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Huge table, naturally ordered by time
+CREATE INDEX idx_events_ts_brin ON events USING BRIN (created_at);
+
+-- Pages per range (default <span class="num">128</span>)
+CREATE INDEX idx_events_ts_brin32 ON events USING BRIN (created_at) WITH (pages_per_range = <span class="num">32</span>);
+
+-- Size comparison
+-- B-tree: ~<span class="num">1.2</span> GB  |  BRIN: ~<span class="num">40</span> MB (<span class="kw">for</span> 1B rows)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- BRIN only in PostgreSQL</span>
+<span class="cm">-- Best when: physical order ≈ logical order (append-only, timestamps)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no BRIN equivalent</span>
+<span class="cm">-- Use partitioning by time instead</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>expression indexes & collation</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Case-insensitive unique constraint
+CREATE UNIQUE INDEX idx_users_email_lower ON users (LOWER(email));
+
+-- Custom collation (PostgreSQL <span class="num">12</span>+)
+CREATE COLLATION case_insensitive (provider = icu, locale = <span class="st">'und-u-ks-level2'</span>, deterministic = <span class="kw">false</span>);
+CREATE TABLE users (email TEXT COLLATE case_insensitive UNIQUE);
+
+-- JSONB path index
+CREATE INDEX idx_data_tags ON events USING GIN ((data-><span class="st">'tags'</span>));
+-- Query: data-><span class="st">'tags' @> '["urgent"]'</span></code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- ICU collation for proper case-insensitive</span>
+<span class="cm">-- JSONB path indexing with jsonb_path_ops</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Functional index (MySQL 8.0+)</span>
+CREATE INDEX idx_users_email_lower ON users ((LOWER(email)));
+
+<span class="cm">-- Collation</span>
+CREATE TABLE users (email VARCHAR(<span class="num">255</span>) COLLATE utf8mb4_0900_ai_ci UNIQUE);</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>concurrent index creation</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Avoid table lock during index build
+CREATE INDEX CONCURRENTLY idx_big_table_col ON big_table (col);
+
+-- Trade-offs:
+-- 2x disk space during build
+-- Longer build time
+-- May fail <span class="kw">if</span> concurrent modifications conflict
+-- Cannot run in transaction</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL specific</span>
+<span class="cm">-- DROP INDEX CONCURRENTLY also available</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0: ALGORITHM=INPLACE, LOCK=NONE</span>
+ALTER TABLE big_table ADD INDEX idx_col (col), ALGORITHM=INPLACE, LOCK=NONE;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q44" data-answer="1">
+      <div class="quiz-q">BRIN index size is ~1/30th of B-tree because:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>It uses compression</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Stores only min/max per block range, not every row</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only indexes first column</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Skips NULL values</span></div></div>
+      <div class="quiz-explain">BRIN summarizes 128-page ranges (default) with min/max. Tiny metadata vs per-row pointers.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q45" data-answer="0">
+      <div class="quiz-q">CREATE INDEX CONCURRENTLY cannot:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Run inside a transaction</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Be used on partitioned tables</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Create unique indexes</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Work on expressions</span></div></div>
+      <div class="quiz-explain">Must run outside transaction. Takes share-update-exclusive lock, not exclusive.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Deep Dive — Partitioning & Parallelism</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE TABLE sales (...) PARTITION BY RANGE (sale_date);
+CREATE TABLE sales_2024_q1 PARTITION OF sales FOR VALUES FROM ('2024-01-01') TO ('2024-04-01');</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE TABLE sales (...) PARTITION BY RANGE (UNIX_TIMESTAMP(sale_date)) (
+  PARTITION p2024q1 VALUES LESS THAN (UNIX_TIMESTAMP('2024-04-01')),
+  PARTITION pmax VALUES LESS THAN MAXVALUE
+);</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SET max_parallel_workers_per_gather = 8;
+EXPLAIN ANALYZE SELECT ...; -- Shows Gather/Parallel Seq Scan</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- No native parallel query execution
+-- Workaround: Application-level parallelism with UNION ALL</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L4 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Design Partitioned Event Table</div>
+        <div class="prob-meta">drill · partition-design</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B401"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Design a partitioned table for 1B events/year with partition key on event_time. Include monthly partitions, default partition, and index strategy.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tk" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tk">PARTITION BY RANGE (event_time)</div><button class="reveal-btn" data-target="umtxzqd8tm" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8tm">Monthly partitions</div><button class="reveal-btn" data-target="umtxzqd8to" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqd8to">Default partition for strays</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">BRIN Index for Append-Only Logs</div>
+        <div class="prob-meta">drill · brin-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B402"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create BRIN index on log_table(created_at) for 500M row append-only log table. Compare size vs B-tree.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tp" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tp">USING BRIN (created_at)</div><button class="reveal-btn" data-target="umtxzqd8tr" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8tr">pages_per_range=32 for finer granularity</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Concurrent Index on Production Table</div>
+        <div class="prob-meta">drill · concurrent-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B403"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Add index on orders(customer_id, order_date) without locking the 200M row table.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8ts" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8ts">CREATE INDEX CONCURRENTLY</div><button class="reveal-btn" data-target="umtxzqd8tu" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8tu">Monitor pg_stat_progress_create_index</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Functional Index for Case-Insensitive Search</div>
+        <div class="prob-meta">drill · functional-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B404"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Users search by email case-insensitively. Create index to support WHERE LOWER(email) = ? efficiently.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tv" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tv">CREATE INDEX ON users (LOWER(email))</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Analyze Parallel Query Plan</div>
+        <div class="prob-meta">drill · parallel-query + explain-analyze</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B405"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Run EXPLAIN (ANALYZE, BUFFERS) on large aggregation. Identify Gather node, worker count, and whether parallelism helped.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tw" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tw">SET max_parallel_workers_per_gather = 4</div><button class="reveal-btn" data-target="umtxzqd8ty" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8ty">Look for Parallel Seq Scan vs Seq Scan</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Partitioning: RANGE/LIST/HASH on key; planner prunes automatically; detach for archival</li><li>BRIN for huge correlated tables (time-series); pages_per_range tunes granularity</li><li>Parallel query: Gather node, workers, cost thresholds (parallel_setup/tuple_cost)</li><li>CREATE INDEX CONCURRENTLY — no exclusive lock; 2x space, slower build</li><li>Functional indexes for expressions (LOWER, JSONB paths); ICU collations for CI</li><li>effective_cache_size guides index vs seq scan choice; pg_stat_statements for monitoring</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>partition pruning</code></td><td>Planner excludes partitions not matching WHERE on partition key.</td></tr><tr><td style="width:220px;"><code>partition key</code></td><td>Column(s) used to determine which partition a row belongs to.</td></tr><tr><td style="width:220px;"><code>parallel query</code></td><td>Multiple workers scan/process data simultaneously; leader gathers results.</td></tr><tr><td style="width:220px;"><code>pages_per_range</code></td><td>BRIN parameter: how many heap pages per min/max summary. Lower = more precise, larger index.</td></tr><tr><td style="width:220px;"><code>gather merge</code></td><td>Parallel workers return sorted data; leader merges without re-sorting.</td></tr><tr><td style="width:220px;"><code>concurrent index</code></td><td>Index built without blocking writes; takes share-update-exclusive lock.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: next MODULE</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 01 · L4/EXPERT · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('basics_L4');</script>
+</body></html>

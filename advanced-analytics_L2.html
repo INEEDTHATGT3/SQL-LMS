@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Analytics — L2 INTERVIEW READY</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="2" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 08</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">PIVOT, LATERAL, advanced frames, sampling — analytics beyond GROUP BY</span></div>
+  <h1>Advanced Analytics</h1>
+  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="advanced-analytics_L1" href="advanced-analytics_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="advanced-analytics_L2" href="advanced-analytics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="advanced-analytics_L3" href="advanced-analytics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="advanced-analytics_L4" href="advanced-analytics_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Advanced PIVOT — Dynamic Columns & Multi-Level</a><a href="#sec-1">02 · Advanced LATERAL — Top-N, Correlated, Parallel</a><a href="#sec-2">03 · EXPLAIN — LATERAL Top-N Per Group</a><a href="#sec-3">04 · Advanced Frames & Sampling</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q336" data-answer="1">
+      <div class="quiz-q">PIVOT rotates rows to columns. In PostgreSQL, PIVOT is:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Built-in syntax (PIVOT ... FOR)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Done via crosstab() from tablefunc extension</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only available in MySQL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not possible</span></div></div>
+      <div class="quiz-explain">PostgreSQL uses crosstab() from tablefunc extension for pivot. MySQL has PIVOT syntax in 8.0+.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q337" data-answer="0">
+      <div class="quiz-q">LATERAL join allows the right side to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Reference columns from left side</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Run independently of left side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only work with LEFT JOIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Replace CTE</span></div></div>
+      <div class="quiz-explain">LATERAL allows right subquery to reference columns from left side of join.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q338" data-answer="2">
+      <div class="quiz-q">Advanced frame: ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING includes:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Current row only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Current row ± 2 rows (5 rows total)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>2 rows before, current, 2 rows after (5 rows total)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All rows</span></div></div>
+      <div class="quiz-explain">2 PRECEDING + current + 2 FOLLOWING = 5 rows total centered on current.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q339" data-answer="1">
+      <div class="quiz-q">TABLESAMPLE SYSTEM (10) returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exactly 10% of rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>~10% of pages (approximate 10% of rows)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>First 10% of table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Random 10 rows</span></div></div>
+      <div class="quiz-explain">TABLESAMPLE SYSTEM samples at page level. Returns approximate percentage.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q340" data-answer="1">
+      <div class="quiz-q">LATERAL with LIMIT 1 for top-N per group — execution:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Full scan per outer row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Index seek + LIMIT per outer row</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Full sort per outer row</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Cross join optimization</span></div></div>
+      <div class="quiz-explain">LATERAL + ORDER BY + LIMIT with index on (partition, order) = index seek + LIMIT per outer row.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Advanced PIVOT — Dynamic Columns & Multi-Level</h2></div>
+    <div class="mantra">Static PIVOT works when categories are known. Dynamic PIVOT generates columns at runtime. Multi-level PIVOT (e.g., year → quarter → month) requires chaining or dynamic SQL. PostgreSQL: dynamic crosstab via execute format().</div>
+<div><div class="code-label"><span>dynamic crosstab</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Dynamic columns: use EXECUTE format()
+DO $$
+DECLARE
+  cols TEXT;
+BEGIN
+  SELECT string_agg(DISTINCT quote_ident(quarter), <span class="st">', '</span>) INTO cols
+  FROM sales;
+  EXECUTE format(
+    'SELECT * FROM crosstab(
+      <span class="st">''SELECT dept, quarter, SUM(sales) FROM sales GROUP BY dept, quarter ORDER BY 1,2''</span>,
+      <span class="st">''SELECT DISTINCT quarter FROM sales ORDER BY 1''</span>
+    ) AS ct(dept TEXT, %s)',
+    cols
+  );
+END $$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Dynamic SQL with EXECUTE format() for unknown columns</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: prepared statements with dynamic SQL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Multi-Level PIVOT (Year → Quarter → Month)</h3>
+<div><div class="code-label"><span>multi-level pivot</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Static multi-level: year → quarter
+SELECT * FROM crosstab(
+  <span class="st">'SELECT year, quarter, SUM(sales) FROM sales GROUP BY year, quarter ORDER BY 1,2'</span>,
+  <span class="st">'SELECT DISTINCT quarter FROM sales ORDER BY 1'</span>
+) AS ct(year INT, q1 NUMERIC, q2 NUMERIC, q3 NUMERIC, q4 NUMERIC);
+
+-- True multi-level requires dynamic SQL or application-level pivot
+-- Dynamic: build column list at runtime</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Chain crosstab calls or use dynamic SQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: multiple PIVOTs or dynamic SQL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">Static crosstab requires known columns. For dynamic categories, use EXECUTE format() with dynamic SQL. Performance: dynamic SQL prevents plan caching.</div>
+<div class="quiz-card" data-quiz-key="s0-q341" data-answer="1">
+      <div class="quiz-q">Dynamic crosstab in PostgreSQL uses:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>PIVOT keyword</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>EXECUTE format() with dynamic SQL</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>CTE with recursive</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>PL/pgSQL function only</span></div></div>
+      <div class="quiz-explain">EXECUTE format() builds query string at runtime. Column list built dynamically.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q342" data-answer="1">
+      <div class="quiz-q">Multi-level PIVOT (year → quarter) — static approach:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Single crosstab call</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Chain crosstab calls or build composite key</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Not possible</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Use VIEW</span></div></div>
+      <div class="quiz-explain">Chain crosstab calls or build composite key (year||'-'||quarter) then pivot.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Advanced LATERAL — Top-N, Correlated, Parallel</h2></div>
+    <h3>LATERAL for Top-N Per Group</h3>
+<div><div class="code-label"><span>lateral top-n per group</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Top <span class="num">3</span> products per category by sales
+SELECT c.name, p.name, p.sales
+FROM categories c
+LEFT JOIN LATERAL (
+  SELECT name, sales
+  FROM products p
+  WHERE p.category_id = c.id
+  ORDER BY p.sales DESC
+  LIMIT <span class="num">3</span>
+) p ON <span class="kw">true</span>;
+
+-- With ROW_NUMBER alternative (no LATERAL)
+WITH ranked AS (
+  SELECT p.*, ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY sales DESC) AS rn
+  FROM products
+)
+SELECT * FROM ranked WHERE rn <= <span class="num">3</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- LATERAL is often clearer for top-N per group</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0.14+: LATERAL supported</span>
+<span class="cm">-- ROW_NUMBER() alternative works everywhere</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue">LATERAL + LIMIT is often faster than ROW_NUMBER() for Top-N: stops scanning after N rows per group. ROW_NUMBER scans all rows then filters.</div>
+<h3>LATERAL with Aggregate Subqueries</h3>
+<div><div class="code-label"><span>lateral + aggregate</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- For each customer: total orders, avg order value, latest order date
+SELECT c.name,
+  COALESCE(oa.total_orders, <span class="num">0</span>) AS total_orders,
+  oa.avg_order,
+  oa.latest_order
+FROM customers c
+LEFT JOIN LATERAL (
+  SELECT 
+    COUNT(*) AS total_orders,
+    AVG(total) AS avg_order,
+    MAX(order_date) AS latest_order
+  FROM orders o
+  WHERE o.customer_id = c.id
+) oa ON <span class="kw">true</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Single LATERAL with multiple aggregates</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0.14+: LATERAL supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s1-q343" data-answer="1">
+      <div class="quiz-q">LATERAL vs ROW_NUMBER() for Top-N: which is faster when N is small?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ROW_NUMBER() always</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>LATERAL with LIMIT (stops early)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Same performance</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Depends on index</span></div></div>
+      <div class="quiz-explain">LATERAL + LIMIT stops after N rows per group. ROW_NUMBER scans all rows first.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q344" data-answer="1">
+      <div class="quiz-q">LATERAL can reference:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only tables in same FROM</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Columns from LEFT side of join</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only columns from same subquery</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Global variables only</span></div></div>
+      <div class="quiz-explain">LATERAL allows right side to see left side columns. Like correlated subquery in FROM.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>EXPLAIN — LATERAL Top-N Per Group</h2></div>
+    
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — LATERAL Top-N Per Group</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Nested Loop Left Join</span>
+        <span class="plan-node-meta"> cost=0..5000 rows=8500 width=120</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Join Filter: true</div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>categories</code>
+        <span class="plan-node-meta"> cost=0..185 rows=8500 width=72</span>
+      </div></div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Subquery Scan</span>
+        <span class="plan-node-meta"> cost=0.29..0.55 rows=1 width=48</span>
+      </div></div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Advanced Frames & Sampling</h2></div>
+    <h3>GROUPS Frame (PostgreSQL 14+)</h3>
+<div><div class="code-label"><span>groups frame</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- GROUPS: counts groups of peer rows (same ORDER BY value)
+-- <span class="num">1</span> group = all rows with same ORDER BY value
+SELECT 
+  salary,
+  COUNT(*) OVER (
+    ORDER BY salary
+    GROUPS BETWEEN <span class="num">1</span> PRECEDING AND <span class="num">1</span> FOLLOWING
+  ) AS peer_count
+FROM employees;
+
+-- Useful <span class="kw">for</span>: percentile buckets with variable row density</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- GROUPS frame (PostgreSQL 14+)</span>
+<span class="cm">-- Counts peer groups (ties) not individual rows</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no GROUPS frame</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>Advanced Sampling — SYSTEM vs BERNOULLI</h3>
+<div><div class="code-label"><span>sampling methods</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- SYSTEM: page-level (fast, approximate)
+SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>);
+
+-- BERNOULLI: row-level (accurate %, slower)
+SELECT * FROM large_table TABLESAMPLE BERNOULLI (<span class="num">10</span>);
+
+-- REPEATABLE <span class="kw">for</span> deterministic results
+SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) REPEATABLE (<span class="num">42</span>);
+
+-- With WHERE (pushdown may not work)
+SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE status = <span class="st">'active'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- SYSTEM = page-level (fast). BERNOULLI = row-level (accurate %)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no TABLESAMPLE</span>
+<span class="cm">-- Use: WHERE RAND() < 0.1</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">SYSTEM sampling is fast but can be skewed if data clustered on pages. BERNOULLI is statistically sound but scans all rows. REPEATABLE(seed) for reproducible samples.</div>
+<div class="quiz-card" data-quiz-key="s3-q345" data-answer="1">
+      <div class="quiz-q">GROUPS frame counts:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Individual rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Peer groups (rows with same ORDER BY value)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Partitions</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Pages</span></div></div>
+      <div class="quiz-explain">GROUPS counts peer groups (rows with same ORDER BY value). Useful for percentile buckets with ties.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q346" data-answer="1">
+      <div class="quiz-q">TABLESAMPLE SYSTEM vs BERNOULLI — SYSTEM is:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>More accurate %</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Faster (page-level), may be skewed</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Slower but exact</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only for small tables</span></div></div>
+      <div class="quiz-explain">SYSTEM samples pages (fast, ~1% I/O). BERNOULLI samples rows (accurate %, full scan).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L2 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Dynamic PIVOT for Unknown Categories</div>
+        <div class="prob-meta">drill · dynamic-pivot</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X201"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Categories unknown at design time. Write dynamic SQL to pivot sales by category.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y65" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y65">EXECUTE format() with dynamic column list</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">LATERAL: Top 3 Products per Category</div>
+        <div class="prob-meta">drill · lateral-top-n</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X202"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      For each category, list top 3 products by sales.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y66" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y66">LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Running Total with RANGE Frame</div>
+        <div class="prob-meta">drill · frame-range</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X203"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Running total of daily sales using RANGE frame (date-based).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y67" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y67">RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">GROUPS Frame for Peer Groups</div>
+        <div class="prob-meta">drill · groups-frame</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X204"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Count employees in same salary tier ±1 tier. Use GROUPS frame.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y68" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y68">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">TABLESAMPLE for A/B Test Sampling</div>
+        <div class="prob-meta">drill · tablesample</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X205"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Get 10% random sample of users for A/B test. Use SYSTEM for speed.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y69" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y69">TABLESAMPLE SYSTEM (10) REPEATABLE (42)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Dynamic Crosstab with Unknown Quarters</div>
+        <div class="prob-meta">drill · dynamic-crosstab</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X206"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Quarters vary by year. Build dynamic crosstab for sales by region × quarter.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6a">EXECUTE format() with dynamic column list from distinct quarters</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">LATERAL: Running Total per Customer</div>
+        <div class="prob-meta">drill · lateral-running-total</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X207"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      For each customer, show running total of order amounts over time.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6b">LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name">Approximate Distinct Count with Sampling</div>
+        <div class="prob-meta">drill · approx-aggregate</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X208"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Estimate distinct users per day using 10% TABLESAMPLE. Compare with exact COUNT(DISTINCT).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6c">TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Dynamic PIVOT: EXECUTE format() builds column list at runtime</li><li>LATERAL + LIMIT 1/3 = efficient Top-N per group; stops after N rows per group</li><li>GROUPS frame (PG14): counts peer groups (ties); great for percentile buckets</li><li>TABLESAMPLE SYSTEM = fast page-level; BERNOULLI = accurate row-level</li><li>Dynamic SQL with EXECUTE format() for runtime column generation</li><li>LATERAL + aggregate = multiple aggregates per row in single lateral subquery</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>dynamic pivot</code></td><td>PIVOT where category columns determined at runtime via dynamic SQL.</td></tr><tr><td style="width:220px;"><code>GROUPS frame</code></td><td>Frame unit = peer groups (rows with same ORDER BY value). PostgreSQL 14+.</td></tr><tr><td style="width:220px;"><code>TABLESAMPLE SYSTEM</code></td><td>Page-level sampling. Fast (~1% I/O) but may be skewed if data clustered on pages.</td></tr><tr><td style="width:220px;"><code>TABLESAMPLE BERNOULLI</code></td><td>Row-level sampling. Statistically accurate but scans all rows.</td></tr><tr><td style="width:220px;"><code>REPEATABLE</code></td><td>TABLESAMPLE option for deterministic sampling using seed.</td></tr><tr><td style="width:220px;"><code>dynamic SQL</code></td><td>SQL constructed at runtime (e.g., EXECUTE format() in PostgreSQL).</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 08 · L2/INTERVIEW READY · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('advanced-analytics_L2');</script>
+</body></html>

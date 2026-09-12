@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joins & Set Operations — L4 EXPERT</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="4" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 03</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">join internals, cost model, parallel hash join, join ordering DP</span></div>
+  <h1>Joins & Set Operations</h1>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="level-strip"><a class="level-pill " data-lesson="joins_L1" href="joins_L1.html">BEGINNER</a><a class="level-pill " data-lesson="joins_L2" href="joins_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="joins_L3" href="joins_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="joins_L4" href="joins_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Join Cost Model — Inside the Planner's Brain</a><a href="#sec-1">02 · Dynamic Programming & GEQO — Join Ordering at Scale</a><a href="#sec-2">03 · Parallel Hash Join & Advanced Parallelism</a><a href="#sec-3">04 · Dialect Mastery — Enterprise Join Features</a><a href="#sec-4">05 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q123" data-answer="1">
+      <div class="quiz-q">Dynamic Programming join ordering (DP) evaluates:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>All possible join orders (N!)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Subsets of joins via DP (O(3^N))</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only left-deep trees</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only right-deep trees</span></div></div>
+      <div class="quiz-explain">DP join ordering: considers all subsets (O(2^N)) and partitions. Default for < 12 joins (join_collapse_limit).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q124" data-answer="0">
+      <div class="quiz-q">GEQO (Genetic Query Optimizer) activates when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Joins > 12 (geqo_threshold)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Tables > 1GB</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>No statistics</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Parallel query enabled</span></div></div>
+      <div class="quiz-explain">GEQO kicks in for > geqo_threshold joins (default 12). Uses genetic algorithm instead of DP.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q125" data-answer="1">
+      <div class="quiz-q">Parallel Hash Join (PostgreSQL) builds hash table:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>In leader process only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>In each worker independently</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Shared across workers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>In temporary table</span></div></div>
+      <div class="quiz-explain">Each worker builds own hash table on its partition of build side. No shared memory.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q126" data-answer="2">
+      <div class="quiz-q">Join path cost = startup_cost + run_cost. run_cost includes:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>CPU only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>I/O only</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>CPU + I/O (seq_page_cost, random_page_cost, cpu_tuple_cost)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Network only</span></div></div>
+      <div class="quiz-explain">Cost model: seq_page_cost (1.0), random_page_cost (4.0), cpu_tuple_cost (0.01), cpu_operator_cost (0.0025).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q127" data-answer="0">
+      <div class="quiz-q">Unique inner join optimization:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>When inner side has unique join key, planner can stop after first match</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Always uses Nested Loop</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Disables Hash Join</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Requires PRIMARY KEY on inner</span></div></div>
+      <div class="quiz-explain">Unique inner: planner knows at most 1 match per outer row → stops after first. Semi-join like.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Join Cost Model — Inside the Planner's Brain</h2></div>
+    <div class="mantra">Planner cost = startup + run. seq_page_cost=1.0, random_page_cost=4.0, cpu_tuple_cost=0.01. Hash Join cost = build + probe. Merge Join = sort + merge. Understanding cost model = predicting plans.</div>
+<div><div class="code-label"><span>cost parameters</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- View cost parameters
+SHOW seq_page_cost;      -- <span class="num">1.0</span> (sequential I/O)
+SHOW random_page_cost;  -- <span class="num">4.0</span> (random I/O)
+SHOW cpu_tuple_cost;    -- <span class="num">0.01</span> (per tuple CPU)
+SHOW cpu_operator_cost; -- <span class="num">0.0025</span> (per <span class="kw">operator</span>)
+SHOW parallel_tuple_cost; -- <span class="num">0.1</span>
+
+-- Override <span class="kw">for</span> session
+SET random_page_cost = <span class="num">2.0</span>;  -- SSD: random cheaper
+SET seq_page_cost = <span class="num">1.0</span>;
+
+-- Hash Join cost = build_cost + probe_cost
+-- build = seq_scan_build + cpu_hash * rows
+-- probe = seq_scan_probe + cpu_hash * rows</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Cost model is the heart of planner</span>
+<span class="cm">-- Adjust for hardware: SSD → random_page_cost=1.1</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL cost model different</span>
+<span class="cm">-- optimizer_switch controls features</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s0-q128" data-answer="0">
+      <div class="quiz-q">random_page_cost = 4.0 means:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Random I/O is 4x more expensive than sequential</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>4 random pages per second</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>4x CPU cost</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>4 pages cached</span></div></div>
+      <div class="quiz-explain">Planner assumes random I/O 4x slower than sequential. On SSD, lower to 1.1-2.0.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q129" data-answer="1">
+      <div class="quiz-q">Hash Join startup cost includes:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Sort cost</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Hash table build cost</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Index scan cost</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Network cost</span></div></div>
+      <div class="quiz-explain">Startup = build hash table on build side. Run = probe cost per outer row.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Dynamic Programming & GEQO — Join Ordering at Scale</h2></div>
+    <h3>DP Join Ordering (Default)</h3>
+<p>PostgreSQL uses Dynamic Programming for join ordering up to <code>join_collapse_limit</code> (default 8) or <code>from_collapse_limit</code> (default 8). DP considers all left-deep trees. Complexity O(3^N) — exponential but manageable for N ≤ 12.</p>
+<div><div class="code-label"><span>dp vs geqo</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- DP join ordering (default <span class="kw">for</span> ≤ <span class="num">12</span> joins)
+SET join_collapse_limit = <span class="num">8</span>;  -- default
+SET from_collapse_limit = <span class="num">8</span>;
+
+-- GEQO (Genetic Query Optimizer) <span class="kw">for</span> > <span class="num">12</span> joins
+SET geqo_threshold = <span class="num">12</span>;  -- default
+SET geqo = on;            -- default
+SET geqo_effort = <span class="num">5</span>;      -- <span class="num">1</span>-<span class="num">10</span>, higher = more search
+
+-- Force GEQO off
+SET geqo = off;
+SET join_collapse_limit = <span class="num">20</span>;  -- extend DP</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- DP: exhaustive for small N, guaranteed optimal</span>
+<span class="cm">-- GEQO: genetic algorithm, probabilistic, for large N</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no DP/GEQO distinction</span>
+<span class="cm">-- Optimizer uses greedy search + dynamic programming (limited)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue">DP guarantees optimal for small N. GEQO is probabilistic — may find different plans on re-plan. For reproducible plans with large N: increase geqo_threshold or use pg_hint_plan.</div>
+<div class="quiz-card" data-quiz-key="s1-q130" data-answer="2">
+      <div class="quiz-q">DP join ordering complexity:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>O(N!)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>O(2^N)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>O(3^N)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>O(N^2)</span></div></div>
+      <div class="quiz-explain">DP considers all subsets and partitions. O(3^N) for left-deep trees.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q131" data-answer="0">
+      <div class="quiz-q">GEQO activates when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Joins > geqo_threshold (default 12)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Tables > 100M rows</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>No indexes exist</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Parallel query</span></div></div>
+      <div class="quiz-explain">geqo_threshold (default 12) controls switch from DP to genetic algorithm.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Parallel Hash Join & Advanced Parallelism</h2></div>
+    <h3>Parallel Hash Join (PostgreSQL 11+)</h3>
+<div><div class="code-label"><span>parallel hash join</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Enable parallel hash join
+SET max_parallel_workers_per_gather = <span class="num">4</span>;
+SET enable_parallel_hash = on;
+
+-- Query
+SELECT * FROM large_a a JOIN large_b b ON a.id = b.id;
+
+-- Plan: Parallel Hash Join
+-- Leader: coordinates, gathers results
+-- Workers: each builds hash on its build partition, probes
+
+-- Control:
+SET parallel_setup_cost = <span class="num">1000</span>;
+SET parallel_tuple_cost = <span class="num">0.1</span>;
+SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Parallel Hash Join (PG 11+)</span>
+<span class="cm">-- Each worker builds independent hash table</span>
+<span class="cm">-- No shared memory between workers</span>
+<span class="cm">-- Gather Merge if output ordered</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no parallel hash join</span>
+<span class="cm">-- Use multiple connections manually</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Parallel Hash Join Plan</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Gather Merge</span>
+        <span class="plan-node-meta"> cost=10000..50000 rows=1000000 width=120</span>
+      </div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Parallel Hash Join</span>
+        <span class="plan-node-meta"> cost=5000..40000 rows=250000 width=120</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Hash Cond: (a.id = b.id)</div></div></div></div>
+</div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Right-Deep Hash Join</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Hash Join</span>
+        <span class="plan-node-meta"> cost=100..5000 rows=100000 width=120</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Hash Cond: (a.id = b.id)</div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>large_a</code>
+        <span class="plan-node-meta"> cost=0..1000 rows=100000</span>
+      </div></div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Hash</span>
+        <span class="plan-node-meta"> cost=50..50 rows=5000</span>
+      </div></div></div></div>
+</div>
+<div class="quiz-card" data-quiz-key="s2-q132" data-answer="1">
+      <div class="quiz-q">Parallel Hash Join workers each build:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Full hash table on entire build side</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Hash table on their partition of build side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Shared hash table in shared memory</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No hash table — use NLJ</span></div></div>
+      <div class="quiz-explain">Each worker builds hash on its partition of build side. No shared memory — independent.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q133" data-answer="1">
+      <div class="quiz-q">Gather vs Gather Merge:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same thing</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Gather = unordered collect; Gather Merge = ordered merge</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Gather Merge faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Gather for Hash Join only</span></div></div>
+      <div class="quiz-explain">Gather Merge: workers return sorted data, leader merges. Gather: unordered collect.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Mastery — Enterprise Join Features</h2></div>
+    <div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SET max_parallel_workers_per_gather = 8; -- parallel hash join</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SET max_parallel_workers_per_gather = 8;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- No parallel hash join
+-- Manual: multiple connections + UNION ALL</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">Pool(8).map(join_chunk, chunks)</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">-- Use multiprocessing</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM a JOIN b ON a.id = b.id WHERE a.val > 100;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- Late materialization: fetch columns after join</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- Late materialization in 8.0+</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">merged = a.merge(b, on='id'); merged[merged['val'] > 100]</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (SQLAlchemy)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python">session.query(A).join(B).filter(A.val > 100)</code></pre>
+      </div></div></div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L4 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Cost Model: SSD Random I/O Tuning</div>
+        <div class="prob-meta">drill · cost-model</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J401"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      On NVMe SSD, random_page_cost=4.0 overestimates. Set optimal value and explain impact on Hash vs NLJ choice.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982a">SET random_page_cost = 1.1; favors Hash Join over NLJ</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">GEQO vs DP Plan Stability</div>
+        <div class="prob-meta">drill · geqo</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J402"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      15-table query produces different plans on each run. Fix for stability.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982b">SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Parallel Hash Join Memory Tuning</div>
+        <div class="prob-meta">drill · parallel-hash-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J403"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Parallel Hash Join spills to disk (Lossy). Fix with work_mem.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982c">SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Unique Inner Join Optimization</div>
+        <div class="prob-meta">drill · unique-inner</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J404"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      JOIN on PK column. Show how planner optimizes (stops after first match).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982d">EXPLAIN shows 'Unique Inner: true' or stops early in NLJ</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name">Right-Deep vs Left-Deep Join Trees</div>
+        <div class="prob-meta">drill · join-tree</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J405"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Explain when right-deep tree (Hash Join build on right) beats left-deep.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982e">When right side is smaller; Hash Join builds on right (build side)</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>Cost model: seq_page_cost=1, random_page_cost=4, cpu_tuple_cost=0.01 — tune for hardware</li><li>DP ordering (N≤12): exhaustive DP, optimal. GEQO (N>12): genetic, probabilistic</li><li>Parallel Hash Join: workers build independent hashes; Gather Merge for ordered output</li><li>work_mem critical for Hash Join: spill = Lossy bitmap → massive slowdown</li><li>Unique inner optimization: planner stops after first match on PK/FK inner</li><li>Right-deep trees: Hash Join can build on right (smaller build side)</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>left-deep tree</code></td><td>Join tree where each join adds one table to left result. Standard DP output.</td></tr><tr><td style="width:220px;"><code>right-deep tree</code></td><td>Join tree where build side is on right. Hash Join can use either.</td></tr><tr><td style="width:220px;"><code>GEQO</code></td><td>Genetic Query Optimizer — genetic algorithm for join ordering when N > geqo_threshold.</td></tr><tr><td style="width:220px;"><code>adaptive join</code></td><td>Starts as Nested Loop, dynamically switches to Hash Join if outer rows exceed threshold.</td></tr><tr><td style="width:220px;"><code>late materialization</code></td><td>Fetch non-join columns after join (avoids carrying wide tuples through join).</td></tr><tr><td style="width:220px;"><code>join qual</code></td><td>Join condition (ON clause). Planner extracts for pushdown, index matching.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: next MODULE</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 03 · L4/EXPERT · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('joins_L4');</script>
+</body></html>

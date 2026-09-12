@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Performance & Indexing — L1 BEGINNER</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="1" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 07</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">EXPLAIN, indexes, statistics — make queries fast</span></div>
+  <h1>Performance & Indexing</h1>
+  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="level-strip"><a class="level-pill current" data-lesson="performance_L1" href="performance_L1.html">BEGINNER</a><a class="level-pill " data-lesson="performance_L2" href="performance_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="performance_L3" href="performance_L3.html">ADVANCED</a><a class="level-pill " data-lesson="performance_L4" href="performance_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — The Library Catalog</a><a href="#sec-1">02 · EXPLAIN & EXPLAIN ANALYZE</a><a href="#sec-2">03 · Indexes — B-tree, Composite, Partial, Covering</a><a href="#sec-3">04 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q279" data-answer="1">
+      <div class="quiz-q">EXPLAIN shows:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Actual execution time</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Estimated query plan with costs</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Actual rows returned</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index usage statistics</span></div></div>
+      <div class="quiz-explain">EXPLAIN shows the planner's estimated plan with startup/total costs. EXPLAIN ANALYZE runs the query and shows actuals.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q280" data-answer="0">
+      <div class="quiz-q">A B-tree index helps with:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Exact match (=) and range queries (> < BETWEEN)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Only exact match (=)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only full-text search</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only ORDER BY</span></div></div>
+      <div class="quiz-explain">B-tree indexes support equality, inequality, range, and ORDER BY on the indexed column(s).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q281" data-answer="3">
+      <div class="quiz-q">Seq Scan vs Index Scan — Seq Scan is chosen when:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Table is small or query returns large % of rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Index doesn't exist</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Query has no WHERE clause</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All of the above</span></div></div>
+      <div class="quiz-explain">Seq Scan is faster for small tables or when query touches large fraction of table (random I/O cost > sequential I/O).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q282" data-answer="3">
+      <div class="quiz-q">Composite index (a, b) can be used for:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE a = 1 AND b = 2</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE a = 1</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE b = 2</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A and B</span></div></div>
+      <div class="quiz-explain">Composite index (a,b) supports queries on a alone, or a+b together. Leading column matters!</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q283" data-answer="3">
+      <div class="quiz-q">Index on (dept_id, salary DESC) helps query:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE dept_id = 5 ORDER BY salary DESC LIMIT 10</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE salary > 50000</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE dept_id = 5</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Both A and C</span></div></div>
+      <div class="quiz-explain">Index (dept_id, salary DESC) supports both equality on dept_id and ORDER BY salary DESC within that dept.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Mental Model — The Library Catalog</h2></div>
+    <div class="mantra">An index is like a library catalog. Without it, you scan every book (Seq Scan). With it, you jump straight to the shelf (Index Scan). But catalogs take space and slow down writes — use wisely.</div>
+
+<ul class="notes"><li>Seq Scan: reads every page sequentially — O(N) but sequential I/O</li><li>Index Scan: B-tree lookup + heap fetch — O(log N + K) but random I/O</li><li>Index Only Scan: all columns in index — no heap fetch</li><li>Bitmap Index Scan: combines multiple indexes, builds bitmap, then heap fetch</li></ul>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Seq Scan vs Index Scan</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0..185 rows=8500 width=72</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (salary > 50000)</div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>EXPLAIN & EXPLAIN ANALYZE</h2></div>
+    <h3>Reading the Plan</h3>
+<div><div class="code-label"><span>explain basics</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Estimated plan (no execution)
+EXPLAIN SELECT * FROM employees WHERE salary > <span class="num">50000</span>;
+
+-- Actual execution + actuals
+EXPLAIN ANALYZE SELECT * FROM employees WHERE salary > <span class="num">50000</span>;
+
+-- With buffers (I/O detail)
+EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM employees WHERE salary > <span class="num">50000</span>;
+
+-- JSON format (machine-readable)
+EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT * FROM employees WHERE salary > <span class="num">50000</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Full options: ANALYZE, BUFFERS, FORMAT, SETTINGS, WAL, TIMING</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: EXPLAIN FORMAT=JSON, EXPLAIN ANALYZE (8.0.18+)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s1-q284" data-answer="0">
+      <div class="quiz-q">EXPLAIN vs EXPLAIN ANALYZE — key difference:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>ANALYZE runs the query; EXPLAIN only plans</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>ANALYZE is faster</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>EXPLAIN shows actual rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No difference</span></div></div>
+      <div class="quiz-explain">EXPLAIN = planner's estimate. ANALYZE = runs query, shows actual time/rows.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q285" data-answer="1">
+      <div class="quiz-q">Buffers in EXPLAIN (ANALYZE, BUFFERS) show:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Memory usage</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Shared hit/read/dirtied blocks</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>CPU usage</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Network I/O</span></div></div>
+      <div class="quiz-explain">Buffers show shared hit (cache), shared read (disk), dirtied (modified), written (flushed).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q286" data-answer="1">
+      <div class="quiz-q">EXPLAIN ANALYZE shows 'Actual Rows=1000, Plan Rows=100' — what does this mean?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Plan was perfect</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Planner underestimated by 10x</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Query returned fewer rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index is corrupted</span></div></div>
+      <div class="quiz-explain">Planner estimated 100 rows but actual was 1000. Statistics may be stale (run ANALYZE).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q287" data-answer="1">
+      <div class="quiz-q">Buffers in EXPLAIN (ANALYZE, BUFFERS) show:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Memory usage</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Shared hit/read/dirtied blocks</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>CPU usage</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Network I/O</span></div></div>
+      <div class="quiz-explain">Buffers show shared hit (cache), shared read (disk), dirtied (modified), written (flushed).</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Indexes — B-tree, Composite, Partial, Covering</h2></div>
+    <h3>B-tree Index Basics</h3>
+<div><div class="code-label"><span>create index</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Single column
+CREATE INDEX idx_emp_salary ON employees (salary);
+
+-- Composite (order matters!)
+CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
+
+-- Partial (filtered)
+CREATE INDEX idx_active_emp ON employees (salary) WHERE status = <span class="st">'active'</span>;
+
+-- Covering (INCLUDE)
+CREATE INDEX idx_emp_salary_name ON employees (salary) INCLUDE (name);
+
+-- Expression index
+CREATE INDEX idx_emp_annual ON employees ((salary * <span class="num">12</span>));
+
+-- Drop index
+DROP INDEX idx_emp_salary;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Partial, INCLUDE, expression indexes supported</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: partial (WHERE), INCLUDE (8.0.13+), expression indexes</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s2-q288" data-answer="0">
+      <div class="quiz-q">Composite index (a, b) — query WHERE a = 1 uses index?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Yes</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>No</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only if b is also in WHERE</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only if b is in ORDER BY</span></div></div>
+      <div class="quiz-explain">Leading column of composite index can be used alone. (a,b) works for WHERE a=1.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q289" data-answer="0">
+      <div class="quiz-q">Partial index WHERE status='active' helps query:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE status = 'active'</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE status = 'inactive'</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Neither</span></div></div>
+      <div class="quiz-explain">Partial index only contains rows matching its WHERE clause. Only helps matching queries.</div>
+      <div class="quiz-score"></div>
+    </div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — Index Scan vs Seq Scan</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Index Scan</span> on <code>employees</code>
+        <span class="plan-node-meta"> cost=0.29..8.3 rows=1 width=72 actual time=0.015..0.045 actual rows=1 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (dept_id = 3)</div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Problem Set — L1 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">EXPLAIN Simple Query</div>
+        <div class="prob-meta">drill · explain</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P101"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Run EXPLAIN on SELECT * FROM employees WHERE dept_id = 3. Identify scan type.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9q4s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9q4s">Look for Seq Scan vs Index Scan</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Create Index for Dept Filter</div>
+        <div class="prob-meta">drill · create-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P102"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Create index to speed up WHERE dept_id = 5.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9q4t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9q4t">CREATE INDEX ON employees (dept_id)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Composite Index for Dept + Salary</div>
+        <div class="prob-meta">drill · composite-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P103"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Optimize: WHERE dept_id = 3 ORDER BY salary DESC LIMIT 5.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9q4u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9q4u">CREATE INDEX ON employees (dept_id, salary DESC)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Partial Index for Active Users</div>
+        <div class="prob-meta">drill · partial-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P104"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      90% queries filter status='active'. Create partial index on users(last_login).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9q4v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9q4v">WHERE status = 'active'</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Covering Index for Name Lookup</div>
+        <div class="prob-meta">drill · covering-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P105"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Query: SELECT name FROM users WHERE id = 123. Create covering index.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9q4w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9q4w">INCLUDE (name)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Expression Index for Email Domain</div>
+        <div class="prob-meta">drill · expression-index</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P106"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Speed up: WHERE email LIKE '%@company.com'. Use expression index.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9q4x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9q4x">CREATE INDEX ON users ((SUBSTRING(email FROM '@.*')))</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">05 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>EXPLAIN = plan; EXPLAIN ANALYZE = plan + actuals</li><li>Seq Scan = full table; Index Scan = B-tree lookup + heap fetch; Index Only Scan = no heap fetch</li><li>Composite index: leading column first; (a,b) works for WHERE a=1 but not WHERE b=2</li><li>Partial index = WHERE clause on index; smaller, faster for filtered queries</li><li>Covering index (INCLUDE): all needed columns in index → Index Only Scan</li><li>Expression index: index on f(col) for WHERE f(col) = ?</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>Seq Scan</code></td><td>Sequential scan — reads every table page sequentially.</td></tr><tr><td style="width:220px;"><code>Index Scan</code></td><td>Uses B-tree index to find matching rows, then fetches from heap.</td></tr><tr><td style="width:220px;"><code>Index Only Scan</code></td><td>All required columns in index; no heap fetch needed.</td></tr><tr><td style="width:220px;"><code>Bitmap Index Scan</code></td><td>Combines multiple indexes via bitmap; good for AND/OR conditions.</td></tr><tr><td style="width:220px;"><code>Partial Index</code></td><td>Index with WHERE clause — only indexes subset of rows.</td></tr><tr><td style="width:220px;"><code>Covering Index</code></td><td>Index with INCLUDE columns — satisfies query without heap access.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L2 INTERVIEW READY file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 07 · L1/BEGINNER · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('performance_L1');</script>
+</body></html>

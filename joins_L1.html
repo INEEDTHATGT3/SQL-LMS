@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joins & Set Operations — L1 BEGINNER</title>
+<link rel="stylesheet" href="theme.css"></head>
+<body data-level="1" data-lang="sql">
+<div class="hero" data-watermark="SQL">
+  <div class="hero-tag"><span class="badge">MODULE 03</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">tables connecting — the Venn diagram of data</span></div>
+  <h1>Joins & Set Operations</h1>
+  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="level-strip"><a class="level-pill current" data-lesson="joins_L1" href="joins_L1.html">BEGINNER</a><a class="level-pill " data-lesson="joins_L2" href="joins_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="joins_L3" href="joins_L3.html">ADVANCED</a><a class="level-pill " data-lesson="joins_L4" href="joins_L4.html">EXPERT</a></div>
+</div>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — The Venn Diagram</a><a href="#sec-1">02 · Inner & Left Joins — The Core Two</a><a href="#sec-2">03 · Right, Full & Self Joins</a><a href="#sec-3">04 · Set Operations — UNION, INTERSECT, EXCEPT</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
+<div class="progress-wrap"><div class="progress-bar"></div></div>
+<div class="container">
+  
+  <section class="section" id="placement">
+    <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
+    <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
+    <div class="quiz-card" data-quiz-key="place-q90" data-answer="2">
+      <div class="quiz-q">INNER JOIN returns rows where:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only left table has match</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Only right table has match</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both tables have matching rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No matches at all</span></div></div>
+      <div class="quiz-explain">INNER JOIN = intersection. Only rows with matches in both tables.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q91" data-answer="0">
+      <div class="quiz-q">LEFT JOIN returns:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>All left rows, matching right rows (NULL if no match)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Only left rows with no match</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only matching rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All right rows</span></div></div>
+      <div class="quiz-explain">LEFT JOIN preserves all left table rows. Unmatched right columns become NULL.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q92" data-answer="0">
+      <div class="quiz-q">SELECT * FROM a JOIN b ON a.id = b.id is equivalent to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>SELECT * FROM a, b WHERE a.id = b.id</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>SELECT * FROM a LEFT JOIN b ON a.id = b.id</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>SELECT * FROM a FULL JOIN b ON a.id = b.id</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>SELECT * FROM a CROSS JOIN b</span></div></div>
+      <div class="quiz-explain">Comma join with WHERE = INNER JOIN. Explicit JOIN syntax preferred.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q93" data-answer="1">
+      <div class="quiz-q">UNION vs UNION ALL:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same thing</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>UNION removes duplicates; UNION ALL keeps all</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>UNION ALL removes duplicates</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>UNION is faster</span></div></div>
+      <div class="quiz-explain">UNION = distinct (sorts/removes dups). UNION ALL = all rows, faster.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q94" data-answer="1">
+      <div class="quiz-q">JOIN condition in WHERE vs ON for LEFT JOIN:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same result</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE filters after join (can turn LEFT into INNER)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>ON filters after join</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No difference</span></div></div>
+      <div class="quiz-explain">ON filters before preserving left rows. WHERE filters after — can eliminate NULL-extended rows.</div>
+      <div class="quiz-score"></div>
+    </div>
+    <div id="placement-result"></div>
+  </section>
+  
+  <section class="section" id="sec-0">
+    <div class="section-header"><span class="section-num">01 //</span><h2>Mental Model — The Venn Diagram</h2></div>
+    <div class="mantra">A JOIN connects two tables on a common column. Think Venn diagrams: INNER = intersection, LEFT = left circle + overlap, FULL = both circles.</div>
+
+<p>Every row in employees has a dept_id pointing to departments. JOIN follows that pointer to bring department info into the employee row. It's like looking up a phone number in a directory.</p>
+<ul class="notes"><li>Primary key (PK) = unique identifier in parent table (departments.id)</li><li>Foreign key (FK) = pointer in child table (employees.dept_id)</li><li>JOIN condition = FK = PK</li><li>One department → many employees (one-to-many)</li></ul>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Inner & Left Joins — The Core Two</h2></div>
+    <h3>INNER JOIN — Intersection</h3>
+<div><div class="code-label"><span>inner join</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Explicit syntax (preferred)
+SELECT e.name, d.name AS department
+FROM employees e
+INNER JOIN departments d ON e.dept_id = d.id;
+
+-- Implicit (old style, avoid)
+SELECT e.name, d.name
+FROM employees e, departments d
+WHERE e.dept_id = d.id;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>LEFT JOIN — Preserve Left</h3>
+<div><div class="code-label"><span>left join</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- All employees, even those without department
+SELECT e.name, d.name AS department
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id;
+-- Employees with no dept: d.name = NULL
+
+-- Find employees WITHOUT department
+SELECT e.name
+FROM employees e
+LEFT JOIN departments d ON e.dept_id = d.id
+WHERE d.id IS NULL;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+
+<div class="quiz-card" data-quiz-key="s1-q95" data-answer="2">
+      <div class="quiz-q">LEFT JOIN with 10 left rows, 3 matches → result rows:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>3</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>7</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>10</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>13</span></div></div>
+      <div class="quiz-explain">LEFT JOIN returns all left rows (10). 3 matched, 7 NULL-extended.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s1-q96" data-answer="1">
+      <div class="quiz-q">WHERE d.id IS NULL after LEFT JOIN finds:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Matched rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Left rows with no match</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Right rows with no match</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
+      <div class="quiz-explain">NULL-extended rows = no match in right table. Classic anti-join pattern.</div>
+      <div class="quiz-score"></div>
+    </div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>EXPLAIN — LEFT JOIN Anti-Pattern</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Hash Right Join</span>
+        <span class="plan-node-meta"> cost=10..45 rows=50 width=120</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (d.id IS NULL); Hash Cond: (e.dept_id = d.id)</div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>departments</code>
+        <span class="plan-node-meta"> cost=0..1.2 rows=10</span>
+      </div></div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Hash</span>
+        <span class="plan-node-meta"> cost=8.5..8.5 rows=850</span>
+      </div></div></div></div>
+</div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Right, Full & Self Joins</h2></div>
+    <h3>RIGHT JOIN — Mirror of LEFT</h3>
+<div><div class="code-label"><span>right join</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- All departments, even those with no employees
+SELECT d.name, e.name AS employee
+FROM employees e
+RIGHT JOIN departments d ON e.dept_id = d.id;
+-- Departments with no employees: e.name = NULL</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>FULL JOIN — Union of Both</h3>
+<div><div class="code-label"><span>full join</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- All employees AND all departments
+SELECT e.name, d.name
+FROM employees e
+FULL JOIN departments d ON e.dept_id = d.id;
+-- Matched rows + NULL-extended left + NULL-extended right</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no FULL JOIN</span>
+<span class="cm">-- Workaround: LEFT UNION RIGHT</span>
+SELECT * FROM employees e LEFT JOIN departments d ON ...
+UNION
+SELECT * FROM employees e RIGHT JOIN departments d ON ...;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<h3>SELF JOIN — Table Joins Itself</h3>
+<div><div class="code-label"><span>self join (manager lookup)</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Employee + their manager name
+SELECT e.name AS employee, m.name AS manager
+FROM employees e
+LEFT JOIN employees m ON e.manager_id = m.id;
+-- Same table, different aliases (e and m)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same syntax</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q97" data-answer="0">
+      <div class="quiz-q">FULL JOIN = LEFT JOIN UNION RIGHT JOIN? (ignoring duplicates)</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Yes, exactly</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>No, different</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only if no NULLs</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only in PostgreSQL</span></div></div>
+      <div class="quiz-explain">FULL JOIN = all left + all right. LEFT UNION RIGHT = same (UNION removes dups).</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s2-q98" data-answer="3">
+      <div class="quiz-q">Self join requires:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Two identical tables</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Table aliases</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Foreign key to itself</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Both B and C</span></div></div>
+      <div class="quiz-explain">Aliases distinguish the two instances; FK to itself (manager_id → id) is the join condition.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Set Operations — UNION, INTERSECT, EXCEPT</h2></div>
+    <h3>Set Theory in SQL</h3>
+<div><div class="code-label"><span>union / intersect / except</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- UNION: all distinct rows from both
+SELECT name FROM employees
+UNION
+SELECT name FROM contractors;
+-- Removes duplicates
+
+-- UNION ALL: all rows, keep duplicates
+SELECT name FROM employees
+UNION ALL
+SELECT name FROM contractors;
+-- Faster, no dedup
+
+-- INTERSECT: common rows
+SELECT dept_id FROM employees
+INTERSECT
+SELECT id FROM departments;
+
+-- EXCEPT: in first, not in second
+SELECT dept_id FROM departments
+EXCEPT
+SELECT dept_id FROM employees;
+-- Departments with NO employees</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Same syntax</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: INTERSECT, EXCEPT supported</span>
+<span class="cm">-- Older: use EXISTS/NOT EXISTS</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s3-q99" data-answer="1">
+      <div class="quiz-q">UNION vs UNION ALL performance:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>UNION faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>UNION ALL faster (no dedup)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Same</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Depends on data</span></div></div>
+      <div class="quiz-explain">UNION ALL skips sort/unique. Use when duplicates OK or impossible.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q100" data-answer="0">
+      <div class="quiz-q">EXCEPT is to NOT IN as INTERSECT is to:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>IN</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>UNION</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>JOIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>EXISTS</span></div></div>
+      <div class="quiz-explain">EXCEPT = in first not in second. INTERSECT = in both = IN logic.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L1 Drills</h2></div>
+    <ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Employee + Department Name</div>
+        <div class="prob-meta">drill · inner-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J101"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      List employee name and their department name.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931o">INNER JOIN employees e ON e.dept_id = d.id</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">All Employees + Department (Include No Dept)</div>
+        <div class="prob-meta">drill · left-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J102"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      List all employees with department name. Show NULL for employees without department.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931p">LEFT JOIN departments</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Departments Without Employees</div>
+        <div class="prob-meta">drill · left-join-anti</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J103"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Find departments that have no employees.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931q">LEFT JOIN employees ... WHERE e.id IS NULL</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Employee + Manager Name</div>
+        <div class="prob-meta">drill · self-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J104"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      List each employee with their manager's name.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931r">Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">All Names: Employees + Contractors</div>
+        <div class="prob-meta">drill · union</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J105"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Combine employee and contractor names, remove duplicates.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931s">UNION (not UNION ALL)</div></div>
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name">Departments With No Employees (RIGHT JOIN)</div>
+        <div class="prob-meta">drill · right-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J106"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      Same as J103 but using RIGHT JOIN.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931t">RIGHT JOIN employees ON ... WHERE e.id IS NULL</div></div>
+    </div></li></ul>
+  </section>
+  
+  <section class="section" id="revision">
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
+      <ul><li>INNER = intersection; LEFT = all left + match; RIGHT = all right + match; FULL = both</li><li>LEFT JOIN + WHERE right.id IS NULL = anti-join (left rows with no match)</li><li>JOIN condition in ON, not WHERE (especially for LEFT — WHERE filters after join)</li><li>Self join = table aliases + FK to same table (manager_id → id)</li><li>UNION = distinct (slow); UNION ALL = all rows (fast); use ALL when possible</li><li>INTERSECT = common; EXCEPT = in first not second</li></ul></div>
+    <h3>Glossary</h3>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>inner join</code></td><td>Returns only rows with matches in both tables (intersection).</td></tr><tr><td style="width:220px;"><code>left join</code></td><td>All left rows; matched right rows or NULL (left circle + overlap).</td></tr><tr><td style="width:220px;"><code>right join</code></td><td>All right rows; matched left rows or NULL (right circle + overlap).</td></tr><tr><td style="width:220px;"><code>full join</code></td><td>All rows from both tables; NULLs where no match (union of circles).</td></tr><tr><td style="width:220px;"><code>self join</code></td><td>Table joined to itself using aliases; FK references same table PK.</td></tr><tr><td style="width:220px;"><code>anti-join</code></td><td>LEFT JOIN + WHERE right.key IS NULL — finds rows with no match.</td></tr></tbody></table>
+  </section>
+  <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
+    <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L2 INTERVIEW READY file</p></div>
+</div>
+<div class="footer">SQL LAYERED SYSTEM · MODULE 03 · L1/BEGINNER · GENERATED 2026-09-12</div>
+<script src="lang-toggle.js"></script><script src="recall.js"></script>
+<script>initLangToggle();initRecall('joins_L1');</script>
+</body></html>
