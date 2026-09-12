@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 03</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">join algorithms, lateral, semi/anti joins, join order</span></div>
   <h1>Joins & Set Operations</h1>
-  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="promise">Joins, grouping, windows. The standard pattern vocabulary an SQL screen actually tests.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="joins_L1" href="joins_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="joins_L2" href="joins_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="joins_L3" href="joins_L3.html">ADVANCED</a><a class="level-pill " data-lesson="joins_L4" href="joins_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Join Algorithms — How the Planner Executes</a><a href="#sec-1">02 · LATERAL JOIN — Correlated Subquery in FROM</a><a href="#sec-2">03 · Semi/Anti Joins & Join Order</a><a href="#sec-3">04 · Dialect Differences — Join Syntax</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Join Algorithms — How the Planner Executes</a><a href="#sec-1">02 · LATERAL JOIN — Correlated Subquery in FROM</a><a href="#sec-2">03 · Semi/Anti Joins & Join Order</a><a href="#sec-3">04 · Dialect Differences — Join Syntax</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -253,7 +253,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each employee, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd941u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd941u">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz1u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz1u">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -263,7 +263,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Find customers who have never placed an order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd941v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd941v">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz1v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz1v">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -273,7 +273,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd941w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd941w">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz1w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz1w">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -283,7 +283,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Employees who placed at least one order in 2024.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd941x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd941x">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz1x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz1x">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -293,7 +293,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Products that have never been ordered.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd941y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd941y">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz1y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz1y">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -303,7 +303,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Join small_table (100 rows) → medium (10k) → large (1M). Force order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd941z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd941z">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz1z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz1z">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -313,7 +313,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       User IDs in 'active' status but not in 'inactive'. Use EXCEPT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9420" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9420">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz20" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz20">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -323,12 +323,157 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9421" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9421">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkz21" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkz21">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">14 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">New Companies</a></div>
+        <div class="prob-meta">hackerrank · #025 · hackerrank-sql-58 · multi-join + count-distinct</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-HR025"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Report</a></div>
+        <div class="prob-meta">hackerrank · #046 · hackerrank-sql-58 · non-equi-join + case-expression</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-HR046"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Top Competitors</a></div>
+        <div class="prob-meta">hackerrank · #047 · hackerrank-sql-58 · multi-join + having + tie-break-order</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-HR047"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Ollivander's Inventory</a></div>
+        <div class="prob-meta">hackerrank · #048 · hackerrank-sql-58 · correlated-subquery + min-per-group</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-HR048"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Challenges</a></div>
+        <div class="prob-meta">hackerrank · #049 · hackerrank-sql-58 · group-having + union-all</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-HR049"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Contest Leaderboard</a></div>
+        <div class="prob-meta">hackerrank · #050 · hackerrank-sql-58 · max-per-group + sum-having</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-HR050"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Placements</a></div>
+        <div class="prob-meta">hackerrank · #052 · hackerrank-sql-58 · self-join + multi-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-HR052"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/students-and-examinations/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Students and Examinations</a></div>
+        <div class="prob-meta">leetcode · #1280 · easy · leetcode-sql-50 · cross-join + left-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1280"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/average-time-of-process-per-machine/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Average Time of Process per Machine</a></div>
+        <div class="prob-meta">leetcode · #1661 · easy · leetcode-sql-50 · self-join + conditional-agg</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1661"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-number-of-employees-which-report-to-each-employee/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Number of Employees Which Report to Each Employee</a></div>
+        <div class="prob-meta">leetcode · #1731 · easy · leetcode-sql-50 · self-join + hierarchy</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1731"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/primary-department-for-each-employee/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Primary Department for Each Employee</a></div>
+        <div class="prob-meta">leetcode · #1789 · easy · leetcode-sql-50 · union-all + group-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1789"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/confirmation-rate/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Confirmation Rate</a></div>
+        <div class="prob-meta">leetcode · #1934 · medium · leetcode-sql-50 · left-join + conditional-agg</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC1934"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/rising-temperature/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Rising Temperature</a></div>
+        <div class="prob-meta">leetcode · #197 · easy · leetcode-sql-50 · self-join + date-arithmetic</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC197"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/managers-with-at-least-5-direct-reports/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Managers with at Least 5 Direct Reports</a></div>
+        <div class="prob-meta">leetcode · #570 · medium · leetcode-sql-50 · self-join + having</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J2-LC570"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Nested Loop: small outer + indexed inner; Hash: large both, build hash on smaller; Merge: pre-sorted</li><li>LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer</li><li>Semi-join (EXISTS/IN): left columns only, stops at first match; Anti-join (NOT EXISTS): no match</li><li>NOT IN + subquery with NULL = disaster; always NOT EXISTS for anti-join</li><li>Join order: planner decides; join_collapse_limit=1 forces written order; pg_hint_plan for hints</li><li>FULL JOIN = LEFT UNION RIGHT; MySQL 5.7 workaround: LEFT UNION RIGHT</li></ul></div>
     <h3>Glossary</h3>

@@ -1,100 +1,282 @@
 {
-  "version": "1.0",
-  "orderSource": "Progressive complexity: syntax → filtering → joins → aggregation → windows → analytics",
+  "version": "2.0",
+  "orderSource": "LeetCode SQL 50 \u2014 7 sections, 50 problems, free and judge-backed. Modules 01-06 follow it; 07-09 are deliberate off-spine extensions. Volume from HackerRank SQL (58); company realism from DataLemur/StrataScratch; Postgres-native and recursive from PGExercises. Full rationale and precedence rules: content/SOURCING.md.",
+  "sourcing": {
+    "doc": "content/SOURCING.md",
+    "bank": "content/problems.json",
+    "spine": "leetcode-sql-50",
+    "overlays": [
+      "hackerrank-sql-58",
+      "datalemur",
+      "stratascratch",
+      "pgexercises"
+    ],
+    "pending": [
+      "leetcode-advanced-sql-50"
+    ],
+    "references": [
+      "reference-ankit-bansal",
+      "reference-techtfq"
+    ],
+    "sourcedTotal": 108
+  },
   "tierRule": {
-    "L1": "Single concept, guided",
-    "L2": "Combinations, EXPLAIN",
-    "L3": "Optimization, dialects",
-    "L4": "Internals, partitioning"
+    "L1": "Single concept, guided. Boundary = LeetCode SQL 50 Easy + HackerRank Basic Select/Aggregation.",
+    "L2": "Combinations and standard patterns, first EXPLAIN. Boundary = LeetCode SQL 50 Medium + HackerRank Basic/Advanced Join.",
+    "L3": "Optimization trade-offs, dialect differences, internals. Boundary = LeetCode SQL 50 Hard + Advanced SQL 50 + DataLemur Hard.",
+    "L4": "Constraint-driven techniques, plan forcing, partitioning. Predominantly synthesised \u2014 no free sheet reaches here."
   },
   "modules": [
     {
       "id": "basics",
       "num": "01",
       "title": "SQL Fundamentals",
-      "subtitle": "SELECT, WHERE, ORDER BY, LIMIT",
+      "subtitle": "SELECT, WHERE, ORDER BY, LIMIT, string functions",
       "deps": [],
-      "status": "active"
+      "status": "active",
+      "spinePosition": "LC50 \u00a71 Select",
+      "sheetSections": [
+        "LC50: Select",
+        "LC50: Advanced String Functions / Regex / Clause",
+        "HR: Basic Select"
+      ],
+      "sourced": {
+        "count": 15,
+        "byTier": {
+          "1": 13,
+          "2": 1,
+          "3": 1,
+          "4": 0
+        },
+        "bySheet": {
+          "hackerrank-sql-58": 9,
+          "leetcode-sql-50": 6
+        }
+      }
     },
     {
       "id": "filtering",
       "num": "02",
       "title": "Filtering & Conditionals",
-      "subtitle": "IN, BETWEEN, LIKE, CASE, NULL handling",
-      "deps": ["basics"],
-      "status": "active"
+      "subtitle": "IN, BETWEEN, LIKE, REGEXP, CASE, NULL handling",
+      "deps": [
+        "basics"
+      ],
+      "status": "active",
+      "spinePosition": "LC50 \u00a71 Select / \u00a77 String",
+      "sheetSections": [
+        "LC50: Select",
+        "LC50: Basic Aggregate Functions",
+        "LC50: Advanced Select and Joins",
+        "LC50: Advanced String Functions / Regex / Clause",
+        "HR: Basic Select",
+        "HR: Advanced Select"
+      ],
+      "sourced": {
+        "count": 20,
+        "byTier": {
+          "1": 16,
+          "2": 4,
+          "3": 0,
+          "4": 0
+        },
+        "bySheet": {
+          "hackerrank-sql-58": 13,
+          "leetcode-sql-50": 7
+        }
+      }
     },
     {
       "id": "joins",
       "num": "03",
       "title": "Joins & Set Operations",
-      "subtitle": "INNER/LEFT/RIGHT/FULL, UNION, EXCEPT, INTERSECT",
-      "deps": ["filtering"],
-      "status": "active"
+      "subtitle": "INNER/LEFT/RIGHT/FULL, self-join, semi/anti, UNION, EXCEPT, INTERSECT",
+      "deps": [
+        "filtering"
+      ],
+      "status": "active",
+      "spinePosition": "LC50 \u00a72 Basic Joins",
+      "sheetSections": [
+        "LC50: Basic Joins",
+        "LC50: Advanced Select and Joins",
+        "HR: Basic Join",
+        "HR: Advanced Join",
+        "HR: Advanced Select"
+      ],
+      "sourced": {
+        "count": 22,
+        "byTier": {
+          "1": 7,
+          "2": 14,
+          "3": 1,
+          "4": 0
+        },
+        "bySheet": {
+          "hackerrank-sql-58": 11,
+          "leetcode-sql-50": 11
+        }
+      }
     },
     {
       "id": "aggregation",
       "num": "04",
       "title": "Aggregation & Grouping",
-      "subtitle": "GROUP BY, HAVING, rollup, cube, grouping sets",
-      "deps": ["joins"],
-      "status": "active"
+      "subtitle": "GROUP BY, HAVING, conditional aggregation, rollup, cube, grouping sets",
+      "deps": [
+        "joins"
+      ],
+      "status": "active",
+      "spinePosition": "LC50 \u00a73 Basic Aggregates / \u00a74 Sorting and Grouping",
+      "sheetSections": [
+        "LC50: Basic Aggregate Functions",
+        "LC50: Sorting and Grouping",
+        "LC50: Subqueries",
+        "LC50: Advanced String Functions / Regex / Clause",
+        "HR: Aggregation",
+        "HR: Advanced Join"
+      ],
+      "sourced": {
+        "count": 35,
+        "byTier": {
+          "1": 21,
+          "2": 11,
+          "3": 3,
+          "4": 0
+        },
+        "bySheet": {
+          "hackerrank-sql-58": 19,
+          "leetcode-sql-50": 16
+        }
+      }
     },
     {
       "id": "window-functions",
       "num": "05",
       "title": "Window Functions",
-      "subtitle": "ROW_NUMBER, RANK, LAG/LEAD, frames",
-      "deps": ["aggregation"],
-      "status": "active"
+      "subtitle": "ROW_NUMBER, RANK/DENSE_RANK, LAG/LEAD, frames, running totals",
+      "deps": [
+        "aggregation"
+      ],
+      "status": "active",
+      "spinePosition": "LC50 \u00a75 Advanced Select and Joins",
+      "sheetSections": [
+        "LC50: Advanced Select and Joins",
+        "LC50: Subqueries",
+        "HR: Advanced Join"
+      ],
+      "sourced": {
+        "count": 6,
+        "byTier": {
+          "1": 0,
+          "2": 3,
+          "3": 3,
+          "4": 0
+        },
+        "bySheet": {
+          "leetcode-sql-50": 5,
+          "hackerrank-sql-58": 1
+        }
+      }
     },
     {
       "id": "subqueries-ctes",
       "num": "06",
       "title": "Subqueries & CTEs",
       "subtitle": "Correlated, recursive CTEs, materialization",
-      "deps": ["window-functions"],
-      "status": "active"
+      "deps": [
+        "window-functions"
+      ],
+      "status": "active",
+      "spinePosition": "LC50 \u00a76 Subqueries",
+      "sheetSections": [
+        "LC50: Subqueries",
+        "LC50: Advanced String Functions / Regex / Clause",
+        "HR: Advanced Select"
+      ],
+      "sourced": {
+        "count": 6,
+        "byTier": {
+          "1": 1,
+          "2": 3,
+          "3": 2,
+          "4": 0
+        },
+        "bySheet": {
+          "leetcode-sql-50": 5,
+          "hackerrank-sql-58": 1
+        }
+      }
     },
     {
       "id": "performance",
       "num": "07",
       "title": "Performance & Indexing",
-      "subtitle": "EXPLAIN, indexes, statistics, tuning",
-      "deps": ["subqueries-ctes"],
-      "status": "active"
+      "subtitle": "EXPLAIN, indexes, statistics, tuning, stored procedures",
+      "deps": [
+        "subqueries-ctes"
+      ],
+      "status": "active",
+      "spinePosition": "off-spine",
+      "sheetSections": [],
+      "sourced": {
+        "count": 0,
+        "byTier": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0
+        },
+        "bySheet": {}
+      }
     },
     {
       "id": "advanced-analytics",
       "num": "08",
       "title": "Advanced Analytics",
-      "subtitle": "Pivot, lateral, advanced frames, sampling",
-      "deps": ["performance"],
-      "status": "active"
+      "subtitle": "Pivot, lateral, advanced frames, sampling, triggers & transaction control",
+      "deps": [
+        "performance"
+      ],
+      "status": "active",
+      "spinePosition": "off-spine",
+      "sheetSections": [
+        "HR: Advanced Select",
+        "HR: Alternative Queries"
+      ],
+      "sourced": {
+        "count": 4,
+        "byTier": {
+          "1": 0,
+          "2": 1,
+          "3": 0,
+          "4": 3
+        },
+        "bySheet": {
+          "hackerrank-sql-58": 4
+        }
+      }
     },
     {
       "id": "timeseries-geo",
       "num": "09",
       "title": "Time-Series & Geospatial",
       "subtitle": "Gap filling, interpolation, PostGIS basics, H3",
-      "deps": ["advanced-analytics"],
-      "status": "active"
-    },
-    {
-      "id": "stored-procs",
-      "num": "10",
-      "title": "Stored Procedures & Functions",
-      "subtitle": "CREATE PROCEDURE/FUNCTION, params, returns, transactions, cursors",
-      "deps": ["advanced-analytics"],
-      "status": "draft"
-    },
-    {
-      "id": "triggers",
-      "num": "11",
-      "title": "Triggers & Transaction Control",
-      "subtitle": "CREATE TRIGGER, BEFORE/AFTER/INSTEAD OF, audit, constraints",
-      "deps": ["stored-procs"],
-      "status": "draft"
+      "deps": [
+        "advanced-analytics"
+      ],
+      "status": "active",
+      "spinePosition": "off-spine",
+      "sheetSections": [],
+      "sourced": {
+        "count": 0,
+        "byTier": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0
+        },
+        "bySheet": {}
+      }
     }
   ],
   "levels": [
@@ -102,25 +284,25 @@
       "level": 1,
       "name": "BEGINNER",
       "color": "#00b4d8",
-      "promise": "Core syntax, mental models. Tables as grids."
+      "promise": "Core syntax, mental models. Tables as grids. Every problem is solvable with one SELECT."
     },
     {
       "level": 2,
       "name": "INTERVIEW READY",
       "color": "#90e0ef",
-      "promise": "Joins, grouping, windows. Standard patterns."
+      "promise": "Joins, grouping, windows. The standard pattern vocabulary an SQL screen actually tests."
     },
     {
       "level": 3,
       "name": "ADVANCED",
       "color": "#caf0f8",
-      "promise": "CTEs, recursive, query optimization, dialects."
+      "promise": "CTEs, recursion, query optimization, dialect differences. You justify the plan, not just the output."
     },
     {
       "level": 4,
       "name": "EXPERT",
       "color": "#0077b6",
-      "promise": "Execution plans, partitioning, stored procs, triggers."
+      "promise": "Execution plans, partitioning, stored procs, triggers. Constraint-driven \u2014 mostly beyond any public sheet."
     }
   ]
 }

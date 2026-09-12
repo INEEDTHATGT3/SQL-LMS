@@ -115,30 +115,30 @@
             "Plan": {
               "Node Type": "CTE Scan",
               "CTE Name": "ranked",
-              "Startup Cost": 100.00,
-              "Total Cost": 500.00,
+              "Startup Cost": 100,
+              "Total Cost": 500,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "WindowAgg",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 200.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 200,
                   "Plan Rows": 8500,
                   "Plan Width": 48,
                   "Plans": [
                     {
                       "Node Type": "Sort",
-                      "Startup Cost": 50.00,
-                      "Total Cost": 100.00,
+                      "Startup Cost": 50,
+                      "Total Cost": 100,
                       "Plan Rows": 8500,
                       "Plan Width": 40,
                       "Plans": [
                         {
                           "Node Type": "Seq Scan",
                           "Relation Name": "employees",
-                          "Startup Cost": 0.00,
-                          "Total Cost": 185.00,
+                          "Startup Cost": 0,
+                          "Total Cost": 185,
                           "Plan Rows": 8500,
                           "Plan Width": 40
                         }
@@ -295,54 +295,139 @@
               "tier": 3,
               "title": "Moving Average of Ranks",
               "platform": "drill",
-              "patterns": ["nested-window", "cte"],
+              "patterns": [
+                "nested-window",
+                "cte"
+              ],
               "statement": "Compute 3-period moving average of ROW_NUMBER() ordered by salary.",
-              "hints": ["CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)"]
+              "hints": [
+                "CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)"
+              ]
             },
             {
               "id": "W302",
               "tier": 3,
               "title": "Running Total of Ranks",
               "platform": "drill",
-              "patterns": ["nested-window"],
+              "patterns": [
+                "nested-window"
+              ],
               "statement": "Running sum of ROW_NUMBER() ordered by salary.",
-              "hints": ["SUM(rn) OVER (ORDER BY rn)"]
+              "hints": [
+                "SUM(rn) OVER (ORDER BY rn)"
+              ]
             },
             {
               "id": "W303",
               "tier": 3,
               "title": "Work_Mem Tuning for Window Spill",
               "platform": "drill",
-              "patterns": ["work-mem", "spill"],
+              "patterns": [
+                "work-mem",
+                "spill"
+              ],
               "statement": "EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.",
-              "hints": ["SET work_mem = '256MB'; watch for 'Sort Method: external merge'"]
+              "hints": [
+                "SET work_mem = '256MB'; watch for 'Sort Method: external merge'"
+              ]
             },
             {
               "id": "W304",
               "tier": 3,
               "title": "Index for Window Function",
               "platform": "drill",
-              "patterns": ["index-optimization"],
+              "patterns": [
+                "index-optimization"
+              ],
               "statement": "Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).",
-              "hints": ["CREATE INDEX ON employees (dept_id, hire_date DESC)"]
+              "hints": [
+                "CREATE INDEX ON employees (dept_id, hire_date DESC)"
+              ]
             },
             {
               "id": "W305",
               "tier": 3,
               "title": "Nested Window: Rank of Running Total",
               "platform": "drill",
-              "patterns": ["nested-window"],
+              "patterns": [
+                "nested-window"
+              ],
               "statement": "Rank employees by their running total of salary (ordered by hire_date).",
-              "hints": ["CTE: running total, then RANK() OVER (ORDER BY running_total)"]
+              "hints": [
+                "CTE: running total, then RANK() OVER (ORDER BY running_total)"
+              ]
             },
             {
               "id": "W306",
               "tier": 3,
               "title": "Filter on Window Result",
               "platform": "drill",
-              "patterns": ["cte-filter"],
+              "patterns": [
+                "cte-filter"
+              ],
               "statement": "Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).",
-              "hints": ["CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1"]
+              "hints": [
+                "CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "W3-HR051",
+              "tier": 3,
+              "title": "SQL Project Planning",
+              "platform": "hackerrank",
+              "ref": "051",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Join",
+              "patterns": [
+                "gaps-and-islands",
+                "consecutive-runs"
+              ]
+            },
+            {
+              "id": "W3-LC1164",
+              "tier": 3,
+              "title": "Product Price at a Given Date",
+              "platform": "leetcode",
+              "ref": "1164",
+              "url": "https://leetcode.com/problems/product-price-at-a-given-date/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                "as-of-join",
+                "last-value-before"
+              ]
+            },
+            {
+              "id": "W3-LC1321",
+              "tier": 3,
+              "title": "Restaurant Growth",
+              "platform": "leetcode",
+              "ref": "1321",
+              "url": "https://leetcode.com/problems/restaurant-growth/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "medium",
+              "patterns": [
+                "moving-average",
+                "rows-frame"
+              ]
             }
           ]
         }
@@ -358,11 +443,29 @@
     "GROUPS frame (PG14) counts peer groups; EXCLUDE TIES/GROUP/CURRENT ROW"
   ],
   "glossary": [
-    { "term": "nested window", "def": "Window function applied to result of another window function via CTE." },
-    { "term": "WindowAgg", "def": "PostgreSQL executor node for window functions. Multiple passes for different functions." },
-    { "term": "work_mem", "def": "Memory budget for sort/hash/window operations per query. Spills to disk if exceeded." },
-    { "term": "CTE materialization", "def": "CTE result computed once, reused. Enables predicate pushdown on window results." },
-    { "term": "Sort Method: external merge", "def": "EXPLAIN ANALYZE indicator that sort spilled to disk (work_mem exceeded)." },
-    { "term": "peer group", "def": "Rows with identical ORDER BY values. Relevant for RANGE/GROUPS frames and EXCLUDE TIES." }
+    {
+      "term": "nested window",
+      "def": "Window function applied to result of another window function via CTE."
+    },
+    {
+      "term": "WindowAgg",
+      "def": "PostgreSQL executor node for window functions. Multiple passes for different functions."
+    },
+    {
+      "term": "work_mem",
+      "def": "Memory budget for sort/hash/window operations per query. Spills to disk if exceeded."
+    },
+    {
+      "term": "CTE materialization",
+      "def": "CTE result computed once, reused. Enables predicate pushdown on window results."
+    },
+    {
+      "term": "Sort Method: external merge",
+      "def": "EXPLAIN ANALYZE indicator that sort spilled to disk (work_mem exceeded)."
+    },
+    {
+      "term": "peer group",
+      "def": "Rows with identical ORDER BY values. Relevant for RANGE/GROUPS frames and EXCLUDE TIES."
+    }
   ]
 }

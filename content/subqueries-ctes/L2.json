@@ -80,13 +80,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"pattern": "Correlated in WHERE", "execution": "Per outer row", "use_case": "Filter outer rows", "performance": "Can be slow"},
-              {"pattern": "Correlated in SELECT", "execution": "Per outer row", "use_case": "Add computed column", "performance": "Can be slow"},
-              {"pattern": "Correlated EXISTS", "execution": "Per outer row, stops at first match", "use_case": "Semi-join", "performance": "Often better than IN"},
-              {"pattern": "Correlated LATERAL", "execution": "Per outer row, returns set", "use_case": "Top-N per group", "performance": "Good with indexes"}
+              {
+                "pattern": "Correlated in WHERE",
+                "execution": "Per outer row",
+                "use_case": "Filter outer rows",
+                "performance": "Can be slow"
+              },
+              {
+                "pattern": "Correlated in SELECT",
+                "execution": "Per outer row",
+                "use_case": "Add computed column",
+                "performance": "Can be slow"
+              },
+              {
+                "pattern": "Correlated EXISTS",
+                "execution": "Per outer row, stops at first match",
+                "use_case": "Semi-join",
+                "performance": "Often better than IN"
+              },
+              {
+                "pattern": "Correlated LATERAL",
+                "execution": "Per outer row, returns set",
+                "use_case": "Top-N per group",
+                "performance": "Good with indexes"
+              }
             ],
             "after": [],
-            "highlight": ["execution"]
+            "highlight": [
+              "execution"
+            ]
           }
         },
         {
@@ -138,12 +160,30 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"pattern": "LATERAL", "readability": "High — looks like join", "performance": "Same as correlated subquery", "use_case": "Top-N per group, complex per-row logic"},
-              {"pattern": "Correlated Subquery in SELECT", "readability": "Low — nested in SELECT", "performance": "Same", "use_case": "Single column, simple"},
-              {"pattern": "Window Function", "readability": "Medium", "performance": "Better for full scan", "use_case": "All rows need rank/row_number"}
+              {
+                "pattern": "LATERAL",
+                "readability": "High — looks like join",
+                "performance": "Same as correlated subquery",
+                "use_case": "Top-N per group, complex per-row logic"
+              },
+              {
+                "pattern": "Correlated Subquery in SELECT",
+                "readability": "Low — nested in SELECT",
+                "performance": "Same",
+                "use_case": "Single column, simple"
+              },
+              {
+                "pattern": "Window Function",
+                "readability": "Medium",
+                "performance": "Better for full scan",
+                "use_case": "All rows need rank/row_number"
+              }
             ],
             "after": [],
-            "highlight": ["readability", "performance"]
+            "highlight": [
+              "readability",
+              "performance"
+            ]
           }
         },
         {
@@ -251,37 +291,37 @@
             "Plan": {
               "Node Type": "CTE Scan",
               "CTE Name": "bfs",
-              "Startup Cost": 100.00,
-              "Total Cost": 5000.00,
+              "Startup Cost": 100,
+              "Total Cost": 5000,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Recursive Union",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 5000.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 5000,
                   "Plan Rows": 8500,
                   "Plan Width": 48,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 100.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 100,
                       "Plan Rows": 100
                     },
                     {
                       "Node Type": "WorkTable Scan",
                       "Relation Name": "bfs",
-                      "Startup Cost": 100.00,
-                      "Total Cost": 4900.00,
+                      "Startup Cost": 100,
+                      "Total Cost": 4900,
                       "Plan Rows": 8400,
                       "Plan Width": 48,
                       "Plans": [
                         {
                           "Node Type": "Hash Join",
-                          "Startup Cost": 100.00,
-                          "Total Cost": 4900.00,
+                          "Startup Cost": 100,
+                          "Total Cost": 4900,
                           "Plan Rows": 8400,
                           "Plan Width": 48,
                           "Hash Cond": "(e.manager_id = bfs.id)",
@@ -289,15 +329,15 @@
                             {
                               "Node Type": "Seq Scan",
                               "Relation Name": "employees",
-                              "Startup Cost": 0.00,
-                              "Total Cost": 100.00,
+                              "Startup Cost": 0,
+                              "Total Cost": 100,
                               "Plan Rows": 1000
                             },
                             {
                               "Node Type": "WorkTable Scan",
                               "Relation Name": "bfs",
-                              "Startup Cost": 0.00,
-                              "Total Cost": 0.00,
+                              "Startup Cost": 0,
+                              "Total Cost": 0,
                               "Plan Rows": 100,
                               "Plan Width": 24
                             }
@@ -371,72 +411,165 @@
               "tier": 2,
               "title": "Correlated Avg Salary per Dept",
               "platform": "drill",
-              "patterns": ["correlated-subquery"],
+              "patterns": [
+                "correlated-subquery"
+              ],
               "statement": "Each employee with their department's average salary.",
-              "hints": ["SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id"]
+              "hints": [
+                "SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id"
+              ]
             },
             {
               "id": "S202",
               "tier": 2,
               "title": "Latest Order per Customer (LATERAL)",
               "platform": "drill",
-              "patterns": ["lateral"],
+              "patterns": [
+                "lateral"
+              ],
               "statement": "For each customer, show their most recent order date and total.",
-              "hints": ["LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)"]
+              "hints": [
+                "LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)"
+              ]
             },
             {
               "id": "S203",
               "tier": 2,
               "title": "Customers with Orders > $1000 (EXISTS)",
               "platform": "drill",
-              "patterns": ["correlated-exists"],
+              "patterns": [
+                "correlated-exists"
+              ],
               "statement": "Customers who placed at least one order over $1000.",
-              "hints": ["EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)"]
+              "hints": [
+                "EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)"
+              ]
             },
             {
               "id": "S204",
               "tier": 2,
               "title": "Non-Materialized CTE for Pushdown",
               "platform": "drill",
-              "patterns": ["not-materialized"],
+              "patterns": [
+                "not-materialized"
+              ],
               "statement": "CTE filters status='active', outer query adds dept_id=5. Use NOT MATERIALIZED.",
-              "hints": ["WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5"]
+              "hints": [
+                "WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5"
+              ]
             },
             {
               "id": "S205",
               "tier": 2,
               "title": "Recursive CTE: All Subordinates",
               "platform": "drill",
-              "patterns": ["recursive-cte"],
+              "patterns": [
+                "recursive-cte"
+              ],
               "statement": "Find all subordinates (direct + indirect) of manager_id = 5.",
-              "hints": ["WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)"]
+              "hints": [
+                "WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)"
+              ]
             },
             {
               "id": "S206",
               "tier": 2,
               "title": "Path Finding: A to B",
               "platform": "drill",
-              "patterns": ["recursive-cte", "path"],
+              "patterns": [
+                "recursive-cte",
+                "path"
+              ],
               "statement": "Find path from node 'A' to 'B' in graph edges table.",
-              "hints": ["Track path in array: path || next_node"]
+              "hints": [
+                "Track path in array: path || next_node"
+              ]
             },
             {
               "id": "S207",
               "tier": 2,
               "title": "Safe NOT IN (avoid NULL trap)",
               "platform": "drill",
-              "patterns": ["not-in-null-trap"],
+              "patterns": [
+                "not-in-null-trap"
+              ],
               "statement": "Departments without employees. Fix NOT IN NULL trap.",
-              "hints": ["NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)"]
+              "hints": [
+                "NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)"
+              ]
             },
             {
               "id": "S208",
               "tier": 2,
               "title": "LATERAL: Top 3 Products per Category",
               "platform": "drill",
-              "patterns": ["lateral", "top-n"],
+              "patterns": [
+                "lateral",
+                "top-n"
+              ],
               "statement": "For each category, list top 3 products by sales.",
-              "hints": ["LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)"]
+              "hints": [
+                "LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S2-HR024",
+              "tier": 2,
+              "title": "Binary Tree Nodes",
+              "platform": "hackerrank",
+              "ref": "024",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Select",
+              "patterns": [
+                "hierarchy",
+                "case-expression"
+              ]
+            },
+            {
+              "id": "S2-LC176",
+              "tier": 2,
+              "title": "Second Highest Salary",
+              "platform": "leetcode",
+              "ref": "176",
+              "url": "https://leetcode.com/problems/second-highest-salary/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced String Functions / Regex / Clause",
+              "difficulty": "medium",
+              "patterns": [
+                "nth-value",
+                "null-when-empty"
+              ]
+            },
+            {
+              "id": "S2-LC626",
+              "tier": 2,
+              "title": "Exchange Seats",
+              "platform": "leetcode",
+              "ref": "626",
+              "url": "https://leetcode.com/problems/exchange-seats/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "medium",
+              "patterns": [
+                "case-swap",
+                "lead-lag"
+              ]
             }
           ]
         }
@@ -452,11 +585,29 @@
     "NOT IN + NULL = zero rows; always NOT EXISTS for anti-join"
   ],
   "glossary": [
-    { "term": "correlated subquery", "def": "Subquery referencing outer query columns; executes once per outer row." },
-    { "term": "LATERAL join", "def": "Right subquery references left-side columns. Like correlated subquery in FROM." },
-    { "term": "NOT MATERIALIZED", "def": "PostgreSQL hint to inline CTE, enabling predicate pushdown." },
-    { "term": "recursive CTE", "def": "CTE with RECURSIVE keyword: anchor + UNION ALL + recursive part referencing itself." },
-    { "term": "cycle detection", "def": "Tracking visited nodes in recursive CTE to prevent infinite loops (path array check)." },
-    { "term": "semi-join", "def": "EXISTS/IN pattern — returns left rows with match; stops at first match per row." }
+    {
+      "term": "correlated subquery",
+      "def": "Subquery referencing outer query columns; executes once per outer row."
+    },
+    {
+      "term": "LATERAL join",
+      "def": "Right subquery references left-side columns. Like correlated subquery in FROM."
+    },
+    {
+      "term": "NOT MATERIALIZED",
+      "def": "PostgreSQL hint to inline CTE, enabling predicate pushdown."
+    },
+    {
+      "term": "recursive CTE",
+      "def": "CTE with RECURSIVE keyword: anchor + UNION ALL + recursive part referencing itself."
+    },
+    {
+      "term": "cycle detection",
+      "def": "Tracking visited nodes in recursive CTE to prevent infinite loops (path array check)."
+    },
+    {
+      "term": "semi-join",
+      "def": "EXISTS/IN pattern — returns left rows with match; stops at first match per row."
+    }
   ]
 }

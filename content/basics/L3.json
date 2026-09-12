@@ -82,8 +82,8 @@
               "Node Type": "Seq Scan",
               "Relation Name": "employees",
               "Alias": "e",
-              "Startup Cost": 0.00,
-              "Total Cost": 185.00,
+              "Startup Cost": 0,
+              "Total Cost": 185,
               "Plan Rows": 8500,
               "Plan Width": 72,
               "Filter": "(salary > 50000)",
@@ -285,54 +285,109 @@
               "tier": 3,
               "title": "Create Index for Salary Range Queries",
               "platform": "drill",
-              "patterns": ["create-index", "btree"],
+              "patterns": [
+                "create-index",
+                "btree"
+              ],
               "statement": "Create a B-tree index on employees.salary to speed up range queries.",
-              "hints": ["CREATE INDEX idx_emp_salary ON employees (salary);"]
+              "hints": [
+                "CREATE INDEX idx_emp_salary ON employees (salary);"
+              ]
             },
             {
               "id": "B302",
               "tier": 3,
               "title": "Composite Index for Dept + Salary",
               "platform": "drill",
-              "patterns": ["composite-index"],
+              "patterns": [
+                "composite-index"
+              ],
               "statement": "Create composite index for queries filtering by dept_id then ordering by salary.",
-              "hints": ["Column order matters: equality first (dept_id), then range (salary)"]
+              "hints": [
+                "Column order matters: equality first (dept_id), then range (salary)"
+              ]
             },
             {
               "id": "B303",
               "tier": 3,
               "title": "Partial Index for Active Employees",
               "platform": "drill",
-              "patterns": ["partial-index"],
+              "patterns": [
+                "partial-index"
+              ],
               "statement": "90% of queries filter status='active'. Create partial index on salary for active employees only.",
-              "hints": ["WHERE status = 'active'"]
+              "hints": [
+                "WHERE status = 'active'"
+              ]
             },
             {
               "id": "B304",
               "tier": 3,
               "title": "Covering Index to Avoid Heap Fetch",
               "platform": "drill",
-              "patterns": ["covering-index"],
+              "patterns": [
+                "covering-index"
+              ],
               "statement": "Query: SELECT name, salary FROM employees WHERE salary > 50000. Create covering index.",
-              "hints": ["INCLUDE (name) in PostgreSQL; (salary, name) in MySQL"]
+              "hints": [
+                "INCLUDE (name) in PostgreSQL; (salary, name) in MySQL"
+              ]
             },
             {
               "id": "B305",
               "tier": 3,
               "title": "Analyze Query Plan",
               "platform": "drill",
-              "patterns": ["explain-analyze"],
+              "patterns": [
+                "explain-analyze"
+              ],
               "statement": "Run EXPLAIN ANALYZE on: SELECT * FROM employees WHERE dept_id = 3 AND salary > 60000. Note: Seq Scan vs Index Scan, actual rows.",
-              "hints": ["EXPLAIN (ANALYZE, BUFFERS) ..."]
+              "hints": [
+                "EXPLAIN (ANALYZE, BUFFERS) ..."
+              ]
             },
             {
               "id": "B306",
               "tier": 3,
               "title": "Fix Function-on-Column Index Issue",
               "platform": "drill",
-              "patterns": ["functional-index"],
+              "patterns": [
+                "functional-index"
+              ],
               "statement": "Query: SELECT * FROM employees WHERE LOWER(email) = 'alice@company.com'. Create index to support this.",
-              "hints": ["Functional index on LOWER(email)"]
+              "hints": [
+                "Functional index on LOWER(email)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "B3-LC196",
+              "tier": 3,
+              "title": "Delete Duplicate Emails",
+              "platform": "leetcode",
+              "ref": "196",
+              "url": "https://leetcode.com/problems/delete-duplicate-emails/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced String Functions / Regex / Clause",
+              "difficulty": "easy",
+              "patterns": [
+                "dml-delete",
+                "self-join-dedupe"
+              ]
             }
           ]
         }
@@ -348,11 +403,29 @@
     "Leading wildcard (%text) kills B-tree — pg_trgm or fulltext for that"
   ],
   "glossary": [
-    { "term": "covering index", "def": "Index that includes all columns needed by query (INCLUDE), avoiding table lookup." },
-    { "term": "partial index", "def": "Index with WHERE clause — only indexes subset of rows." },
-    { "term": "functional index", "def": "Index on expression (e.g., UPPER(col)) — supports queries with functions." },
-    { "term": "selectivity", "def": "Fraction of rows matching condition. Low selectivity = few rows = index friendly." },
-    { "term": "heap fetch", "def": "Table lookup after index finds row pointer. Covering index eliminates this." },
-    { "term": "random_page_cost", "def": "Planner parameter: cost of random I/O vs sequential. Higher = prefer Seq Scan." }
+    {
+      "term": "covering index",
+      "def": "Index that includes all columns needed by query (INCLUDE), avoiding table lookup."
+    },
+    {
+      "term": "partial index",
+      "def": "Index with WHERE clause — only indexes subset of rows."
+    },
+    {
+      "term": "functional index",
+      "def": "Index on expression (e.g., UPPER(col)) — supports queries with functions."
+    },
+    {
+      "term": "selectivity",
+      "def": "Fraction of rows matching condition. Low selectivity = few rows = index friendly."
+    },
+    {
+      "term": "heap fetch",
+      "def": "Table lookup after index finds row pointer. Covering index eliminates this."
+    },
+    {
+      "term": "random_page_cost",
+      "def": "Planner parameter: cost of random I/O vs sequential. Higher = prefer Seq Scan."
+    }
   ]
 }

@@ -80,12 +80,30 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"method": "FILTER", "readability": "High — condition inline", "performance": "Single scan, optimizer can use indexes", "portability": "PostgreSQL, standard SQL"},
-              {"method": "CASE SUM", "readability": "Medium — verbose", "performance": "Same as FILTER (optimizer converts)", "portability": "All databases"},
-              {"method": "Multiple subqueries", "readability": "Low — verbose", "performance": "Multiple scans", "portability": "All databases"}
+              {
+                "method": "FILTER",
+                "readability": "High — condition inline",
+                "performance": "Single scan, optimizer can use indexes",
+                "portability": "PostgreSQL, standard SQL"
+              },
+              {
+                "method": "CASE SUM",
+                "readability": "Medium — verbose",
+                "performance": "Same as FILTER (optimizer converts)",
+                "portability": "All databases"
+              },
+              {
+                "method": "Multiple subqueries",
+                "readability": "Low — verbose",
+                "performance": "Multiple scans",
+                "portability": "All databases"
+              }
             ],
             "after": [],
-            "highlight": ["readability", "performance"]
+            "highlight": [
+              "readability",
+              "performance"
+            ]
           }
         },
         {
@@ -239,24 +257,26 @@
             "Plan": {
               "Node Type": "GroupAggregate",
               "Strategy": "Sorted",
-              "Group Key": ["dept_id"],
-              "Startup Cost": 100.00,
-              "Total Cost": 500.00,
+              "Group Key": [
+                "dept_id"
+              ],
+              "Startup Cost": 100,
+              "Total Cost": 500,
               "Plan Rows": 5,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 450.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 450,
                   "Plan Rows": 8500,
                   "Plan Width": 40,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40,
                       "Filter": "(status = 'active')"
@@ -294,54 +314,139 @@
               "tier": 3,
               "title": "Conditional Counts with FILTER",
               "platform": "drill",
-              "patterns": ["filter-clause"],
+              "patterns": [
+                "filter-clause"
+              ],
               "statement": "Per department: count of active, pending, inactive employees using FILTER.",
-              "hints": ["COUNT(*) FILTER (WHERE status = 'active')"]
+              "hints": [
+                "COUNT(*) FILTER (WHERE status = 'active')"
+              ]
             },
             {
               "id": "A302",
               "tier": 3,
               "title": "Median Salary per Department",
               "platform": "drill",
-              "patterns": ["percentile"],
+              "patterns": [
+                "percentile"
+              ],
               "statement": "Median salary per department using percentile_cont.",
-              "hints": ["percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)"]
+              "hints": [
+                "percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)"
+              ]
             },
             {
               "id": "A303",
               "tier": 3,
               "title": "Approximate Unique Users",
               "platform": "drill",
-              "patterns": ["approx-aggregate"],
+              "patterns": [
+                "approx-aggregate"
+              ],
               "statement": "Approximate distinct user count per day from events table.",
-              "hints": ["approx_count_distinct(user_id)"]
+              "hints": [
+                "approx_count_distinct(user_id)"
+              ]
             },
             {
               "id": "A304",
               "tier": 3,
               "title": "Top 3 Earners per Dept (STRING_AGG)",
               "platform": "drill",
-              "patterns": ["string-agg"],
+              "patterns": [
+                "string-agg"
+              ],
               "statement": "Concatenate top 3 employee names by salary per department.",
-              "hints": ["STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3"]
+              "hints": [
+                "STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3"
+              ]
             },
             {
-              "id": "A304",
+              "id": "A305",
               "tier": 3,
               "title": "JSON Payload per Department",
               "platform": "drill",
-              "patterns": ["json-agg"],
+              "patterns": [
+                "json-agg"
+              ],
               "statement": "Return JSON array of {name, salary} objects per department.",
-              "hints": ["JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))"]
+              "hints": [
+                "JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))"
+              ]
             },
             {
               "id": "A306",
               "tier": 3,
               "title": "Mode Status per Department",
               "platform": "drill",
-              "patterns": ["mode"],
+              "patterns": [
+                "mode"
+              ],
               "statement": "Most common employee status per department (PostgreSQL 15+).",
-              "hints": ["mode() WITHIN GROUP (ORDER BY status)"]
+              "hints": [
+                "mode() WITHIN GROUP (ORDER BY status)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "A3-HR054",
+              "tier": 3,
+              "title": "Interviews",
+              "platform": "hackerrank",
+              "ref": "054",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Join",
+              "patterns": [
+                "multi-join",
+                "multi-level-agg",
+                "null-collapse"
+              ]
+            },
+            {
+              "id": "A3-HR055",
+              "tier": 3,
+              "title": "15 Days of Learning SQL",
+              "platform": "hackerrank",
+              "ref": "055",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Join",
+              "patterns": [
+                "running-distinct",
+                "max-per-group",
+                "correlated-subquery"
+              ]
+            },
+            {
+              "id": "A3-LC550",
+              "tier": 3,
+              "title": "Game Play Analysis IV",
+              "platform": "leetcode",
+              "ref": "550",
+              "url": "https://leetcode.com/problems/game-play-analysis-iv/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Aggregate Functions",
+              "difficulty": "medium",
+              "patterns": [
+                "retention",
+                "consecutive-days",
+                "first-per-group"
+              ]
             }
           ]
         }
@@ -357,11 +462,29 @@
     "mode() WITHIN GROUP = most frequent value (PG 15+)"
   ],
   "glossary": [
-    { "term": "FILTER clause", "def": "Conditional aggregate: AGG(expr) FILTER (WHERE condition). Row contributes only if condition true." },
-    { "term": "percentile_cont", "def": "Continuous percentile — interpolates between values for exact percentile." },
-    { "term": "percentile_disc", "def": "Discrete percentile — returns actual value from dataset at percentile." },
-    { "term": "HyperLogLog", "def": "Probabilistic algorithm for approximate distinct count with fixed memory." },
-    { "term": "STRING_AGG", "def": "Concatenates values with delimiter; supports ORDER BY inside aggregate." },
-    { "term": "JSON_AGG", "def": "Aggregates rows into JSON array; JSONB_AGG returns binary JSONB." }
+    {
+      "term": "FILTER clause",
+      "def": "Conditional aggregate: AGG(expr) FILTER (WHERE condition). Row contributes only if condition true."
+    },
+    {
+      "term": "percentile_cont",
+      "def": "Continuous percentile — interpolates between values for exact percentile."
+    },
+    {
+      "term": "percentile_disc",
+      "def": "Discrete percentile — returns actual value from dataset at percentile."
+    },
+    {
+      "term": "HyperLogLog",
+      "def": "Probabilistic algorithm for approximate distinct count with fixed memory."
+    },
+    {
+      "term": "STRING_AGG",
+      "def": "Concatenates values with delimiter; supports ORDER BY inside aggregate."
+    },
+    {
+      "term": "JSON_AGG",
+      "def": "Aggregates rows into JSON array; JSONB_AGG returns binary JSONB."
+    }
   ]
 }

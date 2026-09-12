@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 06</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">queries within queries — the nesting doll of SQL</span></div>
   <h1>Subqueries & CTEs</h1>
-  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="promise">Core syntax, mental models. Tables as grids. Every problem is solvable with one SELECT.</div>
   <div class="level-strip"><a class="level-pill current" data-lesson="subqueries-ctes_L1" href="subqueries-ctes_L1.html">BEGINNER</a><a class="level-pill " data-lesson="subqueries-ctes_L2" href="subqueries-ctes_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="subqueries-ctes_L3" href="subqueries-ctes_L3.html">ADVANCED</a><a class="level-pill " data-lesson="subqueries-ctes_L4" href="subqueries-ctes_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Mental Model — The Nested Box</a><a href="#sec-1">02 · Scalar & Row Subqueries</a><a href="#sec-2">03 · Table Subqueries — IN, EXISTS, NOT IN</a><a href="#sec-3">04 · CTEs — Common Table Expressions</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — The Nested Box</a><a href="#sec-1">02 · Scalar & Row Subqueries</a><a href="#sec-2">03 · Table Subqueries — IN, EXISTS, NOT IN</a><a href="#sec-3">04 · CTEs — Common Table Expressions</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -249,7 +249,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Find employees earning more than the company average salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9l43" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9l43">WHERE salary > (SELECT AVG(salary) FROM employees)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflf43" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflf43">WHERE salary > (SELECT AVG(salary) FROM employees)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -259,7 +259,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Find departments that have at least one employee.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9l44" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9l44">EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflf44" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflf44">EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -269,7 +269,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Find employees who have never placed an order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9l45" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9l45">NOT EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflf45" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflf45">NOT EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -279,7 +279,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Show employees who earn the maximum salary in their department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9l46" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9l46">WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflf46" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflf46">WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -289,7 +289,7 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Use CTE to compute avg salary per department, then show departments above 75000.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9l47" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9l47">WITH dept_avg AS (...) SELECT * FROM dept_avg WHERE avg_sal > 75000</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflf47" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflf47">WITH dept_avg AS (...) SELECT * FROM dept_avg WHERE avg_sal > 75000</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -299,12 +299,27 @@ SELECT * FROM org_chart ORDER BY level, name;</code></pre><pre data-lang="py" cl
     </div>
     <div class="prob-body">
       Employees whose department is active (status='active' in departments).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9l48" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9l48">WHERE dept_id IN (SELECT id FROM departments WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflf48" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflf48">WHERE dept_id IN (SELECT id FROM departments WHERE status = 'active')</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/employees-whose-manager-left-the-company/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Employees Whose Manager Left the Company</a></div>
+        <div class="prob-meta">leetcode · #1978 · easy · leetcode-sql-50 · not-in-subquery + null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S1-LC1978"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Subquery types: scalar (1x1), row (1xN), table (MxN) — each with specific operators</li><li>Scalar subquery = single value; use with =, >, <, in expressions</li><li>Table subquery: IN, EXISTS, NOT IN, NOT EXISTS, FROM</li><li>NOT IN + NULL = disaster; use NOT EXISTS instead</li><li>CTE: WITH name AS (...) — reusable, readable, recursive capable</li><li>Recursive CTE: anchor + UNION ALL + recursive part + termination</li></ul></div>
     <h3>Glossary</h3>

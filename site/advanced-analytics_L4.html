@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 08</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">custom aggregates, hypothetical sets, window function internals, extensibility</span></div>
   <h1>Advanced Analytics</h1>
-  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="advanced-analytics_L1" href="advanced-analytics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="advanced-analytics_L2" href="advanced-analytics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="advanced-analytics_L3" href="advanced-analytics_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="advanced-analytics_L4" href="advanced-analytics_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Custom Window Aggregates (PostgreSQL 14+)</a><a href="#sec-1">02 · Hypothetical Set Functions</a><a href="#sec-2">03 · IGNORE NULLS & Advanced NULL Handling</a><a href="#sec-3">04 · Window Function Internals — WindowAgg, Sort, Spilling</a><a href="#sec-4">05 · Dialect Mastery — Window Function Gaps</a><a href="#sec-5">06 · Triggers & Transaction Control — Audit, Constraints, Cascades</a><a href="#sec-6">07 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Custom Window Aggregates (PostgreSQL 14+)</a><a href="#sec-1">02 · Hypothetical Set Functions</a><a href="#sec-2">03 · IGNORE NULLS & Advanced NULL Handling</a><a href="#sec-3">04 · Window Function Internals — WindowAgg, Sort, Spilling</a><a href="#sec-4">05 · Dialect Mastery — Window Function Gaps</a><a href="#sec-5">06 · Triggers & Transaction Control — Audit, Constraints, Cascades</a><a href="#sec-6">07 · Problem Set — L4 Drills</a><a href="#sec-7">08 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -387,7 +387,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda06v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda06v">msfunc adds, minvfunc removes, state = running sum + count</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6v">msfunc adds, minvfunc removes, state = running sum + count</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -397,7 +397,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda06w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda06w">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6w">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -407,7 +407,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda06x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda06x">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6x">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -417,7 +417,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Window function uses ORDER BY salary + bonus. Create expression index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda06y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda06y">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6y">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -427,12 +427,47 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Explain how PostgreSQL 17+ pushes predicates below window functions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqda06z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqda06z">Predicate pushdown through WindowAgg when safe</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6z">Predicate pushdown through WindowAgg when safe</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-7">
+    <div class="section-header"><span class="section-num">08 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">3 sourced problems from HackerRank SQL. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Draw The Triangle 1</a></div>
+        <div class="prob-meta">hackerrank · #056 · hackerrank-sql-58 · recursive-cte + number-generation</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X4-HR056"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Draw The Triangle 2</a></div>
+        <div class="prob-meta">hackerrank · #057 · hackerrank-sql-58 · recursive-cte + number-generation</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X4-HR057"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t4">L4</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Print Prime Numbers</a></div>
+        <div class="prob-meta">hackerrank · #058 · hackerrank-sql-58 · recursive-cte + set-based-sieve + string-agg</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X4-HR058"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">08 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">09 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Custom aggregates: CREATE AGGREGATE ... WINDOW (PG14+), msfunc/minvfunc for O(1) sliding</li><li>Hypothetical sets: RANK(x) WITHIN GROUP — where would x rank?</li><li>IGNORE NULLS (PG15): skip NULLs in LAG/LEAD/FIRST/LAST_VALUE</li><li>WindowAgg: shared sort for same PARTITION+ORDER, multiple passes per function</li><li>Expression in ORDER BY kills index use → expression index or computed column</li><li>QUALIFY (MySQL/Snowflake) vs CTE (PostgreSQL) for filtering window results</li></ul></div>
     <h3>Glossary</h3>

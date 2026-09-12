@@ -79,13 +79,31 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"predicate": "A AND B OR C", "interpretation": "(A AND B) OR C", "example": "dept=1 AND salary>50k OR dept=2"},
-              {"predicate": "A AND (B OR C)", "interpretation": "A AND (B OR C)", "example": "dept=1 AND (salary>50k OR bonus>1k)"},
-              {"predicate": "NOT (A OR B)", "interpretation": "NOT A AND NOT B", "example": "NOT (dept=3 OR salary<30k)"},
-              {"predicate": "NOT A OR NOT B", "interpretation": "(NOT A) OR (NOT B)", "example": "dept<>3 OR salary>=30k"}
+              {
+                "predicate": "A AND B OR C",
+                "interpretation": "(A AND B) OR C",
+                "example": "dept=1 AND salary>50k OR dept=2"
+              },
+              {
+                "predicate": "A AND (B OR C)",
+                "interpretation": "A AND (B OR C)",
+                "example": "dept=1 AND (salary>50k OR bonus>1k)"
+              },
+              {
+                "predicate": "NOT (A OR B)",
+                "interpretation": "NOT A AND NOT B",
+                "example": "NOT (dept=3 OR salary<30k)"
+              },
+              {
+                "predicate": "NOT A OR NOT B",
+                "interpretation": "(NOT A) OR (NOT B)",
+                "example": "dept<>3 OR salary>=30k"
+              }
             ],
             "after": [],
-            "highlight": ["interpretation"]
+            "highlight": [
+              "interpretation"
+            ]
           }
         },
         {
@@ -173,8 +191,8 @@
               "Node Type": "Seq Scan",
               "Relation Name": "employees",
               "Filter": "(NOT (SubPlan 1))",
-              "Startup Cost": 0.00,
-              "Total Cost": 1250.00,
+              "Startup Cost": 0,
+              "Total Cost": 1250,
               "Plan Rows": 50,
               "Plan Width": 72,
               "Subplans": [
@@ -182,8 +200,8 @@
                   "Node Type": "Seq Scan",
                   "Relation Name": "departments",
                   "Filter": "(location = 'NYC')",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 1.20,
+                  "Startup Cost": 0,
+                  "Total Cost": 1.2,
                   "Plan Rows": 1,
                   "Plan Width": 4
                 }
@@ -282,72 +300,178 @@
               "tier": 2,
               "title": "High Salary in Dept 1 OR Mid Salary in Dept 2",
               "platform": "drill",
-              "patterns": ["compound-predicate"],
+              "patterns": [
+                "compound-predicate"
+              ],
               "statement": "Employees with (salary > 100000 AND dept_id = 1) OR (salary > 70000 AND dept_id = 2).",
-              "hints": ["Parenthesize each AND group"]
+              "hints": [
+                "Parenthesize each AND group"
+              ]
             },
             {
               "id": "F202",
               "tier": 2,
               "title": "Not in NYC Departments (Safe)",
               "platform": "drill",
-              "patterns": ["not-exists"],
+              "patterns": [
+                "not-exists"
+              ],
               "statement": "Employees NOT in departments located in 'NYC'. Use NOT EXISTS.",
-              "hints": ["NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')"]
+              "hints": [
+                "NOT EXISTS (SELECT 1 FROM departments d WHERE d.id = e.dept_id AND d.location = 'NYC')"
+              ]
             },
             {
               "id": "F203",
               "tier": 2,
               "title": "Salary Band via CASE",
               "platform": "drill",
-              "patterns": ["case-expression"],
+              "patterns": [
+                "case-expression"
+              ],
               "statement": "Add column 'band': salary>=100k='high', >=70k='mid', else 'standard'.",
-              "hints": ["CASE WHEN salary >= 100000 THEN 'high' ..."]
+              "hints": [
+                "CASE WHEN salary >= 100000 THEN 'high' ..."
+              ]
             },
             {
               "id": "F204",
               "tier": 2,
               "title": "Custom Sort: Active First, Then Salary DESC",
               "platform": "drill",
-              "patterns": ["case-order-by"],
+              "patterns": [
+                "case-order-by"
+              ],
               "statement": "Order by status (active first, pending second, inactive last), then salary DESC.",
-              "hints": ["CASE status WHEN 'active' THEN 1 ..."]
+              "hints": [
+                "CASE status WHEN 'active' THEN 1 ..."
+              ]
             },
             {
               "id": "F205",
               "tier": 2,
               "title": "Conditional Count: Active/Pending per Dept",
               "platform": "drill",
-              "patterns": ["conditional-aggregation"],
+              "patterns": [
+                "conditional-aggregation"
+              ],
               "statement": "Per department: count of active and pending employees.",
-              "hints": ["SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)"]
+              "hints": [
+                "SUM(CASE WHEN status='active' THEN 1 ELSE 0 END)"
+              ]
             },
             {
               "id": "F206",
               "tier": 2,
               "title": "NULL-Safe NOT IN Subquery",
               "platform": "drill",
-              "patterns": ["not-in-null-trap"],
+              "patterns": [
+                "not-in-null-trap"
+              ],
               "statement": "Departments without employees. Show NOT IN fails with NULL; fix with NOT EXISTS.",
-              "hints": ["Subquery with NULL breaks NOT IN; use NOT EXISTS"]
+              "hints": [
+                "Subquery with NULL breaks NOT IN; use NOT EXISTS"
+              ]
             },
             {
               "id": "F207",
               "tier": 2,
               "title": "COALESCE Chain for Display Name",
               "platform": "drill",
-              "patterns": ["coalesce"],
+              "patterns": [
+                "coalesce"
+              ],
               "statement": "Display name: prefer nickname, then first_name, then 'Anonymous'.",
-              "hints": ["COALESCE(nickname, first_name, 'Anonymous')"]
+              "hints": [
+                "COALESCE(nickname, first_name, 'Anonymous')"
+              ]
             },
             {
               "id": "F208",
               "tier": 2,
               "title": "Normalize Status: Empty String → 'unknown'",
               "platform": "drill",
-              "patterns": ["nullif-coalesce"],
+              "patterns": [
+                "nullif-coalesce"
+              ],
               "statement": "Replace empty status with 'unknown', NULL with 'unknown'.",
-              "hints": ["COALESCE(NULLIF(TRIM(status), ''), 'unknown')"]
+              "hints": [
+                "COALESCE(NULLIF(TRIM(status), ''), 'unknown')"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "4 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "F2-HR022",
+              "tier": 2,
+              "title": "The PADS",
+              "platform": "hackerrank",
+              "ref": "022",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Select",
+              "patterns": [
+                "string-functions",
+                "case-expression",
+                "union-all"
+              ]
+            },
+            {
+              "id": "F2-LC1517",
+              "tier": 2,
+              "title": "Find Users With Valid E-Mails",
+              "platform": "leetcode",
+              "ref": "1517",
+              "url": "https://leetcode.com/problems/find-users-with-valid-e-mails/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced String Functions / Regex / Clause",
+              "difficulty": "easy",
+              "patterns": [
+                "regexp"
+              ]
+            },
+            {
+              "id": "F2-LC1527",
+              "tier": 2,
+              "title": "Patients With a Condition",
+              "platform": "leetcode",
+              "ref": "1527",
+              "url": "https://leetcode.com/problems/patients-with-a-condition/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced String Functions / Regex / Clause",
+              "difficulty": "easy",
+              "patterns": [
+                "like-prefix",
+                "token-match"
+              ]
+            },
+            {
+              "id": "F2-LC1907",
+              "tier": 2,
+              "title": "Count Salary Categories",
+              "platform": "leetcode",
+              "ref": "1907",
+              "url": "https://leetcode.com/problems/count-salary-categories/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                "bucketing",
+                "zero-row-union"
+              ]
             }
           ]
         }
@@ -363,11 +487,29 @@
     "FILTER (PostgreSQL) = portable CASE SUM for conditional aggregation"
   ],
   "glossary": [
-    { "term": "short-circuit evaluation", "def": "AND stops at first FALSE; OR stops at first TRUE. ORDER BY CASE leverages this." },
-    { "term": "anti-join", "def": "NOT EXISTS pattern — returns rows with no match in subquery." },
-    { "term": "semi-join", "def": "EXISTS / IN pattern — returns rows with at least one match; stops at first." },
-    { "term": "three-valued logic", "def": "TRUE, FALSE, UNKNOWN. WHERE keeps TRUE only; CHECK constraint rejects FALSE only." },
-    { "term": "conditional aggregation", "def": "CASE inside SUM/COUNT to pivot rows into columns per group." },
-    { "term": "FILTER clause", "def": "PostgreSQL: aggregate FILTER (WHERE cond) — cleaner than CASE, index-friendly." }
+    {
+      "term": "short-circuit evaluation",
+      "def": "AND stops at first FALSE; OR stops at first TRUE. ORDER BY CASE leverages this."
+    },
+    {
+      "term": "anti-join",
+      "def": "NOT EXISTS pattern — returns rows with no match in subquery."
+    },
+    {
+      "term": "semi-join",
+      "def": "EXISTS / IN pattern — returns rows with at least one match; stops at first."
+    },
+    {
+      "term": "three-valued logic",
+      "def": "TRUE, FALSE, UNKNOWN. WHERE keeps TRUE only; CHECK constraint rejects FALSE only."
+    },
+    {
+      "term": "conditional aggregation",
+      "def": "CASE inside SUM/COUNT to pivot rows into columns per group."
+    },
+    {
+      "term": "FILTER clause",
+      "def": "PostgreSQL: aggregate FILTER (WHERE cond) — cleaner than CASE, index-friendly."
+    }
   ]
 }

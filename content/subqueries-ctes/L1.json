@@ -72,13 +72,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"type": "Scalar Subquery", "returns": "1 row, 1 col", "use": "WHERE col = (SELECT ...)", "example": "salary > (SELECT AVG(salary))"},
-              {"type": "Row Subquery", "returns": "1 row, N cols", "use": "WHERE (a,b) = (SELECT ...)", "example": "(id, name) = (SELECT id, name ...)"},
-              {"type": "Table Subquery", "returns": "M rows, N cols", "use": "IN, EXISTS, FROM", "example": "WHERE id IN (SELECT id ...)"},
-              {"type": "CTE", "returns": "Named result set", "use": "WITH cte AS (...) SELECT ...", "example": "WITH top AS (...) SELECT *"}
+              {
+                "type": "Scalar Subquery",
+                "returns": "1 row, 1 col",
+                "use": "WHERE col = (SELECT ...)",
+                "example": "salary > (SELECT AVG(salary))"
+              },
+              {
+                "type": "Row Subquery",
+                "returns": "1 row, N cols",
+                "use": "WHERE (a,b) = (SELECT ...)",
+                "example": "(id, name) = (SELECT id, name ...)"
+              },
+              {
+                "type": "Table Subquery",
+                "returns": "M rows, N cols",
+                "use": "IN, EXISTS, FROM",
+                "example": "WHERE id IN (SELECT id ...)"
+              },
+              {
+                "type": "CTE",
+                "returns": "Named result set",
+                "use": "WITH cte AS (...) SELECT ...",
+                "example": "WITH top AS (...) SELECT *"
+              }
             ],
             "after": [],
-            "highlight": ["returns"]
+            "highlight": [
+              "returns"
+            ]
           }
         },
         {
@@ -245,38 +267,38 @@
             "Plan": {
               "Node Type": "CTE Scan",
               "CTE Name": "org_chart",
-              "Startup Cost": 100.00,
-              "Total Cost": 5000.00,
+              "Startup Cost": 100,
+              "Total Cost": 5000,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Recursive Union",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 5000.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 5000,
                   "Plan Rows": 8500,
                   "Plan Width": 48,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 100.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 100,
                       "Plan Rows": 100,
                       "Plan Width": 24
                     },
                     {
                       "Node Type": "WorkTable Scan",
                       "Relation Name": "org_chart",
-                      "Startup Cost": 100.00,
-                      "Total Cost": 4900.00,
+                      "Startup Cost": 100,
+                      "Total Cost": 4900,
                       "Plan Rows": 8400,
                       "Plan Width": 48,
                       "Plans": [
                         {
                           "Node Type": "Hash Join",
-                          "Startup Cost": 100.00,
-                          "Total Cost": 4900.00,
+                          "Startup Cost": 100,
+                          "Total Cost": 4900,
                           "Plan Rows": 8400,
                           "Plan Width": 48,
                           "Hash Cond": "(employees.manager_id = org_chart.id)",
@@ -284,16 +306,16 @@
                             {
                               "Node Type": "Seq Scan",
                               "Relation Name": "employees",
-                              "Startup Cost": 0.00,
-                              "Total Cost": 100.00,
+                              "Startup Cost": 0,
+                              "Total Cost": 100,
                               "Plan Rows": 1000,
                               "Plan Width": 24
                             },
                             {
                               "Node Type": "WorkTable Scan",
                               "Relation Name": "org_chart",
-                              "Startup Cost": 0.00,
-                              "Total Cost": 0.00,
+                              "Startup Cost": 0,
+                              "Total Cost": 0,
                               "Plan Rows": 100,
                               "Plan Width": 24
                             }
@@ -348,54 +370,108 @@
               "tier": 1,
               "title": "Employees Above Average Salary",
               "platform": "drill",
-              "patterns": ["scalar-subquery"],
+              "patterns": [
+                "scalar-subquery"
+              ],
               "statement": "Find employees earning more than the company average salary.",
-              "hints": ["WHERE salary > (SELECT AVG(salary) FROM employees)"]
+              "hints": [
+                "WHERE salary > (SELECT AVG(salary) FROM employees)"
+              ]
             },
             {
               "id": "S102",
               "tier": 1,
               "title": "Departments with Employees",
               "platform": "drill",
-              "patterns": ["exists"],
+              "patterns": [
+                "exists"
+              ],
               "statement": "Find departments that have at least one employee.",
-              "hints": ["EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)"]
+              "hints": [
+                "EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)"
+              ]
             },
             {
               "id": "S103",
               "tier": 1,
               "title": "Employees Without Orders",
               "platform": "drill",
-              "patterns": ["not-exists"],
+              "patterns": [
+                "not-exists"
+              ],
               "statement": "Find employees who have never placed an order.",
-              "hints": ["NOT EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id)"]
+              "hints": [
+                "NOT EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id)"
+              ]
             },
             {
               "id": "S104",
               "tier": 1,
               "title": "Top Paid per Department (Scalar)",
               "platform": "drill",
-              "patterns": ["scalar-subquery"],
+              "patterns": [
+                "scalar-subquery"
+              ],
               "statement": "Show employees who earn the maximum salary in their department.",
-              "hints": ["WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)"]
+              "hints": [
+                "WHERE salary = (SELECT MAX(salary) FROM employees e2 WHERE e2.dept_id = e1.dept_id)"
+              ]
             },
             {
               "id": "S105",
               "tier": 1,
               "title": "Simple CTE for Department Stats",
               "platform": "drill",
-              "patterns": ["cte"],
+              "patterns": [
+                "cte"
+              ],
               "statement": "Use CTE to compute avg salary per department, then show departments above 75000.",
-              "hints": ["WITH dept_avg AS (...) SELECT * FROM dept_avg WHERE avg_sal > 75000"]
+              "hints": [
+                "WITH dept_avg AS (...) SELECT * FROM dept_avg WHERE avg_sal > 75000"
+              ]
             },
             {
               "id": "S106",
               "tier": 1,
               "title": "Employees in Active Departments",
               "platform": "drill",
-              "patterns": ["in-subquery"],
+              "patterns": [
+                "in-subquery"
+              ],
               "statement": "Employees whose department is active (status='active' in departments).",
-              "hints": ["WHERE dept_id IN (SELECT id FROM departments WHERE status = 'active')"]
+              "hints": [
+                "WHERE dept_id IN (SELECT id FROM departments WHERE status = 'active')"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S1-LC1978",
+              "tier": 1,
+              "title": "Employees Whose Manager Left the Company",
+              "platform": "leetcode",
+              "ref": "1978",
+              "url": "https://leetcode.com/problems/employees-whose-manager-left-the-company/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "easy",
+              "patterns": [
+                "not-in-subquery",
+                "null-trap"
+              ]
             }
           ]
         }
@@ -411,11 +487,29 @@
     "Recursive CTE: anchor + UNION ALL + recursive part + termination"
   ],
   "glossary": [
-    { "term": "scalar subquery", "def": "Subquery returning exactly one row and one column (single value)." },
-    { "term": "correlated subquery", "def": "Subquery that references columns from the outer query; executes once per outer row." },
-    { "term": "CTE", "def": "Common Table Expression — named temporary result set defined with WITH clause." },
-    { "term": "recursive CTE", "def": "CTE with RECURSIVE keyword that references itself to traverse hierarchies." },
-    { "term": "semi-join", "def": "EXISTS/IN pattern — returns left rows with at least one match; stops at first match." },
-    { "term": "anti-join", "def": "NOT EXISTS pattern — returns left rows with NO match in right." }
+    {
+      "term": "scalar subquery",
+      "def": "Subquery returning exactly one row and one column (single value)."
+    },
+    {
+      "term": "correlated subquery",
+      "def": "Subquery that references columns from the outer query; executes once per outer row."
+    },
+    {
+      "term": "CTE",
+      "def": "Common Table Expression — named temporary result set defined with WITH clause."
+    },
+    {
+      "term": "recursive CTE",
+      "def": "CTE with RECURSIVE keyword that references itself to traverse hierarchies."
+    },
+    {
+      "term": "semi-join",
+      "def": "EXISTS/IN pattern — returns left rows with at least one match; stops at first match."
+    },
+    {
+      "term": "anti-join",
+      "def": "NOT EXISTS pattern — returns left rows with NO match in right."
+    }
   ]
 }

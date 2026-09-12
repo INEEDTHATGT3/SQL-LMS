@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 01</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">filter, sort, limit — the WHERE-ORDER-LIMIT triad</span></div>
   <h1>SQL Fundamentals</h1>
-  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="promise">Joins, grouping, windows. The standard pattern vocabulary an SQL screen actually tests.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="basics_L1" href="basics_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="basics_L2" href="basics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="basics_L3" href="basics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="basics_L4" href="basics_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Advanced Filtering — IN, NOT IN, LIKE, BETWEEN</a><a href="#sec-1">02 · Compound Conditions — AND, OR, NOT, Precedence</a><a href="#sec-2">03 · Query Plans — Reading EXPLAIN</a><a href="#sec-3">04 · Dialect Differences — String Concatenation</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Advanced Filtering — IN, NOT IN, LIKE, BETWEEN</a><a href="#sec-1">02 · Compound Conditions — AND, OR, NOT, Precedence</a><a href="#sec-2">03 · Query Plans — Reading EXPLAIN</a><a href="#sec-3">04 · Dialect Differences — String Concatenation</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -196,7 +196,7 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       List all employees in departments 1, 3, or 5.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8p6" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8p6">Use IN (1, 3, 5)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkk6" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkk6">Use IN (1, 3, 5)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -206,7 +206,7 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       Find employees whose name starts with A or B.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8p7" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8p7">Use LIKE 'A%' OR LIKE 'B%' or SIMILAR TO</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkk7" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkk7">Use LIKE 'A%' OR LIKE 'B%' or SIMILAR TO</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -216,7 +216,7 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       Employees in department 2 with salary between 60000 and 80000.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8p8" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8p8">WHERE dept_id = 2 AND salary BETWEEN 60000 AND 80000</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkk8" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkk8">WHERE dept_id = 2 AND salary BETWEEN 60000 AND 80000</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -226,7 +226,7 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       Employees hired after January 1, 2023.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8p9" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8p9">WHERE hire_date > '2023-01-01'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkk9" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkk9">WHERE hire_date > '2023-01-01'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -236,7 +236,7 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       Write the query pattern to get top 3 salaries. (Full solution at L3 with window functions)
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8pa" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8pa">ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkka" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkka">ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -246,7 +246,7 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       Get the second page of employees ordered by hire_date, 20 per page.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8pb" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8pb">OFFSET 20 LIMIT 20</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkkb" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkkb">OFFSET 20 LIMIT 20</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -256,7 +256,7 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       All employees NOT in departments 4 or 6.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8pc" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8pc">NOT IN (4, 6)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkkc" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkkc">NOT IN (4, 6)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -266,12 +266,27 @@ SELECT * FROM employees WHERE NOT (dept_id = <span class="num">3</span> OR salar
     </div>
     <div class="prob-body">
       Employees with company email (@company.com).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8pd" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8pd">LIKE '%@company.com'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkkd" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkkd">LIKE '%@company.com'</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/fix-names-in-a-table/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Fix Names in a Table</a></div>
+        <div class="prob-meta">leetcode · #1667 · easy · leetcode-sql-50 · string-functions + concat-upper-lower</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B2-LC1667"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>IN / NOT IN — clean list filtering; subquery preview</li><li>LIKE patterns: % = any chars, _ = one char; ILIKE for case-insensitive</li><li>AND before OR — use parentheses: (A AND B) OR C</li><li>Seq Scan = full table read; Index Scan = targeted lookup (faster)</li><li>EXPLAIN shows cost, rows, scan type — learn to spot Seq Scan</li><li>Dialect diff: || (ANSI/PG) vs CONCAT() (MySQL)</li></ul></div>
     <h3>Glossary</h3>

@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 01</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">query plans, indexes, dialect nuances — optimization begins</span></div>
   <h1>SQL Fundamentals</h1>
-  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="promise">CTEs, recursion, query optimization, dialect differences. You justify the plan, not just the output.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="basics_L1" href="basics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="basics_L2" href="basics_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="basics_L3" href="basics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="basics_L4" href="basics_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Query Plans Deep Dive — EXPLAIN ANALYZE</a><a href="#sec-1">02 · Index Types & When to Use</a><a href="#sec-2">03 · Index Pitfalls — When Indexes Don't Help</a><a href="#sec-3">04 · Dialect Differences — Date/Time & Limit</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Query Plans Deep Dive — EXPLAIN ANALYZE</a><a href="#sec-1">02 · Index Types & When to Use</a><a href="#sec-2">03 · Index Pitfalls — When Indexes Don't Help</a><a href="#sec-3">04 · Dialect Differences — Date/Time & Limit</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -263,7 +263,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Create a B-tree index on employees.salary to speed up range queries.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8re" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8re">CREATE INDEX idx_emp_salary ON employees (salary);</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkme" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkme">CREATE INDEX idx_emp_salary ON employees (salary);</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -273,7 +273,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Create composite index for queries filtering by dept_id then ordering by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rf" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rf">Column order matters: equality first (dept_id), then range (salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkmf" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkmf">Column order matters: equality first (dept_id), then range (salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -283,7 +283,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       90% of queries filter status='active'. Create partial index on salary for active employees only.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rg" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rg">WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkmg" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkmg">WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -293,7 +293,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Query: SELECT name, salary FROM employees WHERE salary > 50000. Create covering index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rh" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rh">INCLUDE (name) in PostgreSQL; (salary, name) in MySQL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkmh" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkmh">INCLUDE (name) in PostgreSQL; (salary, name) in MySQL</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -303,7 +303,7 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Run EXPLAIN ANALYZE on: SELECT * FROM employees WHERE dept_id = 3 AND salary > 60000. Note: Seq Scan vs Index Scan, actual rows.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8ri" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8ri">EXPLAIN (ANALYZE, BUFFERS) ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkmi" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkmi">EXPLAIN (ANALYZE, BUFFERS) ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -313,12 +313,27 @@ SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>)
     </div>
     <div class="prob-body">
       Query: SELECT * FROM employees WHERE LOWER(email) = 'alice@company.com'. Create index to support this.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rj">Functional index on LOWER(email)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkmj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkmj">Functional index on LOWER(email)</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/delete-duplicate-emails/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Delete Duplicate Emails</a></div>
+        <div class="prob-meta">leetcode · #196 · easy · leetcode-sql-50 · dml-delete + self-join-dedupe</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B3-LC196"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>EXPLAIN vs EXPLAIN ANALYZE — estimated vs actual rows reveals stats issues</li><li>B-tree = default, supports ranges; Hash = equality only; GIN = JSONB/arrays; BRIN = huge correlated tables</li><li>Partial index (WHERE on index) for skewed query patterns</li><li>Covering index (INCLUDE) avoids heap lookups</li><li>Functions on columns kill indexes — use functional indexes</li><li>Leading wildcard (%text) kills B-tree — pg_trgm or fulltext for that</li></ul></div>
     <h3>Glossary</h3>

@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 03</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">tables connecting — the Venn diagram of data</span></div>
   <h1>Joins & Set Operations</h1>
-  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="promise">Core syntax, mental models. Tables as grids. Every problem is solvable with one SELECT.</div>
   <div class="level-strip"><a class="level-pill current" data-lesson="joins_L1" href="joins_L1.html">BEGINNER</a><a class="level-pill " data-lesson="joins_L2" href="joins_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="joins_L3" href="joins_L3.html">ADVANCED</a><a class="level-pill " data-lesson="joins_L4" href="joins_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Mental Model — The Venn Diagram</a><a href="#sec-1">02 · Inner & Left Joins — The Core Two</a><a href="#sec-2">03 · Right, Full & Self Joins</a><a href="#sec-3">04 · Set Operations — UNION, INTERSECT, EXCEPT</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — The Venn Diagram</a><a href="#sec-1">02 · Inner & Left Joins — The Core Two</a><a href="#sec-2">03 · Right, Full & Self Joins</a><a href="#sec-3">04 · Set Operations — UNION, INTERSECT, EXCEPT</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -194,7 +194,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       List employee name and their department name.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931o">INNER JOIN employees e ON e.dept_id = d.id</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkx1o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkx1o">INNER JOIN employees e ON e.dept_id = d.id</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -204,7 +204,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       List all employees with department name. Show NULL for employees without department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931p">LEFT JOIN departments</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkx1p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkx1p">LEFT JOIN departments</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -214,7 +214,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       Find departments that have no employees.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931q">LEFT JOIN employees ... WHERE e.id IS NULL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkx1q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkx1q">LEFT JOIN employees ... WHERE e.id IS NULL</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -224,7 +224,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       List each employee with their manager's name.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931r">Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkx1r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkx1r">Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -234,7 +234,7 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       Combine employee and contractor names, remove duplicates.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931s">UNION (not UNION ALL)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkx1s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkx1s">UNION (not UNION ALL)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -244,12 +244,87 @@ SELECT dept_id FROM employees;
     </div>
     <div class="prob-body">
       Same as J103 but using RIGHT JOIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd931t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd931t">RIGHT JOIN employees ON ... WHERE e.id IS NULL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkx1t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkx1t">RIGHT JOIN employees ON ... WHERE e.id IS NULL</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">7 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Asian Population</a></div>
+        <div class="prob-meta">hackerrank · #043 · hackerrank-sql-58 · inner-join + sum</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-HR043"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">African Cities</a></div>
+        <div class="prob-meta">hackerrank · #044 · hackerrank-sql-58 · inner-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-HR044"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Average Population of Each Continent</a></div>
+        <div class="prob-meta">hackerrank · #045 · hackerrank-sql-58 · inner-join + group-avg</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-HR045"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/product-sales-analysis-i/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Product Sales Analysis I</a></div>
+        <div class="prob-meta">leetcode · #1068 · easy · leetcode-sql-50 · inner-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1068"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/replace-employee-id-with-the-unique-identifier/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Replace Employee ID With The Unique Identifier</a></div>
+        <div class="prob-meta">leetcode · #1378 · easy · leetcode-sql-50 · left-join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1378"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/customer-who-visited-but-did-not-make-any-transactions/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Customer Who Visited but Did Not Make Any Transactions</a></div>
+        <div class="prob-meta">leetcode · #1581 · easy · leetcode-sql-50 · anti-join + left-join-is-null</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC1581"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/employee-bonus/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Employee Bonus</a></div>
+        <div class="prob-meta">leetcode · #577 · easy · leetcode-sql-50 · left-join + null-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J1-LC577"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>INNER = intersection; LEFT = all left + match; RIGHT = all right + match; FULL = both</li><li>LEFT JOIN + WHERE right.id IS NULL = anti-join (left rows with no match)</li><li>JOIN condition in ON, not WHERE (especially for LEFT — WHERE filters after join)</li><li>Self join = table aliases + FK to same table (manager_id → id)</li><li>UNION = distinct (slow); UNION ALL = all rows (fast); use ALL when possible</li><li>INTERSECT = common; EXCEPT = in first not second</li></ul></div>
     <h3>Glossary</h3>

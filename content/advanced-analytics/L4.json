@@ -86,24 +86,26 @@
           "plan": {
             "Plan": {
               "Node Type": "WindowAgg",
-              "Startup Cost": 60.00,
-              "Total Cost": 550.00,
+              "Startup Cost": 60,
+              "Total Cost": 550,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 60.00,
-                  "Total Cost": 220.00,
+                  "Startup Cost": 60,
+                  "Total Cost": 220,
                   "Plan Rows": 8500,
                   "Plan Width": 40,
-                  "Sort Key": ["hire_date"],
+                  "Sort Key": [
+                    "hire_date"
+                  ],
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40
                     }
@@ -260,13 +262,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"functions": "Same PARTITION+ORDER", "sorts": 1, "windowagg_passes": "N (one per function)", "note": "Shared sort"},
-              {"functions": "Different PARTITION", "sorts": "N", "windowagg_passes": "N", "note": "Separate sorts"},
-              {"functions": "Same PARTITION, different ORDER", "sorts": "N", "windowagg_passes": "N", "note": "Separate sorts"},
-              {"functions": "Same PARTITION+ORDER, diff frames", "sorts": 1, "windowagg_passes": "N", "note": "Frames evaluated per row"}
+              {
+                "functions": "Same PARTITION+ORDER",
+                "sorts": 1,
+                "windowagg_passes": "N (one per function)",
+                "note": "Shared sort"
+              },
+              {
+                "functions": "Different PARTITION",
+                "sorts": "N",
+                "windowagg_passes": "N",
+                "note": "Separate sorts"
+              },
+              {
+                "functions": "Same PARTITION, different ORDER",
+                "sorts": "N",
+                "windowagg_passes": "N",
+                "note": "Separate sorts"
+              },
+              {
+                "functions": "Same PARTITION+ORDER, diff frames",
+                "sorts": 1,
+                "windowagg_passes": "N",
+                "note": "Frames evaluated per row"
+              }
             ],
             "after": [],
-            "highlight": ["sorts", "windowagg_passes"]
+            "highlight": [
+              "sorts",
+              "windowagg_passes"
+            ]
           }
         },
         {
@@ -275,24 +300,27 @@
           "plan": {
             "Plan": {
               "Node Type": "WindowAgg",
-              "Startup Cost": 50.00,
-              "Total Cost": 500.00,
+              "Startup Cost": 50,
+              "Total Cost": 500,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 200.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 200,
                   "Plan Rows": 8500,
                   "Plan Width": 40,
-                  "Sort Key": ["dept", "salary"],
+                  "Sort Key": [
+                    "dept",
+                    "salary"
+                  ],
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40
                     }
@@ -404,8 +432,8 @@
               "Node Type": "Update",
               "Relation Name": "employees",
               "Alias": "employees",
-              "Startup Cost": 0.00,
-              "Total Cost": 12.00,
+              "Startup Cost": 0,
+              "Total Cost": 12,
               "Plan Rows": 0,
               "Plan Width": 0
             }
@@ -452,45 +480,123 @@
               "tier": 4,
               "title": "Custom Window Aggregate (C)",
               "platform": "drill",
-              "patterns": ["custom-aggregate"],
+              "patterns": [
+                "custom-aggregate"
+              ],
               "statement": "Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.",
-              "hints": ["msfunc adds, minvfunc removes, state = running sum + count"]
+              "hints": [
+                "msfunc adds, minvfunc removes, state = running sum + count"
+              ]
             },
             {
               "id": "X402",
               "tier": 4,
               "title": "Hypothetical Rank for Salary Bands",
               "platform": "drill",
-              "patterns": ["hypothetical-rank"],
+              "patterns": [
+                "hypothetical-rank"
+              ],
               "statement": "Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.",
-              "hints": ["RANK(150000) WITHIN GROUP (ORDER BY salary)"]
+              "hints": [
+                "RANK(150000) WITHIN GROUP (ORDER BY salary)"
+              ]
             },
             {
               "id": "X403",
               "tier": 4,
               "title": "IGNORE NULLS for Sparse Data",
               "platform": "drill",
-              "patterns": ["ignore-nulls"],
+              "patterns": [
+                "ignore-nulls"
+              ],
               "statement": "Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.",
-              "hints": ["LAG(reading) IGNORE NULLS OVER (ORDER BY ts)"]
+              "hints": [
+                "LAG(reading) IGNORE NULLS OVER (ORDER BY ts)"
+              ]
             },
             {
               "id": "X404",
               "tier": 4,
               "title": "Expression Index for Window ORDER BY",
               "platform": "drill",
-              "patterns": ["expression-index"],
+              "patterns": [
+                "expression-index"
+              ],
               "statement": "Window function uses ORDER BY salary + bonus. Create expression index.",
-              "hints": ["CREATE INDEX ON employees ((salary + bonus) DESC)"]
+              "hints": [
+                "CREATE INDEX ON employees ((salary + bonus) DESC)"
+              ]
             },
             {
               "id": "X405",
               "tier": 4,
               "title": "Window Function Pushdown (PG 17+)",
               "platform": "drill",
-              "patterns": ["optimization"],
+              "patterns": [
+                "optimization"
+              ],
               "statement": "Explain how PostgreSQL 17+ pushes predicates below window functions.",
-              "hints": ["Predicate pushdown through WindowAgg when safe"]
+              "hints": [
+                "Predicate pushdown through WindowAgg when safe"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "3 sourced problems from HackerRank SQL. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "X4-HR056",
+              "tier": 4,
+              "title": "Draw The Triangle 1",
+              "platform": "hackerrank",
+              "ref": "056",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Alternative Queries",
+              "patterns": [
+                "recursive-cte",
+                "number-generation"
+              ]
+            },
+            {
+              "id": "X4-HR057",
+              "tier": 4,
+              "title": "Draw The Triangle 2",
+              "platform": "hackerrank",
+              "ref": "057",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Alternative Queries",
+              "patterns": [
+                "recursive-cte",
+                "number-generation"
+              ]
+            },
+            {
+              "id": "X4-HR058",
+              "tier": 4,
+              "title": "Print Prime Numbers",
+              "platform": "hackerrank",
+              "ref": "058",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Alternative Queries",
+              "patterns": [
+                "recursive-cte",
+                "set-based-sieve",
+                "string-agg"
+              ]
             }
           ]
         }
@@ -506,11 +612,29 @@
     "QUALIFY (MySQL/Snowflake) vs CTE (PostgreSQL) for filtering window results"
   ],
   "glossary": [
-    { "term": "custom window aggregate", "def": "CREATE AGGREGATE ... WINDOW with msfunc/minvfunc for O(1) sliding window." },
-    { "term": "hypothetical set function", "def": "RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP — rank of hypothetical value in distribution." },
-    { "term": "IGNORE NULLS", "def": "Skip NULLs in window frame; find previous/next non-NULL." },
-    { "term": "WindowAgg passes", "def": "Each window function with same PARTITION+ORDER gets separate pass over sorted data." },
-    { "term": "expression index", "def": "Index on expression (e.g., salary+bonus) to support window ORDER BY on expression." },
-    { "term": "QUALIFY", "def": "MySQL/Snowflake clause to filter window function results without CTE." }
+    {
+      "term": "custom window aggregate",
+      "def": "CREATE AGGREGATE ... WINDOW with msfunc/minvfunc for O(1) sliding window."
+    },
+    {
+      "term": "hypothetical set function",
+      "def": "RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP — rank of hypothetical value in distribution."
+    },
+    {
+      "term": "IGNORE NULLS",
+      "def": "Skip NULLs in window frame; find previous/next non-NULL."
+    },
+    {
+      "term": "WindowAgg passes",
+      "def": "Each window function with same PARTITION+ORDER gets separate pass over sorted data."
+    },
+    {
+      "term": "expression index",
+      "def": "Index on expression (e.g., salary+bonus) to support window ORDER BY on expression."
+    },
+    {
+      "term": "QUALIFY",
+      "def": "MySQL/Snowflake clause to filter window function results without CTE."
+    }
   ]
 }

@@ -75,22 +75,47 @@
               {
                 "name": "employees",
                 "columns": [
-                  { "name": "id", "type": "INTEGER", "pk": true },
-                  { "name": "name", "type": "VARCHAR(100)" },
-                  { "name": "dept_id", "type": "INTEGER" }
+                  {
+                    "name": "id",
+                    "type": "INTEGER",
+                    "pk": true
+                  },
+                  {
+                    "name": "name",
+                    "type": "VARCHAR(100)"
+                  },
+                  {
+                    "name": "dept_id",
+                    "type": "INTEGER"
+                  }
                 ]
               },
               {
                 "name": "departments",
                 "columns": [
-                  { "name": "id", "type": "INTEGER", "pk": true },
-                  { "name": "name", "type": "VARCHAR(100)" },
-                  { "name": "location", "type": "VARCHAR(100)" }
+                  {
+                    "name": "id",
+                    "type": "INTEGER",
+                    "pk": true
+                  },
+                  {
+                    "name": "name",
+                    "type": "VARCHAR(100)"
+                  },
+                  {
+                    "name": "location",
+                    "type": "VARCHAR(100)"
+                  }
                 ]
               }
             ],
             "relationships": [
-              { "from": "employees", "to": "departments", "label": "dept_id", "cardinality": "}o--||" }
+              {
+                "from": "employees",
+                "to": "departments",
+                "label": "dept_id",
+                "cardinality": "}o--||"
+              }
             ]
           }
         },
@@ -143,13 +168,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"join_type": "INNER", "left_rows": "only matched", "right_rows": "only matched", "nulls": "never"},
-              {"join_type": "LEFT", "left_rows": "all", "right_rows": "matched + NULLs", "nulls": "right side"},
-              {"join_type": "RIGHT", "left_rows": "matched + NULLs", "right_rows": "all", "nulls": "left side"},
-              {"join_type": "FULL", "left_rows": "all", "right_rows": "all", "nulls": "both sides"}
+              {
+                "join_type": "INNER",
+                "left_rows": "only matched",
+                "right_rows": "only matched",
+                "nulls": "never"
+              },
+              {
+                "join_type": "LEFT",
+                "left_rows": "all",
+                "right_rows": "matched + NULLs",
+                "nulls": "right side"
+              },
+              {
+                "join_type": "RIGHT",
+                "left_rows": "matched + NULLs",
+                "right_rows": "all",
+                "nulls": "left side"
+              },
+              {
+                "join_type": "FULL",
+                "left_rows": "all",
+                "right_rows": "all",
+                "nulls": "both sides"
+              }
             ],
             "after": [],
-            "highlight": ["nulls"]
+            "highlight": [
+              "nulls"
+            ]
           }
         },
         {
@@ -185,8 +232,8 @@
           "plan": {
             "Plan": {
               "Node Type": "Hash Right Join",
-              "Startup Cost": 10.00,
-              "Total Cost": 45.00,
+              "Startup Cost": 10,
+              "Total Cost": 45,
               "Plan Rows": 50,
               "Plan Width": 120,
               "Hash Cond": "(e.dept_id = d.id)",
@@ -195,14 +242,14 @@
                 {
                   "Node Type": "Seq Scan",
                   "Relation Name": "departments",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 1.20,
+                  "Startup Cost": 0,
+                  "Total Cost": 1.2,
                   "Plan Rows": 10
                 },
                 {
                   "Node Type": "Hash",
-                  "Startup Cost": 8.50,
-                  "Total Cost": 8.50,
+                  "Startup Cost": 8.5,
+                  "Total Cost": 8.5,
                   "Plan Rows": 850
                 }
               ]
@@ -339,54 +386,192 @@
               "tier": 1,
               "title": "Employee + Department Name",
               "platform": "drill",
-              "patterns": ["inner-join"],
+              "patterns": [
+                "inner-join"
+              ],
               "statement": "List employee name and their department name.",
-              "hints": ["INNER JOIN employees e ON e.dept_id = d.id"]
+              "hints": [
+                "INNER JOIN employees e ON e.dept_id = d.id"
+              ]
             },
             {
               "id": "J102",
               "tier": 1,
               "title": "All Employees + Department (Include No Dept)",
               "platform": "drill",
-              "patterns": ["left-join"],
+              "patterns": [
+                "left-join"
+              ],
               "statement": "List all employees with department name. Show NULL for employees without department.",
-              "hints": ["LEFT JOIN departments"]
+              "hints": [
+                "LEFT JOIN departments"
+              ]
             },
             {
               "id": "J103",
               "tier": 1,
               "title": "Departments Without Employees",
               "platform": "drill",
-              "patterns": ["left-join-anti"],
+              "patterns": [
+                "left-join-anti"
+              ],
               "statement": "Find departments that have no employees.",
-              "hints": ["LEFT JOIN employees ... WHERE e.id IS NULL"]
+              "hints": [
+                "LEFT JOIN employees ... WHERE e.id IS NULL"
+              ]
             },
             {
               "id": "J104",
               "tier": 1,
               "title": "Employee + Manager Name",
               "platform": "drill",
-              "patterns": ["self-join"],
+              "patterns": [
+                "self-join"
+              ],
               "statement": "List each employee with their manager's name.",
-              "hints": ["Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id"]
+              "hints": [
+                "Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id"
+              ]
             },
             {
               "id": "J105",
               "tier": 1,
               "title": "All Names: Employees + Contractors",
               "platform": "drill",
-              "patterns": ["union"],
+              "patterns": [
+                "union"
+              ],
               "statement": "Combine employee and contractor names, remove duplicates.",
-              "hints": ["UNION (not UNION ALL)"]
+              "hints": [
+                "UNION (not UNION ALL)"
+              ]
             },
             {
               "id": "J106",
               "tier": 1,
               "title": "Departments With No Employees (RIGHT JOIN)",
               "platform": "drill",
-              "patterns": ["right-join"],
+              "patterns": [
+                "right-join"
+              ],
               "statement": "Same as J103 but using RIGHT JOIN.",
-              "hints": ["RIGHT JOIN employees ON ... WHERE e.id IS NULL"]
+              "hints": [
+                "RIGHT JOIN employees ON ... WHERE e.id IS NULL"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "7 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "J1-HR043",
+              "tier": 1,
+              "title": "Asian Population",
+              "platform": "hackerrank",
+              "ref": "043",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "inner-join",
+                "sum"
+              ]
+            },
+            {
+              "id": "J1-HR044",
+              "tier": 1,
+              "title": "African Cities",
+              "platform": "hackerrank",
+              "ref": "044",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "inner-join"
+              ]
+            },
+            {
+              "id": "J1-HR045",
+              "tier": 1,
+              "title": "Average Population of Each Continent",
+              "platform": "hackerrank",
+              "ref": "045",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "inner-join",
+                "group-avg"
+              ]
+            },
+            {
+              "id": "J1-LC1068",
+              "tier": 1,
+              "title": "Product Sales Analysis I",
+              "platform": "leetcode",
+              "ref": "1068",
+              "url": "https://leetcode.com/problems/product-sales-analysis-i/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "inner-join"
+              ]
+            },
+            {
+              "id": "J1-LC1378",
+              "tier": 1,
+              "title": "Replace Employee ID With The Unique Identifier",
+              "platform": "leetcode",
+              "ref": "1378",
+              "url": "https://leetcode.com/problems/replace-employee-id-with-the-unique-identifier/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "left-join"
+              ]
+            },
+            {
+              "id": "J1-LC1581",
+              "tier": 1,
+              "title": "Customer Who Visited but Did Not Make Any Transactions",
+              "platform": "leetcode",
+              "ref": "1581",
+              "url": "https://leetcode.com/problems/customer-who-visited-but-did-not-make-any-transactions/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "anti-join",
+                "left-join-is-null"
+              ]
+            },
+            {
+              "id": "J1-LC577",
+              "tier": 1,
+              "title": "Employee Bonus",
+              "platform": "leetcode",
+              "ref": "577",
+              "url": "https://leetcode.com/problems/employee-bonus/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "left-join",
+                "null-filter"
+              ]
             }
           ]
         }
@@ -402,11 +587,29 @@
     "INTERSECT = common; EXCEPT = in first not second"
   ],
   "glossary": [
-    { "term": "inner join", "def": "Returns only rows with matches in both tables (intersection)." },
-    { "term": "left join", "def": "All left rows; matched right rows or NULL (left circle + overlap)." },
-    { "term": "right join", "def": "All right rows; matched left rows or NULL (right circle + overlap)." },
-    { "term": "full join", "def": "All rows from both tables; NULLs where no match (union of circles)." },
-    { "term": "self join", "def": "Table joined to itself using aliases; FK references same table PK." },
-    { "term": "anti-join", "def": "LEFT JOIN + WHERE right.key IS NULL — finds rows with no match." }
+    {
+      "term": "inner join",
+      "def": "Returns only rows with matches in both tables (intersection)."
+    },
+    {
+      "term": "left join",
+      "def": "All left rows; matched right rows or NULL (left circle + overlap)."
+    },
+    {
+      "term": "right join",
+      "def": "All right rows; matched left rows or NULL (right circle + overlap)."
+    },
+    {
+      "term": "full join",
+      "def": "All rows from both tables; NULLs where no match (union of circles)."
+    },
+    {
+      "term": "self join",
+      "def": "Table joined to itself using aliases; FK references same table PK."
+    },
+    {
+      "term": "anti-join",
+      "def": "LEFT JOIN + WHERE right.key IS NULL — finds rows with no match."
+    }
   ]
 }

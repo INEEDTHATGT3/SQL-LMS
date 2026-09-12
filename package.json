@@ -5,8 +5,11 @@
   "type": "module",
   "scripts": {
     "new:module": "layered-study-new-module",
+    "sync:problems": "node renderer/sync-problems.mjs",
+    "check:provenance": "node renderer/check-provenance.mjs",
     "lint": "layered-study-lint",
-    "build": "layered-study-build",
+    "verify": "npm run check:provenance && npm run lint",
+    "build": "npm run sync:problems && npm run verify && layered-study-build",
     "dev": "npm run build && npx serve site -p 3000",
     "deploy": "gh-pages -d site"
   },

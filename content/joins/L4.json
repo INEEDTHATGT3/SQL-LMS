@@ -34,7 +34,6 @@
         "In temporary table"
       ],
       "answer": 1,
-      "answer": 1,
       "explain": "Each worker builds own hash table on its partition of build side. No shared memory."
     },
     {
@@ -81,13 +80,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"join_type": "Nested Loop", "startup": "Low", "run": "outer_rows × (index_probe_cost)", "best_for": "Small outer + indexed inner"},
-              {"join_type": "Hash Join", "startup": "High (build hash)", "run": "probe_cost × outer_rows", "best_for": "Large, no index, equality"},
-              {"join_type": "Merge Join", "startup": "High (sort)", "run": "Low (linear merge)", "best_for": "Pre-sorted, large, equality"},
-              {"join_type": "Adaptive", "startup": "NLJ startup", "run": "Switches at threshold", "best_for": "Uncertain row counts"}
+              {
+                "join_type": "Nested Loop",
+                "startup": "Low",
+                "run": "outer_rows × (index_probe_cost)",
+                "best_for": "Small outer + indexed inner"
+              },
+              {
+                "join_type": "Hash Join",
+                "startup": "High (build hash)",
+                "run": "probe_cost × outer_rows",
+                "best_for": "Large, no index, equality"
+              },
+              {
+                "join_type": "Merge Join",
+                "startup": "High (sort)",
+                "run": "Low (linear merge)",
+                "best_for": "Pre-sorted, large, equality"
+              },
+              {
+                "join_type": "Adaptive",
+                "startup": "NLJ startup",
+                "run": "Switches at threshold",
+                "best_for": "Uncertain row counts"
+              }
             ],
             "after": [],
-            "highlight": ["startup", "run"]
+            "highlight": [
+              "startup",
+              "run"
+            ]
           }
         },
         {
@@ -138,7 +160,7 @@
           "mysql": "-- MySQL: no DP/GEQO distinction\n-- Optimizer uses greedy search + dynamic programming (limited)",
           "py-pandas": "# No optimizer; merge order = written"
         },
-{
+        {
           "type": "callout",
           "tone": "blue",
           "md": "DP guarantees optimal for small N. GEQO is probabilistic — may find different plans on re-plan. For reproducible plans with large N: increase geqo_threshold or use pg_hint_plan."
@@ -194,22 +216,30 @@
             "Plan": {
               "Node Type": "Gather Merge",
               "Workers Planned": 4,
-              "Startup Cost": 10000.00,
-              "Total Cost": 50000.00,
+              "Startup Cost": 10000,
+              "Total Cost": 50000,
               "Plan Rows": 1000000,
               "Plan Width": 120,
               "Plans": [
                 {
                   "Node Type": "Parallel Hash Join",
-                  "Startup Cost": 5000.00,
-                  "Total Cost": 40000.00,
+                  "Startup Cost": 5000,
+                  "Total Cost": 40000,
                   "Plan Rows": 250000,
                   "Plan Width": 120,
                   "Hash Cond": "(a.id = b.id)",
-                  "Worker 0": { "Actual Rows": 250123 },
-                  "Worker 1": { "Actual Rows": 249876 },
-                  "Worker 2": { "Actual Rows": 250045 },
-                  "Worker 3": { "Actual Rows": 249956 }
+                  "Worker 0": {
+                    "Actual Rows": 250123
+                  },
+                  "Worker 1": {
+                    "Actual Rows": 249876
+                  },
+                  "Worker 2": {
+                    "Actual Rows": 250045
+                  },
+                  "Worker 3": {
+                    "Actual Rows": 249956
+                  }
                 }
               ]
             }
@@ -222,8 +252,8 @@
           "plan": {
             "Plan": {
               "Node Type": "Hash Join",
-              "Startup Cost": 100.00,
-              "Total Cost": 5000.00,
+              "Startup Cost": 100,
+              "Total Cost": 5000,
               "Plan Rows": 100000,
               "Plan Width": 120,
               "Hash Cond": "(a.id = b.id)",
@@ -231,14 +261,14 @@
                 {
                   "Node Type": "Seq Scan",
                   "Relation Name": "large_a",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 1000.00,
+                  "Startup Cost": 0,
+                  "Total Cost": 1000,
                   "Plan Rows": 100000
                 },
                 {
                   "Node Type": "Hash",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 50.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 50,
                   "Plan Rows": 5000
                 }
               ]
@@ -307,45 +337,65 @@
               "tier": 4,
               "title": "Cost Model: SSD Random I/O Tuning",
               "platform": "drill",
-              "patterns": ["cost-model"],
+              "patterns": [
+                "cost-model"
+              ],
               "statement": "On NVMe SSD, random_page_cost=4.0 overestimates. Set optimal value and explain impact on Hash vs NLJ choice.",
-              "hints": ["SET random_page_cost = 1.1; favors Hash Join over NLJ"]
+              "hints": [
+                "SET random_page_cost = 1.1; favors Hash Join over NLJ"
+              ]
             },
             {
               "id": "J402",
               "tier": 4,
               "title": "GEQO vs DP Plan Stability",
               "platform": "drill",
-              "patterns": ["geqo"],
+              "patterns": [
+                "geqo"
+              ],
               "statement": "15-table query produces different plans on each run. Fix for stability.",
-              "hints": ["SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan"]
+              "hints": [
+                "SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan"
+              ]
             },
             {
               "id": "J403",
               "tier": 4,
               "title": "Parallel Hash Join Memory Tuning",
               "platform": "drill",
-              "patterns": ["parallel-hash-join"],
+              "patterns": [
+                "parallel-hash-join"
+              ],
               "statement": "Parallel Hash Join spills to disk (Lossy). Fix with work_mem.",
-              "hints": ["SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN"]
+              "hints": [
+                "SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN"
+              ]
             },
             {
               "id": "J404",
               "tier": 4,
               "title": "Unique Inner Join Optimization",
               "platform": "drill",
-              "patterns": ["unique-inner"],
+              "patterns": [
+                "unique-inner"
+              ],
               "statement": "JOIN on PK column. Show how planner optimizes (stops after first match).",
-              "hints": ["EXPLAIN shows 'Unique Inner: true' or stops early in NLJ"]
+              "hints": [
+                "EXPLAIN shows 'Unique Inner: true' or stops early in NLJ"
+              ]
             },
             {
               "id": "J405",
               "tier": 4,
               "title": "Right-Deep vs Left-Deep Join Trees",
               "platform": "drill",
-              "patterns": ["join-tree"],
+              "patterns": [
+                "join-tree"
+              ],
               "statement": "Explain when right-deep tree (Hash Join build on right) beats left-deep.",
-              "hints": ["When right side is smaller; Hash Join builds on right (build side)"]
+              "hints": [
+                "When right side is smaller; Hash Join builds on right (build side)"
+              ]
             }
           ]
         }
@@ -361,11 +411,29 @@
     "Right-deep trees: Hash Join can build on right (smaller build side)"
   ],
   "glossary": [
-    { "term": "left-deep tree", "def": "Join tree where each join adds one table to left result. Standard DP output." },
-    { "term": "right-deep tree", "def": "Join tree where build side is on right. Hash Join can use either." },
-    { "term": "GEQO", "def": "Genetic Query Optimizer — genetic algorithm for join ordering when N > geqo_threshold." },
-    { "term": "adaptive join", "def": "Starts as Nested Loop, dynamically switches to Hash Join if outer rows exceed threshold." },
-    { "term": "late materialization", "def": "Fetch non-join columns after join (avoids carrying wide tuples through join)." },
-    { "term": "join qual", "def": "Join condition (ON clause). Planner extracts for pushdown, index matching." }
+    {
+      "term": "left-deep tree",
+      "def": "Join tree where each join adds one table to left result. Standard DP output."
+    },
+    {
+      "term": "right-deep tree",
+      "def": "Join tree where build side is on right. Hash Join can use either."
+    },
+    {
+      "term": "GEQO",
+      "def": "Genetic Query Optimizer — genetic algorithm for join ordering when N > geqo_threshold."
+    },
+    {
+      "term": "adaptive join",
+      "def": "Starts as Nested Loop, dynamically switches to Hash Join if outer rows exceed threshold."
+    },
+    {
+      "term": "late materialization",
+      "def": "Fetch non-join columns after join (avoids carrying wide tuples through join)."
+    },
+    {
+      "term": "join qual",
+      "def": "Join condition (ON clause). Planner extracts for pushdown, index matching."
+    }
   ]
 }

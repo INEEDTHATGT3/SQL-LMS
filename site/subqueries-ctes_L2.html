@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 06</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">correlated subqueries, lateral joins, predicate pushdown, optimization</span></div>
   <h1>Subqueries & CTEs</h1>
-  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="promise">Joins, grouping, windows. The standard pattern vocabulary an SQL screen actually tests.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="subqueries-ctes_L1" href="subqueries-ctes_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="subqueries-ctes_L2" href="subqueries-ctes_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="subqueries-ctes_L3" href="subqueries-ctes_L3.html">ADVANCED</a><a class="level-pill " data-lesson="subqueries-ctes_L4" href="subqueries-ctes_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Correlated Subqueries — Per-Row Evaluation</a><a href="#sec-1">02 · LATERAL Joins — Correlated Subquery in FROM</a><a href="#sec-2">03 · CTE Optimization — Materialization & Pushdown</a><a href="#sec-3">04 · Recursive CTE Patterns — Graphs, Trees, Paths</a><a href="#sec-4">05 · Dialect Differences — CTEs & Subqueries</a><a href="#sec-5">06 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Correlated Subqueries — Per-Row Evaluation</a><a href="#sec-1">02 · LATERAL Joins — Correlated Subquery in FROM</a><a href="#sec-2">03 · CTE Optimization — Materialization & Pushdown</a><a href="#sec-3">04 · Recursive CTE Patterns — Graphs, Trees, Paths</a><a href="#sec-4">05 · Dialect Differences — CTEs & Subqueries</a><a href="#sec-5">06 · Problem Set — L2 Drills</a><a href="#sec-6">07 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -286,7 +286,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Each employee with their department's average salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m49" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m49">SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh49" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh49">SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -296,7 +296,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       For each customer, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m4a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m4a">LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh4a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh4a">LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -306,7 +306,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Customers who placed at least one order over $1000.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m4b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m4b">EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh4b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh4b">EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -316,7 +316,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE filters status='active', outer query adds dept_id=5. Use NOT MATERIALIZED.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m4c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m4c">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh4c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh4c">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -326,7 +326,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Find all subordinates (direct + indirect) of manager_id = 5.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m4d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m4d">WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh4d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh4d">WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -336,7 +336,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Find path from node 'A' to 'B' in graph edges table.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m4e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m4e">Track path in array: path || next_node</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh4e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh4e">Track path in array: path || next_node</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -346,7 +346,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Departments without employees. Fix NOT IN NULL trap.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m4f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m4f">NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh4f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh4f">NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -356,12 +356,47 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9m4g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9m4g">LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflh4g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflh4g">LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-6">
+    <div class="section-header"><span class="section-num">07 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Binary Tree Nodes</a></div>
+        <div class="prob-meta">hackerrank · #024 · hackerrank-sql-58 · hierarchy + case-expression</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S2-HR024"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/second-highest-salary/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Second Highest Salary</a></div>
+        <div class="prob-meta">leetcode · #176 · medium · leetcode-sql-50 · nth-value + null-when-empty</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S2-LC176"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/exchange-seats/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Exchange Seats</a></div>
+        <div class="prob-meta">leetcode · #626 · medium · leetcode-sql-50 · case-swap + lead-lag</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S2-LC626"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">08 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Correlated subquery: runs per outer row; use EXISTS for semi-join, LATERAL for set results</li><li>LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer</li><li>EXISTS stops at first match; IN may scan all. Use EXISTS for correlated semi/anti joins</li><li>CTE: NOT MATERIALIZED for pushdown, MATERIALIZED to force; recursive = anchor + UNION ALL + recurse</li><li>Recursive CTE: track visited (path array), limit depth, prevent cycles</li><li>NOT IN + NULL = zero rows; always NOT EXISTS for anti-join</li></ul></div>
     <h3>Glossary</h3>

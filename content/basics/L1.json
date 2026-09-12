@@ -72,21 +72,58 @@
           "kind": "schema-diagram",
           "spec": {
             "tables": [
-              { "name": "employees", "columns": [
-                { "name": "id", "type": "INTEGER", "pk": true },
-                { "name": "name", "type": "VARCHAR(100)" },
-                { "name": "dept_id", "type": "INTEGER" },
-                { "name": "salary", "type": "DECIMAL(10,2)" },
-                { "name": "hire_date", "type": "DATE" }
-              ]},
-              { "name": "departments", "columns": [
-                { "name": "id", "type": "INTEGER", "pk": true },
-                { "name": "name", "type": "VARCHAR(100)" },
-                { "name": "location", "type": "VARCHAR(100)" }
-              ]}
+              {
+                "name": "employees",
+                "columns": [
+                  {
+                    "name": "id",
+                    "type": "INTEGER",
+                    "pk": true
+                  },
+                  {
+                    "name": "name",
+                    "type": "VARCHAR(100)"
+                  },
+                  {
+                    "name": "dept_id",
+                    "type": "INTEGER"
+                  },
+                  {
+                    "name": "salary",
+                    "type": "DECIMAL(10,2)"
+                  },
+                  {
+                    "name": "hire_date",
+                    "type": "DATE"
+                  }
+                ]
+              },
+              {
+                "name": "departments",
+                "columns": [
+                  {
+                    "name": "id",
+                    "type": "INTEGER",
+                    "pk": true
+                  },
+                  {
+                    "name": "name",
+                    "type": "VARCHAR(100)"
+                  },
+                  {
+                    "name": "location",
+                    "type": "VARCHAR(100)"
+                  }
+                ]
+              }
             ],
             "relationships": [
-              { "from": "employees", "to": "departments", "label": "dept_id", "cardinality": "}o--||" }
+              {
+                "from": "employees",
+                "to": "departments",
+                "label": "dept_id",
+                "cardinality": "}o--||"
+              }
             ]
           }
         },
@@ -127,8 +164,8 @@
               "Node Type": "Seq Scan",
               "Relation Name": "employees",
               "Alias": "e",
-              "Startup Cost": 0.00,
-              "Total Cost": 18.50,
+              "Startup Cost": 0,
+              "Total Cost": 18.5,
               "Plan Rows": 850,
               "Plan Width": 72,
               "Actual Startup Time": 0.012,
@@ -306,54 +343,277 @@
               "tier": 1,
               "title": "Select All Employees",
               "platform": "drill",
-              "patterns": ["basic-select"],
+              "patterns": [
+                "basic-select"
+              ],
               "statement": "Write a query to return all columns for all employees.",
-              "hints": ["Use SELECT * FROM table_name;"]
+              "hints": [
+                "Use SELECT * FROM table_name;"
+              ]
             },
             {
               "id": "B102",
               "tier": 1,
               "title": "Select Name and Salary",
               "platform": "drill",
-              "patterns": ["column-projection"],
+              "patterns": [
+                "column-projection"
+              ],
               "statement": "Return only the name and salary columns from employees.",
-              "hints": ["List columns after SELECT separated by commas."]
+              "hints": [
+                "List columns after SELECT separated by commas."
+              ]
             },
             {
               "id": "B103",
               "tier": 1,
               "title": "Top 10 Highest Paid",
               "platform": "drill",
-              "patterns": ["order-by", "limit"],
+              "patterns": [
+                "order-by",
+                "limit"
+              ],
               "statement": "Find the 10 employees with the highest salary.",
-              "hints": ["ORDER BY salary DESC LIMIT 10"]
+              "hints": [
+                "ORDER BY salary DESC LIMIT 10"
+              ]
             },
             {
               "id": "B104",
               "tier": 1,
               "title": "Employees in Department 5",
               "platform": "drill",
-              "patterns": ["where-equality"],
+              "patterns": [
+                "where-equality"
+              ],
               "statement": "List all employees who work in department 5.",
-              "hints": ["WHERE dept_id = 5"]
+              "hints": [
+                "WHERE dept_id = 5"
+              ]
             },
             {
               "id": "B105",
               "tier": 1,
               "title": "Salary Range 50k-75k",
               "platform": "drill",
-              "patterns": ["where-range"],
+              "patterns": [
+                "where-range"
+              ],
               "statement": "Find employees with salary between 50000 and 75000 inclusive.",
-              "hints": ["Use BETWEEN or >= AND <="]
+              "hints": [
+                "Use BETWEEN or >= AND <="
+              ]
             },
             {
               "id": "B106",
               "tier": 1,
               "title": "Employees Without Manager",
               "platform": "drill",
-              "patterns": ["where-null"],
+              "patterns": [
+                "where-null"
+              ],
               "statement": "Find all employees who don't have a manager (manager_id is NULL).",
-              "hints": ["Use IS NULL, not = NULL"]
+              "hints": [
+                "Use IS NULL, not = NULL"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "13 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "B1-HR001",
+              "tier": 1,
+              "title": "Revising the Select Query I",
+              "platform": "hackerrank",
+              "ref": "001",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR002",
+              "tier": 1,
+              "title": "Revising the Select Query II",
+              "platform": "hackerrank",
+              "ref": "002",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR003",
+              "tier": 1,
+              "title": "Select All",
+              "platform": "hackerrank",
+              "ref": "003",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR004",
+              "tier": 1,
+              "title": "Select By ID",
+              "platform": "hackerrank",
+              "ref": "004",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR005",
+              "tier": 1,
+              "title": "Japanese Cities' Attributes",
+              "platform": "hackerrank",
+              "ref": "005",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR006",
+              "tier": 1,
+              "title": "Japanese Cities' Names",
+              "platform": "hackerrank",
+              "ref": "006",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR007",
+              "tier": 1,
+              "title": "Higher Than 75 Marks",
+              "platform": "hackerrank",
+              "ref": "007",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR008",
+              "tier": 1,
+              "title": "Employee Names",
+              "platform": "hackerrank",
+              "ref": "008",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-HR009",
+              "tier": 1,
+              "title": "Employee Salaries",
+              "platform": "hackerrank",
+              "ref": "009",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Select",
+              "patterns": [
+                "select-where",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-LC1148",
+              "tier": 1,
+              "title": "Article Views I",
+              "platform": "leetcode",
+              "ref": "1148",
+              "url": "https://leetcode.com/problems/article-views-i/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Select",
+              "difficulty": "easy",
+              "patterns": [
+                "distinct",
+                "order-by"
+              ]
+            },
+            {
+              "id": "B1-LC1683",
+              "tier": 1,
+              "title": "Invalid Tweets",
+              "platform": "leetcode",
+              "ref": "1683",
+              "url": "https://leetcode.com/problems/invalid-tweets/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Select",
+              "difficulty": "easy",
+              "patterns": [
+                "string-length"
+              ]
+            },
+            {
+              "id": "B1-LC1757",
+              "tier": 1,
+              "title": "Recyclable and Low Fat Products",
+              "platform": "leetcode",
+              "ref": "1757",
+              "url": "https://leetcode.com/problems/recyclable-and-low-fat-products/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Select",
+              "difficulty": "easy",
+              "patterns": [
+                "where-and"
+              ]
+            },
+            {
+              "id": "B1-LC595",
+              "tier": 1,
+              "title": "Big Countries",
+              "platform": "leetcode",
+              "ref": "595",
+              "url": "https://leetcode.com/problems/big-countries/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Select",
+              "difficulty": "easy",
+              "patterns": [
+                "where-or"
+              ]
             }
           ]
         }
@@ -369,11 +629,29 @@
     "String concat: ANSI ||, MySQL CONCAT(), Python +"
   ],
   "glossary": [
-    { "term": "table", "def": "Named collection of rows with same column structure." },
-    { "term": "column", "def": "Vertical slice of a table; has name, type, position." },
-    { "term": "row", "def": "Horizontal record; one entity instance." },
-    { "term": "NULL", "def": "Missing/unknown value; not equal to anything including itself." },
-    { "term": "predicate", "def": "Boolean expression in WHERE clause that filters rows." },
-    { "term": "projection", "def": "Selecting a subset of columns (vertical filtering)." }
+    {
+      "term": "table",
+      "def": "Named collection of rows with same column structure."
+    },
+    {
+      "term": "column",
+      "def": "Vertical slice of a table; has name, type, position."
+    },
+    {
+      "term": "row",
+      "def": "Horizontal record; one entity instance."
+    },
+    {
+      "term": "NULL",
+      "def": "Missing/unknown value; not equal to anything including itself."
+    },
+    {
+      "term": "predicate",
+      "def": "Boolean expression in WHERE clause that filters rows."
+    },
+    {
+      "term": "projection",
+      "def": "Selecting a subset of columns (vertical filtering)."
+    }
   ]
 }

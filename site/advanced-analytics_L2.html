@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 08</span><span class="badge blue">L2 · INTERVIEW READY</span><span class="badge green">PIVOT, LATERAL, advanced frames, sampling — analytics beyond GROUP BY</span></div>
   <h1>Advanced Analytics</h1>
-  <div class="promise">Joins, grouping, windows. Standard patterns.</div>
+  <div class="promise">Joins, grouping, windows. The standard pattern vocabulary an SQL screen actually tests.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="advanced-analytics_L1" href="advanced-analytics_L1.html">BEGINNER</a><a class="level-pill current" data-lesson="advanced-analytics_L2" href="advanced-analytics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="advanced-analytics_L3" href="advanced-analytics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="advanced-analytics_L4" href="advanced-analytics_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Advanced PIVOT — Dynamic Columns & Multi-Level</a><a href="#sec-1">02 · Advanced LATERAL — Top-N, Correlated, Parallel</a><a href="#sec-2">03 · EXPLAIN — LATERAL Top-N Per Group</a><a href="#sec-3">04 · Advanced Frames & Sampling</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Advanced PIVOT — Dynamic Columns & Multi-Level</a><a href="#sec-1">02 · Advanced LATERAL — Top-N, Correlated, Parallel</a><a href="#sec-2">03 · EXPLAIN — LATERAL Top-N Per Group</a><a href="#sec-3">04 · Advanced Frames & Sampling</a><a href="#sec-4">05 · Problem Set — L2 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -209,7 +209,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Categories unknown at design time. Write dynamic SQL to pivot sales by category.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y65" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y65">EXECUTE format() with dynamic column list</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr65" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr65">EXECUTE format() with dynamic column list</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -219,7 +219,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y66" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y66">LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr66" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr66">LATERAL (SELECT ... ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -229,7 +229,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Running total of daily sales using RANGE frame (date-based).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y67" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y67">RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr67" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr67">RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -239,7 +239,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Count employees in same salary tier ±1 tier. Use GROUPS frame.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y68" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y68">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr68" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr68">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -249,7 +249,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Get 10% random sample of users for A/B test. Use SYSTEM for speed.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y69" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y69">TABLESAMPLE SYSTEM (10) REPEATABLE (42)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr69" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr69">TABLESAMPLE SYSTEM (10) REPEATABLE (42)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -259,7 +259,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Quarters vary by year. Build dynamic crosstab for sales by region × quarter.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6a">EXECUTE format() with dynamic column list from distinct quarters</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr6a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr6a">EXECUTE format() with dynamic column list from distinct quarters</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -269,7 +269,7 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       For each customer, show running total of order amounts over time.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6b">LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr6b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr6b">LATERAL (SELECT SUM(amount) FROM orders WHERE cust_id = c.id AND order_date <= o.order_date)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -279,12 +279,27 @@ SELECT * FROM large_table TABLESAMPLE SYSTEM (<span class="num">10</span>) WHERE
     </div>
     <div class="prob-body">
       Estimate distinct users per day using 10% TABLESAMPLE. Compare with exact COUNT(DISTINCT).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9y6c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9y6c">TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflr6c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflr6c">TABLESAMPLE BERNOULLI (10) + COUNT(DISTINCT)</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">1 sourced problem from HackerRank SQL. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t2">L2</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Occupations</a></div>
+        <div class="prob-meta">hackerrank · #023 · hackerrank-sql-58 · pivot + row-number-pivot</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X2-HR023"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Dynamic PIVOT: EXECUTE format() builds column list at runtime</li><li>LATERAL + LIMIT 1/3 = efficient Top-N per group; stops after N rows per group</li><li>GROUPS frame (PG14): counts peer groups (ties); great for percentile buckets</li><li>TABLESAMPLE SYSTEM = fast page-level; BERNOULLI = accurate row-level</li><li>Dynamic SQL with EXECUTE format() for runtime column generation</li><li>LATERAL + aggregate = multiple aggregates per row in single lateral subquery</li></ul></div>
     <h3>Glossary</h3>

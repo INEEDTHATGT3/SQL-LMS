@@ -170,8 +170,8 @@
               "Node Type": "Seq Scan",
               "Relation Name": "employees",
               "Alias": "e",
-              "Startup Cost": 0.00,
-              "Total Cost": 185.00,
+              "Startup Cost": 0,
+              "Total Cost": 185,
               "Plan Rows": 8500,
               "Plan Width": 72,
               "Filter": "(salary > 50000)",
@@ -269,72 +269,135 @@
               "tier": 2,
               "title": "Employees in Dept 1, 3, or 5",
               "platform": "drill",
-              "patterns": ["where-in"],
+              "patterns": [
+                "where-in"
+              ],
               "statement": "List all employees in departments 1, 3, or 5.",
-              "hints": ["Use IN (1, 3, 5)"]
+              "hints": [
+                "Use IN (1, 3, 5)"
+              ]
             },
             {
               "id": "B202",
               "tier": 2,
               "title": "Names Starting with 'A' or 'B'",
               "platform": "drill",
-              "patterns": ["where-like"],
+              "patterns": [
+                "where-like"
+              ],
               "statement": "Find employees whose name starts with A or B.",
-              "hints": ["Use LIKE 'A%' OR LIKE 'B%' or SIMILAR TO"]
+              "hints": [
+                "Use LIKE 'A%' OR LIKE 'B%' or SIMILAR TO"
+              ]
             },
             {
               "id": "B203",
               "tier": 2,
               "title": "Salary 60k-80k in Dept 2",
               "platform": "drill",
-              "patterns": ["where-compound"],
+              "patterns": [
+                "where-compound"
+              ],
               "statement": "Employees in department 2 with salary between 60000 and 80000.",
-              "hints": ["WHERE dept_id = 2 AND salary BETWEEN 60000 AND 80000"]
+              "hints": [
+                "WHERE dept_id = 2 AND salary BETWEEN 60000 AND 80000"
+              ]
             },
             {
               "id": "B204",
               "tier": 2,
               "title": "Recent Hires (Last 2 Years)",
               "platform": "drill",
-              "patterns": ["where-date"],
+              "patterns": [
+                "where-date"
+              ],
               "statement": "Employees hired after January 1, 2023.",
-              "hints": ["WHERE hire_date > '2023-01-01'"]
+              "hints": [
+                "WHERE hire_date > '2023-01-01'"
+              ]
             },
             {
               "id": "B205",
               "tier": 2,
               "title": "Top 3 by Salary in Each Dept (Conceptual)",
               "platform": "drill",
-              "patterns": ["order-by", "limit"],
+              "patterns": [
+                "order-by",
+                "limit"
+              ],
               "statement": "Write the query pattern to get top 3 salaries. (Full solution at L3 with window functions)",
-              "hints": ["ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept"]
+              "hints": [
+                "ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept"
+              ]
             },
             {
               "id": "B206",
               "tier": 2,
               "title": "Pagination: Page 2 (20 per page)",
               "platform": "drill",
-              "patterns": ["limit-offset"],
+              "patterns": [
+                "limit-offset"
+              ],
               "statement": "Get the second page of employees ordered by hire_date, 20 per page.",
-              "hints": ["OFFSET 20 LIMIT 20"]
+              "hints": [
+                "OFFSET 20 LIMIT 20"
+              ]
             },
             {
               "id": "B207",
               "tier": 2,
               "title": "Exclude Departments 4 and 6",
               "platform": "drill",
-              "patterns": ["where-not-in"],
+              "patterns": [
+                "where-not-in"
+              ],
               "statement": "All employees NOT in departments 4 or 6.",
-              "hints": ["NOT IN (4, 6)"]
+              "hints": [
+                "NOT IN (4, 6)"
+              ]
             },
             {
               "id": "B208",
               "tier": 2,
               "title": "Email Domain Filter",
               "platform": "drill",
-              "patterns": ["where-like"],
+              "patterns": [
+                "where-like"
+              ],
               "statement": "Employees with company email (@company.com).",
-              "hints": ["LIKE '%@company.com'"]
+              "hints": [
+                "LIKE '%@company.com'"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "B2-LC1667",
+              "tier": 2,
+              "title": "Fix Names in a Table",
+              "platform": "leetcode",
+              "ref": "1667",
+              "url": "https://leetcode.com/problems/fix-names-in-a-table/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced String Functions / Regex / Clause",
+              "difficulty": "easy",
+              "patterns": [
+                "string-functions",
+                "concat-upper-lower"
+              ]
             }
           ]
         }
@@ -350,11 +413,29 @@
     "Dialect diff: || (ANSI/PG) vs CONCAT() (MySQL)"
   ],
   "glossary": [
-    { "term": "Seq Scan", "def": "Sequential scan — reads every table page; O(N) cost." },
-    { "term": "Index Scan", "def": "Uses B-tree index to jump directly to matching rows; O(log N) + matches." },
-    { "term": "wildcard", "def": "% (any chars) and _ (one char) in LIKE patterns." },
-    { "term": "precedence", "def": "Order of operations: NOT > AND > OR. Parentheses override." },
-    { "term": "pagination", "def": "LIMIT n OFFSET m — skip m rows, take n. Page k = OFFSET k*page_size." },
-    { "term": "cost", "def": "Planner's estimated resource units (not milliseconds). Lower = better." }
+    {
+      "term": "Seq Scan",
+      "def": "Sequential scan — reads every table page; O(N) cost."
+    },
+    {
+      "term": "Index Scan",
+      "def": "Uses B-tree index to jump directly to matching rows; O(log N) + matches."
+    },
+    {
+      "term": "wildcard",
+      "def": "% (any chars) and _ (one char) in LIKE patterns."
+    },
+    {
+      "term": "precedence",
+      "def": "Order of operations: NOT > AND > OR. Parentheses override."
+    },
+    {
+      "term": "pagination",
+      "def": "LIMIT n OFFSET m — skip m rows, take n. Page k = OFFSET k*page_size."
+    },
+    {
+      "term": "cost",
+      "def": "Planner's estimated resource units (not milliseconds). Lower = better."
+    }
   ]
 }

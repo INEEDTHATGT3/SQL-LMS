@@ -6,7 +6,7 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 05</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">custom aggregates, hypothetical sets, window function internals, extensibility</span></div>
   <h1>Window Functions</h1>
-  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="window-functions_L1" href="window-functions_L1.html">BEGINNER</a><a class="level-pill " data-lesson="window-functions_L2" href="window-functions_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="window-functions_L3" href="window-functions_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="window-functions_L4" href="window-functions_L4.html">EXPERT</a></div>
 </div>
 <nav class="toc"><a href="#sec-0">01 · Custom Window Aggregates (PostgreSQL 14+)</a><a href="#sec-1">02 · Hypothetical Set Functions</a><a href="#sec-2">03 · IGNORE NULLS & Advanced NULL Handling</a><a href="#sec-3">04 · Window Function Internals — WindowAgg, Sort, Spilling</a><a href="#sec-4">05 · EXPLAIN — Multiple Window Functions Shared Sort</a><a href="#sec-5">06 · EXPLAIN — Custom Window Aggregate Execution</a><a href="#sec-6">07 · Dialect Mastery — Window Function Gaps</a><a href="#sec-7">08 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
@@ -305,7 +305,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9k3y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9k3y">msfunc adds, minvfunc removes, state = running sum + count</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle3y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle3y">msfunc adds, minvfunc removes, state = running sum + count</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -315,7 +315,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9k3z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9k3z">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle3z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle3z">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -325,7 +325,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9k40" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9k40">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle40" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle40">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -335,7 +335,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Window function uses ORDER BY salary + bonus. Create expression index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9k41" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9k41">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle41" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle41">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -345,7 +345,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Explain how PostgreSQL 17+ pushes predicates below window functions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9k42" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9k42">Predicate pushdown through WindowAgg when safe</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle42" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle42">Predicate pushdown through WindowAgg when safe</div></div>
     </div></li></ul>
   </section>
   

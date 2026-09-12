@@ -6,7 +6,7 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 08</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">PIVOT, LATERAL, advanced frames, sampling — analytics beyond GROUP BY</span></div>
   <h1>Advanced Analytics</h1>
-  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="promise">Core syntax, mental models. Tables as grids. Every problem is solvable with one SELECT.</div>
   <div class="level-strip"><a class="level-pill current" data-lesson="advanced-analytics_L1" href="advanced-analytics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="advanced-analytics_L2" href="advanced-analytics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="advanced-analytics_L3" href="advanced-analytics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="advanced-analytics_L4" href="advanced-analytics_L4.html">EXPERT</a></div>
 </div>
 <nav class="toc"><a href="#sec-0">01 · Mental Model — Analytics Beyond GROUP BY</a><a href="#sec-1">02 · PIVOT / Crosstab — Cross-Tabulation</a><a href="#sec-2">03 · Advanced Frames — ROWS/RANGE/GROUPS, EXCLUDE</a><a href="#sec-3">04 · NTILE, Sampling, Advanced Aggregates</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
@@ -252,7 +252,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Create cross-tabulation: departments as rows, quarters as columns, sales as values.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w5z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w5z">crosstab() from tablefunc</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflq5z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflq5z">crosstab() from tablefunc</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -262,7 +262,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       For each customer, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w60" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w60">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflq60" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflq60">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -272,7 +272,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Compute 4-row moving average of daily sales (current + 3 preceding).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w61" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w61">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflq61" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflq61">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -282,7 +282,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Sum of sales for each day + previous 6 days using RANGE.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w62" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w62">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflq62" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflq62">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -292,7 +292,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Assign each employee to a salary quartile (1-4) within their department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w63" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w63">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflq63" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflq63">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -302,7 +302,7 @@ GROUP BY dept_id;</code></pre><pre data-lang="py" class="py-missing"><code># Pyt
     </div>
     <div class="prob-body">
       Per department: count of active, pending, inactive employees using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9w64" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9w64">COUNT(*) FILTER (WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflq64" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflq64">COUNT(*) FILTER (WHERE status = 'active')</div></div>
     </div></li></ul>
   </section>
   

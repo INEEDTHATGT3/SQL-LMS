@@ -178,13 +178,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"pattern": "Path enumeration", "technique": "ARRAY[id] || next_id", "cycle_check": "id != ALL(path)", "use_case": "Full path, cycle detection"},
-              {"pattern": "Shortest path (BFS)", "technique": "Track distance, stop at target", "cycle_check": "Visited set", "use_case": "Shortest path in unweighted graph"},
-              {"pattern": "Transitive closure", "technique": "Recursive join on edges", "cycle_check": "Visited set", "use_case": "All reachable nodes"},
-              {"pattern": "Cycle detection", "technique": "path @> ARRAY[next_id]", "cycle_check": "Early termination", "use_case": "Detect cycles in graph"}
+              {
+                "pattern": "Path enumeration",
+                "technique": "ARRAY[id] || next_id",
+                "cycle_check": "id != ALL(path)",
+                "use_case": "Full path, cycle detection"
+              },
+              {
+                "pattern": "Shortest path (BFS)",
+                "technique": "Track distance, stop at target",
+                "cycle_check": "Visited set",
+                "use_case": "Shortest path in unweighted graph"
+              },
+              {
+                "pattern": "Transitive closure",
+                "technique": "Recursive join on edges",
+                "cycle_check": "Visited set",
+                "use_case": "All reachable nodes"
+              },
+              {
+                "pattern": "Cycle detection",
+                "technique": "path @> ARRAY[next_id]",
+                "cycle_check": "Early termination",
+                "use_case": "Detect cycles in graph"
+              }
             ],
             "after": [],
-            "highlight": ["cycle_check"]
+            "highlight": [
+              "cycle_check"
+            ]
           }
         },
         {
@@ -221,37 +243,37 @@
             "Plan": {
               "Node Type": "CTE Scan",
               "CTE Name": "bfs",
-              "Startup Cost": 100.00,
-              "Total Cost": 5000.00,
+              "Startup Cost": 100,
+              "Total Cost": 5000,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Recursive Union",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 5000.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 5000,
                   "Plan Rows": 8500,
                   "Plan Width": 48,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "nodes",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 100.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 100,
                       "Plan Rows": 100
                     },
                     {
                       "Node Type": "WorkTable Scan",
                       "Relation Name": "bfs",
-                      "Startup Cost": 100.00,
-                      "Total Cost": 4900.00,
+                      "Startup Cost": 100,
+                      "Total Cost": 4900,
                       "Plan Rows": 8400,
                       "Plan Width": 48,
                       "Plans": [
                         {
                           "Node Type": "Hash Join",
-                          "Startup Cost": 100.00,
-                          "Total Cost": 4900.00,
+                          "Startup Cost": 100,
+                          "Total Cost": 4900,
                           "Plan Rows": 8400,
                           "Plan Width": 48,
                           "Hash Cond": "(edges.from_id = bfs.id)",
@@ -259,15 +281,15 @@
                             {
                               "Node Type": "Seq Scan",
                               "Relation Name": "edges",
-                              "Startup Cost": 0.00,
-                              "Total Cost": 100.00,
+                              "Startup Cost": 0,
+                              "Total Cost": 100,
                               "Plan Rows": 1000
                             },
                             {
                               "Node Type": "WorkTable Scan",
                               "Relation Name": "bfs",
-                              "Startup Cost": 0.00,
-                              "Total Cost": 0.00,
+                              "Startup Cost": 0,
+                              "Total Cost": 0,
                               "Plan Rows": 100,
                               "Plan Width": 24
                             }
@@ -314,54 +336,126 @@
               "tier": 3,
               "title": "Pushdown Through View",
               "platform": "drill",
-              "patterns": ["predicate-pushdown"],
+              "patterns": [
+                "predicate-pushdown"
+              ],
               "statement": "View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.",
-              "hints": ["EXPLAIN SELECT * FROM active_view WHERE dept_id = 5"]
+              "hints": [
+                "EXPLAIN SELECT * FROM active_view WHERE dept_id = 5"
+              ]
             },
             {
               "id": "S302",
               "tier": 3,
               "title": "Force Predicate Pushdown Through CTE",
               "platform": "drill",
-              "patterns": ["not-materialized"],
+              "patterns": [
+                "not-materialized"
+              ],
               "statement": "CTE filters status='active'. Outer adds dept_id=5. Rewrite with NOT MATERIALIZED.",
-              "hints": ["WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active')"]
+              "hints": [
+                "WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active')"
+              ]
             },
             {
               "id": "S303",
               "tier": 3,
               "title": "Recursive CTE with Cycle Detection",
               "platform": "drill",
-              "patterns": ["recursive-cte", "cycle-detection"],
+              "patterns": [
+                "recursive-cte",
+                "cycle-detection"
+              ],
               "statement": "Graph edges table (from_id, to_id). Find all paths from A to B with cycle detection.",
-              "hints": ["Track path in ARRAY, check `WHERE next_id != ALL(path)`"]
+              "hints": [
+                "Track path in ARRAY, check `WHERE next_id != ALL(path)`"
+              ]
             },
             {
               "id": "S304",
               "tier": 3,
               "title": "Materialized vs Not Materialized CTE",
               "platform": "drill",
-              "patterns": ["materialized", "not-materialized"],
+              "patterns": [
+                "materialized",
+                "not-materialized"
+              ],
               "statement": "CTE computes expensive aggregation. Referenced 3 times. Force MATERIALIZED.",
-              "hints": ["WITH cte AS MATERIALIZED (SELECT ...)"]
+              "hints": [
+                "WITH cte AS MATERIALIZED (SELECT ...)"
+              ]
             },
             {
               "id": "S305",
               "tier": 3,
               "title": "Shortest Path in Weighted Graph (Conceptual)",
               "platform": "drill",
-              "patterns": ["recursive-cte", "shortest-path"],
+              "patterns": [
+                "recursive-cte",
+                "shortest-path"
+              ],
               "statement": "Explain how recursive CTE finds shortest path in unweighted graph.",
-              "hints": ["BFS via recursive CTE level expansion; first hit = shortest"]
+              "hints": [
+                "BFS via recursive CTE level expansion; first hit = shortest"
+              ]
             },
             {
               "id": "S306",
               "tier": 3,
               "title": "Fix Blocked Pushdown",
               "platform": "drill",
-              "patterns": ["pushdown-fix"],
+              "patterns": [
+                "pushdown-fix"
+              ],
               "statement": "CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.",
-              "hints": ["Move LIMIT to outer query; use subquery instead of CTE"]
+              "hints": [
+                "Move LIMIT to outer query; use subquery instead of CTE"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "2 sourced problems from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "S3-LC1341",
+              "tier": 3,
+              "title": "Movie Rating",
+              "platform": "leetcode",
+              "ref": "1341",
+              "url": "https://leetcode.com/problems/movie-rating/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "medium",
+              "patterns": [
+                "union-all",
+                "tie-break-order"
+              ]
+            },
+            {
+              "id": "S3-LC585",
+              "tier": 3,
+              "title": "Investments in 2016",
+              "platform": "leetcode",
+              "ref": "585",
+              "url": "https://leetcode.com/problems/investments-in-2016/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "medium",
+              "patterns": [
+                "multi-condition-subquery",
+                "dedupe-by-key"
+              ]
             }
           ]
         }
@@ -377,11 +471,29 @@
     "Pushdown blockers: VOLATILE, LIMIT, CTE (materialized), set ops, window funcs"
   ],
   "glossary": [
-    { "term": "predicate pushdown", "def": "Moving WHERE filter down into view/CTE/subquery to reduce rows before join." },
-    { "term": "optimization fence", "def": "CTE in PostgreSQL — materialized by default, blocks predicate pushdown and join reordering." },
-    { "term": "NOT MATERIALIZED", "def": "PostgreSQL 12+ hint to inline CTE, enabling predicate pushdown." },
-    { "term": "MATERIALIZED", "def": "Force CTE to be computed once and stored; avoids recomputation for multiple references." },
-    { "term": "transitive closure", "def": "All reachable nodes from a starting node in a graph." },
-    { "term": "cycle detection", "def": "Checking if next node already in path to prevent infinite recursion." }
+    {
+      "term": "predicate pushdown",
+      "def": "Moving WHERE filter down into view/CTE/subquery to reduce rows before join."
+    },
+    {
+      "term": "optimization fence",
+      "def": "CTE in PostgreSQL — materialized by default, blocks predicate pushdown and join reordering."
+    },
+    {
+      "term": "NOT MATERIALIZED",
+      "def": "PostgreSQL 12+ hint to inline CTE, enabling predicate pushdown."
+    },
+    {
+      "term": "MATERIALIZED",
+      "def": "Force CTE to be computed once and stored; avoids recomputation for multiple references."
+    },
+    {
+      "term": "transitive closure",
+      "def": "All reachable nodes from a starting node in a graph."
+    },
+    {
+      "term": "cycle detection",
+      "def": "Checking if next node already in path to prevent infinite recursion."
+    }
   ]
 }

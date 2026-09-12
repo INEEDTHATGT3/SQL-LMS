@@ -80,7 +80,7 @@
           "plan": {
             "Plan": {
               "Node Type": "Append",
-              "Startup Cost": 0.00,
+              "Startup Cost": 0,
               "Total Cost": 42.15,
               "Plan Rows": 3200,
               "Plan Width": 72,
@@ -162,22 +162,30 @@
             "Plan": {
               "Node Type": "Gather Merge",
               "Workers Planned": 4,
-              "Startup Cost": 10000.00,
-              "Total Cost": 50000.00,
+              "Startup Cost": 10000,
+              "Total Cost": 50000,
               "Plan Rows": 1000000,
               "Plan Width": 120,
               "Plans": [
                 {
                   "Node Type": "Parallel Hash Join",
-                  "Startup Cost": 5000.00,
-                  "Total Cost": 40000.00,
+                  "Startup Cost": 5000,
+                  "Total Cost": 40000,
                   "Plan Rows": 250000,
                   "Plan Width": 120,
                   "Hash Cond": "(a.id = b.id)",
-                  "Worker 0": { "Actual Rows": 250123 },
-                  "Worker 1": { "Actual Rows": 249876 },
-                  "Worker 2": { "Actual Rows": 250045 },
-                  "Worker 3": { "Actual Rows": 249956 }
+                  "Worker 0": {
+                    "Actual Rows": 250123
+                  },
+                  "Worker 1": {
+                    "Actual Rows": 249876
+                  },
+                  "Worker 2": {
+                    "Actual Rows": 250045
+                  },
+                  "Worker 3": {
+                    "Actual Rows": 249956
+                  }
                 }
               ]
             }
@@ -300,54 +308,82 @@
               "tier": 3,
               "title": "Design Partitioned Event Table",
               "platform": "drill",
-              "patterns": ["partition-design"],
+              "patterns": [
+                "partition-design"
+              ],
               "statement": "Design a partitioned table for 1B events/year with partition key on event_time. Include monthly partitions, default partition, and index strategy.",
-              "hints": ["PARTITION BY RANGE (event_time)", "Monthly partitions", "Default partition for strays"]
+              "hints": [
+                "PARTITION BY RANGE (event_time)",
+                "Monthly partitions",
+                "Default partition for strays"
+              ]
             },
             {
               "id": "P302",
               "tier": 3,
               "title": "BRIN Index for Append-Only Logs",
               "platform": "drill",
-              "patterns": ["brin-index"],
+              "patterns": [
+                "brin-index"
+              ],
               "statement": "Create BRIN index on log_table(created_at) for 500M row append-only log table. Compare size vs B-tree.",
-              "hints": ["USING BRIN (created_at)", "pages_per_range=32 for finer granularity"]
+              "hints": [
+                "USING BRIN (created_at)",
+                "pages_per_range=32 for finer granularity"
+              ]
             },
             {
               "id": "P303",
               "tier": 3,
               "title": "Concurrent Index on Production Table",
               "platform": "drill",
-              "patterns": ["concurrent-index"],
+              "patterns": [
+                "concurrent-index"
+              ],
               "statement": "Add index on orders(customer_id, order_date) without locking the 200M row table.",
-              "hints": ["CREATE INDEX CONCURRENTLY", "Monitor pg_stat_progress_create_index"]
+              "hints": [
+                "CREATE INDEX CONCURRENTLY",
+                "Monitor pg_stat_progress_create_index"
+              ]
             },
             {
               "id": "P304",
               "tier": 3,
               "title": "Functional Index for Case-Insensitive Search",
               "platform": "drill",
-              "patterns": ["functional-index"],
+              "patterns": [
+                "functional-index"
+              ],
               "statement": "Users login with email case-insensitively. Create index for WHERE LOWER(email) = ? efficiently.",
-              "hints": ["CREATE INDEX ON users (LOWER(email))"]
+              "hints": [
+                "CREATE INDEX ON users (LOWER(email))"
+              ]
             },
             {
               "id": "P305",
               "tier": 3,
               "title": "Partial Unique: One Active Email Per User",
               "platform": "drill",
-              "patterns": ["partial-unique"],
+              "patterns": [
+                "partial-unique"
+              ],
               "statement": "Allow same email for inactive users, but only one active per email.",
-              "hints": ["CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'"]
+              "hints": [
+                "CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'"
+              ]
             },
             {
               "id": "P306",
               "tier": 3,
               "title": "Sargable Rewrite: YEAR(created_at) = 2024",
               "platform": "drill",
-              "patterns": ["sargability-fix"],
+              "patterns": [
+                "sargability-fix"
+              ],
               "statement": "Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.",
-              "hints": ["created_at >= '2024-01-01' AND created_at < '2025-01-01'"]
+              "hints": [
+                "created_at >= '2024-01-01' AND created_at < '2025-01-01'"
+              ]
             }
           ]
         }
@@ -363,11 +399,29 @@
     "effective_cache_size guides index vs seq scan choice; pg_stat_statements for monitoring"
   ],
   "glossary": [
-    { "term": "partition pruning", "def": "Planner excludes partitions not matching WHERE on partition key." },
-    { "term": "partition key", "def": "Column(s) used to determine which partition a row belongs to." },
-    { "term": "parallel query", "def": "Multiple workers scan/process data simultaneously; leader gathers results." },
-    { "term": "pages_per_range", "def": "BRIN parameter: how many heap pages per min/max summary. Lower = more precise, larger index." },
-    { "term": "gather merge", "def": "Parallel workers return sorted data; leader merges without re-sorting." },
-    { "term": "concurrent index", "def": "Index built without blocking writes; takes share-update-exclusive lock." }
+    {
+      "term": "partition pruning",
+      "def": "Planner excludes partitions not matching WHERE on partition key."
+    },
+    {
+      "term": "partition key",
+      "def": "Column(s) used to determine which partition a row belongs to."
+    },
+    {
+      "term": "parallel query",
+      "def": "Multiple workers scan/process data simultaneously; leader gathers results."
+    },
+    {
+      "term": "pages_per_range",
+      "def": "BRIN parameter: how many heap pages per min/max summary. Lower = more precise, larger index."
+    },
+    {
+      "term": "gather merge",
+      "def": "Parallel workers return sorted data; leader merges without re-sorting."
+    },
+    {
+      "term": "concurrent index",
+      "def": "Index built without blocking writes; takes share-update-exclusive lock."
+    }
   ]
 }

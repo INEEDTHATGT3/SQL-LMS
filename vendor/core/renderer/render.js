@@ -159,7 +159,7 @@ function renderProblem(p, skillConfig) {
     }).join('') + `</div>`;
   }
   let sol = '';
-  if (p.solutionCode) sol = renderCode({ label: p.solutionCode.label || 'reference solution', code: p.solutionCode.cpp, py: p.solutionCode.py !== undefined ? p.solutionCode.py : null, reveal: true }, skillConfig);
+  if (p.solutionCode) sol = renderCode({ ...p.solutionCode, label: p.solutionCode.label || 'reference solution', code: p.solutionCode.code !== undefined ? p.solutionCode.code : (p.solutionCode.sql !== undefined ? p.solutionCode.sql : p.solutionCode.cpp), py: p.solutionCode.py !== undefined ? p.solutionCode.py : null, reveal: true }, skillConfig);
   let fus = '';
   if (p.followups && p.followups.length) {
     fus = `<div class="followup-chain"><div style="font-family:'Space Mono';font-size:10px;letter-spacing:2px;color:var(--accent2);margin-bottom:6px;">INTERVIEWER FOLLOW-UP CHAIN</div>` +
@@ -168,8 +168,8 @@ function renderProblem(p, skillConfig) {
   return `<li class="problem-item">
     <div class="problem-head">
       <span class="diff t${p.tier}">L${p.tier}</span>
-      <div><div class="prob-name">${md(p.title)}</div>
-        <div class="prob-meta">${esc(p.platform || '')}${p.lc ? ' · LC ' + p.lc : ''}${p.patterns ? ' · ' + p.patterns.join(' + ') : ''}${p.srcFile ? ' · your: CODES/' + p.srcFile : ''}</div></div>
+      <div><div class="prob-name">${p.url ? `<a class="prob-link" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">${md(p.title)}</a>` : md(p.title)}</div>
+        <div class="prob-meta">${esc(p.platform || '')}${p.ref ? ' · #' + esc(p.ref) : (p.lc ? ' · LC ' + p.lc : '')}${p.difficulty ? ' · ' + esc(p.difficulty) : ''}${p.sheet ? ' · ' + esc(p.sheet) : ''}${p.patterns ? ' · ' + p.patterns.join(' + ') : ''}${p.srcFile ? ' · your: CODES/' + p.srcFile : ''}</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="${pid}"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">

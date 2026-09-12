@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 05</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">advanced frames, nested windows, performance, optimization</span></div>
   <h1>Window Functions</h1>
-  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="promise">CTEs, recursion, query optimization, dialect differences. You justify the plan, not just the output.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="window-functions_L1" href="window-functions_L1.html">BEGINNER</a><a class="level-pill " data-lesson="window-functions_L2" href="window-functions_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="window-functions_L3" href="window-functions_L3.html">ADVANCED</a><a class="level-pill " data-lesson="window-functions_L4" href="window-functions_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Nested Windows & CTE Patterns</a><a href="#sec-1">02 · Performance — Work_Memory, Spills, Indexes</a><a href="#sec-2">03 · Dialect Deep Dive — Window Function Support</a><a href="#sec-3">04 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Nested Windows & CTE Patterns</a><a href="#sec-1">02 · Performance — Work_Memory, Spills, Indexes</a><a href="#sec-2">03 · Dialect Deep Dive — Window Function Support</a><a href="#sec-3">04 · Problem Set — L3 Drills</a><a href="#sec-4">05 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -251,7 +251,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Compute 3-period moving average of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3s">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfld3s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfld3s">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -261,7 +261,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Running sum of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3t">SUM(rn) OVER (ORDER BY rn)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfld3t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfld3t">SUM(rn) OVER (ORDER BY rn)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -271,7 +271,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3u">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfld3u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfld3u">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -281,7 +281,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3v">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfld3v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfld3v">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -291,7 +291,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Rank employees by their running total of salary (ordered by hire_date).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3w">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfld3w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfld3w">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -301,12 +301,47 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3x">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfld3x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfld3x">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">3 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">SQL Project Planning</a></div>
+        <div class="prob-meta">hackerrank · #051 · hackerrank-sql-58 · gaps-and-islands + consecutive-runs</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-HR051"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/product-price-at-a-given-date/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Product Price at a Given Date</a></div>
+        <div class="prob-meta">leetcode · #1164 · medium · leetcode-sql-50 · as-of-join + last-value-before</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1164"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/restaurant-growth/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Restaurant Growth</a></div>
+        <div class="prob-meta">leetcode · #1321 · medium · leetcode-sql-50 · moving-average + rows-frame</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1321"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">05 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Chain windows via CTE: inner computes, outer applies another window</li><li>Spill = Sort Method: external merge Disk; fix with work_mem</li><li>Index on (PARTITION BY, ORDER BY) avoids sort for window functions</li><li>Multiple windows with same PARTITION+ORDER = single sort, multiple WindowAgg</li><li>CTE materializes window result → allows WHERE/HAVING on window output</li><li>GROUPS frame (PG14) counts peer groups; EXCLUDE TIES/GROUP/CURRENT ROW</li></ul></div>
     <h3>Glossary</h3>

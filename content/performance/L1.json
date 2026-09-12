@@ -72,13 +72,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"scan_type": "Seq Scan", "cost": "O(N)", "when": "Small table, no index, or large % of rows", "example": "SELECT * FROM users"},
-              {"scan_type": "Index Scan", "cost": "O(log N + K)", "when": "Index exists, selective WHERE", "example": "WHERE id = 5"},
-              {"scan_type": "Index Only Scan", "cost": "O(log N + K)", "when": "All columns in index", "example": "SELECT id FROM users WHERE id = 5"},
-              {"scan_type": "Bitmap Index Scan", "cost": "O(log N + pages)", "when": "Multiple indexes combined", "example": "WHERE a=1 AND b=2"}
+              {
+                "scan_type": "Seq Scan",
+                "cost": "O(N)",
+                "when": "Small table, no index, or large % of rows",
+                "example": "SELECT * FROM users"
+              },
+              {
+                "scan_type": "Index Scan",
+                "cost": "O(log N + K)",
+                "when": "Index exists, selective WHERE",
+                "example": "WHERE id = 5"
+              },
+              {
+                "scan_type": "Index Only Scan",
+                "cost": "O(log N + K)",
+                "when": "All columns in index",
+                "example": "SELECT id FROM users WHERE id = 5"
+              },
+              {
+                "scan_type": "Bitmap Index Scan",
+                "cost": "O(log N + pages)",
+                "when": "Multiple indexes combined",
+                "example": "WHERE a=1 AND b=2"
+              }
             ],
             "after": [],
-            "highlight": ["scan_type"]
+            "highlight": [
+              "scan_type"
+            ]
           }
         },
         {
@@ -97,8 +119,8 @@
             "Plan": {
               "Node Type": "Seq Scan",
               "Relation Name": "employees",
-              "Startup Cost": 0.00,
-              "Total Cost": 185.00,
+              "Startup Cost": 0,
+              "Total Cost": 185,
               "Plan Rows": 8500,
               "Plan Width": 72,
               "Filter": "(salary > 50000)"
@@ -128,15 +150,41 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"metric": "Startup Cost", "meaning": "Cost before first row returned", "unit": "arbitrary planner units"},
-              {"metric": "Total Cost", "meaning": "Total estimated cost", "unit": "arbitrary planner units"},
-              {"metric": "Plan Rows", "meaning": "Estimated rows output", "unit": "rows"},
-              {"metric": "Plan Width", "meaning": "Estimated avg row size", "unit": "bytes"},
-              {"metric": "Actual Time", "meaning": "Actual ms (ANALYZE)", "unit": "milliseconds"},
-              {"metric": "Actual Rows", "meaning": "Actual rows output", "unit": "rows"}
+              {
+                "metric": "Startup Cost",
+                "meaning": "Cost before first row returned",
+                "unit": "arbitrary planner units"
+              },
+              {
+                "metric": "Total Cost",
+                "meaning": "Total estimated cost",
+                "unit": "arbitrary planner units"
+              },
+              {
+                "metric": "Plan Rows",
+                "meaning": "Estimated rows output",
+                "unit": "rows"
+              },
+              {
+                "metric": "Plan Width",
+                "meaning": "Estimated avg row size",
+                "unit": "bytes"
+              },
+              {
+                "metric": "Actual Time",
+                "meaning": "Actual ms (ANALYZE)",
+                "unit": "milliseconds"
+              },
+              {
+                "metric": "Actual Rows",
+                "meaning": "Actual rows output",
+                "unit": "rows"
+              }
             ],
             "after": [],
-            "highlight": ["metric"]
+            "highlight": [
+              "metric"
+            ]
           }
         },
         {
@@ -153,7 +201,7 @@
               "answer": 0,
               "explain": "EXPLAIN = planner's estimate. ANALYZE = runs query, shows actual time/rows."
             },
-{
+            {
               "q": "Buffers in EXPLAIN (ANALYZE, BUFFERS) show:",
               "options": [
                 "Memory usage",
@@ -210,13 +258,31 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"index_type": "B-tree", "supports": "=, <, >, <=, >=, BETWEEN, IN, LIKE 'prefix%'", "use_case": "Default, general purpose"},
-              {"index_type": "Partial", "supports": "WHERE clause filters rows", "use_case": "Small subset queries (active users)"},
-              {"index_type": "Covering (INCLUDE)", "supports": "Index-only scan", "use_case": "SELECT col1, col2 WHERE key = ?"},
-              {"index_type": "Expression", "supports": "Index on f(col)", "use_case": "WHERE LOWER(email) = ?"}
+              {
+                "index_type": "B-tree",
+                "supports": "=, <, >, <=, >=, BETWEEN, IN, LIKE 'prefix%'",
+                "use_case": "Default, general purpose"
+              },
+              {
+                "index_type": "Partial",
+                "supports": "WHERE clause filters rows",
+                "use_case": "Small subset queries (active users)"
+              },
+              {
+                "index_type": "Covering (INCLUDE)",
+                "supports": "Index-only scan",
+                "use_case": "SELECT col1, col2 WHERE key = ?"
+              },
+              {
+                "index_type": "Expression",
+                "supports": "Index on f(col)",
+                "use_case": "WHERE LOWER(email) = ?"
+              }
             ],
             "after": [],
-            "highlight": ["index_type"]
+            "highlight": [
+              "index_type"
+            ]
           }
         },
         {
@@ -255,7 +321,7 @@
               "Relation Name": "employees",
               "Index Name": "idx_emp_dept",
               "Startup Cost": 0.29,
-              "Total Cost": 8.30,
+              "Total Cost": 8.3,
               "Plan Rows": 1,
               "Plan Width": 72,
               "Index Cond": "(dept_id = 3)",
@@ -280,54 +346,78 @@
               "tier": 1,
               "title": "EXPLAIN Simple Query",
               "platform": "drill",
-              "patterns": ["explain"],
+              "patterns": [
+                "explain"
+              ],
               "statement": "Run EXPLAIN on SELECT * FROM employees WHERE dept_id = 3. Identify scan type.",
-              "hints": ["Look for Seq Scan vs Index Scan"]
+              "hints": [
+                "Look for Seq Scan vs Index Scan"
+              ]
             },
             {
               "id": "P102",
               "tier": 1,
               "title": "Create Index for Dept Filter",
               "platform": "drill",
-              "patterns": ["create-index"],
+              "patterns": [
+                "create-index"
+              ],
               "statement": "Create index to speed up WHERE dept_id = 5.",
-              "hints": ["CREATE INDEX ON employees (dept_id)"]
+              "hints": [
+                "CREATE INDEX ON employees (dept_id)"
+              ]
             },
             {
               "id": "P103",
               "tier": 1,
               "title": "Composite Index for Dept + Salary",
               "platform": "drill",
-              "patterns": ["composite-index"],
+              "patterns": [
+                "composite-index"
+              ],
               "statement": "Optimize: WHERE dept_id = 3 ORDER BY salary DESC LIMIT 5.",
-              "hints": ["CREATE INDEX ON employees (dept_id, salary DESC)"]
+              "hints": [
+                "CREATE INDEX ON employees (dept_id, salary DESC)"
+              ]
             },
             {
               "id": "P104",
               "tier": 1,
               "title": "Partial Index for Active Users",
               "platform": "drill",
-              "patterns": ["partial-index"],
+              "patterns": [
+                "partial-index"
+              ],
               "statement": "90% queries filter status='active'. Create partial index on users(last_login).",
-              "hints": ["WHERE status = 'active'"]
+              "hints": [
+                "WHERE status = 'active'"
+              ]
             },
             {
               "id": "P105",
               "tier": 1,
               "title": "Covering Index for Name Lookup",
               "platform": "drill",
-              "patterns": ["covering-index"],
+              "patterns": [
+                "covering-index"
+              ],
               "statement": "Query: SELECT name FROM users WHERE id = 123. Create covering index.",
-              "hints": ["INCLUDE (name)"]
+              "hints": [
+                "INCLUDE (name)"
+              ]
             },
             {
               "id": "P106",
               "tier": 1,
               "title": "Expression Index for Email Domain",
               "platform": "drill",
-              "patterns": ["expression-index"],
+              "patterns": [
+                "expression-index"
+              ],
               "statement": "Speed up: WHERE email LIKE '%@company.com'. Use expression index.",
-              "hints": ["CREATE INDEX ON users ((SUBSTRING(email FROM '@.*')))"]
+              "hints": [
+                "CREATE INDEX ON users ((SUBSTRING(email FROM '@.*')))"
+              ]
             }
           ]
         }
@@ -343,11 +433,29 @@
     "Expression index: index on f(col) for WHERE f(col) = ?"
   ],
   "glossary": [
-    { "term": "Seq Scan", "def": "Sequential scan — reads every table page sequentially." },
-    { "term": "Index Scan", "def": "Uses B-tree index to find matching rows, then fetches from heap." },
-    { "term": "Index Only Scan", "def": "All required columns in index; no heap fetch needed." },
-    { "term": "Bitmap Index Scan", "def": "Combines multiple indexes via bitmap; good for AND/OR conditions." },
-    { "term": "Partial Index", "def": "Index with WHERE clause — only indexes subset of rows." },
-    { "term": "Covering Index", "def": "Index with INCLUDE columns — satisfies query without heap access." }
+    {
+      "term": "Seq Scan",
+      "def": "Sequential scan — reads every table page sequentially."
+    },
+    {
+      "term": "Index Scan",
+      "def": "Uses B-tree index to find matching rows, then fetches from heap."
+    },
+    {
+      "term": "Index Only Scan",
+      "def": "All required columns in index; no heap fetch needed."
+    },
+    {
+      "term": "Bitmap Index Scan",
+      "def": "Combines multiple indexes via bitmap; good for AND/OR conditions."
+    },
+    {
+      "term": "Partial Index",
+      "def": "Index with WHERE clause — only indexes subset of rows."
+    },
+    {
+      "term": "Covering Index",
+      "def": "Index with INCLUDE columns — satisfies query without heap access."
+    }
   ]
 }

@@ -72,13 +72,31 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"dimension": "What", "description": "The measured value (temperature, sales, velocity)", "example": "23.5°C"},
-              {"dimension": "When", "description": "The timestamp (ISO 8601, epoch, interval)", "example": "2024-01-15T14:30:00Z"},
-              {"dimension": "Where", "description": "The spatial context (lat/lon, geometry)", "example": "POINT(-122.4 37.7)"},
-              {"dimension": "Who", "description": "The entity/series identifier", "example": "sensor_42"}
+              {
+                "dimension": "What",
+                "description": "The measured value (temperature, sales, velocity)",
+                "example": "23.5°C"
+              },
+              {
+                "dimension": "When",
+                "description": "The timestamp (ISO 8601, epoch, interval)",
+                "example": "2024-01-15T14:30:00Z"
+              },
+              {
+                "dimension": "Where",
+                "description": "The spatial context (lat/lon, geometry)",
+                "example": "POINT(-122.4 37.7)"
+              },
+              {
+                "dimension": "Who",
+                "description": "The entity/series identifier",
+                "example": "sensor_42"
+              }
             ],
             "after": [],
-            "highlight": ["dimension"]
+            "highlight": [
+              "dimension"
+            ]
           }
         },
         {
@@ -129,8 +147,8 @@
           "plan": {
             "Plan": {
               "Node Type": "HashAggregate",
-              "Startup Cost": 5.00,
-              "Total Cost": 7.00,
+              "Startup Cost": 5,
+              "Total Cost": 7,
               "Plan Rows": 96,
               "Plan Width": 40,
               "Group Key": "date_trunc('hour'::text, ts)",
@@ -138,8 +156,8 @@
                 {
                   "Node Type": "Seq Scan",
                   "Relation Name": "events",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 4.00,
+                  "Startup Cost": 0,
+                  "Total Cost": 4,
                   "Plan Rows": 240,
                   "Plan Width": 8
                 }
@@ -197,13 +215,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"type": "POINT", "dimensions": "0", "coordinates": "1 pair", "example": "ST_MakePoint(lon, lat)"},
-              {"type": "LINESTRING", "dimensions": "1", "coordinates": "2+ pairs", "example": "Path, route"},
-              {"type": "POLYGON", "dimensions": "2", "coordinates": "3+ pairs (closed)", "example": "Boundary, zone"},
-              {"type": "MULTIPOINT", "dimensions": "0", "coordinates": "N points", "example": "Multiple locations"}
+              {
+                "type": "POINT",
+                "dimensions": "0",
+                "coordinates": "1 pair",
+                "example": "ST_MakePoint(lon, lat)"
+              },
+              {
+                "type": "LINESTRING",
+                "dimensions": "1",
+                "coordinates": "2+ pairs",
+                "example": "Path, route"
+              },
+              {
+                "type": "POLYGON",
+                "dimensions": "2",
+                "coordinates": "3+ pairs (closed)",
+                "example": "Boundary, zone"
+              },
+              {
+                "type": "MULTIPOINT",
+                "dimensions": "0",
+                "coordinates": "N points",
+                "example": "Multiple locations"
+              }
             ],
             "after": [],
-            "highlight": ["type"]
+            "highlight": [
+              "type"
+            ]
           }
         },
         {
@@ -318,54 +358,82 @@
               "tier": 1,
               "title": "Parse and Extract Timestamp Parts",
               "platform": "drill",
-              "patterns": ["timestamp-extraction"],
+              "patterns": [
+                "timestamp-extraction"
+              ],
               "statement": "From a TIMESTAMPTZ column, extract year, month, day, hour, and day-of-week.",
-              "hints": ["EXTRACT(field FROM timestamp)", "date_trunc('unit', timestamp)"]
+              "hints": [
+                "EXTRACT(field FROM timestamp)",
+                "date_trunc('unit', timestamp)"
+              ]
             },
             {
               "id": "T102",
               "tier": 1,
               "title": "Create Point from Lat/Lon",
               "platform": "drill",
-              "patterns": ["point-creation"],
+              "patterns": [
+                "point-creation"
+              ],
               "statement": "Create a POINT geometry from longitude -122.4194 and latitude 37.7749 with SRID 4326.",
-              "hints": ["ST_MakePoint(lon, lat)", "ST_SetSRID(geom, 4326)"]
+              "hints": [
+                "ST_MakePoint(lon, lat)",
+                "ST_SetSRID(geom, 4326)"
+              ]
             },
             {
               "id": "T103",
               "tier": 1,
               "title": "Distance Between Two Points",
               "platform": "drill",
-              "patterns": ["distance-calculation"],
+              "patterns": [
+                "distance-calculation"
+              ],
               "statement": "Calculate distance in meters between two WGS84 points.",
-              "hints": ["ST_Transform to 3857", "ST_Distance on geography type"]
+              "hints": [
+                "ST_Transform to 3857",
+                "ST_Distance on geography type"
+              ]
             },
             {
               "id": "T104",
               "tier": 1,
               "title": "Points Within Radius",
               "platform": "drill",
-              "patterns": ["spatial-filter"],
+              "patterns": [
+                "spatial-filter"
+              ],
               "statement": "Find all POIs within 500m of a given location.",
-              "hints": ["ST_DWithin with geography or ST_Transform to 3857"]
+              "hints": [
+                "ST_DWithin with geography or ST_Transform to 3857"
+              ]
             },
             {
               "id": "T105",
               "tier": 1,
               "title": "Hourly Bucketing of Events",
               "platform": "drill",
-              "patterns": ["time-bucketing"],
+              "patterns": [
+                "time-bucketing"
+              ],
               "statement": "Count events per hour for the last 7 days.",
-              "hints": ["date_trunc('hour', ts)", "GROUP BY hour_bucket"]
+              "hints": [
+                "date_trunc('hour', ts)",
+                "GROUP BY hour_bucket"
+              ]
             },
             {
               "id": "T106",
               "tier": 1,
               "title": "Build Trajectory from GPS Points",
               "platform": "drill",
-              "patterns": ["trajectory-construction"],
+              "patterns": [
+                "trajectory-construction"
+              ],
               "statement": "Create a LINESTRING trajectory from GPS points ordered by timestamp.",
-              "hints": ["ST_MakeLine(geom ORDER BY ts)"]
+              "hints": [
+                "ST_MakeLine(geom ORDER BY ts)"
+              ]
             }
           ]
         }
@@ -383,13 +451,37 @@
     "date_trunc + GROUP BY = time bucketing; generate_series = gap filling"
   ],
   "glossary": [
-    { "term": "TIMESTAMPTZ", "def": "Timestamp with timezone — stored as UTC, displayed in session timezone." },
-    { "term": "date_trunc", "def": "Truncates timestamp to specified precision (hour, day, month, etc.)." },
-    { "term": "generate_series", "def": "Generates a series of values (dates, numbers) — useful for gap filling." },
-    { "term": "SRID", "def": "Spatial Reference System Identifier — defines coordinate system (4326 = WGS84)." },
-    { "term": "geography type", "def": "PostGIS type for geodesic calculations on sphere (meters, degrees)." },
-    { "term": "geometry type", "def": "PostGIS type for planar calculations on projected coordinates." },
-    { "term": "ST_DWithin", "def": "Returns true if geometries are within specified distance (supports geography)." },
-    { "term": "ST_Transform", "def": "Converts geometry between coordinate systems (SRIDs)." }
+    {
+      "term": "TIMESTAMPTZ",
+      "def": "Timestamp with timezone — stored as UTC, displayed in session timezone."
+    },
+    {
+      "term": "date_trunc",
+      "def": "Truncates timestamp to specified precision (hour, day, month, etc.)."
+    },
+    {
+      "term": "generate_series",
+      "def": "Generates a series of values (dates, numbers) — useful for gap filling."
+    },
+    {
+      "term": "SRID",
+      "def": "Spatial Reference System Identifier — defines coordinate system (4326 = WGS84)."
+    },
+    {
+      "term": "geography type",
+      "def": "PostGIS type for geodesic calculations on sphere (meters, degrees)."
+    },
+    {
+      "term": "geometry type",
+      "def": "PostGIS type for planar calculations on projected coordinates."
+    },
+    {
+      "term": "ST_DWithin",
+      "def": "Returns true if geometries are within specified distance (supports geography)."
+    },
+    {
+      "term": "ST_Transform",
+      "def": "Converts geometry between coordinate systems (SRIDs)."
+    }
   ]
 }

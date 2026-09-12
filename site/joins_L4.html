@@ -6,7 +6,7 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 03</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">join internals, cost model, parallel hash join, join ordering DP</span></div>
   <h1>Joins & Set Operations</h1>
-  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="joins_L1" href="joins_L1.html">BEGINNER</a><a class="level-pill " data-lesson="joins_L2" href="joins_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="joins_L3" href="joins_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="joins_L4" href="joins_L4.html">EXPERT</a></div>
 </div>
 <nav class="toc"><a href="#sec-0">01 · Join Cost Model — Inside the Planner's Brain</a><a href="#sec-1">02 · Dynamic Programming & GEQO — Join Ordering at Scale</a><a href="#sec-2">03 · Parallel Hash Join & Advanced Parallelism</a><a href="#sec-3">04 · Dialect Mastery — Enterprise Join Features</a><a href="#sec-4">05 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
@@ -255,7 +255,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       On NVMe SSD, random_page_cost=4.0 overestimates. Set optimal value and explain impact on Hash vs NLJ choice.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982a">SET random_page_cost = 1.1; favors Hash Join over NLJ</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfl12a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfl12a">SET random_page_cost = 1.1; favors Hash Join over NLJ</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -265,7 +265,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       15-table query produces different plans on each run. Fix for stability.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982b">SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfl12b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfl12b">SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -275,7 +275,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       Parallel Hash Join spills to disk (Lossy). Fix with work_mem.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982c">SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfl12c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfl12c">SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -285,7 +285,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       JOIN on PK column. Show how planner optimizes (stops after first match).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982d">EXPLAIN shows 'Unique Inner: true' or stops early in NLJ</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfl12d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfl12d">EXPLAIN shows 'Unique Inner: true' or stops early in NLJ</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -295,7 +295,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       Explain when right-deep tree (Hash Join build on right) beats left-deep.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd982e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd982e">When right side is smaller; Hash Join builds on right (build side)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfl12e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfl12e">When right side is smaller; Hash Join builds on right (build side)</div></div>
     </div></li></ul>
   </section>
   

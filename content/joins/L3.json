@@ -82,8 +82,8 @@
             "Plan": {
               "Node Type": "Seq Scan",
               "Relation Name": "employees",
-              "Startup Cost": 0.00,
-              "Total Cost": 185.00,
+              "Startup Cost": 0,
+              "Total Cost": 185,
               "Plan Rows": 8500,
               "Plan Width": 4
             }
@@ -139,7 +139,7 @@
           "mysql": "-- MySQL 8.0+: predicate pushdown improved\n-- Derived table pushdown (merged)",
           "py-pandas": "# Manual pushdown: filter first, then merge\nactive = employees[employees['status'] == 'active']\nresult = active[active['dept_id'] == 3]"
         },
-{
+        {
           "type": "callout",
           "tone": "warn",
           "md": "Pushdown blockers: VOLATILE functions (random(), now()), LIMIT/OFFSET in subquery, UNION/EXCEPT, window functions in subquery, set operations. Use CTEs carefully."
@@ -194,23 +194,23 @@
           "plan": {
             "Plan": {
               "Node Type": "Append",
-              "Startup Cost": 0.00,
-              "Total Cost": 5000.00,
+              "Startup Cost": 0,
+              "Total Cost": 5000,
               "Plan Rows": 100000,
               "Plan Width": 120,
               "Plans": [
                 {
                   "Node Type": "Hash Join",
                   "Relation Name": "events_2024_01",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 500.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 500,
                   "Plan Rows": 8333
                 },
                 {
                   "Node Type": "Hash Join",
                   "Relation Name": "events_2024_02",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 500.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 500,
                   "Plan Rows": 8333
                 }
               ]
@@ -284,54 +284,108 @@
               "tier": 3,
               "title": "Identify Join Elimination Opportunity",
               "platform": "drill",
-              "patterns": ["join-elimination"],
+              "patterns": [
+                "join-elimination"
+              ],
               "statement": "Query: SELECT e.dept_id FROM employees e JOIN departments d ON e.dept_id = d.id. Is join eliminated? Why/why not?",
-              "hints": ["Only FK column from child selected → yes, eliminated"]
+              "hints": [
+                "Only FK column from child selected → yes, eliminated"
+              ]
             },
             {
               "id": "J302",
               "tier": 3,
               "title": "Force Predicate Pushdown",
               "platform": "drill",
-              "patterns": ["predicate-pushdown"],
+              "patterns": [
+                "predicate-pushdown"
+              ],
               "statement": "View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.",
-              "hints": ["EXPLAIN SELECT * FROM active_view WHERE dept_id = 5"]
+              "hints": [
+                "EXPLAIN SELECT * FROM active_view WHERE dept_id = 5"
+              ]
             },
             {
               "id": "J303",
               "tier": 3,
               "title": "Design Partition-Wise Join",
               "platform": "drill",
-              "patterns": ["partition-wise-join"],
+              "patterns": [
+                "partition-wise-join"
+              ],
               "statement": "Design events and orders tables partitioned by month for partition-wise join on user_id.",
-              "hints": ["Partition both on month", "Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key"]
+              "hints": [
+                "Partition both on month",
+                "Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key"
+              ]
             },
             {
               "id": "J304",
               "tier": 3,
               "title": "Join Collapse Limit for Forced Order",
               "platform": "drill",
-              "patterns": ["join-order"],
+              "patterns": [
+                "join-order"
+              ],
               "statement": "Force join order: small → medium → large using join_collapse_limit.",
-              "hints": ["SET join_collapse_limit = 1; write joins in desired order"]
+              "hints": [
+                "SET join_collapse_limit = 1; write joins in desired order"
+              ]
             },
             {
               "id": "J305",
               "tier": 3,
               "title": "Adaptive Join Behavior (PG 17+)",
               "platform": "drill",
-              "patterns": ["adaptive-join"],
+              "patterns": [
+                "adaptive-join"
+              ],
               "statement": "Describe when Adaptive Join switches from Nested Loop to Hash Join.",
-              "hints": ["Starts as NLJ; switches when outer rows exceed threshold"]
+              "hints": [
+                "Starts as NLJ; switches when outer rows exceed threshold"
+              ]
             },
             {
               "id": "J306",
               "tier": 3,
               "title": "Fix Blocked Pushdown",
               "platform": "drill",
-              "patterns": ["pushdown-fix"],
+              "patterns": [
+                "pushdown-fix"
+              ],
               "statement": "CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.",
-              "hints": ["Move LIMIT to outer query; use subquery instead of CTE"]
+              "hints": [
+                "Move LIMIT to outer query; use subquery instead of CTE"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "1 sourced problem from HackerRank SQL. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "J3-HR053",
+              "tier": 3,
+              "title": "Symmetric Pairs",
+              "platform": "hackerrank",
+              "ref": "053",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Join",
+              "patterns": [
+                "self-join",
+                "pair-dedupe"
+              ]
             }
           ]
         }
@@ -347,11 +401,29 @@
     "CTE = optimization fence (materialized); subquery = pushdown-friendly"
   ],
   "glossary": [
-    { "term": "join elimination", "def": "Planner removes join when child FK already contains needed parent PK data." },
-    { "term": "predicate pushdown", "def": "Moving WHERE filter down into view/CTE/subquery to reduce rows before join." },
-    { "term": "partition-wise join", "def": "Join partitioned tables partition-by-partition in parallel; requires same partition key." },
-    { "term": "join collapse limit", "def": "Max joins to reorder. Set to 1 to force written order." },
-    { "term": "adaptive join", "def": "PostgreSQL 17+: starts as Nested Loop, dynamically switches to Hash Join if outer rows exceed threshold." },
-    { "term": "optimization fence", "def": "CTE in PostgreSQL — materialized, blocks predicate pushdown and join reordering." }
+    {
+      "term": "join elimination",
+      "def": "Planner removes join when child FK already contains needed parent PK data."
+    },
+    {
+      "term": "predicate pushdown",
+      "def": "Moving WHERE filter down into view/CTE/subquery to reduce rows before join."
+    },
+    {
+      "term": "partition-wise join",
+      "def": "Join partitioned tables partition-by-partition in parallel; requires same partition key."
+    },
+    {
+      "term": "join collapse limit",
+      "def": "Max joins to reorder. Set to 1 to force written order."
+    },
+    {
+      "term": "adaptive join",
+      "def": "PostgreSQL 17+: starts as Nested Loop, dynamically switches to Hash Join if outer rows exceed threshold."
+    },
+    {
+      "term": "optimization fence",
+      "def": "CTE in PostgreSQL — materialized, blocks predicate pushdown and join reordering."
+    }
   ]
 }

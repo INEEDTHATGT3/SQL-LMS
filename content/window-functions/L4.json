@@ -226,13 +226,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"functions": "Same PARTITION+ORDER", "sorts": 1, "windowagg_passes": "N (one per function)", "note": "Shared sort"},
-              {"functions": "Different PARTITION", "sorts": "N", "windowagg_passes": "N", "note": "Separate sorts"},
-              {"functions": "Same PARTITION, different ORDER", "sorts": "N", "windowagg_passes": "N", "note": "Separate sorts"},
-              {"functions": "Same PARTITION+ORDER, diff frames", "sorts": 1, "windowagg_passes": "N", "note": "Frames evaluated per row"}
+              {
+                "functions": "Same PARTITION+ORDER",
+                "sorts": 1,
+                "windowagg_passes": "N (one per function)",
+                "note": "Shared sort"
+              },
+              {
+                "functions": "Different PARTITION",
+                "sorts": "N",
+                "windowagg_passes": "N",
+                "note": "Separate sorts"
+              },
+              {
+                "functions": "Same PARTITION, different ORDER",
+                "sorts": "N",
+                "windowagg_passes": "N",
+                "note": "Separate sorts"
+              },
+              {
+                "functions": "Same PARTITION+ORDER, diff frames",
+                "sorts": 1,
+                "windowagg_passes": "N",
+                "note": "Frames evaluated per row"
+              }
             ],
             "after": [],
-            "highlight": ["sorts", "windowagg_passes"]
+            "highlight": [
+              "sorts",
+              "windowagg_passes"
+            ]
           }
         },
         {
@@ -262,7 +285,7 @@
             }
           ]
         }
-]
+      ]
     },
     {
       "title": "EXPLAIN — Multiple Window Functions Shared Sort",
@@ -273,23 +296,23 @@
           "plan": {
             "Plan": {
               "Node Type": "WindowAgg",
-              "Startup Cost": 50.00,
-              "Total Cost": 500.00,
+              "Startup Cost": 50,
+              "Total Cost": 500,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 200.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 200,
                   "Plan Rows": 8500,
                   "Plan Width": 40,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40
                     }
@@ -312,30 +335,30 @@
             "Plan": {
               "Node Type": "Custom Scan",
               "Custom Scan Name": "Custom Window Aggregate",
-              "Startup Cost": 100.00,
-              "Total Cost": 1000.00,
+              "Startup Cost": 100,
+              "Total Cost": 1000,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "WindowAgg",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 800.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 800,
                   "Plan Rows": 8500,
                   "Plan Width": 48,
                   "Plans": [
                     {
                       "Node Type": "Sort",
-                      "Startup Cost": 50.00,
-                      "Total Cost": 200.00,
+                      "Startup Cost": 50,
+                      "Total Cost": 200,
                       "Plan Rows": 8500,
                       "Plan Width": 40,
                       "Plans": [
                         {
                           "Node Type": "Seq Scan",
                           "Relation Name": "employees",
-                          "Startup Cost": 0.00,
-                          "Total Cost": 185.00,
+                          "Startup Cost": 0,
+                          "Total Cost": 185,
                           "Plan Rows": 8500,
                           "Plan Width": 40
                         }
@@ -381,45 +404,65 @@
               "tier": 4,
               "title": "Custom Window Aggregate (C)",
               "platform": "drill",
-              "patterns": ["custom-aggregate"],
+              "patterns": [
+                "custom-aggregate"
+              ],
               "statement": "Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.",
-              "hints": ["msfunc adds, minvfunc removes, state = running sum + count"]
+              "hints": [
+                "msfunc adds, minvfunc removes, state = running sum + count"
+              ]
             },
             {
               "id": "W402",
               "tier": 4,
               "title": "Hypothetical Rank for Salary Bands",
               "platform": "drill",
-              "patterns": ["hypothetical-rank"],
+              "patterns": [
+                "hypothetical-rank"
+              ],
               "statement": "Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.",
-              "hints": ["RANK(150000) WITHIN GROUP (ORDER BY salary)"]
+              "hints": [
+                "RANK(150000) WITHIN GROUP (ORDER BY salary)"
+              ]
             },
             {
               "id": "W403",
               "tier": 4,
               "title": "IGNORE NULLS for Sparse Data",
               "platform": "drill",
-              "patterns": ["ignore-nulls"],
+              "patterns": [
+                "ignore-nulls"
+              ],
               "statement": "Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.",
-              "hints": ["LAG(reading) IGNORE NULLS OVER (ORDER BY ts)"]
+              "hints": [
+                "LAG(reading) IGNORE NULLS OVER (ORDER BY ts)"
+              ]
             },
             {
               "id": "W404",
               "tier": 4,
               "title": "Expression Index for Window ORDER BY",
               "platform": "drill",
-              "patterns": ["expression-index"],
+              "patterns": [
+                "expression-index"
+              ],
               "statement": "Window function uses ORDER BY salary + bonus. Create expression index.",
-              "hints": ["CREATE INDEX ON employees ((salary + bonus) DESC)"]
+              "hints": [
+                "CREATE INDEX ON employees ((salary + bonus) DESC)"
+              ]
             },
             {
               "id": "W405",
               "tier": 4,
               "title": "Window Function Pushdown (PG 17+)",
               "platform": "drill",
-              "patterns": ["optimization"],
+              "patterns": [
+                "optimization"
+              ],
               "statement": "Explain how PostgreSQL 17+ pushes predicates below window functions.",
-              "hints": ["Predicate pushdown through WindowAgg when safe"]
+              "hints": [
+                "Predicate pushdown through WindowAgg when safe"
+              ]
             }
           ]
         }
@@ -435,11 +478,29 @@
     "QUALIFY (MySQL/Snowflake) vs CTE (PostgreSQL) for filtering window results"
   ],
   "glossary": [
-    { "term": "custom window aggregate", "def": "CREATE AGGREGATE ... WINDOW with msfunc/minvfunc for O(1) sliding window." },
-    { "term": "hypothetical set function", "def": "RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP — rank of hypothetical value in distribution." },
-    { "term": "IGNORE NULLS", "def": "Skip NULLs in window frame; find previous/next non-NULL." },
-    { "term": "WindowAgg passes", "def": "Each window function with same PARTITION+ORDER gets separate pass over sorted data." },
-    { "term": "expression index", "def": "Index on expression (e.g., salary+bonus) to support window ORDER BY on expression." },
-    { "term": "QUALIFY", "def": "MySQL/Snowflake clause to filter window function results without CTE." }
+    {
+      "term": "custom window aggregate",
+      "def": "CREATE AGGREGATE ... WINDOW with msfunc/minvfunc for O(1) sliding window."
+    },
+    {
+      "term": "hypothetical set function",
+      "def": "RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP — rank of hypothetical value in distribution."
+    },
+    {
+      "term": "IGNORE NULLS",
+      "def": "Skip NULLs in window frame; find previous/next non-NULL."
+    },
+    {
+      "term": "WindowAgg passes",
+      "def": "Each window function with same PARTITION+ORDER gets separate pass over sorted data."
+    },
+    {
+      "term": "expression index",
+      "def": "Index on expression (e.g., salary+bonus) to support window ORDER BY on expression."
+    },
+    {
+      "term": "QUALIFY",
+      "def": "MySQL/Snowflake clause to filter window function results without CTE."
+    }
   ]
 }

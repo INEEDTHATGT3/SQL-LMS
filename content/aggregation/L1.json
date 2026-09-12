@@ -72,12 +72,26 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"stage": "Input rows", "description": "100 employee rows with dept_id", "example": "100 rows"},
-              {"stage": "Sort by key", "description": "All dept_id=1 together, then dept_id=2...", "example": "Sorted buckets"},
-              {"stage": "Collapse", "description": "Each bucket → one row + aggregates", "example": "5 rows (5 depts)"}
+              {
+                "stage": "Input rows",
+                "description": "100 employee rows with dept_id",
+                "example": "100 rows"
+              },
+              {
+                "stage": "Sort by key",
+                "description": "All dept_id=1 together, then dept_id=2...",
+                "example": "Sorted buckets"
+              },
+              {
+                "stage": "Collapse",
+                "description": "Each bucket → one row + aggregates",
+                "example": "5 rows (5 depts)"
+              }
             ],
             "after": [],
-            "highlight": ["stage"]
+            "highlight": [
+              "stage"
+            ]
           }
         },
         {
@@ -219,24 +233,26 @@
             "Plan": {
               "Node Type": "GroupAggregate",
               "Strategy": "Sorted",
-              "Group Key": ["dept_id"],
-              "Startup Cost": 100.00,
-              "Total Cost": 500.00,
+              "Group Key": [
+                "dept_id"
+              ],
+              "Startup Cost": 100,
+              "Total Cost": 500,
               "Plan Rows": 5,
               "Plan Width": 24,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 450.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 450,
                   "Plan Rows": 8500,
                   "Plan Width": 24,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 24
                     }
@@ -260,54 +276,386 @@
               "tier": 1,
               "title": "Employee Count per Department",
               "platform": "drill",
-              "patterns": ["group-by"],
+              "patterns": [
+                "group-by"
+              ],
               "statement": "Count employees in each department.",
-              "hints": ["GROUP BY dept_id"]
+              "hints": [
+                "GROUP BY dept_id"
+              ]
             },
             {
               "id": "A102",
               "tier": 1,
               "title": "Average Salary per Department",
               "platform": "drill",
-              "patterns": ["group-by", "avg"],
+              "patterns": [
+                "group-by",
+                "avg"
+              ],
               "statement": "Average salary for each department.",
-              "hints": ["AVG(salary) with GROUP BY dept_id"]
+              "hints": [
+                "AVG(salary) with GROUP BY dept_id"
+              ]
             },
             {
               "id": "A103",
               "tier": 1,
               "title": "Total Payroll per Department",
               "platform": "drill",
-              "patterns": ["group-by", "sum"],
+              "patterns": [
+                "group-by",
+                "sum"
+              ],
               "statement": "Sum of salaries per department.",
-              "hints": ["SUM(salary) with GROUP BY dept_id"]
+              "hints": [
+                "SUM(salary) with GROUP BY dept_id"
+              ]
             },
             {
               "id": "A104",
               "tier": 1,
               "title": "Min/Max Salary per Department",
               "platform": "drill",
-              "patterns": ["group-by", "min-max"],
+              "patterns": [
+                "group-by",
+                "min-max"
+              ],
               "statement": "Minimum and maximum salary in each department.",
-              "hints": ["MIN(salary), MAX(salary) with GROUP BY"]
+              "hints": [
+                "MIN(salary), MAX(salary) with GROUP BY"
+              ]
             },
             {
               "id": "A105",
               "tier": 1,
               "title": "Departments with More Than 5 Employees",
               "platform": "drill",
-              "patterns": ["group-by", "having"],
+              "patterns": [
+                "group-by",
+                "having"
+              ],
               "statement": "Departments having more than 5 employees.",
-              "hints": ["GROUP BY dept_id HAVING COUNT(*) > 5"]
+              "hints": [
+                "GROUP BY dept_id HAVING COUNT(*) > 5"
+              ]
             },
             {
               "id": "A106",
               "tier": 1,
               "title": "Employee Count by Dept and Status",
               "platform": "drill",
-              "patterns": ["multi-column-group-by"],
+              "patterns": [
+                "multi-column-group-by"
+              ],
               "statement": "Count employees grouped by department AND status.",
-              "hints": ["GROUP BY dept_id, status"]
+              "hints": [
+                "GROUP BY dept_id, status"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "21 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "A1-HR026",
+              "tier": 1,
+              "title": "Revising Aggregations - The Count Function",
+              "platform": "hackerrank",
+              "ref": "026",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR027",
+              "tier": 1,
+              "title": "Revising Aggregations - The Sum Function",
+              "platform": "hackerrank",
+              "ref": "027",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR028",
+              "tier": 1,
+              "title": "Revising Aggregations - Averages",
+              "platform": "hackerrank",
+              "ref": "028",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR029",
+              "tier": 1,
+              "title": "Average Population",
+              "platform": "hackerrank",
+              "ref": "029",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR030",
+              "tier": 1,
+              "title": "Japan Population",
+              "platform": "hackerrank",
+              "ref": "030",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR031",
+              "tier": 1,
+              "title": "Population Density Difference",
+              "platform": "hackerrank",
+              "ref": "031",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR032",
+              "tier": 1,
+              "title": "Weather Observation Station 2",
+              "platform": "hackerrank",
+              "ref": "032",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR035",
+              "tier": 1,
+              "title": "Weather Observation Station 13",
+              "platform": "hackerrank",
+              "ref": "035",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR036",
+              "tier": 1,
+              "title": "Weather Observation Station 14",
+              "platform": "hackerrank",
+              "ref": "036",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR037",
+              "tier": 1,
+              "title": "Weather Observation Station 15",
+              "platform": "hackerrank",
+              "ref": "037",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR038",
+              "tier": 1,
+              "title": "Weather Observation Station 16",
+              "platform": "hackerrank",
+              "ref": "038",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR039",
+              "tier": 1,
+              "title": "Weather Observation Station 17",
+              "platform": "hackerrank",
+              "ref": "039",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR040",
+              "tier": 1,
+              "title": "Weather Observation Station 18",
+              "platform": "hackerrank",
+              "ref": "040",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR041",
+              "tier": 1,
+              "title": "Weather Observation Station 19",
+              "platform": "hackerrank",
+              "ref": "041",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-HR042",
+              "tier": 1,
+              "title": "Weather Observation Station 20",
+              "platform": "hackerrank",
+              "ref": "042",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "min-max-round",
+                "scalar-agg"
+              ]
+            },
+            {
+              "id": "A1-LC1075",
+              "tier": 1,
+              "title": "Project Employees I",
+              "platform": "leetcode",
+              "ref": "1075",
+              "url": "https://leetcode.com/problems/project-employees-i/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                "avg",
+                "round"
+              ]
+            },
+            {
+              "id": "A1-LC1141",
+              "tier": 1,
+              "title": "User Activity for the Past 30 Days I",
+              "platform": "leetcode",
+              "ref": "1141",
+              "url": "https://leetcode.com/problems/user-activity-for-the-past-30-days-i/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "easy",
+              "patterns": [
+                "date-window",
+                "count-distinct"
+              ]
+            },
+            {
+              "id": "A1-LC1633",
+              "tier": 1,
+              "title": "Percentage of Users Attended a Contest",
+              "platform": "leetcode",
+              "ref": "1633",
+              "url": "https://leetcode.com/problems/percentage-of-users-attended-a-contest/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                "ratio-of-total"
+              ]
+            },
+            {
+              "id": "A1-LC1729",
+              "tier": 1,
+              "title": "Find Followers Count",
+              "platform": "leetcode",
+              "ref": "1729",
+              "url": "https://leetcode.com/problems/find-followers-count/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "easy",
+              "patterns": [
+                "group-count"
+              ]
+            },
+            {
+              "id": "A1-LC2356",
+              "tier": 1,
+              "title": "Number of Unique Subjects Taught by Each Teacher",
+              "platform": "leetcode",
+              "ref": "2356",
+              "url": "https://leetcode.com/problems/number-of-unique-subjects-taught-by-each-teacher/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "easy",
+              "patterns": [
+                "count-distinct"
+              ]
+            },
+            {
+              "id": "A1-LC596",
+              "tier": 1,
+              "title": "Classes More Than 5 Students",
+              "platform": "leetcode",
+              "ref": "596",
+              "url": "https://leetcode.com/problems/classes-more-than-5-students/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "easy",
+              "patterns": [
+                "having"
+              ]
             }
           ]
         }
@@ -323,11 +671,29 @@
     "NULLs group together in GROUP BY"
   ],
   "glossary": [
-    { "term": "aggregate function", "def": "Computes single value from multiple rows: COUNT, SUM, AVG, MIN, MAX." },
-    { "term": "GROUP BY", "def": "Collapses rows with same key values into one row per group." },
-    { "term": "HAVING", "def": "Filters groups after aggregation (vs WHERE filters rows before)." },
-    { "term": "bucket", "def": "A group of rows with same GROUP BY key values." },
-    { "term": "aggregate expression", "def": "Expression containing aggregate function (e.g., COUNT(*) + 1)." },
-    { "term": "null group", "def": "All rows with NULL in GROUP BY column form one group together." }
+    {
+      "term": "aggregate function",
+      "def": "Computes single value from multiple rows: COUNT, SUM, AVG, MIN, MAX."
+    },
+    {
+      "term": "GROUP BY",
+      "def": "Collapses rows with same key values into one row per group."
+    },
+    {
+      "term": "HAVING",
+      "def": "Filters groups after aggregation (vs WHERE filters rows before)."
+    },
+    {
+      "term": "bucket",
+      "def": "A group of rows with same GROUP BY key values."
+    },
+    {
+      "term": "aggregate expression",
+      "def": "Expression containing aggregate function (e.g., COUNT(*) + 1)."
+    },
+    {
+      "term": "null group",
+      "def": "All rows with NULL in GROUP BY column form one group together."
+    }
   ]
 }

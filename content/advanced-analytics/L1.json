@@ -72,13 +72,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"concept": "GROUP BY", "behavior": "Collapses rows", "output": "One row per group", "example": "SELECT dept, AVG(sal) FROM emp GROUP BY dept"},
-              {"concept": "PIVOT/crosstab", "behavior": "Rows → columns", "output": "Cross-tabulation", "example": "dept vs quarter matrix"},
-              {"concept": "LATERAL", "behavior": "Per-row subquery", "output": "Same row count, extra cols", "example": "Top-N per group"},
-              {"concept": "Advanced frames", "behavior": "Window with custom boundaries", "output": "Moving stats per row", "example": "3-day moving average"}
+              {
+                "concept": "GROUP BY",
+                "behavior": "Collapses rows",
+                "output": "One row per group",
+                "example": "SELECT dept, AVG(sal) FROM emp GROUP BY dept"
+              },
+              {
+                "concept": "PIVOT/crosstab",
+                "behavior": "Rows → columns",
+                "output": "Cross-tabulation",
+                "example": "dept vs quarter matrix"
+              },
+              {
+                "concept": "LATERAL",
+                "behavior": "Per-row subquery",
+                "output": "Same row count, extra cols",
+                "example": "Top-N per group"
+              },
+              {
+                "concept": "Advanced frames",
+                "behavior": "Window with custom boundaries",
+                "output": "Moving stats per row",
+                "example": "3-day moving average"
+              }
             ],
             "after": [],
-            "highlight": ["behavior"]
+            "highlight": [
+              "behavior"
+            ]
           }
         },
         {
@@ -125,97 +147,115 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"pattern": "LATERAL", "readability": "High — looks like join", "performance": "Same as correlated subquery", "use_case": "Top-N per group, complex per-row logic"},
-              {"pattern": "Correlated Subquery", "readability": "Low — nested in SELECT", "performance": "Same", "use_case": "Single column, simple"},
-              {"pattern": "Window Function", "readability": "Medium", "performance": "Better for full scan", "use_case": "All rows need rank/row_number"}
+              {
+                "pattern": "LATERAL",
+                "readability": "High — looks like join",
+                "performance": "Same as correlated subquery",
+                "use_case": "Top-N per group, complex per-row logic"
+              },
+              {
+                "pattern": "Correlated Subquery",
+                "readability": "Low — nested in SELECT",
+                "performance": "Same",
+                "use_case": "Single column, simple"
+              },
+              {
+                "pattern": "Window Function",
+                "readability": "Medium",
+                "performance": "Better for full scan",
+                "use_case": "All rows need rank/row_number"
+              }
             ],
             "after": [],
-            "highlight": ["readability", "performance"]
+            "highlight": [
+              "readability",
+              "performance"
+            ]
           }
         },
-{
-              "type": "quiz",
-              "items": [
-                {
-                  "q": "LATERAL subquery can reference:",
-                  "options": [
-                    "Only tables in same FROM",
-                    "Columns from LEFT side of join",
-                    "Only columns from same subquery",
-                    "Global variables only"
-                  ],
-                  "answer": 1,
-                  "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
-                },
-                {
-                  "q": "CROSS JOIN LATERAL vs LEFT JOIN LATERAL:",
-                  "options": [
-                    "Same",
-                    "CROSS = inner (drops left rows with no match), LEFT = preserves left",
-                    "LEFT not allowed with LATERAL",
-                    "CROSS not allowed"
-                  ],
-                  "answer": 1,
-                  "explain": "CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match)."
-                }
-              ]
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "LATERAL subquery can reference:",
+              "options": [
+                "Only tables in same FROM",
+                "Columns from LEFT side of join",
+                "Only columns from same subquery",
+                "Global variables only"
+              ],
+              "answer": 1,
+              "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
             },
             {
-              "type": "query-plan",
-              "title": "EXPLAIN — LATERAL Join Index Seek",
-              "plan": {
-                "Plan": {
-                  "Node Type": "Nested Loop Left Join",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 5000.00,
-                  "Plan Rows": 8500,
-                  "Plan Width": 120,
-                  "Join Filter": "true",
-                  "Plans": [
-                    {
-                      "Node Type": "Seq Scan",
-                      "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
-                      "Plan Rows": 8500,
-                      "Plan Width": 72
-                    },
-                    {
-                      "Node Type": "Subquery Scan",
-                      "Startup Cost": 0.29,
-                      "Total Cost": 0.55,
-                      "Plan Rows": 1,
-                      "Plan Width": 48,
-                      "SubPlan": {
-                        "Node Type": "Limit",
-                        "Startup Cost": 0.29,
-                        "Total Cost": 0.55,
-                        "Plan Rows": 1,
-                        "Plan Width": 48,
-                        "Plans": [
-                          {
-                            "Node Type": "Index Scan",
-                            "Relation Name": "orders",
-                            "Index Name": "idx_orders_emp_date",
-                            "Startup Cost": 0.29,
-                            "Total Cost": 0.55,
-                            "Plan Rows": 1,
-                            "Plan Width": 48,
-                            "Index Cond": "(emp_id = employees.id)",
-                            "Order By": "order_date DESC"
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              "dialect": "pg"
+              "q": "CROSS JOIN LATERAL vs LEFT JOIN LATERAL:",
+              "options": [
+                "Same",
+                "CROSS = inner (drops left rows with no match), LEFT = preserves left",
+                "LEFT not allowed with LATERAL",
+                "CROSS not allowed"
+              ],
+              "answer": 1,
+              "explain": "CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match)."
             }
           ]
         },
         {
-          "title": "Advanced Frames — ROWS/RANGE/GROUPS, EXCLUDE",
+          "type": "query-plan",
+          "title": "EXPLAIN — LATERAL Join Index Seek",
+          "plan": {
+            "Plan": {
+              "Node Type": "Nested Loop Left Join",
+              "Startup Cost": 0,
+              "Total Cost": 5000,
+              "Plan Rows": 8500,
+              "Plan Width": 120,
+              "Join Filter": "true",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "employees",
+                  "Startup Cost": 0,
+                  "Total Cost": 185,
+                  "Plan Rows": 8500,
+                  "Plan Width": 72
+                },
+                {
+                  "Node Type": "Subquery Scan",
+                  "Startup Cost": 0.29,
+                  "Total Cost": 0.55,
+                  "Plan Rows": 1,
+                  "Plan Width": 48,
+                  "SubPlan": {
+                    "Node Type": "Limit",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 0.55,
+                    "Plan Rows": 1,
+                    "Plan Width": 48,
+                    "Plans": [
+                      {
+                        "Node Type": "Index Scan",
+                        "Relation Name": "orders",
+                        "Index Name": "idx_orders_emp_date",
+                        "Startup Cost": 0.29,
+                        "Total Cost": 0.55,
+                        "Plan Rows": 1,
+                        "Plan Width": 48,
+                        "Index Cond": "(emp_id = employees.id)",
+                        "Order By": "order_date DESC"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "dialect": "pg"
+        }
+      ]
+    },
+    {
+      "title": "Advanced Frames — ROWS/RANGE/GROUPS, EXCLUDE",
       "blocks": [
         {
           "type": "heading",
@@ -234,13 +274,31 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"frame": "ROWS 3 PRECEDING", "meaning": "Current row + 3 rows before", "use_case": "Moving average N rows"},
-              {"frame": "RANGE 3 PRECEDING", "meaning": "Current row + rows with ORDER BY value within 3", "use_case": "Time-based windows"},
-              {"frame": "UNBOUNDED PRECEDING", "meaning": "All rows from start", "use_case": "Running total"},
-              {"frame": "CURRENT ROW", "meaning": "Only current row", "use_case": "Point lookup"}
+              {
+                "frame": "ROWS 3 PRECEDING",
+                "meaning": "Current row + 3 rows before",
+                "use_case": "Moving average N rows"
+              },
+              {
+                "frame": "RANGE 3 PRECEDING",
+                "meaning": "Current row + rows with ORDER BY value within 3",
+                "use_case": "Time-based windows"
+              },
+              {
+                "frame": "UNBOUNDED PRECEDING",
+                "meaning": "All rows from start",
+                "use_case": "Running total"
+              },
+              {
+                "frame": "CURRENT ROW",
+                "meaning": "Only current row",
+                "use_case": "Point lookup"
+              }
             ],
             "after": [],
-            "highlight": ["frame"]
+            "highlight": [
+              "frame"
+            ]
           }
         },
         {
@@ -322,23 +380,23 @@
           "plan": {
             "Plan": {
               "Node Type": "WindowAgg",
-              "Startup Cost": 50.00,
-              "Total Cost": 300.00,
+              "Startup Cost": 50,
+              "Total Cost": 300,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 200.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 200,
                   "Plan Rows": 8500,
                   "Plan Width": 40,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40
                     }
@@ -389,54 +447,78 @@
               "tier": 1,
               "title": "Department × Quarter Sales Matrix",
               "platform": "drill",
-              "patterns": ["crosstab"],
+              "patterns": [
+                "crosstab"
+              ],
               "statement": "Create cross-tabulation: departments as rows, quarters as columns, sales as values.",
-              "hints": ["crosstab() from tablefunc"]
+              "hints": [
+                "crosstab() from tablefunc"
+              ]
             },
             {
               "id": "X102",
               "tier": 1,
               "title": "Latest Order per Customer (LATERAL)",
               "platform": "drill",
-              "patterns": ["lateral-join"],
+              "patterns": [
+                "lateral-join"
+              ],
               "statement": "For each customer, show their most recent order date and total.",
-              "hints": ["LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"]
+              "hints": [
+                "LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"
+              ]
             },
             {
               "id": "X103",
               "tier": 1,
               "title": "4-Row Moving Average",
               "platform": "drill",
-              "patterns": ["frame-rows"],
+              "patterns": [
+                "frame-rows"
+              ],
               "statement": "Compute 4-row moving average of daily sales (current + 3 preceding).",
-              "hints": ["ROWS BETWEEN 3 PRECEDING AND CURRENT ROW"]
+              "hints": [
+                "ROWS BETWEEN 3 PRECEDING AND CURRENT ROW"
+              ]
             },
             {
               "id": "X104",
               "tier": 1,
               "title": "7-Day Moving Sum (RANGE)",
               "platform": "drill",
-              "patterns": ["frame-range"],
+              "patterns": [
+                "frame-range"
+              ],
               "statement": "Sum of sales for each day + previous 6 days using RANGE.",
-              "hints": ["RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW"]
+              "hints": [
+                "RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW"
+              ]
             },
             {
               "id": "X105",
               "tier": 1,
               "title": "Quartile Assignment",
               "platform": "drill",
-              "patterns": ["ntile"],
+              "patterns": [
+                "ntile"
+              ],
               "statement": "Assign each employee to a salary quartile (1-4) within their department.",
-              "hints": ["NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)"]
+              "hints": [
+                "NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)"
+              ]
             },
             {
               "id": "X106",
               "tier": 1,
               "title": "Conditional Counts with FILTER",
               "platform": "drill",
-              "patterns": ["filter-clause"],
+              "patterns": [
+                "filter-clause"
+              ],
               "statement": "Per department: count of active, pending, inactive employees using FILTER.",
-              "hints": ["COUNT(*) FILTER (WHERE status = 'active')"]
+              "hints": [
+                "COUNT(*) FILTER (WHERE status = 'active')"
+              ]
             }
           ]
         }
@@ -452,11 +534,29 @@
     "FILTER clause: conditional aggregate in one scan; cleaner than CASE"
   ],
   "glossary": [
-    { "term": "crosstab", "def": "PostgreSQL function (tablefunc) for pivot/cross-tabulation." },
-    { "term": "LATERAL join", "def": "Right subquery references left columns. Like correlated subquery in FROM clause." },
-    { "term": "frame clause", "def": "ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row." },
-    { "term": "NTILE", "def": "Divides partition into n roughly equal buckets (1..n)." },
-    { "term": "TABLESAMPLE", "def": "Fast approximate sampling of tables (SYSTEM = page-level, BERNOULLI = row-level)." },
-    { "term": "FILTER clause", "def": "Conditional aggregate: AGG(expr) FILTER (WHERE condition)." }
+    {
+      "term": "crosstab",
+      "def": "PostgreSQL function (tablefunc) for pivot/cross-tabulation."
+    },
+    {
+      "term": "LATERAL join",
+      "def": "Right subquery references left columns. Like correlated subquery in FROM clause."
+    },
+    {
+      "term": "frame clause",
+      "def": "ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row."
+    },
+    {
+      "term": "NTILE",
+      "def": "Divides partition into n roughly equal buckets (1..n)."
+    },
+    {
+      "term": "TABLESAMPLE",
+      "def": "Fast approximate sampling of tables (SYSTEM = page-level, BERNOULLI = row-level)."
+    },
+    {
+      "term": "FILTER clause",
+      "def": "Conditional aggregate: AGG(expr) FILTER (WHERE condition)."
+    }
   ]
 }

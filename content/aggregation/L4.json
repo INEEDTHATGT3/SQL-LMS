@@ -82,22 +82,30 @@
             "Plan": {
               "Node Type": "Gather Merge",
               "Workers Planned": 4,
-              "Startup Cost": 1000.00,
-              "Total Cost": 50000.00,
+              "Startup Cost": 1000,
+              "Total Cost": 50000,
               "Plan Rows": 1000000,
               "Plan Width": 120,
               "Plans": [
                 {
                   "Node Type": "Parallel Hash Join",
-                  "Startup Cost": 5000.00,
-                  "Total Cost": 40000.00,
+                  "Startup Cost": 5000,
+                  "Total Cost": 40000,
                   "Plan Rows": 250000,
                   "Plan Width": 120,
                   "Hash Cond": "(a.id = b.id)",
-                  "Worker 0": { "Actual Rows": 250123 },
-                  "Worker 1": { "Actual Rows": 249876 },
-                  "Worker 2": { "Actual Rows": 250045 },
-                  "Worker 3": { "Actual Rows": 249956 }
+                  "Worker 0": {
+                    "Actual Rows": 250123
+                  },
+                  "Worker 1": {
+                    "Actual Rows": 249876
+                  },
+                  "Worker 2": {
+                    "Actual Rows": 250045
+                  },
+                  "Worker 3": {
+                    "Actual Rows": 249956
+                  }
                 }
               ]
             }
@@ -165,13 +173,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"type": "Materialized View", "refresh": "Manual / scheduled", "latency": "Stale until refresh", "storage": "Full copy"},
-              {"type": "Continuous Aggregate", "refresh": "Automatic incremental", "latency": "Near real-time (configurable)", "storage": "Incremental + raw"},
-              {"type": "View", "refresh": "Always real-time", "latency": "Zero", "storage": "None (query rewrite)"},
-              {"type": "Table + Trigger", "refresh": "Per-row (sync)", "latency": "Real-time", "storage": "Full copy + overhead"}
+              {
+                "type": "Materialized View",
+                "refresh": "Manual / scheduled",
+                "latency": "Stale until refresh",
+                "storage": "Full copy"
+              },
+              {
+                "type": "Continuous Aggregate",
+                "refresh": "Automatic incremental",
+                "latency": "Near real-time (configurable)",
+                "storage": "Incremental + raw"
+              },
+              {
+                "type": "View",
+                "refresh": "Always real-time",
+                "latency": "Zero",
+                "storage": "None (query rewrite)"
+              },
+              {
+                "type": "Table + Trigger",
+                "refresh": "Per-row (sync)",
+                "latency": "Real-time",
+                "storage": "Full copy + overhead"
+              }
             ],
             "after": [],
-            "highlight": ["refresh", "latency"]
+            "highlight": [
+              "refresh",
+              "latency"
+            ]
           }
         },
         {
@@ -273,33 +304,35 @@
           "plan": {
             "Plan": {
               "Node Type": "Insert",
-              "Startup Cost": 0.00,
-              "Total Cost": 100.00,
+              "Startup Cost": 0,
+              "Total Cost": 100,
               "Plan Rows": 1,
               "Plan Width": 48,
               "Conflict Resolution": "ON CONFLICT DO UPDATE",
               "Plans": [
                 {
                   "Node Type": "Subquery Scan",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 50.00,
+                  "Startup Cost": 0,
+                  "Total Cost": 50,
                   "Plan Rows": 1,
                   "Plan Width": 48,
                   "Plans": [
                     {
                       "Node Type": "Aggregate",
                       "Strategy": "Hashed",
-                      "Group Key": ["sale_date"],
-                      "Startup Cost": 0.00,
-                      "Total Cost": 50.00,
+                      "Group Key": [
+                        "sale_date"
+                      ],
+                      "Startup Cost": 0,
+                      "Total Cost": 50,
                       "Plan Rows": 1,
                       "Plan Width": 48,
                       "Plans": [
                         {
                           "Node Type": "Seq Scan",
                           "Relation Name": "orders",
-                          "Startup Cost": 0.00,
-                          "Total Cost": 40.00,
+                          "Startup Cost": 0,
+                          "Total Cost": 40,
                           "Plan Rows": 1000,
                           "Plan Width": 24,
                           "Filter": "(sale_date = (CURRENT_DATE - 1))"
@@ -345,45 +378,72 @@
               "tier": 4,
               "title": "Parallel Aggregate Tuning",
               "platform": "drill",
-              "patterns": ["parallel-aggregate"],
+              "patterns": [
+                "parallel-aggregate"
+              ],
               "statement": "Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.",
-              "hints": ["max_parallel_workers_per_gather", "work_mem", "min_parallel_table_scan_size"]
+              "hints": [
+                "max_parallel_workers_per_gather",
+                "work_mem",
+                "min_parallel_table_scan_size"
+              ]
             },
             {
               "id": "A402",
               "tier": 4,
               "title": "Materialized View with Concurrent Refresh",
               "platform": "drill",
-              "patterns": ["materialized-view"],
+              "patterns": [
+                "materialized-view"
+              ],
               "statement": "Create MV for daily sales by region with zero-downtime refresh.",
-              "hints": ["CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)"]
+              "hints": [
+                "CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)"
+              ]
             },
             {
               "id": "A403",
               "tier": 4,
               "title": "Continuous Aggregate for Real-Time Dashboard",
               "platform": "drill",
-              "patterns": ["continuous-aggregate"],
+              "patterns": [
+                "continuous-aggregate"
+              ],
               "statement": "Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.",
-              "hints": ["time_bucket('5 min', ts)", "add_continuous_aggregate_policy"]
+              "hints": [
+                "time_bucket('5 min', ts)",
+                "add_continuous_aggregate_policy"
+              ]
             },
             {
               "id": "A404",
               "tier": 4,
               "title": "Incremental Aggregate with CDC",
               "platform": "drill",
-              "patterns": ["incremental-aggregate", "cdc"],
+              "patterns": [
+                "incremental-aggregate",
+                "cdc"
+              ],
               "statement": "Design incremental daily sales agg using pgoutput logical replication for CDC.",
-              "hints": ["CREATE PUBLICATION", "pgoutput plugin", "apply delta to agg table"]
+              "hints": [
+                "CREATE PUBLICATION",
+                "pgoutput plugin",
+                "apply delta to agg table"
+              ]
             },
             {
               "id": "A405",
               "tier": 4,
               "title": "Right-Deep Tree for Parallel Hash Aggregate",
               "platform": "drill",
-              "patterns": ["join-tree", "parallel-aggregate"],
+              "patterns": [
+                "join-tree",
+                "parallel-aggregate"
+              ],
               "statement": "Explain when right-deep join tree enables better parallel aggregate distribution.",
-              "hints": ["Build side on right (smaller), probe on left"]
+              "hints": [
+                "Build side on right (smaller), probe on left"
+              ]
             }
           ]
         }
@@ -399,10 +459,25 @@
     "REFRESH CONCURRENTLY = brief lock swap; requires unique index on MV"
   ],
   "glossary": [
-    { "term": "partial aggregate", "def": "Per-worker aggregate on data partition; combined at leader via Gather Merge." },
-    { "term": "continuous aggregate", "def": "TimescaleDB: automatically maintained materialized view with incremental refresh." },
-    { "term": "materialized view", "def": "Pre-computed query result stored as table; refreshed manually or scheduled." },
-    { "term": "incremental aggregate", "def": "Aggregate updated by applying delta (new/changed rows) instead of full recompute." },
-    { "term": "CDC (Change Data Capture)", "def": "Capture INSERT/UPDATE/DELETE from WAL for real-time incremental processing." }
+    {
+      "term": "partial aggregate",
+      "def": "Per-worker aggregate on data partition; combined at leader via Gather Merge."
+    },
+    {
+      "term": "continuous aggregate",
+      "def": "TimescaleDB: automatically maintained materialized view with incremental refresh."
+    },
+    {
+      "term": "materialized view",
+      "def": "Pre-computed query result stored as table; refreshed manually or scheduled."
+    },
+    {
+      "term": "incremental aggregate",
+      "def": "Aggregate updated by applying delta (new/changed rows) instead of full recompute."
+    },
+    {
+      "term": "CDC (Change Data Capture)",
+      "def": "Capture INSERT/UPDATE/DELETE from WAL for real-time incremental processing."
+    }
   ]
 }

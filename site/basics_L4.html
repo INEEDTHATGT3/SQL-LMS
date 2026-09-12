@@ -6,7 +6,7 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 01</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">partitioning, parallelism, internals — production-grade fundamentals</span></div>
   <h1>SQL Fundamentals</h1>
-  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="basics_L1" href="basics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="basics_L2" href="basics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="basics_L3" href="basics_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="basics_L4" href="basics_L4.html">EXPERT</a></div>
 </div>
 <nav class="toc"><a href="#sec-0">01 · Table Partitioning — Scale Without Sharding</a><a href="#sec-1">02 · Parallel Query & Cost Tuning</a><a href="#sec-2">03 · Advanced Indexing — BRIN, Expression, Concurrent</a><a href="#sec-3">04 · Dialect Deep Dive — Partitioning & Parallelism</a><a href="#sec-4">05 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
@@ -255,7 +255,7 @@ EXPLAIN ANALYZE SELECT ...; -- Shows Gather/Parallel Seq Scan</code></pre>
     </div>
     <div class="prob-body">
       Design a partitioned table for 1B events/year with partition key on event_time. Include monthly partitions, default partition, and index strategy.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tk" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tk">PARTITION BY RANGE (event_time)</div><button class="reveal-btn" data-target="umtxzqd8tm" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8tm">Monthly partitions</div><button class="reveal-btn" data-target="umtxzqd8to" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqd8to">Default partition for strays</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfknk" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfknk">PARTITION BY RANGE (event_time)</div><button class="reveal-btn" data-target="umtybhfknm" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfknm">Monthly partitions</div><button class="reveal-btn" data-target="umtybhfkno" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtybhfkno">Default partition for strays</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -265,7 +265,7 @@ EXPLAIN ANALYZE SELECT ...; -- Shows Gather/Parallel Seq Scan</code></pre>
     </div>
     <div class="prob-body">
       Create BRIN index on log_table(created_at) for 500M row append-only log table. Compare size vs B-tree.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tp" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tp">USING BRIN (created_at)</div><button class="reveal-btn" data-target="umtxzqd8tr" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8tr">pages_per_range=32 for finer granularity</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfknp" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfknp">USING BRIN (created_at)</div><button class="reveal-btn" data-target="umtybhfknr" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfknr">pages_per_range=32 for finer granularity</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -275,7 +275,7 @@ EXPLAIN ANALYZE SELECT ...; -- Shows Gather/Parallel Seq Scan</code></pre>
     </div>
     <div class="prob-body">
       Add index on orders(customer_id, order_date) without locking the 200M row table.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8ts" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8ts">CREATE INDEX CONCURRENTLY</div><button class="reveal-btn" data-target="umtxzqd8tu" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8tu">Monitor pg_stat_progress_create_index</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfkns" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfkns">CREATE INDEX CONCURRENTLY</div><button class="reveal-btn" data-target="umtybhfknu" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfknu">Monitor pg_stat_progress_create_index</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -285,7 +285,7 @@ EXPLAIN ANALYZE SELECT ...; -- Shows Gather/Parallel Seq Scan</code></pre>
     </div>
     <div class="prob-body">
       Users search by email case-insensitively. Create index to support WHERE LOWER(email) = ? efficiently.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tv" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tv">CREATE INDEX ON users (LOWER(email))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfknv" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfknv">CREATE INDEX ON users (LOWER(email))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -295,7 +295,7 @@ EXPLAIN ANALYZE SELECT ...; -- Shows Gather/Parallel Seq Scan</code></pre>
     </div>
     <div class="prob-body">
       Run EXPLAIN (ANALYZE, BUFFERS) on large aggregation. Identify Gather node, worker count, and whether parallelism helped.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8tw" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8tw">SET max_parallel_workers_per_gather = 4</div><button class="reveal-btn" data-target="umtxzqd8ty" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd8ty">Look for Parallel Seq Scan vs Seq Scan</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfknw" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfknw">SET max_parallel_workers_per_gather = 4</div><button class="reveal-btn" data-target="umtybhfkny" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfkny">Look for Parallel Seq Scan vs Seq Scan</div></div>
     </div></li></ul>
   </section>
   

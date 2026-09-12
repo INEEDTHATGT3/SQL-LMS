@@ -6,7 +6,7 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 05</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">OVER clause — analytics without GROUP BY collapse</span></div>
   <h1>Window Functions</h1>
-  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="promise">Core syntax, mental models. Tables as grids. Every problem is solvable with one SELECT.</div>
   <div class="level-strip"><a class="level-pill current" data-lesson="window-functions_L1" href="window-functions_L1.html">BEGINNER</a><a class="level-pill " data-lesson="window-functions_L2" href="window-functions_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="window-functions_L3" href="window-functions_L3.html">ADVANCED</a><a class="level-pill " data-lesson="window-functions_L4" href="window-functions_L4.html">EXPERT</a></div>
 </div>
 <nav class="toc"><a href="#sec-0">01 · Mental Model — The Sliding Window</a><a href="#sec-1">02 · Ranking Functions — ROW_NUMBER, RANK, DENSE_RANK</a><a href="#sec-2">03 · Navigation Functions — LAG, LEAD, FIRST_VALUE, LAST_VALUE</a><a href="#sec-3">04 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
@@ -206,7 +206,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Add column rn = row number within department ordered by salary DESC.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9f3e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9f3e">ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfla3e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfla3e">ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -216,7 +216,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Rank all employees by salary DESC. Show name, salary, rank.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9f3f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9f3f">RANK() OVER (ORDER BY salary DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfla3f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfla3f">RANK() OVER (ORDER BY salary DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -226,7 +226,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Dense rank employees within each department by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9f3g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9f3g">DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfla3g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfla3g">DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -236,7 +236,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       For each employee ordered by hire_date, show previous employee's salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9f3h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9f3h">LAG(salary) OVER (ORDER BY hire_date)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfla3h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfla3h">LAG(salary) OVER (ORDER BY hire_date)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -246,7 +246,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Show each employee with their department's highest salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9f3i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9f3i">FIRST_VALUE(salary) OVER (PARTITION BY dept_id ORDER BY salary DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfla3i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfla3i">FIRST_VALUE(salary) OVER (PARTITION BY dept_id ORDER BY salary DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -256,7 +256,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       For each employee ordered by hire_date, show the next employee's hire date.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9f3j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9f3j">LEAD(hire_date) OVER (ORDER BY hire_date)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfla3j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfla3j">LEAD(hire_date) OVER (ORDER BY hire_date)</div></div>
     </div></li></ul>
   </section>
   

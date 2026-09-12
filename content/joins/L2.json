@@ -81,8 +81,8 @@
           "plan": {
             "Plan": {
               "Node Type": "Hash Join",
-              "Startup Cost": 100.00,
-              "Total Cost": 5000.00,
+              "Startup Cost": 100,
+              "Total Cost": 5000,
               "Plan Rows": 10000,
               "Plan Width": 120,
               "Hash Cond": "(a.id = b.id)",
@@ -90,14 +90,14 @@
                 {
                   "Node Type": "Seq Scan",
                   "Relation Name": "a",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 100.00,
+                  "Startup Cost": 0,
+                  "Total Cost": 100,
                   "Plan Rows": 10000
                 },
                 {
                   "Node Type": "Hash",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 50.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 50,
                   "Plan Rows": 5000
                 }
               ]
@@ -160,12 +160,30 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"pattern": "LATERAL", "readability": "High — looks like regular join", "performance": "Same as correlated subquery", "use_case": "Top-N per group, complex per-row logic"},
-              {"pattern": "Correlated Subquery", "readability": "Low — nested in SELECT", "performance": "Same", "use_case": "Single column, simple"},
-              {"pattern": "Window Function", "readability": "Medium", "performance": "Better for full scan", "use_case": "All rows need rank/row_number"}
+              {
+                "pattern": "LATERAL",
+                "readability": "High — looks like regular join",
+                "performance": "Same as correlated subquery",
+                "use_case": "Top-N per group, complex per-row logic"
+              },
+              {
+                "pattern": "Correlated Subquery",
+                "readability": "Low — nested in SELECT",
+                "performance": "Same",
+                "use_case": "Single column, simple"
+              },
+              {
+                "pattern": "Window Function",
+                "readability": "Medium",
+                "performance": "Better for full scan",
+                "use_case": "All rows need rank/row_number"
+              }
             ],
             "after": [],
-            "highlight": ["readability", "performance"]
+            "highlight": [
+              "readability",
+              "performance"
+            ]
           }
         },
         {
@@ -291,72 +309,323 @@
               "tier": 2,
               "title": "Latest Order per Employee (LATERAL)",
               "platform": "drill",
-              "patterns": ["lateral-join"],
+              "patterns": [
+                "lateral-join"
+              ],
               "statement": "For each employee, show their most recent order date and total.",
-              "hints": ["LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"]
+              "hints": [
+                "LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"
+              ]
             },
             {
               "id": "J202",
               "tier": 2,
               "title": "Customers Without Orders (NOT EXISTS)",
               "platform": "drill",
-              "patterns": ["anti-join"],
+              "patterns": [
+                "anti-join"
+              ],
               "statement": "Find customers who have never placed an order.",
-              "hints": ["NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)"]
+              "hints": [
+                "NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)"
+              ]
             },
             {
               "id": "J203",
               "tier": 2,
               "title": "Top 3 Products per Category (LATERAL)",
               "platform": "drill",
-              "patterns": ["lateral-top-n"],
+              "patterns": [
+                "lateral-top-n"
+              ],
               "statement": "For each category, list top 3 products by sales.",
-              "hints": ["LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)"]
+              "hints": [
+                "LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)"
+              ]
             },
             {
               "id": "J204",
               "tier": 2,
               "title": "Employees With Orders in 2024 (EXISTS)",
               "platform": "drill",
-              "patterns": ["semi-join"],
+              "patterns": [
+                "semi-join"
+              ],
               "statement": "Employees who placed at least one order in 2024.",
-              "hints": ["EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')"]
+              "hints": [
+                "EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')"
+              ]
             },
             {
               "id": "J205",
               "tier": 2,
               "title": "Products Never Ordered (Anti-Join)",
               "platform": "drill",
-              "patterns": ["anti-join"],
+              "patterns": [
+                "anti-join"
+              ],
               "statement": "Products that have never been ordered.",
-              "hints": ["NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)"]
+              "hints": [
+                "NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)"
+              ]
             },
             {
               "id": "J206",
               "tier": 2,
               "title": "Force Join Order (Small to Large)",
               "platform": "drill",
-              "patterns": ["join-order"],
+              "patterns": [
+                "join-order"
+              ],
               "statement": "Join small_table (100 rows) → medium (10k) → large (1M). Force order.",
-              "hints": ["SET join_collapse_limit = 1; write joins in order small→medium→large"]
+              "hints": [
+                "SET join_collapse_limit = 1; write joins in order small→medium→large"
+              ]
             },
             {
               "id": "J207",
               "tier": 2,
               "title": "Set Operations: Active vs Inactive Users",
               "platform": "drill",
-              "patterns": ["except"],
+              "patterns": [
+                "except"
+              ],
               "statement": "User IDs in 'active' status but not in 'inactive'. Use EXCEPT.",
-              "hints": ["SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'"]
+              "hints": [
+                "SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'"
+              ]
             },
             {
               "id": "J208",
               "tier": 2,
               "title": "FULL JOIN Workaround (MySQL)",
               "platform": "drill",
-              "patterns": ["full-join-workaround"],
+              "patterns": [
+                "full-join-workaround"
+              ],
               "statement": "MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.",
-              "hints": ["LEFT JOIN ... UNION RIGHT JOIN ..."]
+              "hints": [
+                "LEFT JOIN ... UNION RIGHT JOIN ..."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "14 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "J2-HR025",
+              "tier": 2,
+              "title": "New Companies",
+              "platform": "hackerrank",
+              "ref": "025",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Select",
+              "patterns": [
+                "multi-join",
+                "count-distinct"
+              ]
+            },
+            {
+              "id": "J2-HR046",
+              "tier": 2,
+              "title": "The Report",
+              "platform": "hackerrank",
+              "ref": "046",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "non-equi-join",
+                "case-expression"
+              ]
+            },
+            {
+              "id": "J2-HR047",
+              "tier": 2,
+              "title": "Top Competitors",
+              "platform": "hackerrank",
+              "ref": "047",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "multi-join",
+                "having",
+                "tie-break-order"
+              ]
+            },
+            {
+              "id": "J2-HR048",
+              "tier": 2,
+              "title": "Ollivander's Inventory",
+              "platform": "hackerrank",
+              "ref": "048",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "correlated-subquery",
+                "min-per-group"
+              ]
+            },
+            {
+              "id": "J2-HR049",
+              "tier": 2,
+              "title": "Challenges",
+              "platform": "hackerrank",
+              "ref": "049",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "group-having",
+                "union-all"
+              ]
+            },
+            {
+              "id": "J2-HR050",
+              "tier": 2,
+              "title": "Contest Leaderboard",
+              "platform": "hackerrank",
+              "ref": "050",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Basic Join",
+              "patterns": [
+                "max-per-group",
+                "sum-having"
+              ]
+            },
+            {
+              "id": "J2-HR052",
+              "tier": 2,
+              "title": "Placements",
+              "platform": "hackerrank",
+              "ref": "052",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Advanced Join",
+              "patterns": [
+                "self-join",
+                "multi-join"
+              ]
+            },
+            {
+              "id": "J2-LC1280",
+              "tier": 2,
+              "title": "Students and Examinations",
+              "platform": "leetcode",
+              "ref": "1280",
+              "url": "https://leetcode.com/problems/students-and-examinations/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "cross-join",
+                "left-join"
+              ]
+            },
+            {
+              "id": "J2-LC1661",
+              "tier": 2,
+              "title": "Average Time of Process per Machine",
+              "platform": "leetcode",
+              "ref": "1661",
+              "url": "https://leetcode.com/problems/average-time-of-process-per-machine/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "self-join",
+                "conditional-agg"
+              ]
+            },
+            {
+              "id": "J2-LC1731",
+              "tier": 2,
+              "title": "The Number of Employees Which Report to Each Employee",
+              "platform": "leetcode",
+              "ref": "1731",
+              "url": "https://leetcode.com/problems/the-number-of-employees-which-report-to-each-employee/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "self-join",
+                "hierarchy"
+              ]
+            },
+            {
+              "id": "J2-LC1789",
+              "tier": 2,
+              "title": "Primary Department for Each Employee",
+              "platform": "leetcode",
+              "ref": "1789",
+              "url": "https://leetcode.com/problems/primary-department-for-each-employee/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "union-all",
+                "group-filter"
+              ]
+            },
+            {
+              "id": "J2-LC1934",
+              "tier": 2,
+              "title": "Confirmation Rate",
+              "platform": "leetcode",
+              "ref": "1934",
+              "url": "https://leetcode.com/problems/confirmation-rate/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "medium",
+              "patterns": [
+                "left-join",
+                "conditional-agg"
+              ]
+            },
+            {
+              "id": "J2-LC197",
+              "tier": 2,
+              "title": "Rising Temperature",
+              "platform": "leetcode",
+              "ref": "197",
+              "url": "https://leetcode.com/problems/rising-temperature/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "easy",
+              "patterns": [
+                "self-join",
+                "date-arithmetic"
+              ]
+            },
+            {
+              "id": "J2-LC570",
+              "tier": 2,
+              "title": "Managers with at Least 5 Direct Reports",
+              "platform": "leetcode",
+              "ref": "570",
+              "url": "https://leetcode.com/problems/managers-with-at-least-5-direct-reports/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Joins",
+              "difficulty": "medium",
+              "patterns": [
+                "self-join",
+                "having"
+              ]
             }
           ]
         }
@@ -372,11 +641,29 @@
     "FULL JOIN = LEFT UNION RIGHT; MySQL 5.7 workaround: LEFT UNION RIGHT"
   ],
   "glossary": [
-    { "term": "nested loop join", "def": "For each outer row, probe inner index. Best: small outer + indexed inner." },
-    { "term": "hash join", "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem." },
-    { "term": "merge join", "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input." },
-    { "term": "lateral join", "def": "Right subquery references left columns. Like correlated subquery in FROM clause." },
-    { "term": "semi-join", "def": "EXISTS/IN pattern — returns left rows only, stops at first match per left row." },
-    { "term": "anti-join", "def": "NOT EXISTS pattern — returns left rows with NO match in right." }
+    {
+      "term": "nested loop join",
+      "def": "For each outer row, probe inner index. Best: small outer + indexed inner."
+    },
+    {
+      "term": "hash join",
+      "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem."
+    },
+    {
+      "term": "merge join",
+      "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input."
+    },
+    {
+      "term": "lateral join",
+      "def": "Right subquery references left columns. Like correlated subquery in FROM clause."
+    },
+    {
+      "term": "semi-join",
+      "def": "EXISTS/IN pattern — returns left rows only, stops at first match per left row."
+    },
+    {
+      "term": "anti-join",
+      "def": "NOT EXISTS pattern — returns left rows with NO match in right."
+    }
   ]
 }

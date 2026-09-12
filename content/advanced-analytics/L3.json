@@ -88,13 +88,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"method": "COUNT(DISTINCT)", "memory": "O(N)", "accuracy": "Exact", "speed": "Slow on large N"},
-              {"method": "HyperLogLog", "memory": "O(1) ~few KB", "accuracy": "~1-2% error", "speed": "Very fast"},
-              {"method": "TDigest (percentile)", "memory": "O(1) ~few KB", "accuracy": "~1% error", "speed": "Very fast"},
-              {"method": "KMV (top-K)", "memory": "O(K)", "accuracy": "Exact top-K", "speed": "Fast"}
+              {
+                "method": "COUNT(DISTINCT)",
+                "memory": "O(N)",
+                "accuracy": "Exact",
+                "speed": "Slow on large N"
+              },
+              {
+                "method": "HyperLogLog",
+                "memory": "O(1) ~few KB",
+                "accuracy": "~1-2% error",
+                "speed": "Very fast"
+              },
+              {
+                "method": "TDigest (percentile)",
+                "memory": "O(1) ~few KB",
+                "accuracy": "~1% error",
+                "speed": "Very fast"
+              },
+              {
+                "method": "KMV (top-K)",
+                "memory": "O(K)",
+                "accuracy": "Exact top-K",
+                "speed": "Fast"
+              }
             ],
             "after": [],
-            "highlight": ["memory", "accuracy"]
+            "highlight": [
+              "memory",
+              "accuracy"
+            ]
           }
         },
         {
@@ -209,22 +232,30 @@
             "Plan": {
               "Node Type": "Gather Merge",
               "Workers Planned": 4,
-              "Startup Cost": 10000.00,
-              "Total Cost": 50000.00,
+              "Startup Cost": 10000,
+              "Total Cost": 50000,
               "Plan Rows": 1000000,
               "Plan Width": 120,
               "Plans": [
                 {
                   "Node Type": "Parallel Hash Join",
-                  "Startup Cost": 5000.00,
-                  "Total Cost": 40000.00,
+                  "Startup Cost": 5000,
+                  "Total Cost": 40000,
                   "Plan Rows": 250000,
                   "Plan Width": 120,
                   "Hash Cond": "(a.id = b.id)",
-                  "Worker 0": { "Actual Rows": 250123 },
-                  "Worker 1": { "Actual Rows": 249876 },
-                  "Worker 2": { "Actual Rows": 250045 },
-                  "Worker 3": { "Actual Rows": 249956 }
+                  "Worker 0": {
+                    "Actual Rows": 250123
+                  },
+                  "Worker 1": {
+                    "Actual Rows": 249876
+                  },
+                  "Worker 2": {
+                    "Actual Rows": 250045
+                  },
+                  "Worker 3": {
+                    "Actual Rows": 249956
+                  }
                 }
               ]
             }
@@ -290,54 +321,85 @@
               "tier": 3,
               "title": "HyperLogLog for Unique Users",
               "platform": "drill",
-              "patterns": ["hyperloglog"],
+              "patterns": [
+                "hyperloglog"
+              ],
               "statement": "Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).",
-              "hints": ["CREATE EXTENSION hll; hll_add_agg()"]
+              "hints": [
+                "CREATE EXTENSION hll; hll_add_agg()"
+              ]
             },
             {
               "id": "X302",
               "tier": 3,
               "title": "TDigest for Latency Percentiles",
               "platform": "drill",
-              "patterns": ["tdigest"],
+              "patterns": [
+                "tdigest"
+              ],
               "statement": "Compute p50, p95, p99 latency from 10M requests using TDigest.",
-              "hints": ["tdigest_agg(latency)", "percentile(t, 0.99)"]
+              "hints": [
+                "tdigest_agg(latency)",
+                "percentile(t, 0.99)"
+              ]
             },
             {
               "id": "X303",
               "tier": 3,
               "title": "Continuous Aggregate for 5-min Buckets",
               "platform": "drill",
-              "patterns": ["continuous-aggregate"],
+              "patterns": [
+                "continuous-aggregate"
+              ],
               "statement": "Design TimescaleDB continuous aggregate for 5-min metrics with 1-hour lag.",
-              "hints": ["time_bucket('5 min', ts)", "add_continuous_aggregate_policy"]
+              "hints": [
+                "time_bucket('5 min', ts)",
+                "add_continuous_aggregate_policy"
+              ]
             },
             {
               "id": "X304",
               "tier": 3,
               "title": "Streaming Page Views (PipelineDB)",
               "platform": "drill",
-              "patterns": ["streaming-aggregate"],
+              "patterns": [
+                "streaming-aggregate"
+              ],
               "statement": "Create continuous view for page views per minute per site.",
-              "hints": ["CREATE CONTINUOUS VIEW", "time_bucket('1 minute', ts)"]
+              "hints": [
+                "CREATE CONTINUOUS VIEW",
+                "time_bucket('1 minute', ts)"
+              ]
             },
             {
               "id": "X305",
               "tier": 3,
               "title": "Parallel GROUP BY on 100M Rows",
               "platform": "drill",
-              "patterns": ["parallel-aggregate"],
+              "patterns": [
+                "parallel-aggregate"
+              ],
               "statement": "Tune parallel GROUP BY: set workers, work_mem, parallel_tuple_cost.",
-              "hints": ["max_parallel_workers_per_gather", "work_mem", "parallel_tuple_cost"]
+              "hints": [
+                "max_parallel_workers_per_gather",
+                "work_mem",
+                "parallel_tuple_cost"
+              ]
             },
             {
               "id": "X306",
               "tier": 3,
               "title": "Approximate Top-K with KMV",
               "platform": "drill",
-              "patterns": ["kmv", "top-k"],
+              "patterns": [
+                "kmv",
+                "top-k"
+              ],
               "statement": "Find top 100 most frequent IPs from 100M requests using KMV sketch.",
-              "hints": ["KMV sketch", "top-K distinct"]
+              "hints": [
+                "KMV sketch",
+                "top-K distinct"
+              ]
             }
           ]
         }
@@ -353,11 +415,29 @@
     "TABLESAMPLE SYSTEM (fast) vs BERNOULLI (accurate) + REPEATABLE for determinism."
   ],
   "glossary": [
-    { "term": "HyperLogLog", "def": "Probabilistic algorithm for approximate distinct count with fixed memory." },
-    { "term": "TDigest", "def": "Streaming percentile algorithm with O(1) memory and bounded error." },
-    { "term": "continuous aggregate", "def": "TimescaleDB: automatically maintained materialized view with incremental refresh." },
-    { "term": "continuous view", "def": "PipelineDB/pg_streaming: real-time view combining materialized history + streaming tail." },
-    { "term": "parallel aggregate", "def": "Workers compute partial aggregates; leader combines via Gather Merge." },
-    { "term": "KMV sketch", "def": "K Minimum Values sketch for top-K distinct elements with bounded memory." }
+    {
+      "term": "HyperLogLog",
+      "def": "Probabilistic algorithm for approximate distinct count with fixed memory."
+    },
+    {
+      "term": "TDigest",
+      "def": "Streaming percentile algorithm with O(1) memory and bounded error."
+    },
+    {
+      "term": "continuous aggregate",
+      "def": "TimescaleDB: automatically maintained materialized view with incremental refresh."
+    },
+    {
+      "term": "continuous view",
+      "def": "PipelineDB/pg_streaming: real-time view combining materialized history + streaming tail."
+    },
+    {
+      "term": "parallel aggregate",
+      "def": "Workers compute partial aggregates; leader combines via Gather Merge."
+    },
+    {
+      "term": "KMV sketch",
+      "def": "K Minimum Values sketch for top-K distinct elements with bounded memory."
+    }
   ]
 }

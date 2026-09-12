@@ -81,8 +81,8 @@
           "plan": {
             "Plan": {
               "Node Type": "Hash Join",
-              "Startup Cost": 100.00,
-              "Total Cost": 5000.00,
+              "Startup Cost": 100,
+              "Total Cost": 5000,
               "Plan Rows": 10000,
               "Plan Width": 120,
               "Hash Cond": "(a.id = b.id)",
@@ -90,14 +90,14 @@
                 {
                   "Node Type": "Seq Scan",
                   "Relation Name": "a",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 100.00,
+                  "Startup Cost": 0,
+                  "Total Cost": 100,
                   "Plan Rows": 10000
                 },
                 {
                   "Node Type": "Hash",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 50.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 50,
                   "Plan Rows": 5000
                 }
               ]
@@ -166,8 +166,8 @@
               "Node Type": "Bitmap Heap Scan",
               "Relation Name": "employees",
               "Recheck Cond": "((dept_id = 1) AND (salary > 50000))",
-              "Startup Cost": 10.00,
-              "Total Cost": 150.00,
+              "Startup Cost": 10,
+              "Total Cost": 150,
               "Plan Rows": 50,
               "Plan Width": 72,
               "Plans": [
@@ -316,72 +316,104 @@
               "tier": 2,
               "title": "Hash Join vs Nested Loop Decision",
               "platform": "drill",
-              "patterns": ["join-algorithm"],
+              "patterns": [
+                "join-algorithm"
+              ],
               "statement": "Query joins large_table (1M rows) with small_table (100 rows) on id. Which algorithm? Why?",
-              "hints": ["Hash Join — small table builds hash, large probes"]
+              "hints": [
+                "Hash Join — small table builds hash, large probes"
+              ]
             },
             {
               "id": "P202",
               "tier": 2,
               "title": "Composite Index for Multi-Column Query",
               "platform": "drill",
-              "patterns": ["composite-index"],
+              "patterns": [
+                "composite-index"
+              ],
               "statement": "Query: WHERE user_id = 123 AND created_at > '2024-01-01'. Design index.",
-              "hints": ["Column order: equality first (user_id), then range (created_at)"]
+              "hints": [
+                "Column order: equality first (user_id), then range (created_at)"
+              ]
             },
             {
-              "id": "P202",
+              "id": "P203",
               "tier": 2,
               "title": "Partial Index for Soft Delete",
               "platform": "drill",
-              "patterns": ["partial-index"],
+              "patterns": [
+                "partial-index"
+              ],
               "statement": "99% queries filter deleted=false. Create partial index on orders(user_id, created_at).",
-              "hints": ["WHERE deleted = false"]
+              "hints": [
+                "WHERE deleted = false"
+              ]
             },
             {
               "id": "P204",
               "tier": 2,
               "title": "Covering Index to Avoid Heap Fetch",
               "platform": "drill",
-              "patterns": ["covering-index"],
+              "patterns": [
+                "covering-index"
+              ],
               "statement": "Query: SELECT name, email FROM users WHERE status='active'. Create covering index.",
-              "hints": ["INCLUDE (name, email) or (status, name, email)"]
+              "hints": [
+                "INCLUDE (name, email) or (status, name, email)"
+              ]
             },
             {
               "id": "P205",
               "tier": 2,
               "title": "Fix Non-Sargable: YEAR(created_at) = 2024",
               "platform": "drill",
-              "patterns": ["sargability-fix"],
+              "patterns": [
+                "sargability-fix"
+              ],
               "statement": "Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.",
-              "hints": ["created_at >= '2024-01-01' AND created_at < '2025-01-01'"]
+              "hints": [
+                "created_at >= '2024-01-01' AND created_at < '2025-01-01'"
+              ]
             },
             {
               "id": "P206",
               "tier": 2,
               "title": "Bitmap Index Scan for Multiple Conditions",
               "platform": "drill",
-              "patterns": ["bitmap-scan"],
+              "patterns": [
+                "bitmap-scan"
+              ],
               "statement": "Query: WHERE dept_id = 1 AND salary > 50000. No composite index. Explain plan.",
-              "hints": ["BitmapAnd combines idx_dept and idx_salary"]
+              "hints": [
+                "BitmapAnd combines idx_dept and idx_salary"
+              ]
             },
             {
               "id": "P207",
               "tier": 2,
               "title": "Expression Index for Annual Salary",
               "platform": "drill",
-              "patterns": ["expression-index"],
+              "patterns": [
+                "expression-index"
+              ],
               "statement": "Query: WHERE salary * 12 > 120000. Create functional index.",
-              "hints": ["CREATE INDEX ON employees ((salary * 12))"]
+              "hints": [
+                "CREATE INDEX ON employees ((salary * 12))"
+              ]
             },
             {
               "id": "P208",
               "tier": 2,
               "title": "Fix Non-Sargable: salary * 1.1 > 55000",
               "platform": "drill",
-              "patterns": ["sargability-fix"],
+              "patterns": [
+                "sargability-fix"
+              ],
               "statement": "Rewrite to use index on salary.",
-              "hints": ["salary > 50000"]
+              "hints": [
+                "salary > 50000"
+              ]
             }
           ]
         }
@@ -397,11 +429,29 @@
     "Bitmap Index Scan: combines multiple indexes in memory; Recheck Cond = lossy pages"
   ],
   "glossary": [
-    { "term": "nested loop join", "def": "For each outer row, probe inner index. Best: small outer + indexed inner." },
-    { "term": "hash join", "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem." },
-    { "term": "merge join", "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input." },
-    { "term": "partial index", "def": "Index with WHERE clause — only indexes subset of rows matching condition." },
-    { "term": "covering index", "def": "Index with INCLUDE columns — satisfies query without heap lookup." },
-    { "term": "sargable", "def": "Search ARGument ABLE — predicate that can use index seek (e.g., col = 5)." }
+    {
+      "term": "nested loop join",
+      "def": "For each outer row, probe inner index. Best: small outer + indexed inner."
+    },
+    {
+      "term": "hash join",
+      "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem."
+    },
+    {
+      "term": "merge join",
+      "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input."
+    },
+    {
+      "term": "partial index",
+      "def": "Index with WHERE clause — only indexes subset of rows matching condition."
+    },
+    {
+      "term": "covering index",
+      "def": "Index with INCLUDE columns — satisfies query without heap lookup."
+    },
+    {
+      "term": "sargable",
+      "def": "Search ARGument ABLE — predicate that can use index seek (e.g., col = 5)."
+    }
   ]
 }

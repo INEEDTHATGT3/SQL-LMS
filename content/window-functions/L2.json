@@ -80,13 +80,31 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"frame": "ROWS 3 PRECEDING", "meaning": "Current row + 3 rows before", "use_case": "Moving average N rows"},
-              {"frame": "RANGE 3 PRECEDING", "meaning": "Current row + rows with ORDER BY value within 3", "use_case": "Time-based windows"},
-              {"frame": "UNBOUNDED PRECEDING", "meaning": "All rows from start", "use_case": "Running total"},
-              {"frame": "CURRENT ROW", "meaning": "Only current row", "use_case": "Point lookup"}
+              {
+                "frame": "ROWS 3 PRECEDING",
+                "meaning": "Current row + 3 rows before",
+                "use_case": "Moving average N rows"
+              },
+              {
+                "frame": "RANGE 3 PRECEDING",
+                "meaning": "Current row + rows with ORDER BY value within 3",
+                "use_case": "Time-based windows"
+              },
+              {
+                "frame": "UNBOUNDED PRECEDING",
+                "meaning": "All rows from start",
+                "use_case": "Running total"
+              },
+              {
+                "frame": "CURRENT ROW",
+                "meaning": "Only current row",
+                "use_case": "Point lookup"
+              }
             ],
             "after": [],
-            "highlight": ["frame"]
+            "highlight": [
+              "frame"
+            ]
           }
         },
         {
@@ -171,23 +189,23 @@
           "plan": {
             "Plan": {
               "Node Type": "WindowAgg",
-              "Startup Cost": 50.00,
-              "Total Cost": 300.00,
+              "Startup Cost": 50,
+              "Total Cost": 300,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 200.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 200,
                   "Plan Rows": 8500,
                   "Plan Width": 40,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40
                     }
@@ -311,72 +329,165 @@
               "tier": 2,
               "title": "4-Row Moving Average",
               "platform": "drill",
-              "patterns": ["frame-rows"],
+              "patterns": [
+                "frame-rows"
+              ],
               "statement": "Compute 4-row moving average of daily sales (current + 3 preceding).",
-              "hints": ["ROWS BETWEEN 3 PRECEDING AND CURRENT ROW"]
+              "hints": [
+                "ROWS BETWEEN 3 PRECEDING AND CURRENT ROW"
+              ]
             },
             {
               "id": "W202",
               "tier": 2,
               "title": "7-Day Moving Sum (RANGE)",
               "platform": "drill",
-              "patterns": ["frame-range"],
+              "patterns": [
+                "frame-range"
+              ],
               "statement": "Sum of sales for each day + previous 6 days using RANGE.",
-              "hints": ["RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW"]
+              "hints": [
+                "RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW"
+              ]
             },
             {
               "id": "W203",
               "tier": 2,
               "title": "Running Total with ROWS",
               "platform": "drill",
-              "patterns": ["frame-unbounded"],
+              "patterns": [
+                "frame-unbounded"
+              ],
               "statement": "Running total of sales ordered by date using ROWS UNBOUNDED PRECEDING.",
-              "hints": ["ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"]
+              "hints": [
+                "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW"
+              ]
             },
             {
               "id": "W204",
               "tier": 2,
               "title": "Quartile Assignment",
               "platform": "drill",
-              "patterns": ["ntile"],
+              "patterns": [
+                "ntile"
+              ],
               "statement": "Assign each employee to a salary quartile (1-4) within their department.",
-              "hints": ["NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)"]
+              "hints": [
+                "NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)"
+              ]
             },
             {
               "id": "W205",
               "tier": 2,
               "title": "Sum of Peers (EXCLUDE GROUP)",
               "platform": "drill",
-              "patterns": ["exclude-group"],
+              "patterns": [
+                "exclude-group"
+              ],
               "statement": "Sum of salaries for employees in same salary tier (excluding current tier).",
-              "hints": ["EXCLUDE GROUP with RANGE frame"]
+              "hints": [
+                "EXCLUDE GROUP with RANGE frame"
+              ]
             },
             {
               "id": "W206",
               "tier": 2,
               "title": "Percentile Rank vs Cume Dist",
               "platform": "drill",
-              "patterns": ["percent_rank", "cume_dist"],
+              "patterns": [
+                "percent_rank",
+                "cume_dist"
+              ],
               "statement": "Show both PERCENT_RANK and CUME_DIST for each employee by salary.",
-              "hints": ["PERCENT_RANK() OVER (ORDER BY salary)"]
+              "hints": [
+                "PERCENT_RANK() OVER (ORDER BY salary)"
+              ]
             },
             {
               "id": "W207",
               "tier": 2,
               "title": "Moving Average Excluding Current",
               "platform": "drill",
-              "patterns": ["exclude-current"],
+              "patterns": [
+                "exclude-current"
+              ],
               "statement": "3-day moving average excluding current day (previous 3 days only).",
-              "hints": ["ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING"]
+              "hints": [
+                "ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING"
+              ]
             },
             {
               "id": "W208",
               "tier": 2,
               "title": "Peer Group Count (GROUPS frame)",
               "platform": "drill",
-              "patterns": ["groups-frame"],
+              "patterns": [
+                "groups-frame"
+              ],
               "statement": "Count of employees in same salary tier ±1 tier. Use GROUPS frame (PG 14+).",
-              "hints": ["GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING"]
+              "hints": [
+                "GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "3 sourced problems from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "W2-LC1204",
+              "tier": 2,
+              "title": "Last Person to Fit in the Bus",
+              "platform": "leetcode",
+              "ref": "1204",
+              "url": "https://leetcode.com/problems/last-person-to-fit-in-the-bus/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                "running-sum",
+                "frame"
+              ]
+            },
+            {
+              "id": "W2-LC180",
+              "tier": 2,
+              "title": "Consecutive Numbers",
+              "platform": "leetcode",
+              "ref": "180",
+              "url": "https://leetcode.com/problems/consecutive-numbers/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced Select and Joins",
+              "difficulty": "medium",
+              "patterns": [
+                "lag-lead",
+                "consecutive-runs"
+              ]
+            },
+            {
+              "id": "W2-LC185",
+              "tier": 2,
+              "title": "Department Top Three Salaries",
+              "platform": "leetcode",
+              "ref": "185",
+              "url": "https://leetcode.com/problems/department-top-three-salaries/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "hard",
+              "patterns": [
+                "dense-rank",
+                "top-n-per-group"
+              ]
             }
           ]
         }
@@ -392,11 +503,29 @@
     "RANGE = value distance; ROWS = row count; GROUPS = peer group count"
   ],
   "glossary": [
-    { "term": "frame clause", "def": "ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row." },
-    { "term": "ROWS", "def": "Frame unit = physical row count." },
-    { "term": "RANGE", "def": "Frame unit = ORDER BY value distance (numeric/date)." },
-    { "term": "GROUPS", "def": "Frame unit = peer groups (rows with same ORDER BY value)." },
-    { "term": "NTILE", "def": "Divides partition into n roughly equal buckets (1..n)." },
-    { "term": "EXCLUDE CURRENT ROW", "def": "Excludes current row from frame calculation." }
+    {
+      "term": "frame clause",
+      "def": "ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row."
+    },
+    {
+      "term": "ROWS",
+      "def": "Frame unit = physical row count."
+    },
+    {
+      "term": "RANGE",
+      "def": "Frame unit = ORDER BY value distance (numeric/date)."
+    },
+    {
+      "term": "GROUPS",
+      "def": "Frame unit = peer groups (rows with same ORDER BY value)."
+    },
+    {
+      "term": "NTILE",
+      "def": "Divides partition into n roughly equal buckets (1..n)."
+    },
+    {
+      "term": "EXCLUDE CURRENT ROW",
+      "def": "Excludes current row from frame calculation."
+    }
   ]
 }

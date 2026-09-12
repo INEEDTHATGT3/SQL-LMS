@@ -94,13 +94,31 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"concept": "Aggregate", "behavior": "Collapses N rows → 1 row", "example": "SUM(salary) GROUP BY dept"},
-              {"concept": "Window Function", "behavior": "N rows → N rows (adds column)", "example": "SUM(salary) OVER (PARTITION BY dept)"},
-              {"concept": "PARTITION BY", "behavior": "Slices data into independent windows", "example": "OVER (PARTITION BY dept)"},
-              {"concept": "ORDER BY", "behavior": "Arranges rows within partition", "example": "OVER (PARTITION BY dept ORDER BY salary)"}
+              {
+                "concept": "Aggregate",
+                "behavior": "Collapses N rows → 1 row",
+                "example": "SUM(salary) GROUP BY dept"
+              },
+              {
+                "concept": "Window Function",
+                "behavior": "N rows → N rows (adds column)",
+                "example": "SUM(salary) OVER (PARTITION BY dept)"
+              },
+              {
+                "concept": "PARTITION BY",
+                "behavior": "Slices data into independent windows",
+                "example": "OVER (PARTITION BY dept)"
+              },
+              {
+                "concept": "ORDER BY",
+                "behavior": "Arranges rows within partition",
+                "example": "OVER (PARTITION BY dept ORDER BY salary)"
+              }
             ],
             "after": [],
-            "highlight": ["behavior"]
+            "highlight": [
+              "behavior"
+            ]
           }
         },
         {
@@ -162,13 +180,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"salary": 100000, "row_number": 1, "rank": 1, "dense_rank": 1},
-              {"salary": 100000, "row_number": 2, "rank": 1, "dense_rank": 1},
-              {"salary": 90000, "row_number": 3, "rank": 3, "dense_rank": 2},
-              {"salary": 80000, "row_number": 4, "rank": 4, "dense_rank": 3}
+              {
+                "salary": 100000,
+                "row_number": 1,
+                "rank": 1,
+                "dense_rank": 1
+              },
+              {
+                "salary": 100000,
+                "row_number": 2,
+                "rank": 1,
+                "dense_rank": 1
+              },
+              {
+                "salary": 90000,
+                "row_number": 3,
+                "rank": 3,
+                "dense_rank": 2
+              },
+              {
+                "salary": 80000,
+                "row_number": 4,
+                "rank": 4,
+                "dense_rank": 3
+              }
             ],
             "after": [],
-            "highlight": ["rank", "dense_rank"]
+            "highlight": [
+              "rank",
+              "dense_rank"
+            ]
           }
         },
         {
@@ -226,23 +267,23 @@
           "plan": {
             "Plan": {
               "Node Type": "WindowAgg",
-              "Startup Cost": 50.00,
-              "Total Cost": 300.00,
+              "Startup Cost": 50,
+              "Total Cost": 300,
               "Plan Rows": 8500,
               "Plan Width": 48,
               "Plans": [
                 {
                   "Node Type": "Sort",
-                  "Startup Cost": 50.00,
-                  "Total Cost": 200.00,
+                  "Startup Cost": 50,
+                  "Total Cost": 200,
                   "Plan Rows": 8500,
                   "Plan Width": 40,
                   "Plans": [
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "employees",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 185.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40
                     }
@@ -327,54 +368,78 @@
               "tier": 1,
               "title": "Row Number by Department",
               "platform": "drill",
-              "patterns": ["row_number"],
+              "patterns": [
+                "row_number"
+              ],
               "statement": "Add column rn = row number within department ordered by salary DESC.",
-              "hints": ["ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC)"]
+              "hints": [
+                "ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC)"
+              ]
             },
             {
               "id": "W102",
               "tier": 1,
               "title": "Rank Employees by Salary",
               "platform": "drill",
-              "patterns": ["rank"],
+              "patterns": [
+                "rank"
+              ],
               "statement": "Rank all employees by salary DESC. Show name, salary, rank.",
-              "hints": ["RANK() OVER (ORDER BY salary DESC)"]
+              "hints": [
+                "RANK() OVER (ORDER BY salary DESC)"
+              ]
             },
             {
               "id": "W103",
               "tier": 1,
               "title": "Dense Rank by Department",
               "platform": "drill",
-              "patterns": ["dense_rank"],
+              "patterns": [
+                "dense_rank"
+              ],
               "statement": "Dense rank employees within each department by salary.",
-              "hints": ["DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC)"]
+              "hints": [
+                "DENSE_RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC)"
+              ]
             },
             {
               "id": "W104",
               "tier": 1,
               "title": "Previous Salary (LAG)",
               "platform": "drill",
-              "patterns": ["lag"],
+              "patterns": [
+                "lag"
+              ],
               "statement": "For each employee ordered by hire_date, show previous employee's salary.",
-              "hints": ["LAG(salary) OVER (ORDER BY hire_date)"]
+              "hints": [
+                "LAG(salary) OVER (ORDER BY hire_date)"
+              ]
             },
             {
               "id": "W105",
               "tier": 1,
               "title": "Department Max via FIRST_VALUE",
               "platform": "drill",
-              "patterns": ["first_value"],
+              "patterns": [
+                "first_value"
+              ],
               "statement": "Show each employee with their department's highest salary.",
-              "hints": ["FIRST_VALUE(salary) OVER (PARTITION BY dept_id ORDER BY salary DESC)"]
+              "hints": [
+                "FIRST_VALUE(salary) OVER (PARTITION BY dept_id ORDER BY salary DESC)"
+              ]
             },
             {
               "id": "W106",
               "tier": 1,
               "title": "Next Hire Date (LEAD)",
               "platform": "drill",
-              "patterns": ["lead"],
+              "patterns": [
+                "lead"
+              ],
               "statement": "For each employee ordered by hire_date, show the next employee's hire date.",
-              "hints": ["LEAD(hire_date) OVER (ORDER BY hire_date)"]
+              "hints": [
+                "LEAD(hire_date) OVER (ORDER BY hire_date)"
+              ]
             }
           ]
         }
@@ -390,12 +455,33 @@
     "Default frame: RANGE UNBOUNDED PRECEDING TO CURRENT ROW"
   ],
   "glossary": [
-    { "term": "window function", "def": "Computes value per row using a window of rows defined by OVER clause." },
-    { "term": "PARTITION BY", "def": "Divides result into partitions; function computed independently per partition." },
-    { "term": "frame clause", "def": "ROWS/RANGE BETWEEN ... defines window boundaries relative to current row." },
-    { "term": "ROW_NUMBER", "def": "Unique sequential number per partition." },
-    { "term": "RANK", "def": "Rank with gaps on ties (1,2,2,4)." },
-    { "term": "DENSE_RANK", "def": "Rank without gaps on ties (1,2,2,3)." },
-    { "term": "LAG/LEAD", "def": "Access previous/next row value in window." }
+    {
+      "term": "window function",
+      "def": "Computes value per row using a window of rows defined by OVER clause."
+    },
+    {
+      "term": "PARTITION BY",
+      "def": "Divides result into partitions; function computed independently per partition."
+    },
+    {
+      "term": "frame clause",
+      "def": "ROWS/RANGE BETWEEN ... defines window boundaries relative to current row."
+    },
+    {
+      "term": "ROW_NUMBER",
+      "def": "Unique sequential number per partition."
+    },
+    {
+      "term": "RANK",
+      "def": "Rank with gaps on ties (1,2,2,4)."
+    },
+    {
+      "term": "DENSE_RANK",
+      "def": "Rank without gaps on ties (1,2,2,3)."
+    },
+    {
+      "term": "LAG/LEAD",
+      "def": "Access previous/next row value in window."
+    }
   ]
 }

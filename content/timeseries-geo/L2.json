@@ -115,21 +115,21 @@
           "plan": {
             "Plan": {
               "Node Type": "HashAggregate",
-              "Startup Cost": 10.00,
-              "Total Cost": 50.00,
+              "Startup Cost": 10,
+              "Total Cost": 50,
               "Plan Rows": 168,
               "Plan Width": 44,
               "Group Key": "date_trunc('hour'::text, ts)",
               "Actual Startup Time": 1.2,
-              "Actual Total Time": 2.0,
+              "Actual Total Time": 2,
               "Actual Rows": 168,
               "Actual Loops": 1,
               "Plans": [
                 {
                   "Node Type": "Bitmap Heap Scan",
                   "Relation Name": "page_views",
-                  "Startup Cost": 5.00,
-                  "Total Cost": 45.00,
+                  "Startup Cost": 5,
+                  "Total Cost": 45,
                   "Plan Rows": 20000,
                   "Plan Width": 8,
                   "Recheck Cond": "(ts >= (now() - '7 days'::interval))",
@@ -141,8 +141,8 @@
                     {
                       "Node Type": "Bitmap Index Scan",
                       "Relation Name": "page_views_ts_idx",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 5.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 5,
                       "Plan Rows": 20000,
                       "Plan Width": 0,
                       "Index Cond": "(ts >= (now() - '7 days'::interval))"
@@ -344,8 +344,8 @@
               "Node Type": "Index Scan",
               "Relation Name": "pois",
               "Alias": "p",
-              "Startup Cost": 0.00,
-              "Total Cost": 20.40,
+              "Startup Cost": 0,
+              "Total Cost": 20.4,
               "Plan Rows": 5,
               "Plan Width": 64,
               "Order By": "((geom <-> '0101000020E6100000...'::geometry))",
@@ -397,72 +397,125 @@
               "tier": 2,
               "title": "Daily Active Users per day",
               "platform": "drill",
-              "patterns": ["bucketing", "distinct"],
+              "patterns": [
+                "bucketing",
+                "distinct"
+              ],
               "statement": "Count distinct users per day for the last 30 days from a 20M-row events table (user_id, ts). Return every day, including days with zero activity.",
-              "hints": ["generate_series for the 30-day grid", "left join the daily distinct counts", "COALESCE(..., 0)"]
+              "hints": [
+                "generate_series for the 30-day grid",
+                "left join the daily distinct counts",
+                "COALESCE(..., 0)"
+              ]
             },
             {
               "id": "T202",
               "tier": 2,
               "title": "Hourly fill for the last 24h",
               "platform": "drill",
-              "patterns": ["gap-filling", "left-join"],
+              "patterns": [
+                "gap-filling",
+                "left-join"
+              ],
               "statement": "A weather sensor publishes readings every 5 minutes but drops occasionally. Return one row per hour for the last 24 hours with the reading count, filling missing hours with 0.",
-              "hints": ["date_trunc('hour', ts)", "generate_series window", "count the readings inside each hour"]
+              "hints": [
+                "date_trunc('hour', ts)",
+                "generate_series window",
+                "count the readings inside each hour"
+              ]
             },
             {
               "id": "T203",
               "tier": 2,
               "title": "LOCF for missing sensor values",
               "platform": "drill",
-              "patterns": ["locf", "windows"],
+              "patterns": [
+                "locf",
+                "windows"
+              ],
               "statement": "Load readings (ts, temp_c) with sparse NULLs. Produce temp_c_filled that carries forward the last observed value, and flag which rows were imputed.",
-              "hints": ["LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY ts)", "compare temp_c IS NULL to build the flag"]
+              "hints": [
+                "LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY ts)",
+                "compare temp_c IS NULL to build the flag"
+              ]
             },
             {
               "id": "T204",
               "tier": 2,
               "title": "7-day moving average with holiday holes",
               "platform": "drill",
-              "patterns": ["rolling-window"],
+              "patterns": [
+                "rolling-window"
+              ],
               "statement": "Compute a 7-day moving average of daily revenue. Some days have no transactions. Decide between ROWS and RANGE and explain which is correct for 'last 7 calendar days'.",
-              "hints": ["RANGE BETWEEN INTERVAL '7 day' PRECEDING", "ROWS counts trading days, not calendar days", "fill the calendar first for ROWS equivalence"]
+              "hints": [
+                "RANGE BETWEEN INTERVAL '7 day' PRECEDING",
+                "ROWS counts trading days, not calendar days",
+                "fill the calendar first for ROWS equivalence"
+              ]
             },
             {
               "id": "T205",
               "tier": 2,
               "title": "Nearest café from a coordinate",
               "platform": "drill",
-              "patterns": ["knn", "proximity"],
+              "patterns": [
+                "knn",
+                "proximity"
+              ],
               "statement": "Given cafés (id, name, geom) and a user point, return the 3 nearest cafés with distance in meters. Use the fast path in pg and the portable fallback for MySQL.",
-              "hints": ["geom <-> point in ORDER BY", "GiST index on geom", "ST_Distance(geom::geography, p) for meters"]
+              "hints": [
+                "geom <-> point in ORDER BY",
+                "GiST index on geom",
+                "ST_Distance(geom::geography, p) for meters"
+              ]
             },
             {
               "id": "T206",
               "tier": 2,
               "title": "Radius banding for delivery zones",
               "platform": "drill",
-              "patterns": ["proximity", "case"],
+              "patterns": [
+                "proximity",
+                "case"
+              ],
               "statement": "Tag each restaurant with a band (within 1km / within 5km / farther) relative to a fixed hub point, using an index-friendly pre-filter.",
-              "hints": ["ST_DWithin(geog, hub, 1000) then 5000", "CASE over two DWithin tests", "order evaluation cheap-first"]
+              "hints": [
+                "ST_DWithin(geog, hub, 1000) then 5000",
+                "CASE over two DWithin tests",
+                "order evaluation cheap-first"
+              ]
             },
             {
               "id": "T207",
               "tier": 2,
               "title": "Growth rate by week",
               "platform": "drill",
-              "patterns": ["lag", "bucketing"],
+              "patterns": [
+                "lag",
+                "bucketing"
+              ],
               "statement": "Weekly signups for 12 weeks. Compute week-over-week percentage change, skipping the first row gracefully.",
-              "hints": ["LAG(signups) OVER (ORDER BY week)", "NULLIF for divide-by-zero", "pct = 100.0 * (cur - prev) / prev"]
+              "hints": [
+                "LAG(signups) OVER (ORDER BY week)",
+                "NULLIF for divide-by-zero",
+                "pct = 100.0 * (cur - prev) / prev"
+              ]
             },
             {
               "id": "T208",
               "tier": 2,
               "title": "Interpolated mid-point for temp gaps",
               "platform": "drill",
-              "patterns": ["interpolation"],
+              "patterns": [
+                "interpolation"
+              ],
               "statement": "For two consecutive readings surrounding a gap of exactly one missing probe, estimate the missing value as the linear mid-point between them.",
-              "hints": ["self-join next/prev non-null", "AVG(prev, nxt) over the gap", "target only rows where temp_c IS NULL"]
+              "hints": [
+                "self-join next/prev non-null",
+                "AVG(prev, nxt) over the gap",
+                "target only rows where temp_c IS NULL"
+              ]
             }
           ]
         }
@@ -478,11 +531,29 @@
     "KNN: pg <-> operator + GiST index = index-ordered walk; MySQL falls back to a full sort."
   ],
   "glossary": [
-    { "term": "date_trunc", "def": "PostgreSQL function returning the start of a time bucket (hour, day, month...)." },
-    { "term": "generate_series", "def": "Set-returning function that emits one row per step; used to build calendar grids for gap filling." },
-    { "term": "LOCF", "def": "Last Observation Carried Forward — fills NULLs by repeating the most recent non-null value." },
-    { "term": "RANGE frame", "def": "Window frame defined by value distance (e.g., last 24h) rather than row count." },
-    { "term": "ST_DWithin", "def": "Spatial predicate filtering geometries within a distance; index-friendly and cheaper than computing exact distance." },
-    { "term": "KNN operator (<->)", "def": "PostgreSQL GiST operator ordering rows by distance, enabling LIMIT-truncated nearest searches." }
+    {
+      "term": "date_trunc",
+      "def": "PostgreSQL function returning the start of a time bucket (hour, day, month...)."
+    },
+    {
+      "term": "generate_series",
+      "def": "Set-returning function that emits one row per step; used to build calendar grids for gap filling."
+    },
+    {
+      "term": "LOCF",
+      "def": "Last Observation Carried Forward — fills NULLs by repeating the most recent non-null value."
+    },
+    {
+      "term": "RANGE frame",
+      "def": "Window frame defined by value distance (e.g., last 24h) rather than row count."
+    },
+    {
+      "term": "ST_DWithin",
+      "def": "Spatial predicate filtering geometries within a distance; index-friendly and cheaper than computing exact distance."
+    },
+    {
+      "term": "KNN operator (<->)",
+      "def": "PostgreSQL GiST operator ordering rows by distance, enabling LIMIT-truncated nearest searches."
+    }
   ]
 }

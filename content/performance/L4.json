@@ -45,7 +45,7 @@
         "Requires primary key"
       ],
       "answer": 1,
-      "explain": "CONCURRENTLY builds new version, swaps atomically \u2014 zero-downtime refresh."
+      "explain": "CONCURRENTLY builds new version, swaps atomically — zero-downtime refresh."
     },
     {
       "q": "Incremental aggregate vs full recompute:",
@@ -61,17 +61,17 @@
   ],
   "sections": [
     {
-      "title": "Parallel Aggregation \u2014 Multi-Core GROUP BY",
+      "title": "Parallel Aggregation — Multi-Core GROUP BY",
       "blocks": [
         {
           "type": "mantra",
-          "md": "Parallel aggregate = scan partitions in parallel \u2192 partial aggregates per worker \u2192 combine at leader. Key params: max_parallel_workers_per_gather, min_parallel_table_scan_size, parallel_tuple_cost. Enable for large tables."
+          "md": "Parallel aggregate = scan partitions in parallel → partial aggregates per worker → combine at leader. Key params: max_parallel_workers_per_gather, min_parallel_table_scan_size, parallel_tuple_cost. Enable for large tables."
         },
         {
           "type": "code",
           "label": "parallel aggregate config",
           "code": "-- Enable parallel query\nSET max_parallel_workers_per_gather = 4;\nSET min_parallel_table_scan_size = '8MB';\nSET parallel_tuple_cost = 0.1;\nSET parallel_setup_cost = 1000;\n\n-- Force parallel for testing\nSET force_parallel_mode = on;\n\n-- Check if parallel used\nEXPLAIN ANALYZE SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;\n-- Look for: Parallel Seq Scan, Partial Aggregate, Gather Merge",
-          "pg": "-- Parallel aggregate (PG 10+)\n-- Partial Aggregate on workers \u2192 Gather Merge at leader",
+          "pg": "-- Parallel aggregate (PG 10+)\n-- Partial Aggregate on workers → Gather Merge at leader",
           "mysql": "-- MySQL: no native parallel GROUP BY\n-- Use partitioning + UNION ALL manually",
           "py-pandas": "# No parallel; but can use Dask / Polars for parallel groupby\nimport dask.dataframe as dd\nddf = dd.from_pandas(df, npartitions=4)\nresult = ddf.groupby('dept_id').size().compute()"
         },
@@ -146,7 +146,7 @@
       "blocks": [
         {
           "type": "heading",
-          "text": "Materialized Views \u2014 Pre-computed Snapshots"
+          "text": "Materialized Views — Pre-computed Snapshots"
         },
         {
           "type": "code",
@@ -235,7 +235,7 @@
       ]
     },
     {
-      "title": "Advanced Patterns \u2014 Incremental, Streaming, Parallel",
+      "title": "Advanced Patterns — Incremental, Streaming, Parallel",
       "blocks": [
         {
           "type": "heading",
@@ -278,7 +278,7 @@
                 "All queries"
               ],
               "answer": 2,
-              "explain": "CONCURRENTLY builds new version, swaps with brief AccessExclusive lock \u2014 reads never blocked."
+              "explain": "CONCURRENTLY builds new version, swaps with brief AccessExclusive lock — reads never blocked."
             },
             {
               "q": "Incremental aggregate challenge:",
@@ -297,7 +297,7 @@
     },
     {
       "type": "query-plan",
-      "title": "EXPLAIN \u2014 Incremental Aggregate Upsert",
+      "title": "EXPLAIN — Incremental Aggregate Upsert",
       "plan": {
         "Plan": {
           "Node Type": "Insert",
@@ -345,20 +345,20 @@
       "blocks": [
         {
           "type": "query-plan",
-          "title": "EXPLAIN \u2014 Incremental Aggregate Upsert",
+          "title": "EXPLAIN — Incremental Aggregate Upsert",
           "plan": {
             "Plan": {
               "Node Type": "Insert",
-              "Startup Cost": 0.0,
-              "Total Cost": 100.0,
+              "Startup Cost": 0,
+              "Total Cost": 100,
               "Plan Rows": 1,
               "Plan Width": 48,
               "Conflict Resolution": "ON CONFLICT DO UPDATE",
               "Plans": [
                 {
                   "Node Type": "Subquery Scan",
-                  "Startup Cost": 0.0,
-                  "Total Cost": 50.0,
+                  "Startup Cost": 0,
+                  "Total Cost": 50,
                   "Plan Rows": 1,
                   "Plan Width": 48,
                   "Plans": [
@@ -368,16 +368,16 @@
                       "Group Key": [
                         "sale_date"
                       ],
-                      "Startup Cost": 0.0,
-                      "Total Cost": 50.0,
+                      "Startup Cost": 0,
+                      "Total Cost": 50,
                       "Plan Rows": 1,
                       "Plan Width": 48,
                       "Plans": [
                         {
                           "Node Type": "Seq Scan",
                           "Relation Name": "orders",
-                          "Startup Cost": 0.0,
-                          "Total Cost": 40.0,
+                          "Startup Cost": 0,
+                          "Total Cost": 40,
                           "Plan Rows": 1000,
                           "Plan Width": 24,
                           "Filter": "(sale_date = (CURRENT_DATE - 1))"
@@ -394,7 +394,7 @@
       ]
     },
     {
-      "title": "Dialect Mastery \u2014 Enterprise Aggregation",
+      "title": "Dialect Mastery — Enterprise Aggregation",
       "blocks": [
         {
           "type": "dialect-diff",
@@ -452,7 +452,7 @@
               "Relation Name": "employees",
               "Alias": "e",
               "Startup Cost": 0.29,
-              "Total Cost": 8.30,
+              "Total Cost": 8.3,
               "Plan Rows": 1,
               "Plan Width": 48,
               "Index Cond": "(id = $1)",
@@ -511,7 +511,7 @@
       ]
     },
     {
-      "title": "Problem Set \u2014 L4 Drills",
+      "title": "Problem Set — L4 Drills",
       "blocks": [
         {
           "type": "problems",
@@ -594,7 +594,7 @@
     }
   ],
   "revisionCard": [
-    "Parallel aggregate: workers do Partial Aggregate \u2192 Gather Merge combines",
+    "Parallel aggregate: workers do Partial Aggregate → Gather Merge combines",
     "Materialized view + CONCURRENTLY = zero-downtime refresh (needs unique index)",
     "Continuous aggregates (TimescaleDB): incremental, automatic, near real-time",
     "Incremental aggregates: apply delta (INSERT/UPDATE/DELETE) to existing aggregate",

@@ -1,1 +1,2035 @@
-{}
+{
+  "version": "2.0",
+  "generated": "2026-09-12",
+  "spine": "leetcode-sql-50",
+  "idScheme": "<MODULE_LETTER><TIER>-<PLATFORM_CODE><REF>  e.g. J2-LC1731, A1-HR042. In-lesson synthesised drills keep the legacy <LETTER><TIER><SEQ> form (J201) and are NOT listed here.",
+  "moduleLetters": {
+    "basics": "B",
+    "filtering": "F",
+    "joins": "J",
+    "aggregation": "A",
+    "window-functions": "W",
+    "subqueries-ctes": "S",
+    "performance": "P",
+    "advanced-analytics": "X",
+    "timeseries-geo": "T"
+  },
+  "sources": {
+    "leetcode-sql-50": {
+      "role": "spine",
+      "title": "LeetCode \u2014 SQL 50",
+      "url": "https://leetcode.com/studyplan/top-sql-50/",
+      "access": "free",
+      "count": 50,
+      "enumerated": true,
+      "authority": "Defines lesson ORDER and the L1/L2 tier boundary. If this sheet and an overlay disagree on where a concept belongs, this sheet wins.",
+      "sections": [
+        "Select",
+        "Basic Joins",
+        "Basic Aggregate Functions",
+        "Sorting and Grouping",
+        "Advanced Select and Joins",
+        "Subqueries",
+        "Advanced String Functions / Regex / Clause"
+      ],
+      "analogue": "Striver A2Z \u2014 ordered, finite, judge-backed, the thing you finish."
+    },
+    "hackerrank-sql-58": {
+      "role": "volume overlay (L1)",
+      "title": "HackerRank \u2014 SQL track",
+      "url": "https://www.hackerrank.com/domains/sql",
+      "access": "free",
+      "count": 58,
+      "enumerated": true,
+      "authority": "Repetition only. Never introduces a concept the spine has not already introduced.",
+      "sections": [
+        "Basic Select (20)",
+        "Advanced Select (5)",
+        "Aggregation (17)",
+        "Basic Join (8)",
+        "Advanced Join (5)",
+        "Alternative Queries (3)"
+      ],
+      "analogue": "Babbar FINAL450 \u2014 breadth and reps, weaker ordering.",
+      "urlCaveat": "Per-challenge slugs are not recorded; each entry links to its subdomain listing. Open by title."
+    },
+    "leetcode-advanced-sql-50": {
+      "role": "L3/L4 spine extension",
+      "title": "LeetCode \u2014 Advanced SQL 50",
+      "url": "https://leetcode.com/studyplan/premium-sql-50/",
+      "access": "premium",
+      "count": 50,
+      "enumerated": false,
+      "authority": "Defines the L3 tier boundary once enumerated.",
+      "blockedOn": "LeetCode Premium. Enumerate from the account, then append with sheet='leetcode-advanced-sql-50'."
+    },
+    "datalemur": {
+      "role": "company-realism overlay (L3/L4)",
+      "title": "DataLemur \u2014 SQL Interview Questions",
+      "url": "https://datalemur.com/questions",
+      "access": "freemium",
+      "enumerated": false,
+      "authority": "Supplies company tags (Amazon, Google, Meta, Microsoft, Netflix, Uber, LinkedIn, banks) and hard analytics problems. Never reorders the curriculum.",
+      "filterHint": "Filter category=SQL, difficulty=Hard, then tag by skill (window functions, CTEs, joins)."
+    },
+    "stratascratch": {
+      "role": "company-realism overlay (L3/L4)",
+      "title": "StrataScratch \u2014 real company SQL questions",
+      "url": "https://platform.stratascratch.com/coding",
+      "access": "freemium",
+      "enumerated": false,
+      "authority": "Same role as DataLemur; use for the modules DataLemur under-serves (time-series, geo, cohort)."
+    },
+    "pgexercises": {
+      "role": "PostgreSQL-native overlay (L2/L3)",
+      "title": "PGExercises",
+      "url": "https://pgexercises.com/",
+      "access": "free",
+      "enumerated": false,
+      "authority": "Fills the dialect-specific and recursive gaps the judge-backed sheets skip.",
+      "categories": {
+        "basic": "https://pgexercises.com/questions/basic/",
+        "joins": "https://pgexercises.com/questions/joins/",
+        "updates": "https://pgexercises.com/questions/updates/",
+        "aggregates": "https://pgexercises.com/questions/aggregates/",
+        "date": "https://pgexercises.com/questions/date/",
+        "string": "https://pgexercises.com/questions/string/",
+        "recursive": "https://pgexercises.com/questions/recursive/"
+      }
+    },
+    "reference-ankit-bansal": {
+      "role": "explanation reference (not a problem source)",
+      "title": "Ankit Bansal \u2014 SQL / analytics SQL",
+      "url": "https://www.youtube.com/@ankitbansal6",
+      "access": "free",
+      "authority": "None over ordering. Cited per-module for intuition on window functions, self-joins and analytics framing."
+    },
+    "reference-techtfq": {
+      "role": "explanation reference (not a problem source)",
+      "title": "techTFQ (Thoufiq Mohammed) \u2014 SQL tutorials",
+      "url": "https://www.youtube.com/@techTFQ",
+      "access": "free",
+      "authority": "None over ordering. Cited per-module for CTEs, recursion and query-writing method."
+    }
+  },
+  "modules": {
+    "basics": [
+      {
+        "id": "B1-HR001",
+        "tier": 1,
+        "title": "Revising the Select Query I",
+        "platform": "hackerrank",
+        "ref": "001",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR002",
+        "tier": 1,
+        "title": "Revising the Select Query II",
+        "platform": "hackerrank",
+        "ref": "002",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR003",
+        "tier": 1,
+        "title": "Select All",
+        "platform": "hackerrank",
+        "ref": "003",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR004",
+        "tier": 1,
+        "title": "Select By ID",
+        "platform": "hackerrank",
+        "ref": "004",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR005",
+        "tier": 1,
+        "title": "Japanese Cities' Attributes",
+        "platform": "hackerrank",
+        "ref": "005",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR006",
+        "tier": 1,
+        "title": "Japanese Cities' Names",
+        "platform": "hackerrank",
+        "ref": "006",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR007",
+        "tier": 1,
+        "title": "Higher Than 75 Marks",
+        "platform": "hackerrank",
+        "ref": "007",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR008",
+        "tier": 1,
+        "title": "Employee Names",
+        "platform": "hackerrank",
+        "ref": "008",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-HR009",
+        "tier": 1,
+        "title": "Employee Salaries",
+        "platform": "hackerrank",
+        "ref": "009",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "select-where",
+          "order-by"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "B1-LC1148",
+        "tier": 1,
+        "title": "Article Views I",
+        "platform": "leetcode",
+        "ref": "1148",
+        "url": "https://leetcode.com/problems/article-views-i/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Select",
+        "difficulty": "easy",
+        "patterns": [
+          "distinct",
+          "order-by"
+        ]
+      },
+      {
+        "id": "B1-LC1683",
+        "tier": 1,
+        "title": "Invalid Tweets",
+        "platform": "leetcode",
+        "ref": "1683",
+        "url": "https://leetcode.com/problems/invalid-tweets/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Select",
+        "difficulty": "easy",
+        "patterns": [
+          "string-length"
+        ]
+      },
+      {
+        "id": "B1-LC1757",
+        "tier": 1,
+        "title": "Recyclable and Low Fat Products",
+        "platform": "leetcode",
+        "ref": "1757",
+        "url": "https://leetcode.com/problems/recyclable-and-low-fat-products/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Select",
+        "difficulty": "easy",
+        "patterns": [
+          "where-and"
+        ]
+      },
+      {
+        "id": "B1-LC595",
+        "tier": 1,
+        "title": "Big Countries",
+        "platform": "leetcode",
+        "ref": "595",
+        "url": "https://leetcode.com/problems/big-countries/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Select",
+        "difficulty": "easy",
+        "patterns": [
+          "where-or"
+        ]
+      },
+      {
+        "id": "B2-LC1667",
+        "tier": 2,
+        "title": "Fix Names in a Table",
+        "platform": "leetcode",
+        "ref": "1667",
+        "url": "https://leetcode.com/problems/fix-names-in-a-table/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced String Functions / Regex / Clause",
+        "difficulty": "easy",
+        "patterns": [
+          "string-functions",
+          "concat-upper-lower"
+        ]
+      },
+      {
+        "id": "B3-LC196",
+        "tier": 3,
+        "title": "Delete Duplicate Emails",
+        "platform": "leetcode",
+        "ref": "196",
+        "url": "https://leetcode.com/problems/delete-duplicate-emails/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced String Functions / Regex / Clause",
+        "difficulty": "easy",
+        "patterns": [
+          "dml-delete",
+          "self-join-dedupe"
+        ]
+      }
+    ],
+    "filtering": [
+      {
+        "id": "F1-HR010",
+        "tier": 1,
+        "title": "Weather Observation Station 1",
+        "platform": "hackerrank",
+        "ref": "010",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR011",
+        "tier": 1,
+        "title": "Weather Observation Station 3",
+        "platform": "hackerrank",
+        "ref": "011",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR012",
+        "tier": 1,
+        "title": "Weather Observation Station 4",
+        "platform": "hackerrank",
+        "ref": "012",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR013",
+        "tier": 1,
+        "title": "Weather Observation Station 5",
+        "platform": "hackerrank",
+        "ref": "013",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR014",
+        "tier": 1,
+        "title": "Weather Observation Station 6",
+        "platform": "hackerrank",
+        "ref": "014",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR015",
+        "tier": 1,
+        "title": "Weather Observation Station 7",
+        "platform": "hackerrank",
+        "ref": "015",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR016",
+        "tier": 1,
+        "title": "Weather Observation Station 8",
+        "platform": "hackerrank",
+        "ref": "016",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR017",
+        "tier": 1,
+        "title": "Weather Observation Station 9",
+        "platform": "hackerrank",
+        "ref": "017",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR018",
+        "tier": 1,
+        "title": "Weather Observation Station 10",
+        "platform": "hackerrank",
+        "ref": "018",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR019",
+        "tier": 1,
+        "title": "Weather Observation Station 11",
+        "platform": "hackerrank",
+        "ref": "019",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR020",
+        "tier": 1,
+        "title": "Weather Observation Station 12",
+        "platform": "hackerrank",
+        "ref": "020",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Select",
+        "difficulty": null,
+        "patterns": [
+          "distinct",
+          "string-pattern",
+          "regexp"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-HR021",
+        "tier": 1,
+        "title": "Type of Triangle",
+        "platform": "hackerrank",
+        "ref": "021",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Select",
+        "difficulty": null,
+        "patterns": [
+          "case-expression"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F1-LC1327",
+        "tier": 1,
+        "title": "List the Products Ordered in a Period",
+        "platform": "leetcode",
+        "ref": "1327",
+        "url": "https://leetcode.com/problems/list-the-products-ordered-in-a-period/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced String Functions / Regex / Clause",
+        "difficulty": "easy",
+        "patterns": [
+          "date-range",
+          "having"
+        ]
+      },
+      {
+        "id": "F1-LC584",
+        "tier": 1,
+        "title": "Find Customer Referee",
+        "platform": "leetcode",
+        "ref": "584",
+        "url": "https://leetcode.com/problems/find-customer-referee/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Select",
+        "difficulty": "easy",
+        "patterns": [
+          "null-trap",
+          "three-valued-logic"
+        ]
+      },
+      {
+        "id": "F1-LC610",
+        "tier": 1,
+        "title": "Triangle Judgement",
+        "platform": "leetcode",
+        "ref": "610",
+        "url": "https://leetcode.com/problems/triangle-judgement/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "case-expression"
+        ]
+      },
+      {
+        "id": "F1-LC620",
+        "tier": 1,
+        "title": "Not Boring Movies",
+        "platform": "leetcode",
+        "ref": "620",
+        "url": "https://leetcode.com/problems/not-boring-movies/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          "modulo-filter",
+          "order-by"
+        ]
+      },
+      {
+        "id": "F2-HR022",
+        "tier": 2,
+        "title": "The PADS",
+        "platform": "hackerrank",
+        "ref": "022",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Select",
+        "difficulty": null,
+        "patterns": [
+          "string-functions",
+          "case-expression",
+          "union-all"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "F2-LC1517",
+        "tier": 2,
+        "title": "Find Users With Valid E-Mails",
+        "platform": "leetcode",
+        "ref": "1517",
+        "url": "https://leetcode.com/problems/find-users-with-valid-e-mails/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced String Functions / Regex / Clause",
+        "difficulty": "easy",
+        "patterns": [
+          "regexp"
+        ]
+      },
+      {
+        "id": "F2-LC1527",
+        "tier": 2,
+        "title": "Patients With a Condition",
+        "platform": "leetcode",
+        "ref": "1527",
+        "url": "https://leetcode.com/problems/patients-with-a-condition/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced String Functions / Regex / Clause",
+        "difficulty": "easy",
+        "patterns": [
+          "like-prefix",
+          "token-match"
+        ]
+      },
+      {
+        "id": "F2-LC1907",
+        "tier": 2,
+        "title": "Count Salary Categories",
+        "platform": "leetcode",
+        "ref": "1907",
+        "url": "https://leetcode.com/problems/count-salary-categories/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          "bucketing",
+          "zero-row-union"
+        ]
+      }
+    ],
+    "joins": [
+      {
+        "id": "J1-HR043",
+        "tier": 1,
+        "title": "Asian Population",
+        "platform": "hackerrank",
+        "ref": "043",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "inner-join",
+          "sum"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J1-HR044",
+        "tier": 1,
+        "title": "African Cities",
+        "platform": "hackerrank",
+        "ref": "044",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "inner-join"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J1-HR045",
+        "tier": 1,
+        "title": "Average Population of Each Continent",
+        "platform": "hackerrank",
+        "ref": "045",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "inner-join",
+          "group-avg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J1-LC1068",
+        "tier": 1,
+        "title": "Product Sales Analysis I",
+        "platform": "leetcode",
+        "ref": "1068",
+        "url": "https://leetcode.com/problems/product-sales-analysis-i/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "inner-join"
+        ]
+      },
+      {
+        "id": "J1-LC1378",
+        "tier": 1,
+        "title": "Replace Employee ID With The Unique Identifier",
+        "platform": "leetcode",
+        "ref": "1378",
+        "url": "https://leetcode.com/problems/replace-employee-id-with-the-unique-identifier/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "left-join"
+        ]
+      },
+      {
+        "id": "J1-LC1581",
+        "tier": 1,
+        "title": "Customer Who Visited but Did Not Make Any Transactions",
+        "platform": "leetcode",
+        "ref": "1581",
+        "url": "https://leetcode.com/problems/customer-who-visited-but-did-not-make-any-transactions/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "anti-join",
+          "left-join-is-null"
+        ]
+      },
+      {
+        "id": "J1-LC577",
+        "tier": 1,
+        "title": "Employee Bonus",
+        "platform": "leetcode",
+        "ref": "577",
+        "url": "https://leetcode.com/problems/employee-bonus/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "left-join",
+          "null-filter"
+        ]
+      },
+      {
+        "id": "J2-HR025",
+        "tier": 2,
+        "title": "New Companies",
+        "platform": "hackerrank",
+        "ref": "025",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Select",
+        "difficulty": null,
+        "patterns": [
+          "multi-join",
+          "count-distinct"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J2-HR046",
+        "tier": 2,
+        "title": "The Report",
+        "platform": "hackerrank",
+        "ref": "046",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "non-equi-join",
+          "case-expression"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J2-HR047",
+        "tier": 2,
+        "title": "Top Competitors",
+        "platform": "hackerrank",
+        "ref": "047",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "multi-join",
+          "having",
+          "tie-break-order"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J2-HR048",
+        "tier": 2,
+        "title": "Ollivander's Inventory",
+        "platform": "hackerrank",
+        "ref": "048",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "correlated-subquery",
+          "min-per-group"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J2-HR049",
+        "tier": 2,
+        "title": "Challenges",
+        "platform": "hackerrank",
+        "ref": "049",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "group-having",
+          "union-all"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J2-HR050",
+        "tier": 2,
+        "title": "Contest Leaderboard",
+        "platform": "hackerrank",
+        "ref": "050",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Basic Join",
+        "difficulty": null,
+        "patterns": [
+          "max-per-group",
+          "sum-having"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J2-HR052",
+        "tier": 2,
+        "title": "Placements",
+        "platform": "hackerrank",
+        "ref": "052",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Join",
+        "difficulty": null,
+        "patterns": [
+          "self-join",
+          "multi-join"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "J2-LC1280",
+        "tier": 2,
+        "title": "Students and Examinations",
+        "platform": "leetcode",
+        "ref": "1280",
+        "url": "https://leetcode.com/problems/students-and-examinations/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "cross-join",
+          "left-join"
+        ]
+      },
+      {
+        "id": "J2-LC1661",
+        "tier": 2,
+        "title": "Average Time of Process per Machine",
+        "platform": "leetcode",
+        "ref": "1661",
+        "url": "https://leetcode.com/problems/average-time-of-process-per-machine/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "self-join",
+          "conditional-agg"
+        ]
+      },
+      {
+        "id": "J2-LC1731",
+        "tier": 2,
+        "title": "The Number of Employees Which Report to Each Employee",
+        "platform": "leetcode",
+        "ref": "1731",
+        "url": "https://leetcode.com/problems/the-number-of-employees-which-report-to-each-employee/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "self-join",
+          "hierarchy"
+        ]
+      },
+      {
+        "id": "J2-LC1789",
+        "tier": 2,
+        "title": "Primary Department for Each Employee",
+        "platform": "leetcode",
+        "ref": "1789",
+        "url": "https://leetcode.com/problems/primary-department-for-each-employee/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "union-all",
+          "group-filter"
+        ]
+      },
+      {
+        "id": "J2-LC1934",
+        "tier": 2,
+        "title": "Confirmation Rate",
+        "platform": "leetcode",
+        "ref": "1934",
+        "url": "https://leetcode.com/problems/confirmation-rate/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "medium",
+        "patterns": [
+          "left-join",
+          "conditional-agg"
+        ]
+      },
+      {
+        "id": "J2-LC197",
+        "tier": 2,
+        "title": "Rising Temperature",
+        "platform": "leetcode",
+        "ref": "197",
+        "url": "https://leetcode.com/problems/rising-temperature/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "easy",
+        "patterns": [
+          "self-join",
+          "date-arithmetic"
+        ]
+      },
+      {
+        "id": "J2-LC570",
+        "tier": 2,
+        "title": "Managers with at Least 5 Direct Reports",
+        "platform": "leetcode",
+        "ref": "570",
+        "url": "https://leetcode.com/problems/managers-with-at-least-5-direct-reports/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Joins",
+        "difficulty": "medium",
+        "patterns": [
+          "self-join",
+          "having"
+        ]
+      },
+      {
+        "id": "J3-HR053",
+        "tier": 3,
+        "title": "Symmetric Pairs",
+        "platform": "hackerrank",
+        "ref": "053",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Join",
+        "difficulty": null,
+        "patterns": [
+          "self-join",
+          "pair-dedupe"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      }
+    ],
+    "aggregation": [
+      {
+        "id": "A1-HR026",
+        "tier": 1,
+        "title": "Revising Aggregations - The Count Function",
+        "platform": "hackerrank",
+        "ref": "026",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR027",
+        "tier": 1,
+        "title": "Revising Aggregations - The Sum Function",
+        "platform": "hackerrank",
+        "ref": "027",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR028",
+        "tier": 1,
+        "title": "Revising Aggregations - Averages",
+        "platform": "hackerrank",
+        "ref": "028",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR029",
+        "tier": 1,
+        "title": "Average Population",
+        "platform": "hackerrank",
+        "ref": "029",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR030",
+        "tier": 1,
+        "title": "Japan Population",
+        "platform": "hackerrank",
+        "ref": "030",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR031",
+        "tier": 1,
+        "title": "Population Density Difference",
+        "platform": "hackerrank",
+        "ref": "031",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR032",
+        "tier": 1,
+        "title": "Weather Observation Station 2",
+        "platform": "hackerrank",
+        "ref": "032",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR035",
+        "tier": 1,
+        "title": "Weather Observation Station 13",
+        "platform": "hackerrank",
+        "ref": "035",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR036",
+        "tier": 1,
+        "title": "Weather Observation Station 14",
+        "platform": "hackerrank",
+        "ref": "036",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR037",
+        "tier": 1,
+        "title": "Weather Observation Station 15",
+        "platform": "hackerrank",
+        "ref": "037",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR038",
+        "tier": 1,
+        "title": "Weather Observation Station 16",
+        "platform": "hackerrank",
+        "ref": "038",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR039",
+        "tier": 1,
+        "title": "Weather Observation Station 17",
+        "platform": "hackerrank",
+        "ref": "039",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR040",
+        "tier": 1,
+        "title": "Weather Observation Station 18",
+        "platform": "hackerrank",
+        "ref": "040",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR041",
+        "tier": 1,
+        "title": "Weather Observation Station 19",
+        "platform": "hackerrank",
+        "ref": "041",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-HR042",
+        "tier": 1,
+        "title": "Weather Observation Station 20",
+        "platform": "hackerrank",
+        "ref": "042",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "min-max-round",
+          "scalar-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A1-LC1075",
+        "tier": 1,
+        "title": "Project Employees I",
+        "platform": "leetcode",
+        "ref": "1075",
+        "url": "https://leetcode.com/problems/project-employees-i/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          "avg",
+          "round"
+        ]
+      },
+      {
+        "id": "A1-LC1141",
+        "tier": 1,
+        "title": "User Activity for the Past 30 Days I",
+        "platform": "leetcode",
+        "ref": "1141",
+        "url": "https://leetcode.com/problems/user-activity-for-the-past-30-days-i/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          "date-window",
+          "count-distinct"
+        ]
+      },
+      {
+        "id": "A1-LC1633",
+        "tier": 1,
+        "title": "Percentage of Users Attended a Contest",
+        "platform": "leetcode",
+        "ref": "1633",
+        "url": "https://leetcode.com/problems/percentage-of-users-attended-a-contest/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          "ratio-of-total"
+        ]
+      },
+      {
+        "id": "A1-LC1729",
+        "tier": 1,
+        "title": "Find Followers Count",
+        "platform": "leetcode",
+        "ref": "1729",
+        "url": "https://leetcode.com/problems/find-followers-count/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          "group-count"
+        ]
+      },
+      {
+        "id": "A1-LC2356",
+        "tier": 1,
+        "title": "Number of Unique Subjects Taught by Each Teacher",
+        "platform": "leetcode",
+        "ref": "2356",
+        "url": "https://leetcode.com/problems/number-of-unique-subjects-taught-by-each-teacher/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          "count-distinct"
+        ]
+      },
+      {
+        "id": "A1-LC596",
+        "tier": 1,
+        "title": "Classes More Than 5 Students",
+        "platform": "leetcode",
+        "ref": "596",
+        "url": "https://leetcode.com/problems/classes-more-than-5-students/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          "having"
+        ]
+      },
+      {
+        "id": "A2-HR033",
+        "tier": 2,
+        "title": "The Blunder",
+        "platform": "hackerrank",
+        "ref": "033",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "string-replace",
+          "avg-diff",
+          "ceil"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A2-HR034",
+        "tier": 2,
+        "title": "Top Earners",
+        "platform": "hackerrank",
+        "ref": "034",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Aggregation",
+        "difficulty": null,
+        "patterns": [
+          "group-max",
+          "having"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A2-LC1045",
+        "tier": 2,
+        "title": "Customers Who Bought All Products",
+        "platform": "leetcode",
+        "ref": "1045",
+        "url": "https://leetcode.com/problems/customers-who-bought-all-products/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          "relational-division"
+        ]
+      },
+      {
+        "id": "A2-LC1070",
+        "tier": 2,
+        "title": "Product Sales Analysis III",
+        "platform": "leetcode",
+        "ref": "1070",
+        "url": "https://leetcode.com/problems/product-sales-analysis-iii/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "medium",
+        "patterns": [
+          "first-per-group",
+          "min-group"
+        ]
+      },
+      {
+        "id": "A2-LC1174",
+        "tier": 2,
+        "title": "Immediate Food Delivery II",
+        "platform": "leetcode",
+        "ref": "1174",
+        "url": "https://leetcode.com/problems/immediate-food-delivery-ii/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "medium",
+        "patterns": [
+          "first-per-group",
+          "conditional-agg"
+        ]
+      },
+      {
+        "id": "A2-LC1193",
+        "tier": 2,
+        "title": "Monthly Transactions I",
+        "platform": "leetcode",
+        "ref": "1193",
+        "url": "https://leetcode.com/problems/monthly-transactions-i/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "medium",
+        "patterns": [
+          "date-bucket",
+          "conditional-agg"
+        ]
+      },
+      {
+        "id": "A2-LC1211",
+        "tier": 2,
+        "title": "Queries Quality and Percentage",
+        "platform": "leetcode",
+        "ref": "1211",
+        "url": "https://leetcode.com/problems/queries-quality-and-percentage/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          "conditional-agg"
+        ]
+      },
+      {
+        "id": "A2-LC1251",
+        "tier": 2,
+        "title": "Average Selling Price",
+        "platform": "leetcode",
+        "ref": "1251",
+        "url": "https://leetcode.com/problems/average-selling-price/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "easy",
+        "patterns": [
+          "weighted-average",
+          "join-agg"
+        ]
+      },
+      {
+        "id": "A2-LC1484",
+        "tier": 2,
+        "title": "Group Sold Products By The Date",
+        "platform": "leetcode",
+        "ref": "1484",
+        "url": "https://leetcode.com/problems/group-sold-products-by-the-date/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced String Functions / Regex / Clause",
+        "difficulty": "easy",
+        "patterns": [
+          "string-agg",
+          "group-concat"
+        ]
+      },
+      {
+        "id": "A2-LC602",
+        "tier": 2,
+        "title": "Friend Requests II: Who Has the Most Friends",
+        "platform": "leetcode",
+        "ref": "602",
+        "url": "https://leetcode.com/problems/friend-requests-ii-who-has-the-most-friends/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "medium",
+        "patterns": [
+          "union-all",
+          "group-count"
+        ]
+      },
+      {
+        "id": "A2-LC619",
+        "tier": 2,
+        "title": "Biggest Single Number",
+        "platform": "leetcode",
+        "ref": "619",
+        "url": "https://leetcode.com/problems/biggest-single-number/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Sorting and Grouping",
+        "difficulty": "easy",
+        "patterns": [
+          "having-count-1",
+          "max-subquery"
+        ]
+      },
+      {
+        "id": "A3-HR054",
+        "tier": 3,
+        "title": "Interviews",
+        "platform": "hackerrank",
+        "ref": "054",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Join",
+        "difficulty": null,
+        "patterns": [
+          "multi-join",
+          "multi-level-agg",
+          "null-collapse"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A3-HR055",
+        "tier": 3,
+        "title": "15 Days of Learning SQL",
+        "platform": "hackerrank",
+        "ref": "055",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Join",
+        "difficulty": null,
+        "patterns": [
+          "running-distinct",
+          "max-per-group",
+          "correlated-subquery"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "A3-LC550",
+        "tier": 3,
+        "title": "Game Play Analysis IV",
+        "platform": "leetcode",
+        "ref": "550",
+        "url": "https://leetcode.com/problems/game-play-analysis-iv/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Basic Aggregate Functions",
+        "difficulty": "medium",
+        "patterns": [
+          "retention",
+          "consecutive-days",
+          "first-per-group"
+        ]
+      }
+    ],
+    "window-functions": [
+      {
+        "id": "W2-LC1204",
+        "tier": 2,
+        "title": "Last Person to Fit in the Bus",
+        "platform": "leetcode",
+        "ref": "1204",
+        "url": "https://leetcode.com/problems/last-person-to-fit-in-the-bus/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          "running-sum",
+          "frame"
+        ]
+      },
+      {
+        "id": "W2-LC180",
+        "tier": 2,
+        "title": "Consecutive Numbers",
+        "platform": "leetcode",
+        "ref": "180",
+        "url": "https://leetcode.com/problems/consecutive-numbers/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          "lag-lead",
+          "consecutive-runs"
+        ]
+      },
+      {
+        "id": "W2-LC185",
+        "tier": 2,
+        "title": "Department Top Three Salaries",
+        "platform": "leetcode",
+        "ref": "185",
+        "url": "https://leetcode.com/problems/department-top-three-salaries/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "hard",
+        "patterns": [
+          "dense-rank",
+          "top-n-per-group"
+        ]
+      },
+      {
+        "id": "W3-HR051",
+        "tier": 3,
+        "title": "SQL Project Planning",
+        "platform": "hackerrank",
+        "ref": "051",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Join",
+        "difficulty": null,
+        "patterns": [
+          "gaps-and-islands",
+          "consecutive-runs"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "W3-LC1164",
+        "tier": 3,
+        "title": "Product Price at a Given Date",
+        "platform": "leetcode",
+        "ref": "1164",
+        "url": "https://leetcode.com/problems/product-price-at-a-given-date/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced Select and Joins",
+        "difficulty": "medium",
+        "patterns": [
+          "as-of-join",
+          "last-value-before"
+        ]
+      },
+      {
+        "id": "W3-LC1321",
+        "tier": 3,
+        "title": "Restaurant Growth",
+        "platform": "leetcode",
+        "ref": "1321",
+        "url": "https://leetcode.com/problems/restaurant-growth/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "medium",
+        "patterns": [
+          "moving-average",
+          "rows-frame"
+        ]
+      }
+    ],
+    "subqueries-ctes": [
+      {
+        "id": "S1-LC1978",
+        "tier": 1,
+        "title": "Employees Whose Manager Left the Company",
+        "platform": "leetcode",
+        "ref": "1978",
+        "url": "https://leetcode.com/problems/employees-whose-manager-left-the-company/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "easy",
+        "patterns": [
+          "not-in-subquery",
+          "null-trap"
+        ]
+      },
+      {
+        "id": "S2-HR024",
+        "tier": 2,
+        "title": "Binary Tree Nodes",
+        "platform": "hackerrank",
+        "ref": "024",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Select",
+        "difficulty": null,
+        "patterns": [
+          "hierarchy",
+          "case-expression"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "S2-LC176",
+        "tier": 2,
+        "title": "Second Highest Salary",
+        "platform": "leetcode",
+        "ref": "176",
+        "url": "https://leetcode.com/problems/second-highest-salary/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Advanced String Functions / Regex / Clause",
+        "difficulty": "medium",
+        "patterns": [
+          "nth-value",
+          "null-when-empty"
+        ]
+      },
+      {
+        "id": "S2-LC626",
+        "tier": 2,
+        "title": "Exchange Seats",
+        "platform": "leetcode",
+        "ref": "626",
+        "url": "https://leetcode.com/problems/exchange-seats/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "medium",
+        "patterns": [
+          "case-swap",
+          "lead-lag"
+        ]
+      },
+      {
+        "id": "S3-LC1341",
+        "tier": 3,
+        "title": "Movie Rating",
+        "platform": "leetcode",
+        "ref": "1341",
+        "url": "https://leetcode.com/problems/movie-rating/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "medium",
+        "patterns": [
+          "union-all",
+          "tie-break-order"
+        ]
+      },
+      {
+        "id": "S3-LC585",
+        "tier": 3,
+        "title": "Investments in 2016",
+        "platform": "leetcode",
+        "ref": "585",
+        "url": "https://leetcode.com/problems/investments-in-2016/",
+        "sheet": "leetcode-sql-50",
+        "sheetSection": "Subqueries",
+        "difficulty": "medium",
+        "patterns": [
+          "multi-condition-subquery",
+          "dedupe-by-key"
+        ]
+      }
+    ],
+    "advanced-analytics": [
+      {
+        "id": "X2-HR023",
+        "tier": 2,
+        "title": "Occupations",
+        "platform": "hackerrank",
+        "ref": "023",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Advanced Select",
+        "difficulty": null,
+        "patterns": [
+          "pivot",
+          "row-number-pivot"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "X4-HR056",
+        "tier": 4,
+        "title": "Draw The Triangle 1",
+        "platform": "hackerrank",
+        "ref": "056",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Alternative Queries",
+        "difficulty": null,
+        "patterns": [
+          "recursive-cte",
+          "number-generation"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "X4-HR057",
+        "tier": 4,
+        "title": "Draw The Triangle 2",
+        "platform": "hackerrank",
+        "ref": "057",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Alternative Queries",
+        "difficulty": null,
+        "patterns": [
+          "recursive-cte",
+          "number-generation"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      },
+      {
+        "id": "X4-HR058",
+        "tier": 4,
+        "title": "Print Prime Numbers",
+        "platform": "hackerrank",
+        "ref": "058",
+        "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=alternative-queries",
+        "sheet": "hackerrank-sql-58",
+        "sheetSection": "Alternative Queries",
+        "difficulty": null,
+        "patterns": [
+          "recursive-cte",
+          "set-based-sieve",
+          "string-agg"
+        ],
+        "note": "URL points to the subdomain listing; open the challenge by title."
+      }
+    ],
+    "performance": [],
+    "timeseries-geo": []
+  },
+  "coverage": {
+    "basics": {
+      "sourced": 15,
+      "byTier": {
+        "1": 13,
+        "2": 1,
+        "3": 1,
+        "4": 0
+      },
+      "bySheet": {
+        "hackerrank-sql-58": 9,
+        "leetcode-sql-50": 6
+      },
+      "overlay": {
+        "pgexercises": [
+          "basic"
+        ],
+        "datalemur": "difficulty=Easy",
+        "reference": [
+          "reference-techtfq"
+        ]
+      }
+    },
+    "filtering": {
+      "sourced": 20,
+      "byTier": {
+        "1": 16,
+        "2": 4,
+        "3": 0,
+        "4": 0
+      },
+      "bySheet": {
+        "hackerrank-sql-58": 13,
+        "leetcode-sql-50": 7
+      },
+      "overlay": {
+        "pgexercises": [
+          "basic",
+          "string"
+        ],
+        "datalemur": "difficulty=Easy",
+        "reference": [
+          "reference-techtfq"
+        ]
+      }
+    },
+    "joins": {
+      "sourced": 22,
+      "byTier": {
+        "1": 7,
+        "2": 14,
+        "3": 1,
+        "4": 0
+      },
+      "bySheet": {
+        "hackerrank-sql-58": 11,
+        "leetcode-sql-50": 11
+      },
+      "overlay": {
+        "pgexercises": [
+          "joins"
+        ],
+        "datalemur": "tag=joins",
+        "reference": [
+          "reference-ankit-bansal"
+        ]
+      }
+    },
+    "aggregation": {
+      "sourced": 35,
+      "byTier": {
+        "1": 21,
+        "2": 11,
+        "3": 3,
+        "4": 0
+      },
+      "bySheet": {
+        "hackerrank-sql-58": 19,
+        "leetcode-sql-50": 16
+      },
+      "overlay": {
+        "pgexercises": [
+          "aggregates"
+        ],
+        "datalemur": "tag=aggregate",
+        "reference": [
+          "reference-ankit-bansal"
+        ]
+      }
+    },
+    "window-functions": {
+      "sourced": 6,
+      "byTier": {
+        "1": 0,
+        "2": 3,
+        "3": 3,
+        "4": 0
+      },
+      "bySheet": {
+        "leetcode-sql-50": 5,
+        "hackerrank-sql-58": 1
+      },
+      "overlay": {
+        "pgexercises": [
+          "aggregates"
+        ],
+        "datalemur": "tag=window+functions",
+        "reference": [
+          "reference-ankit-bansal"
+        ]
+      }
+    },
+    "subqueries-ctes": {
+      "sourced": 6,
+      "byTier": {
+        "1": 1,
+        "2": 3,
+        "3": 2,
+        "4": 0
+      },
+      "bySheet": {
+        "leetcode-sql-50": 5,
+        "hackerrank-sql-58": 1
+      },
+      "overlay": {
+        "pgexercises": [
+          "recursive"
+        ],
+        "datalemur": "tag=CTE",
+        "reference": [
+          "reference-techtfq"
+        ]
+      }
+    },
+    "advanced-analytics": {
+      "sourced": 4,
+      "byTier": {
+        "1": 0,
+        "2": 1,
+        "3": 0,
+        "4": 3
+      },
+      "bySheet": {
+        "hackerrank-sql-58": 4
+      },
+      "overlay": {
+        "pgexercises": [
+          "recursive",
+          "date"
+        ],
+        "datalemur": "difficulty=Hard",
+        "reference": [
+          "reference-ankit-bansal"
+        ]
+      }
+    },
+    "performance": {
+      "sourced": 0,
+      "byTier": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0
+      },
+      "bySheet": {},
+      "overlay": {
+        "pgexercises": [],
+        "datalemur": null,
+        "reference": []
+      }
+    },
+    "timeseries-geo": {
+      "sourced": 0,
+      "byTier": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0
+      },
+      "bySheet": {},
+      "overlay": {
+        "pgexercises": [
+          "date"
+        ],
+        "datalemur": "difficulty=Hard",
+        "reference": []
+      }
+    }
+  },
+  "gaps": [
+    {
+      "module": "performance",
+      "severity": "high",
+      "problem": "No free judge-backed sheet tests EXPLAIN reading, index selection or plan forcing \u2014 LeetCode and HackerRank grade output, not plans.",
+      "fill": "Keep the synthesised drills as the primary source here. Add PGExercises-style local exercises against a seeded Postgres, graded by plan shape rather than result set. Cite Use The Index, Luke (https://use-the-index-luke.com/) as the reference text."
+    },
+    {
+      "module": "timeseries-geo",
+      "severity": "high",
+      "problem": "Gap filling, interpolation, PostGIS and H3 appear in no mainstream interview sheet.",
+      "fill": "StrataScratch hard analytics + PGExercises date category + synthesised drills. This module is deliberately off-spine."
+    },
+    {
+      "module": "window-functions",
+      "severity": "medium",
+      "problem": "Only 6 sourced problems; SQL 50 touches windows in just 5 places.",
+      "fill": "Advanced SQL 50 (once enumerated) + DataLemur tag=window functions. Target 20+."
+    },
+    {
+      "module": "subqueries-ctes",
+      "severity": "medium",
+      "problem": "Recursive CTEs are absent from SQL 50 and near-absent from HackerRank (only the 3 Alternative Queries).",
+      "fill": "PGExercises recursive category is the best free source; techTFQ recursion series as reference."
+    },
+    {
+      "tier": "L4",
+      "severity": "medium",
+      "problem": "Only 3 sourced L4 problems exist across the whole bank (HackerRank Alternative Queries).",
+      "fill": "L4 is constraint-driven and internals-heavy by design \u2014 it stays predominantly synthesised. Do not force external sourcing here."
+    }
+  ],
+  "rules": [
+    "A sourced problem is never invented. Every entry carries platform + ref + url, or it does not go in this file.",
+    "tier is assigned by THIS curriculum, not by the platform's difficulty label. difficulty is recorded as provenance only.",
+    "The spine fixes order. An overlay may add reps at a tier but may not introduce a concept ahead of the spine.",
+    "A module's lesson may cite a sourced problem only if problems.json lists it for that module at that tier.",
+    "Synthesised drills stay legal and stay in the lesson files, but must be labelled platform='drill' so the origin is never ambiguous."
+  ]
+}

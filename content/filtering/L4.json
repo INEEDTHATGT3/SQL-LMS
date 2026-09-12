@@ -83,8 +83,8 @@
               "Node Type": "Seq Scan",
               "Relation Name": "users",
               "Filter": "(city = 'NYC' AND zip_code = '10001')",
-              "Startup Cost": 0.00,
-              "Total Cost": 1250.00,
+              "Startup Cost": 0,
+              "Total Cost": 1250,
               "Plan Rows": 5,
               "Plan Width": 120,
               "Actual Rows": 500
@@ -220,8 +220,8 @@
               "Node Type": "Bitmap Heap Scan",
               "Relation Name": "employees",
               "Recheck Cond": "((dept_id = 1) AND (salary > 50000))",
-              "Startup Cost": 10.00,
-              "Total Cost": 150.00,
+              "Startup Cost": 10,
+              "Total Cost": 150,
               "Plan Rows": 50,
               "Plan Width": 72,
               "Plans": [
@@ -311,45 +311,67 @@
               "tier": 4,
               "title": "Extended Stats for Correlated Columns",
               "platform": "drill",
-              "patterns": ["extended-statistics"],
+              "patterns": [
+                "extended-statistics"
+              ],
               "statement": "Table users(city, zip_code) — queries filter both. Create extended stats for dependency.",
-              "hints": ["CREATE STATISTICS s (DEPENDENCIES) ON city, zip_code FROM users;"]
+              "hints": [
+                "CREATE STATISTICS s (DEPENDENCIES) ON city, zip_code FROM users;"
+              ]
             },
             {
               "id": "F402",
               "tier": 4,
               "title": "Expression Index for Full-Text Search",
               "platform": "drill",
-              "patterns": ["expression-index"],
+              "patterns": [
+                "expression-index"
+              ],
               "statement": "Create index for WHERE first_name || ' ' || last_name ILIKE 'john%'.",
-              "hints": ["CREATE INDEX ON users ((first_name || ' ' || last_name))"]
+              "hints": [
+                "CREATE INDEX ON users ((first_name || ' ' || last_name))"
+              ]
             },
             {
               "id": "F403",
               "tier": 4,
               "title": "Partial Index with Immutable Predicate",
               "platform": "drill",
-              "patterns": ["partial-index"],
+              "patterns": [
+                "partial-index"
+              ],
               "statement": "Create partial index on orders(created_at) WHERE status IN ('shipped','delivered'). Why can't we use NOW()?",
-              "hints": ["Predicate must be immutable; NOW() is volatile"]
+              "hints": [
+                "Predicate must be immutable; NOW() is volatile"
+              ]
             },
             {
               "id": "F404",
               "tier": 4,
               "title": "MCV Statistics for Skewed Data",
               "platform": "drill",
-              "patterns": ["extended-statistics", "mcv"],
+              "patterns": [
+                "extended-statistics",
+                "mcv"
+              ],
               "statement": "status column has 3 values but 90%='active'. Create MCV stats for better estimates.",
-              "hints": ["CREATE STATISTICS s (MCV) ON status FROM users;"]
+              "hints": [
+                "CREATE STATISTICS s (MCV) ON status FROM users;"
+              ]
             },
             {
               "id": "F405",
               "tier": 4,
               "title": "NDISTINCT for GROUP BY Accuracy",
               "platform": "drill",
-              "patterns": ["extended-statistics", "ndistinct"],
+              "patterns": [
+                "extended-statistics",
+                "ndistinct"
+              ],
               "statement": "GROUP BY dept_id, role — planner underestimates groups. Create NDISTINCT stats.",
-              "hints": ["CREATE STATISTICS s (NDISTINCT) ON dept_id, role FROM employees;"]
+              "hints": [
+                "CREATE STATISTICS s (NDISTINCT) ON dept_id, role FROM employees;"
+              ]
             }
           ]
         }
@@ -365,11 +387,29 @@
     "Statistics target: ALTER TABLE ... SET STATISTICS N — more histogram buckets"
   ],
   "glossary": [
-    { "term": "extended statistics", "def": "CREATE STATISTICS object capturing cross-column correlation (DEPENDENCIES, NDISTINCT, MCV)." },
-    { "term": "functional dependency", "def": "Column A determines column B (e.g., zip_code → city). Planner learns via DEPENDENCIES stats." },
-    { "term": "n-distinct", "def": "Estimated distinct value count for GROUP BY accuracy. Extended stats improve this." },
-    { "term": "MCV (Most Common Values)", "def": "List of frequent value combinations for multi-column selectivity estimates." },
-    { "term": "lossy bitmap", "def": "Bitmap page stores page-level not tuple-level; requires Recheck Cond on heap." },
-    { "term": "immutable function", "def": "Same input → same output, forever. Required for expression indexes." }
+    {
+      "term": "extended statistics",
+      "def": "CREATE STATISTICS object capturing cross-column correlation (DEPENDENCIES, NDISTINCT, MCV)."
+    },
+    {
+      "term": "functional dependency",
+      "def": "Column A determines column B (e.g., zip_code → city). Planner learns via DEPENDENCIES stats."
+    },
+    {
+      "term": "n-distinct",
+      "def": "Estimated distinct value count for GROUP BY accuracy. Extended stats improve this."
+    },
+    {
+      "term": "MCV (Most Common Values)",
+      "def": "List of frequent value combinations for multi-column selectivity estimates."
+    },
+    {
+      "term": "lossy bitmap",
+      "def": "Bitmap page stores page-level not tuple-level; requires Recheck Cond on heap."
+    },
+    {
+      "term": "immutable function",
+      "def": "Same input → same output, forever. Required for expression indexes."
+    }
   ]
 }

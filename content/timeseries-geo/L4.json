@@ -88,13 +88,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"method": "COUNT(DISTINCT)", "memory": "O(N)", "accuracy": "Exact", "speed": "Slow on 100M+"},
-              {"method": "HyperLogLog", "memory": "O(1) ~16KB", "accuracy": "~1-2% error", "speed": "Very fast"},
-              {"method": "TDigest (p50)", "memory": "O(1) ~few KB", "accuracy": "~1% error", "speed": "Very fast"},
-              {"method": "KMV (K=1024)", "memory": "O(K)", "accuracy": "Exact top-K", "speed": "Fast"}
+              {
+                "method": "COUNT(DISTINCT)",
+                "memory": "O(N)",
+                "accuracy": "Exact",
+                "speed": "Slow on 100M+"
+              },
+              {
+                "method": "HyperLogLog",
+                "memory": "O(1) ~16KB",
+                "accuracy": "~1-2% error",
+                "speed": "Very fast"
+              },
+              {
+                "method": "TDigest (p50)",
+                "memory": "O(1) ~few KB",
+                "accuracy": "~1% error",
+                "speed": "Very fast"
+              },
+              {
+                "method": "KMV (K=1024)",
+                "memory": "O(K)",
+                "accuracy": "Exact top-K",
+                "speed": "Fast"
+              }
             ],
             "after": [],
-            "highlight": ["memory", "accuracy"]
+            "highlight": [
+              "memory",
+              "accuracy"
+            ]
           }
         },
         {
@@ -165,15 +188,15 @@
             "Plan": {
               "Node Type": "Custom Scan",
               "Plugin": "ChunkAppend",
-              "Startup Cost": 100.00,
-              "Total Cost": 30000.00,
+              "Startup Cost": 100,
+              "Total Cost": 30000,
               "Plan Rows": 800000,
               "Plan Width": 64,
               "Plans": [
                 {
                   "Node Type": "Append",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 30000.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 30000,
                   "Plan Rows": 800000,
                   "Plan Width": 64,
                   "Plans": [
@@ -181,16 +204,16 @@
                       "Node Type": "Custom Scan",
                       "Relation Name": "_mat_hypertable_hourly",
                       "Plugin": "ChunkAppend",
-                      "Startup Cost": 90.00,
-                      "Total Cost": 25000.00,
+                      "Startup Cost": 90,
+                      "Total Cost": 25000,
                       "Plan Rows": 700000,
                       "Plan Width": 64
                     },
                     {
                       "Node Type": "Seq Scan",
                       "Relation Name": "events",
-                      "Startup Cost": 10.00,
-                      "Total Cost": 4500.00,
+                      "Startup Cost": 10,
+                      "Total Cost": 4500,
                       "Plan Rows": 100000,
                       "Plan Width": 64,
                       "Filter": "((bucket_time >= (now() - '1 day'::interval)) AND (bucket_time <= now()))"
@@ -252,8 +275,8 @@
           "plan": {
             "Plan": {
               "Node Type": "Gather Merge",
-              "Startup Cost": 10000.00,
-              "Total Cost": 52000.00,
+              "Startup Cost": 10000,
+              "Total Cost": 52000,
               "Plan Rows": 500000,
               "Plan Width": 16,
               "Workers Planned": 4,
@@ -264,8 +287,8 @@
               "Plans": [
                 {
                   "Node Type": "Nested Loop",
-                  "Startup Cost": 100.00,
-                  "Total Cost": 51000.00,
+                  "Startup Cost": 100,
+                  "Total Cost": 51000,
                   "Plan Rows": 500000,
                   "Plan Width": 16,
                   "Join Filter": "ST_DWithin(a.geom, b.geom, '1000'::double precision)",
@@ -274,8 +297,8 @@
                       "Node Type": "Parallel Seq Scan",
                       "Relation Name": "building",
                       "Alias": "a",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 8500.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 8500,
                       "Plan Rows": 500000,
                       "Plan Width": 76
                     },
@@ -283,8 +306,8 @@
                       "Node Type": "Index Scan",
                       "Relation Name": "parcel",
                       "Alias": "b",
-                      "Startup Cost": 0.00,
-                      "Total Cost": 800.00,
+                      "Startup Cost": 0,
+                      "Total Cost": 800,
                       "Plan Rows": 1,
                       "Plan Width": 76,
                       "Index Cond": "((b.geom && ST_Expand(a.geom, '1000'::double precision)))"
@@ -380,12 +403,12 @@
           "plan": {
             "Plan": {
               "Node Type": "HashAggregate",
-              "Startup Cost": 15000.00,
-              "Total Cost": 18000.00,
+              "Startup Cost": 15000,
+              "Total Cost": 18000,
               "Plan Rows": 15000,
               "Plan Width": 24,
               "Group Key": "h3_lat_lng_to_cell(lat, lng, 8)",
-              "Actual Startup Time": 45.0,
+              "Actual Startup Time": 45,
               "Actual Total Time": 49.5,
               "Actual Rows": 14230,
               "Actual Loops": 1,
@@ -393,8 +416,8 @@
                 {
                   "Node Type": "Seq Scan",
                   "Relation Name": "events",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 12500.00,
+                  "Startup Cost": 0,
+                  "Total Cost": 12500,
                   "Plan Rows": 1000000,
                   "Plan Width": 16,
                   "Filter": "(ts > (now() - '1 day'::interval))"
@@ -463,72 +486,114 @@
               "tier": 4,
               "title": "HyperLogLog for Daily Active Users",
               "platform": "drill",
-              "patterns": ["hyperloglog"],
+              "patterns": [
+                "hyperloglog"
+              ],
               "statement": "Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).",
-              "hints": ["CREATE EXTENSION hll; hll_add_agg()"]
+              "hints": [
+                "CREATE EXTENSION hll; hll_add_agg()"
+              ]
             },
             {
               "id": "T402",
               "tier": 4,
               "title": "TDigest for API Latency Percentiles",
               "platform": "drill",
-              "patterns": ["tdigest"],
+              "patterns": [
+                "tdigest"
+              ],
               "statement": "Compute p50, p95, p99 latency from 10M requests using TDigest.",
-              "hints": ["tdigest_agg(latency)", "percentile(t, 0.99)"]
+              "hints": [
+                "tdigest_agg(latency)",
+                "percentile(t, 0.99)"
+              ]
             },
             {
               "id": "T403",
               "tier": 4,
               "title": "Continuous Aggregate for 5-min Metrics",
               "platform": "drill",
-              "patterns": ["continuous-aggregate"],
+              "patterns": [
+                "continuous-aggregate"
+              ],
               "statement": "Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.",
-              "hints": ["time_bucket('5 min', ts)", "add_continuous_aggregate_policy"]
+              "hints": [
+                "time_bucket('5 min', ts)",
+                "add_continuous_aggregate_policy"
+              ]
             },
             {
               "id": "T404",
               "tier": 4,
               "title": "KNN Search for Nearest POIs",
               "platform": "drill",
-              "patterns": ["knn-search"],
+              "patterns": [
+                "knn-search"
+              ],
               "statement": "Find 10 nearest coffee shops to user location using <-> operator.",
-              "hints": ["geom <-> point", "LIMIT 5", "GiST index"]
+              "hints": [
+                "geom <-> point",
+                "LIMIT 5",
+                "GiST index"
+              ]
             },
             {
               "id": "T405",
               "tier": 4,
               "title": "H3 Hexbin Aggregation",
               "platform": "drill",
-              "patterns": ["h3-hexbin"],
+              "patterns": [
+                "h3-hexbin"
+              ],
               "statement": "Aggregate 1M GPS points into H3 resolution 8 hexagons, count per hex.",
-              "hints": ["h3_lat_lng_to_cell(lat, lng, 8)", "GROUP BY h3_cell"]
+              "hints": [
+                "h3_lat_lng_to_cell(lat, lng, 8)",
+                "GROUP BY h3_cell"
+              ]
             },
             {
               "id": "T406",
               "tier": 4,
               "title": "Continuous View for Real-Time Dashboard",
               "platform": "drill",
-              "patterns": ["continuous-view"],
+              "patterns": [
+                "continuous-view"
+              ],
               "statement": "Create PipelineDB continuous view for per-minute page views per site.",
-              "hints": ["CREATE CONTINUOUS VIEW", "time_bucket('1 minute', ts)"]
+              "hints": [
+                "CREATE CONTINUOUS VIEW",
+                "time_bucket('1 minute', ts)"
+              ]
             },
             {
               "id": "T407",
               "tier": 4,
               "title": "Parallel Spatial Join",
               "platform": "drill",
-              "patterns": ["parallel-spatial-join"],
+              "patterns": [
+                "parallel-spatial-join"
+              ],
               "statement": "Join 10M buildings with 500k parcels using parallel spatial join.",
-              "hints": ["max_parallel_workers_per_gather", "enable_parallel_append"]
+              "hints": [
+                "max_parallel_workers_per_gather",
+                "enable_parallel_append"
+              ]
             },
             {
               "id": "T408",
               "tier": 4,
               "title": "Streaming Percentile with TDigest",
               "platform": "drill",
-              "patterns": ["tdigest", "streaming"],
+              "patterns": [
+                "tdigest",
+                "streaming"
+              ],
               "statement": "Maintain streaming p99 latency using TDigest sketch updated per request.",
-              "hints": ["tdigest_agg", "tdigest_union", "percentile(t, 0.99)"]
+              "hints": [
+                "tdigest_agg",
+                "tdigest_union",
+                "percentile(t, 0.99)"
+              ]
             }
           ]
         }
@@ -544,11 +609,29 @@
     "H3 hexagons: hierarchical, equal-area, hierarchical. Res 8=0.7km², Res 10=15km²."
   ],
   "glossary": [
-    { "term": "HyperLogLog", "def": "Probabilistic algorithm for approximate distinct count with fixed memory." },
-    { "term": "TDigest", "def": "Streaming percentile algorithm with O(1) memory and bounded error." },
-    { "term": "continuous aggregate", "def": "TimescaleDB: automatically maintained materialized view with incremental refresh." },
-    { "term": "continuous view", "def": "PipelineDB/pg_streaming: real-time view combining materialized history + streaming tail." },
-    { "term": "KNN search", "def": "K-Nearest Neighbors via GiST index and <-> operator (PostgreSQL)." },
-    { "term": "H3", "def": "Uber's hexagonal hierarchical grid system. Equal-area, hierarchical, constant-time neighbor lookup." }
+    {
+      "term": "HyperLogLog",
+      "def": "Probabilistic algorithm for approximate distinct count with fixed memory."
+    },
+    {
+      "term": "TDigest",
+      "def": "Streaming percentile algorithm with O(1) memory and bounded error."
+    },
+    {
+      "term": "continuous aggregate",
+      "def": "TimescaleDB: automatically maintained materialized view with incremental refresh."
+    },
+    {
+      "term": "continuous view",
+      "def": "PipelineDB/pg_streaming: real-time view combining materialized history + streaming tail."
+    },
+    {
+      "term": "KNN search",
+      "def": "K-Nearest Neighbors via GiST index and <-> operator (PostgreSQL)."
+    },
+    {
+      "term": "H3",
+      "def": "Uber's hexagonal hierarchical grid system. Equal-area, hierarchical, constant-time neighbor lookup."
+    }
   ]
 }

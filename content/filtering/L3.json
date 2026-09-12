@@ -141,13 +141,36 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"index_type": "Full B-tree", "size": "100%", "covers": "all rows", "query_speed": "fast for all"},
-              {"index_type": "Partial (active)", "size": "~10%", "covers": "status='active'", "query_speed": "fast for active, N/A for inactive"},
-              {"index_type": "Functional (LOWER)", "size": "100%", "covers": "expression", "query_speed": "fast for LOWER() queries"},
-              {"index_type": "Covering (INCLUDE)", "size": "+20%", "covers": "key + payload", "query_speed": "index-only scan"}
+              {
+                "index_type": "Full B-tree",
+                "size": "100%",
+                "covers": "all rows",
+                "query_speed": "fast for all"
+              },
+              {
+                "index_type": "Partial (active)",
+                "size": "~10%",
+                "covers": "status='active'",
+                "query_speed": "fast for active, N/A for inactive"
+              },
+              {
+                "index_type": "Functional (LOWER)",
+                "size": "100%",
+                "covers": "expression",
+                "query_speed": "fast for LOWER() queries"
+              },
+              {
+                "index_type": "Covering (INCLUDE)",
+                "size": "+20%",
+                "covers": "key + payload",
+                "query_speed": "index-only scan"
+              }
             ],
             "after": [],
-            "highlight": ["size", "query_speed"]
+            "highlight": [
+              "size",
+              "query_speed"
+            ]
           }
         },
         {
@@ -187,7 +210,7 @@
               "Index Name": "idx_users_email_lower",
               "Index Cond": "(lower(email) = 'alice@x.com')",
               "Startup Cost": 0.29,
-              "Total Cost": 8.30,
+              "Total Cost": 8.3,
               "Plan Rows": 1,
               "Plan Width": 120,
               "Actual Startup Time": 0.015,
@@ -287,54 +310,78 @@
               "tier": 3,
               "title": "Functional Index for Case-Insensitive Email",
               "platform": "drill",
-              "patterns": ["functional-index"],
+              "patterns": [
+                "functional-index"
+              ],
               "statement": "Users login with email case-insensitively. Create index for WHERE LOWER(email) = ?.",
-              "hints": ["CREATE INDEX ON users (LOWER(email))"]
+              "hints": [
+                "CREATE INDEX ON users (LOWER(email))"
+              ]
             },
             {
               "id": "F302",
               "tier": 3,
               "title": "Partial Index for Active Users",
               "platform": "drill",
-              "patterns": ["partial-index"],
+              "patterns": [
+                "partial-index"
+              ],
               "statement": "95% queries filter status='active'. Create partial index on users(created_at) for active users.",
-              "hints": ["WHERE status = 'active'"]
+              "hints": [
+                "WHERE status = 'active'"
+              ]
             },
             {
               "id": "F303",
               "tier": 3,
               "title": "Fix Non-Sargable: YEAR(created_at) = 2024",
               "platform": "drill",
-              "patterns": ["sargability-fix"],
+              "patterns": [
+                "sargability-fix"
+              ],
               "statement": "Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.",
-              "hints": ["created_at >= '2024-01-01' AND created_at < '2025-01-01'"]
+              "hints": [
+                "created_at >= '2024-01-01' AND created_at < '2025-01-01'"
+              ]
             },
             {
               "id": "F304",
               "tier": 3,
               "title": "Functional Index for Annual Salary",
               "platform": "drill",
-              "patterns": ["functional-index"],
+              "patterns": [
+                "functional-index"
+              ],
               "statement": "Query: WHERE salary * 12 > 120000. Create functional index.",
-              "hints": ["CREATE INDEX ON employees ((salary * 12))"]
+              "hints": [
+                "CREATE INDEX ON employees ((salary * 12))"
+              ]
             },
             {
               "id": "F305",
               "tier": 3,
               "title": "Partial Unique: One Active Email Per User",
               "platform": "drill",
-              "patterns": ["partial-unique"],
+              "patterns": [
+                "partial-unique"
+              ],
               "statement": "Allow same email for inactive users, but only one active per email.",
-              "hints": ["CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'"]
+              "hints": [
+                "CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'"
+              ]
             },
             {
               "id": "F306",
               "tier": 3,
               "title": "Sargable Rewrite: salary * 1.1 > 55000",
               "platform": "drill",
-              "patterns": ["sargability-fix"],
+              "patterns": [
+                "sargability-fix"
+              ],
               "statement": "Rewrite to use index on salary.",
-              "hints": ["salary > 50000"]
+              "hints": [
+                "salary > 50000"
+              ]
             }
           ]
         }
@@ -350,11 +397,29 @@
     "Implicit cast on column = Seq Cast. Match types: numeric_col = 123 not '123'"
   ],
   "glossary": [
-    { "term": "sargable", "def": "Search ARGument ABLE — predicate that can use index seek (e.g., col = 5)." },
-    { "term": "functional index", "def": "Index on expression (e.g., LOWER(col)) — supports queries using that expression." },
-    { "term": "partial index", "def": "Index with WHERE clause — only indexes subset of rows matching condition." },
-    { "term": "covering index", "def": "Index with INCLUDE columns — satisfies query without heap lookup." },
-    { "term": "predicate pushdown", "def": "Moving filter predicate down to storage/index layer to reduce data movement." },
-    { "term": "implicit cast", "def": "Automatic type conversion on column (e.g., varchar = 123) — kills index." }
+    {
+      "term": "sargable",
+      "def": "Search ARGument ABLE — predicate that can use index seek (e.g., col = 5)."
+    },
+    {
+      "term": "functional index",
+      "def": "Index on expression (e.g., LOWER(col)) — supports queries using that expression."
+    },
+    {
+      "term": "partial index",
+      "def": "Index with WHERE clause — only indexes subset of rows matching condition."
+    },
+    {
+      "term": "covering index",
+      "def": "Index with INCLUDE columns — satisfies query without heap lookup."
+    },
+    {
+      "term": "predicate pushdown",
+      "def": "Moving filter predicate down to storage/index layer to reduce data movement."
+    },
+    {
+      "term": "implicit cast",
+      "def": "Automatic type conversion on column (e.g., varchar = 123) — kills index."
+    }
   ]
 }

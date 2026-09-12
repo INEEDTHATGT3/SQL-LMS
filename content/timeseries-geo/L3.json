@@ -108,21 +108,21 @@
             "Plan": {
               "Node Type": "Bitmap Heap Scan",
               "Relation Name": "events",
-              "Startup Cost": 30.00,
-              "Total Cost": 8000.00,
+              "Startup Cost": 30,
+              "Total Cost": 8000,
               "Plan Rows": 1200000,
               "Plan Width": 24,
               "Recheck Cond": "(ts >= '2024-01-01'::timestamptz AND ts < '2024-02-01'::timestamptz)",
-              "Actual Startup Time": 50.0,
-              "Actual Total Time": 700.0,
+              "Actual Startup Time": 50,
+              "Actual Total Time": 700,
               "Actual Rows": 1184453,
               "Actual Loops": 1,
               "Plans": [
                 {
                   "Node Type": "Bitmap Index Scan",
                   "Relation Name": "events_ts_brin",
-                  "Startup Cost": 0.00,
-                  "Total Cost": 25.00,
+                  "Startup Cost": 0,
+                  "Total Cost": 25,
                   "Plan Rows": 1200000,
                   "Plan Width": 0,
                   "Index Cond": "(ts >= '2024-01-01'::timestamptz AND ts < '2024-02-01'::timestamptz)"
@@ -347,54 +347,96 @@
               "tier": 3,
               "title": "BRIN vs B-tree benchmark",
               "platform": "drill",
-              "patterns": ["indexing", "brin"],
+              "patterns": [
+                "indexing",
+                "brin"
+              ],
               "statement": "On a 500M-row append-only events table, justify when you would choose BRIN over B-tree for the ts column, and write the DDL. Include a pages_per_range trade-off note.",
-              "hints": ["page_range=128 default", "BRIN size vs selectivity", "out-of-order inserts break summaries"]
+              "hints": [
+                "page_range=128 default",
+                "BRIN size vs selectivity",
+                "out-of-order inserts break summaries"
+              ]
             },
             {
               "id": "T302",
               "tier": 3,
               "title": "Hourly+monthly rollup ladder",
               "platform": "drill",
-              "patterns": ["rollup", "materialized-view"],
+              "patterns": [
+                "rollup",
+                "materialized-view"
+              ],
               "statement": "Design a two-level rollup (hourly from raw, monthly from hourly) that preserves enough statistics to answer AVG per day and SUM per month. Provide the two CREATE MATERIALIZED VIEW statements.",
-              "hints": ["carry COUNT/SUM/MIN/MAX", "weighted average: SUM(SUM)/SUM(COUNT)", "refresh cadence chaining"]
+              "hints": [
+                "carry COUNT/SUM/MIN/MAX",
+                "weighted average: SUM(SUM)/SUM(COUNT)",
+                "refresh cadence chaining"
+              ]
             },
             {
               "id": "T303",
               "tier": 3,
               "title": "ASOF trade-rate attach",
               "platform": "drill",
-              "patterns": ["asof", "distinct-on"],
+              "patterns": [
+                "asof",
+                "distinct-on"
+              ],
               "statement": "Attach the latest fx rate at-or-before each of 1M trades without a cross join. Write the pg version and the MySQL fallback, and explain the cost of the scalar-subquery form.",
-              "hints": ["DISTINCT ON (t.ts) ORDER BY r.rate_ts DESC", "correlated subquery reruns per row", "index fx_rates(rate_ts)"]
+              "hints": [
+                "DISTINCT ON (t.ts) ORDER BY r.rate_ts DESC",
+                "correlated subquery reruns per row",
+                "index fx_rates(rate_ts)"
+              ]
             },
             {
               "id": "T304",
               "tier": 3,
               "title": "Seasonal bucketing with correct boundaries",
               "platform": "drill",
-              "patterns": ["bucketing", "timezone"],
+              "patterns": [
+                "bucketing",
+                "timezone"
+              ],
               "statement": "Aggregate sales by local-business-day (America/Los_Angeles) from a UTC timestamptz column. Write the bucket expression using AT TIME ZONE and explain the DST edge cases.",
-              "hints": ["ts AT TIME ZONE 'America/Los_Angeles'", "midnight rollover vs UTC midnight", "store local date alongside events to avoid drift"]
+              "hints": [
+                "ts AT TIME ZONE 'America/Los_Angeles'",
+                "midnight rollover vs UTC midnight",
+                "store local date alongside events to avoid drift"
+              ]
             },
             {
               "id": "T305",
               "tier": 3,
               "title": "Interpolate with fade between probes",
               "platform": "drill",
-              "patterns": ["interpolation", "gaps"],
+              "patterns": [
+                "interpolation",
+                "gaps"
+              ],
               "statement": "For a 3-probe gap, produce estimated values at each missing 5-minute slot as a weighted blend of surrounding readings, using the time-distance weights shown in the linear interpolation example.",
-              "hints": ["LAG/LEAD ... IGNORE NULLS to neighbors", "epoch seconds for weights", "single expression, no plpgsql"]
+              "hints": [
+                "LAG/LEAD ... IGNORE NULLS to neighbors",
+                "epoch seconds for weights",
+                "single expression, no plpgsql"
+              ]
             },
             {
               "id": "T306",
               "tier": 3,
               "title": "Partition monthly retention delete",
               "platform": "drill",
-              "patterns": ["partitioning", "retention"],
+              "patterns": [
+                "partitioning",
+                "retention"
+              ],
               "statement": "Events kept 12 months, 200M rows/month. Design monthly range partitioning so retention deletion is a DROP of a partition, and the identical age window 'last 6 months' never scans old partitions.",
-              "hints": ["PARTITION BY RANGE (ts)", "detach + drop oldest", "partition pruning by quals in WHERE"]
+              "hints": [
+                "PARTITION BY RANGE (ts)",
+                "detach + drop oldest",
+                "partition pruning by quals in WHERE"
+              ]
             }
           ]
         }
@@ -410,11 +452,29 @@
     "Dialect gaps: date_trunc (pg) vs DATE_FORMAT (mysql) vs resample (pandas); KNN <-> is pg-only."
   ],
   "glossary": [
-    { "term": "BRIN", "def": "Block Range INdex storing per-range min/max; compact scans for naturally time-sorted data." },
-    { "term": "pages_per_range", "def": "BRIN tuning knob = blocks summarized per index entry; higher = smaller index, coarser pruning." },
-    { "term": "ASOF join", "def": "Joins each A-row to the latest B-row with key <= A's, attaching the 'current state'." },
-    { "term": "Rollup", "def": "Precomputed aggregate table reducing raw volume into summaries at coarser granularity." },
-    { "term": "Partition pruning", "def": "Planner dropping irrelevant partitions from a range-partitioned table based on WHERE quals." },
-    { "term": "merge_asof", "def": "pandas function implementing backward/forward ASOF semantics with log10 tolerance." }
+    {
+      "term": "BRIN",
+      "def": "Block Range INdex storing per-range min/max; compact scans for naturally time-sorted data."
+    },
+    {
+      "term": "pages_per_range",
+      "def": "BRIN tuning knob = blocks summarized per index entry; higher = smaller index, coarser pruning."
+    },
+    {
+      "term": "ASOF join",
+      "def": "Joins each A-row to the latest B-row with key <= A's, attaching the 'current state'."
+    },
+    {
+      "term": "Rollup",
+      "def": "Precomputed aggregate table reducing raw volume into summaries at coarser granularity."
+    },
+    {
+      "term": "Partition pruning",
+      "def": "Planner dropping irrelevant partitions from a range-partitioned table based on WHERE quals."
+    },
+    {
+      "term": "merge_asof",
+      "def": "pandas function implementing backward/forward ASOF semantics with log10 tolerance."
+    }
   ]
 }

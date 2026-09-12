@@ -72,13 +72,31 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"feature": "ROLLUP(dept, status)", "groups": "(dept,status), (dept), ()", "use_case": "Hierarchical reports"},
-              {"feature": "CUBE(dept, status)", "groups": "(dept,status), (dept), (status), ()", "use_case": "Full cross-tab"},
-              {"feature": "GROUPING SETS((dept),(status))", "groups": "(dept), (status)", "use_case": "Custom selection"},
-              {"feature": "GROUPING(col)", "groups": "1 = subtotal row, 0 = detail row", "use_case": "Label subtotal rows"}
+              {
+                "feature": "ROLLUP(dept, status)",
+                "groups": "(dept,status), (dept), ()",
+                "use_case": "Hierarchical reports"
+              },
+              {
+                "feature": "CUBE(dept, status)",
+                "groups": "(dept,status), (dept), (status), ()",
+                "use_case": "Full cross-tab"
+              },
+              {
+                "feature": "GROUPING SETS((dept),(status))",
+                "groups": "(dept), (status)",
+                "use_case": "Custom selection"
+              },
+              {
+                "feature": "GROUPING(col)",
+                "groups": "1 = subtotal row, 0 = detail row",
+                "use_case": "Label subtotal rows"
+              }
             ],
             "after": [],
-            "highlight": ["groups"]
+            "highlight": [
+              "groups"
+            ]
           }
         },
         {
@@ -114,10 +132,13 @@
             "Plan": {
               "Node Type": "GroupAggregate",
               "Strategy": "Sorted",
-              "Group Key": ["dept_id", "status"],
+              "Group Key": [
+                "dept_id",
+                "status"
+              ],
               "Grouping Sets": "[[dept_id, status], [dept_id], []]",
-              "Startup Cost": 100.00,
-              "Total Cost": 500.00,
+              "Startup Cost": 100,
+              "Total Cost": 500,
               "Plan Rows": 30,
               "Plan Width": 24
             }
@@ -229,13 +250,35 @@
           "kind": "table-diff",
           "spec": {
             "before": [
-              {"row_type": "Detail (dept=1, status=active)", "grouping_dept": 0, "grouping_status": 0, "grouping_id": 0},
-              {"row_type": "Subtotal (dept=1, status=NULL)", "grouping_dept": 0, "grouping_status": 1, "grouping_id": 1},
-              {"row_type": "Subtotal (dept=NULL, status=active)", "grouping_dept": 1, "grouping_status": 0, "grouping_id": 2},
-              {"row_type": "Grand Total (NULL, NULL)", "grouping_dept": 1, "grouping_status": 1, "grouping_id": 3}
+              {
+                "row_type": "Detail (dept=1, status=active)",
+                "grouping_dept": 0,
+                "grouping_status": 0,
+                "grouping_id": 0
+              },
+              {
+                "row_type": "Subtotal (dept=1, status=NULL)",
+                "grouping_dept": 0,
+                "grouping_status": 1,
+                "grouping_id": 1
+              },
+              {
+                "row_type": "Subtotal (dept=NULL, status=active)",
+                "grouping_dept": 1,
+                "grouping_status": 0,
+                "grouping_id": 2
+              },
+              {
+                "row_type": "Grand Total (NULL, NULL)",
+                "grouping_dept": 1,
+                "grouping_status": 1,
+                "grouping_id": 3
+              }
             ],
             "after": [],
-            "highlight": ["grouping_id"]
+            "highlight": [
+              "grouping_id"
+            ]
           }
         },
         {
@@ -278,72 +321,281 @@
               "tier": 2,
               "title": "Department Subtotals + Grand Total",
               "platform": "drill",
-              "patterns": ["rollup"],
+              "patterns": [
+                "rollup"
+              ],
               "statement": "Employee count per department with subtotals and grand total.",
-              "hints": ["GROUP BY ROLLUP(dept_id)"]
+              "hints": [
+                "GROUP BY ROLLUP(dept_id)"
+              ]
             },
             {
               "id": "A202",
               "tier": 2,
               "title": "Dept × Status Cross-Tab",
               "platform": "drill",
-              "patterns": ["cube"],
+              "patterns": [
+                "cube"
+              ],
               "statement": "Full cross-tabulation: dept × status with all subtotals.",
-              "hints": ["GROUP BY CUBE(dept_id, status)"]
+              "hints": [
+                "GROUP BY CUBE(dept_id, status)"
+              ]
             },
             {
               "id": "A203",
               "tier": 2,
               "title": "Custom Grouping: Dept Detail + Status Subtotal",
               "platform": "drill",
-              "patterns": ["grouping-sets"],
+              "patterns": [
+                "grouping-sets"
+              ],
               "statement": "Show (dept,status) detail + status subtotals + grand total.",
-              "hints": ["GROUPING SETS ((dept_id, status), (status), ())"]
+              "hints": [
+                "GROUPING SETS ((dept_id, status), (status), ())"
+              ]
             },
             {
               "id": "A204",
               "tier": 2,
               "title": "Label Subtotal Rows",
               "platform": "drill",
-              "patterns": ["grouping"],
+              "patterns": [
+                "grouping"
+              ],
               "statement": "Add column 'level' showing 'detail', 'dept_subtotal', 'grand_total' using GROUPING().",
-              "hints": ["CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ..."]
+              "hints": [
+                "CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ..."
+              ]
             },
             {
               "id": "A205",
               "tier": 2,
               "title": "Partial Rollup: Dept + Status Subtotals Only",
               "platform": "drill",
-              "patterns": ["partial-rollup"],
+              "patterns": [
+                "partial-rollup"
+              ],
               "statement": "Detail (dept,status) + dept subtotals. No grand total.",
-              "hints": ["GROUP BY dept_id, ROLLUP(status)"]
+              "hints": [
+                "GROUP BY dept_id, ROLLUP(status)"
+              ]
             },
             {
               "id": "A206",
               "tier": 2,
               "title": "GROUPING_ID for Bitmask Logic",
               "platform": "drill",
-              "patterns": ["grouping-id"],
+              "patterns": [
+                "grouping-id"
+              ],
               "statement": "Decode GROUPING_ID bitmask: 0=detail, 1=status rolled, 2=dept rolled, 3=grand.",
-              "hints": ["CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ..."]
+              "hints": [
+                "CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ..."
+              ]
             },
             {
               "id": "A207",
               "tier": 2,
               "title": "Custom Grouping Sets: Dept Only + Status Only",
               "platform": "drill",
-              "patterns": ["grouping-sets"],
+              "patterns": [
+                "grouping-sets"
+              ],
               "statement": "Show dept subtotals and status subtotals, but no detail rows.",
-              "hints": ["GROUPING SETS ((dept_id), (status), ())"]
+              "hints": [
+                "GROUPING SETS ((dept_id), (status), ())"
+              ]
             },
             {
               "id": "A208",
               "tier": 2,
               "title": "Pretty Subtotal Labels",
               "platform": "drill",
-              "patterns": ["grouping-labels"],
+              "patterns": [
+                "grouping-labels"
+              ],
               "statement": "Replace NULL in subtotal rows with 'TOTAL' or 'ALL'.",
-              "hints": ["COALESCE(dept_id, 'ALL DEPTS')"]
+              "hints": [
+                "COALESCE(dept_id, 'ALL DEPTS')"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "11 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+        },
+        {
+          "type": "problems",
+          "items": [
+            {
+              "id": "A2-HR033",
+              "tier": 2,
+              "title": "The Blunder",
+              "platform": "hackerrank",
+              "ref": "033",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "string-replace",
+                "avg-diff",
+                "ceil"
+              ]
+            },
+            {
+              "id": "A2-HR034",
+              "tier": 2,
+              "title": "Top Earners",
+              "platform": "hackerrank",
+              "ref": "034",
+              "url": "https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=aggregation",
+              "sheet": "hackerrank-sql-58",
+              "sheetSection": "Aggregation",
+              "patterns": [
+                "group-max",
+                "having"
+              ]
+            },
+            {
+              "id": "A2-LC1045",
+              "tier": 2,
+              "title": "Customers Who Bought All Products",
+              "platform": "leetcode",
+              "ref": "1045",
+              "url": "https://leetcode.com/problems/customers-who-bought-all-products/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                "relational-division"
+              ]
+            },
+            {
+              "id": "A2-LC1070",
+              "tier": 2,
+              "title": "Product Sales Analysis III",
+              "platform": "leetcode",
+              "ref": "1070",
+              "url": "https://leetcode.com/problems/product-sales-analysis-iii/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "medium",
+              "patterns": [
+                "first-per-group",
+                "min-group"
+              ]
+            },
+            {
+              "id": "A2-LC1174",
+              "tier": 2,
+              "title": "Immediate Food Delivery II",
+              "platform": "leetcode",
+              "ref": "1174",
+              "url": "https://leetcode.com/problems/immediate-food-delivery-ii/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Aggregate Functions",
+              "difficulty": "medium",
+              "patterns": [
+                "first-per-group",
+                "conditional-agg"
+              ]
+            },
+            {
+              "id": "A2-LC1193",
+              "tier": 2,
+              "title": "Monthly Transactions I",
+              "platform": "leetcode",
+              "ref": "1193",
+              "url": "https://leetcode.com/problems/monthly-transactions-i/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Aggregate Functions",
+              "difficulty": "medium",
+              "patterns": [
+                "date-bucket",
+                "conditional-agg"
+              ]
+            },
+            {
+              "id": "A2-LC1211",
+              "tier": 2,
+              "title": "Queries Quality and Percentage",
+              "platform": "leetcode",
+              "ref": "1211",
+              "url": "https://leetcode.com/problems/queries-quality-and-percentage/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                "conditional-agg"
+              ]
+            },
+            {
+              "id": "A2-LC1251",
+              "tier": 2,
+              "title": "Average Selling Price",
+              "platform": "leetcode",
+              "ref": "1251",
+              "url": "https://leetcode.com/problems/average-selling-price/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Basic Aggregate Functions",
+              "difficulty": "easy",
+              "patterns": [
+                "weighted-average",
+                "join-agg"
+              ]
+            },
+            {
+              "id": "A2-LC1484",
+              "tier": 2,
+              "title": "Group Sold Products By The Date",
+              "platform": "leetcode",
+              "ref": "1484",
+              "url": "https://leetcode.com/problems/group-sold-products-by-the-date/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Advanced String Functions / Regex / Clause",
+              "difficulty": "easy",
+              "patterns": [
+                "string-agg",
+                "group-concat"
+              ]
+            },
+            {
+              "id": "A2-LC602",
+              "tier": 2,
+              "title": "Friend Requests II: Who Has the Most Friends",
+              "platform": "leetcode",
+              "ref": "602",
+              "url": "https://leetcode.com/problems/friend-requests-ii-who-has-the-most-friends/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Subqueries",
+              "difficulty": "medium",
+              "patterns": [
+                "union-all",
+                "group-count"
+              ]
+            },
+            {
+              "id": "A2-LC619",
+              "tier": 2,
+              "title": "Biggest Single Number",
+              "platform": "leetcode",
+              "ref": "619",
+              "url": "https://leetcode.com/problems/biggest-single-number/",
+              "sheet": "leetcode-sql-50",
+              "sheetSection": "Sorting and Grouping",
+              "difficulty": "easy",
+              "patterns": [
+                "having-count-1",
+                "max-subquery"
+              ]
             }
           ]
         }
@@ -359,11 +611,29 @@
     "COALESCE with GROUPING() for pretty subtotal labels"
   ],
   "glossary": [
-    { "term": "ROLLUP", "def": "Hierarchical grouping: detail rows + progressive subtotals + grand total." },
-    { "term": "CUBE", "def": "Cross-tabulation: all 2^N combinations of grouping columns." },
-    { "term": "GROUPING SETS", "def": "Explicit list of grouping combinations to include." },
-    { "term": "GROUPING()", "def": "Returns 1 if column is NULL due to rollup (subtotal), 0 if detail row." },
-    { "term": "GROUPING_ID()", "def": "Bitmask of GROUPING() values for multiple columns. Bit i = GROUPING(col_i)." },
-    { "term": "super-aggregate", "def": "A row produced by ROLLUP/CUBE/GROUPING SETS that represents a subtotal or grand total." }
+    {
+      "term": "ROLLUP",
+      "def": "Hierarchical grouping: detail rows + progressive subtotals + grand total."
+    },
+    {
+      "term": "CUBE",
+      "def": "Cross-tabulation: all 2^N combinations of grouping columns."
+    },
+    {
+      "term": "GROUPING SETS",
+      "def": "Explicit list of grouping combinations to include."
+    },
+    {
+      "term": "GROUPING()",
+      "def": "Returns 1 if column is NULL due to rollup (subtotal), 0 if detail row."
+    },
+    {
+      "term": "GROUPING_ID()",
+      "def": "Bitmask of GROUPING() values for multiple columns. Bit i = GROUPING(col_i)."
+    },
+    {
+      "term": "super-aggregate",
+      "def": "A row produced by ROLLUP/CUBE/GROUPING SETS that represents a subtotal or grand total."
+    }
   ]
 }
