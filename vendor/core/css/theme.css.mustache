@@ -10,10 +10,10 @@
   --warn:#fbbf24; --text:#c8d3e0; --text-dim:#5a6a7a;
   --text-bright:#eaf0fa; --red:#ff4d6d; --green:#00ff9d; --code-bg:#0d1117;
   /* level accents (set per-file by renderer via body[data-level]) */
-  --lvl:{{levels.0.color}}; --lvl-rgba:{{rgba(levels.0.color, 0.1)}}; --lvl-border:{{rgba(levels.0.color, 0.25)}};
+  --lvl:{{levels.0.color}}; --lvl-rgba:{{levels.0.rgba}}; --lvl-border:{{levels.0.rgba2}};
 }
 {{#levels}}
-body[data-level="{{level}}"]{ --lvl:{{color}}; --lvl-rgba:{{rgba(color, 0.1)}}; --lvl-border:{{rgba(color, 0.25)}}; }
+body[data-level="{{level}}"]{ --lvl:{{color}}; --lvl-rgba:{{rgba}}; --lvl-border:{{rgba2}}; }
 {{/levels}}
 
 *{margin:0;padding:0;box-sizing:border-box;} html{scroll-behavior:smooth;}

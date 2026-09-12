@@ -21,8 +21,10 @@ export function generateLanguageSwitcher(languageConfig, outputPath) {
   var DEFAULT = '${defaultLang}';
   var LANGUAGES = ${JSON.stringify(languages, null, 2)};
   var GROUPS = ${JSON.stringify(groups, null, 2)};
+  var started = false;
 
   function apply(langId) {
+    if (typeof document === 'undefined') return;
     var lang = LANGUAGES.find(l => l.id === langId) || LANGUAGES[0];
     document.body.setAttribute('data-lang', lang.id);
     document.body.setAttribute('data-lang-label', lang.label);
@@ -47,6 +49,7 @@ export function generateLanguageSwitcher(languageConfig, outputPath) {
   }
 
   function init() {
+    if (started) return; started = true;
     var saved = DEFAULT;
     try { saved = localStorage.getItem(KEY) || DEFAULT; } catch (e) {}
     
@@ -108,6 +111,8 @@ export function generateLanguageSwitcher(languageConfig, outputPath) {
     
     apply(saved);
   }
+
+  if (typeof window !== 'undefined') { window.initLangToggle = init; }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

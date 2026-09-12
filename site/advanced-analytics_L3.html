@@ -239,7 +239,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfls6d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfls6d">CREATE EXTENSION hll; hll_add_agg()</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hko6d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hko6d">CREATE EXTENSION hll; hll_add_agg()</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -249,7 +249,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Compute p50, p95, p99 latency from 10M requests using TDigest.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfls6e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfls6e">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtybhfls6g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfls6g">percentile(t, 0.99)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hko6e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hko6e">tdigest_agg(latency)</div><button class="reveal-btn" data-target="umtyc3hko6g" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hko6g">percentile(t, 0.99)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -259,7 +259,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Design TimescaleDB continuous aggregate for 5-min metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfls6h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfls6h">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtybhfls6j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfls6j">add_continuous_aggregate_policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hko6h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hko6h">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtyc3hko6j" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hko6j">add_continuous_aggregate_policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -269,7 +269,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Create continuous view for page views per minute per site.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfls6k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfls6k">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtybhfls6m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfls6m">time_bucket('1 minute', ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hko6k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hko6k">CREATE CONTINUOUS VIEW</div><button class="reveal-btn" data-target="umtyc3hko6m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hko6m">time_bucket('1 minute', ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -279,7 +279,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Tune parallel GROUP BY: set workers, work_mem, parallel_tuple_cost.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfls6n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfls6n">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtybhfls6p" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfls6p">work_mem</div><button class="reveal-btn" data-target="umtybhfls6r" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtybhfls6r">parallel_tuple_cost</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hko6n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hko6n">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtyc3hko6p" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hko6p">work_mem</div><button class="reveal-btn" data-target="umtyc3hko6r" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyc3hko6r">parallel_tuple_cost</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -289,7 +289,7 @@ SELECT * FROM events WHERE RAND() < 0.1;</code></pre>
     </div>
     <div class="prob-body">
       Find top 100 most frequent IPs from 100M requests using KMV sketch.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfls6s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfls6s">KMV sketch</div><button class="reveal-btn" data-target="umtybhfls6u" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhfls6u">top-K distinct</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hko6s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hko6s">KMV sketch</div><button class="reveal-btn" data-target="umtyc3hko6u" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hko6u">top-K distinct</div></div>
     </div></li></ul>
   </section>
   

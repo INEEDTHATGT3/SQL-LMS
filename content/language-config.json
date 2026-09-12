@@ -1,6 +1,6 @@
 {
   "skillName": "SQL",
-  "storageKey": "sql_lms_progress_v1",
+  "storageKey": "sql_lms_lang_v1",
   "default": "sql",
   "languages": [
     {

@@ -379,7 +379,7 @@ $$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pe
     </div>
     <div class="prob-body">
       Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflp5k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflp5k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtybhflp5m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhflp5m">work_mem</div><button class="reveal-btn" data-target="umtybhflp5o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtybhflp5o">min_parallel_table_scan_size</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkj5k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkj5k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtyc3hkj5m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hkj5m">work_mem</div><button class="reveal-btn" data-target="umtyc3hkj5o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyc3hkj5o">min_parallel_table_scan_size</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -389,7 +389,7 @@ $$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pe
     </div>
     <div class="prob-body">
       Create MV for daily sales by region with zero-downtime refresh.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflp5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflp5p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkj5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkj5p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -399,7 +399,7 @@ $$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pe
     </div>
     <div class="prob-body">
       Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflp5q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflp5q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtybhflp5s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhflp5s">add_continuous_aggregate_policy</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkj5q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkj5q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtyc3hkj5s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hkj5s">add_continuous_aggregate_policy</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -409,7 +409,7 @@ $$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pe
     </div>
     <div class="prob-body">
       Design incremental daily sales agg using pgoutput logical replication for CDC.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflp5t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflp5t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtybhflp5v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtybhflp5v">pgoutput plugin</div><button class="reveal-btn" data-target="umtybhflp5x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtybhflp5x">apply delta to agg table</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkj5t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkj5t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtyc3hkj5v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyc3hkj5v">pgoutput plugin</div><button class="reveal-btn" data-target="umtyc3hkj5x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyc3hkj5x">apply delta to agg table</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -419,7 +419,7 @@ $$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pe
     </div>
     <div class="prob-body">
       Explain when right-deep join tree enables better parallel aggregate distribution.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflp5y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflp5y">Build side on right (smaller), probe on left</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkj5y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkj5y">Build side on right (smaller), probe on left</div></div>
     </div></li></ul>
   </section>
   

@@ -233,7 +233,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Compute 4-row moving average of daily sales (current + 3 preceding).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3k">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3k">ROWS BETWEEN 3 PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -243,7 +243,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Sum of sales for each day + previous 6 days using RANGE.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3l">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3l">RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -253,7 +253,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Running total of sales ordered by date using ROWS UNBOUNDED PRECEDING.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3m">ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3m">ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -263,7 +263,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Assign each employee to a salary quartile (1-4) within their department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3n">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3n">NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -273,7 +273,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Sum of salaries for employees in same salary tier (excluding current tier).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3o">EXCLUDE GROUP with RANGE frame</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3o">EXCLUDE GROUP with RANGE frame</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -283,7 +283,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Show both PERCENT_RANK and CUME_DIST for each employee by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3p">PERCENT_RANK() OVER (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3p">PERCENT_RANK() OVER (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -293,7 +293,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       3-day moving average excluding current day (previous 3 days only).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3q">ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3q">ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -303,7 +303,7 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
     </div>
     <div class="prob-body">
       Count of employees in same salary tier ±1 tier. Use GROUPS frame (PG 14+).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflc3r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflc3r">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hix3r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hix3r">GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">

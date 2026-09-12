@@ -305,7 +305,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle3y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle3y">msfunc adds, minvfunc removes, state = running sum + count</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj13y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj13y">msfunc adds, minvfunc removes, state = running sum + count</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -315,7 +315,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle3z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle3z">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj13z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj13z">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -325,7 +325,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle40" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle40">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj140" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj140">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -335,7 +335,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Window function uses ORDER BY salary + bonus. Create expression index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle41" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle41">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj141" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj141">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -345,7 +345,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Explain how PostgreSQL 17+ pushes predicates below window functions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhfle42" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhfle42">Predicate pushdown through WindowAgg when safe</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj142" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj142">Predicate pushdown through WindowAgg when safe</div></div>
     </div></li></ul>
   </section>
   

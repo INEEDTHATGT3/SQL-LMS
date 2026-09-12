@@ -387,7 +387,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6v">msfunc adds, minvfunc removes, state = running sum + count</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6v">msfunc adds, minvfunc removes, state = running sum + count</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -397,7 +397,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6w">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6w">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -407,7 +407,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6x">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6x">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -417,7 +417,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Window function uses ORDER BY salary + bonus. Create expression index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6y">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6y">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -427,7 +427,7 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
     </div>
     <div class="prob-body">
       Explain how PostgreSQL 17+ pushes predicates below window functions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflt6z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflt6z">Predicate pushdown through WindowAgg when safe</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6z">Predicate pushdown through WindowAgg when safe</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-7">

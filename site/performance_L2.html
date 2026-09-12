@@ -258,7 +258,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query joins large_table (1M rows) with small_table (100 rows) on id. Which algorithm? Why?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm4y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm4y">Hash Join — small table builds hash, large probes</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl4y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl4y">Hash Join — small table builds hash, large probes</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -268,7 +268,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: WHERE user_id = 123 AND created_at > '2024-01-01'. Design index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm4z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm4z">Column order: equality first (user_id), then range (created_at)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl4z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl4z">Column order: equality first (user_id), then range (created_at)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -278,7 +278,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       99% queries filter deleted=false. Create partial index on orders(user_id, created_at).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm50" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm50">WHERE deleted = false</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl50" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl50">WHERE deleted = false</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -288,7 +288,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: SELECT name, email FROM users WHERE status='active'. Create covering index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm51" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm51">INCLUDE (name, email) or (status, name, email)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl51" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl51">INCLUDE (name, email) or (status, name, email)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -298,7 +298,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm52" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm52">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl52" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl52">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -308,7 +308,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: WHERE dept_id = 1 AND salary > 50000. No composite index. Explain plan.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm53" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm53">BitmapAnd combines idx_dept and idx_salary</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl53" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl53">BitmapAnd combines idx_dept and idx_salary</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -318,7 +318,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: WHERE salary * 12 > 120000. Create functional index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm54" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm54">CREATE INDEX ON employees ((salary * 12))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl54" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl54">CREATE INDEX ON employees ((salary * 12))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -328,7 +328,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Rewrite to use index on salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtybhflm55" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtybhflm55">salary > 50000</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hjl55" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hjl55">salary > 50000</div></div>
     </div></li></ul>
   </section>
   
