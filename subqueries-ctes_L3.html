@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 06</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">predicate pushdown, cte optimization, recursive patterns, performance</span></div>
   <h1>Subqueries & CTEs</h1>
-  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="promise">CTEs, recursion, query optimization, dialect differences. You justify the plan, not just the output.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="subqueries-ctes_L1" href="subqueries-ctes_L1.html">BEGINNER</a><a class="level-pill " data-lesson="subqueries-ctes_L2" href="subqueries-ctes_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="subqueries-ctes_L3" href="subqueries-ctes_L3.html">ADVANCED</a><a class="level-pill " data-lesson="subqueries-ctes_L4" href="subqueries-ctes_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Predicate Pushdown — Moving Filters Down</a><a href="#sec-1">02 · CTE Optimization Patterns</a><a href="#sec-2">03 · Advanced Recursive CTE Patterns</a><a href="#sec-3">04 · Dialect Deep Dive — CTE & Subquery Limits</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Predicate Pushdown — Moving Filters Down</a><a href="#sec-1">02 · CTE Optimization Patterns</a><a href="#sec-2">03 · Advanced Recursive CTE Patterns</a><a href="#sec-3">04 · Dialect Deep Dive — CTE & Subquery Limits</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -274,7 +274,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9n4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9n4h">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76251" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76251">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -284,7 +284,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE filters status='active'. Outer adds dept_id=5. Rewrite with NOT MATERIALIZED.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9n4i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9n4i">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76252" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76252">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -294,7 +294,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Graph edges table (from_id, to_id). Find all paths from A to B with cycle detection.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9n4j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9n4j">Track path in ARRAY, check <code>WHERE next_id != ALL(path)</code></div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76253" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76253">Track path in ARRAY, check <code>WHERE next_id != ALL(path)</code></div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -304,7 +304,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE computes expensive aggregation. Referenced 3 times. Force MATERIALIZED.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9n4k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9n4k">WITH cte AS MATERIALIZED (SELECT ...)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76254" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76254">WITH cte AS MATERIALIZED (SELECT ...)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -314,7 +314,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Explain how recursive CTE finds shortest path in unweighted graph.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9n4l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9n4l">BFS via recursive CTE level expansion; first hit = shortest</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76255" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76255">BFS via recursive CTE level expansion; first hit = shortest</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -324,12 +324,37 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9n4m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9n4m">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76256" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76256">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">2 sourced problems from LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/movie-rating/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Movie Rating</a></div>
+        <div class="prob-meta">leetcode · #1341 · medium · leetcode-sql-50 · union-all + tie-break-order</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S3-LC1341"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/investments-in-2016/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Investments in 2016</a></div>
+        <div class="prob-meta">leetcode · #585 · medium · leetcode-sql-50 · multi-condition-subquery + dedupe-by-key</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="S3-LC585"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Pushdown: move filter down to data source; blocked by VOLATILE, LIMIT, CTEs, set ops</li><li>CTE: NOT MATERIALIZED = pushdown; MATERIALIZED = force compute once; default = smart</li><li>Volatile functions (NOW(), random()) force materialization</li><li>Recursive CTE: path array for cycle detection, BFS for shortest path</li><li>CTE referenced multiple times = materialized once; single ref = inlined</li><li>Pushdown blockers: VOLATILE, LIMIT, CTE (materialized), set ops, window funcs</li></ul></div>
     <h3>Glossary</h3>

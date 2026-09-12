@@ -1,7 +1,7 @@
 /* SQL Language Switcher
    Generated from language-config.json - DO NOT EDIT DIRECTLY */
 (function () {
-  var KEY = 'sql_lms_progress_v1';
+  var KEY = 'sql_lms_lang_v1';
   var DEFAULT = 'sql';
   var LANGUAGES = [
   {
@@ -81,8 +81,10 @@
     }
   ]
 };
+  var started = false;
 
   function apply(langId) {
+    if (typeof document === 'undefined') return;
     var lang = LANGUAGES.find(l => l.id === langId) || LANGUAGES[0];
     document.body.setAttribute('data-lang', lang.id);
     document.body.setAttribute('data-lang-label', lang.label);
@@ -107,6 +109,7 @@
   }
 
   function init() {
+    if (started) return; started = true;
     var saved = DEFAULT;
     try { saved = localStorage.getItem(KEY) || DEFAULT; } catch (e) {}
     
@@ -168,6 +171,8 @@
     
     apply(saved);
   }
+
+  if (typeof window !== 'undefined') { window.initLangToggle = init; }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

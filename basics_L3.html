@@ -4,325 +4,384 @@
 <link rel="stylesheet" href="theme.css"></head>
 <body data-level="3" data-lang="sql">
 <div class="hero" data-watermark="SQL">
-  <div class="hero-tag"><span class="badge">MODULE 01</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">query plans, indexes, dialect nuances — optimization begins</span></div>
+  <div class="hero-tag"><span class="badge">MODULE 01</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">Data types, NULL and three-valued logic, DML & transactions, and query evaluation order</span></div>
   <h1>SQL Fundamentals</h1>
-  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="promise">CTEs, recursion, query optimization, dialect differences. You justify the plan, not just the output.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="basics_L1" href="basics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="basics_L2" href="basics_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="basics_L3" href="basics_L3.html">ADVANCED</a><a class="level-pill " data-lesson="basics_L4" href="basics_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Query Plans Deep Dive — EXPLAIN ANALYZE</a><a href="#sec-1">02 · Index Types & When to Use</a><a href="#sec-2">03 · Index Pitfalls — When Indexes Don't Help</a><a href="#sec-3">04 · Dialect Differences — Date/Time & Limit</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · The Contract — Types, NULL, Evaluation Order</a><a href="#sec-1">02 · Data Types & Casting</a><a href="#sec-2">03 · NULL & Three-Valued Logic</a><a href="#sec-3">04 · DML & Transactions</a><a href="#sec-4">05 · Query Evaluation Order</a><a href="#sec-5">06 · Dialect Differences — Types & NULL</a><a href="#sec-6">07 · Problem Set — L3 Drills</a><a href="#sec-7">08 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q24" data-answer="0">
-      <div class="quiz-q">An Index Scan is generally faster than Seq Scan because:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>It reads fewer pages by jumping via B-tree</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>It sorts data automatically</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>It uses more CPU but less I/O</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>It only works on primary keys</span></div></div>
-      <div class="quiz-explain">B-tree index lets the database jump directly to matching rows instead of scanning all pages.</div>
+    <div class="quiz-card" data-quiz-key="place-q24" data-answer="2">
+      <div class="quiz-q">A column holds whole numbers only and must never overflow on aggregates. Which type is the safe choice?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>int4</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>int8</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>numeric</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>float8</span></div></div>
+      <div class="quiz-explain">numeric is arbitrary-precision; int4/int8 overflow on big sums, float8 rounds.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q25" data-answer="0">
-      <div class="quiz-q">In EXPLAIN output, 'cost=0.29..42.15' means:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Startup cost 0.29, total cost 42.15 (arbitrary units)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Takes 0.29ms to start, 42.15ms total</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Cost is 0.29 for index, 42.15 for table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Rows 0.29 to 42.15</span></div></div>
-      <div class="quiz-explain">Cost is planner's estimate in arbitrary units. First = startup, second = total.</div>
+    </div><div class="quiz-card" data-quiz-key="place-q25" data-answer="1">
+      <div class="quiz-q">Which condition correctly matches rows where a nullable column is NULL?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE col = NULL</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>WHERE col IS NULL</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>WHERE NOT col = NULL</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>WHERE col <> NULL</span></div></div>
+      <div class="quiz-explain">NULL = anything yields NULL (unknown), so equality never matches; use IS NULL.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="place-q26" data-answer="1">
-      <div class="quiz-q">Which index type supports range queries (>, <, BETWEEN) efficiently?</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Hash index</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>B-tree index</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>GIN index</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>BRIN index</span></div></div>
-      <div class="quiz-explain">B-tree maintains sorted order, enabling range scans. Hash only supports equality.</div>
+      <div class="quiz-q">In SQL's three-valued logic, which is TRUE?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>NULL AND TRUE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>NULL OR TRUE</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>NULL AND FALSE</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>NULL OR FALSE</span></div></div>
+      <div class="quiz-explain">OR TRUE short-circuits the unknown to TRUE; AND TRUE stays unknown.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q27" data-answer="0">
-      <div class="quiz-q">Partial index (WHERE clause on index) is useful when:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>You always query the same subset (e.g., status='active')</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Table has fewer than 100 rows</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Column has all unique values</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>You need full-text search</span></div></div>
-      <div class="quiz-explain">Partial index only indexes rows matching condition — smaller, faster for that subset.</div>
+    </div><div class="quiz-card" data-quiz-key="place-q27" data-answer="1">
+      <div class="quiz-q">A multi-statement change must be fully reversible on an error. Which mechanism fits?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>A view</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>A transaction with SAVEPOINT</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>An index</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A CHECK constraint</span></div></div>
+      <div class="quiz-explain">Wrap statements in BEGIN…COMMIT with SAVEPOINTs to roll back to a known point.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q28" data-answer="1">
-      <div class="quiz-q">Covering index (INCLUDE columns) avoids:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Index creation</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Heap lookups (table access)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Sort operations</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Join operations</span></div></div>
-      <div class="quiz-explain">INCLUDE columns stored in index leaf — query satisfied from index alone, no heap fetch.</div>
+    </div><div class="quiz-card" data-quiz-key="place-q28" data-answer="0">
+      <div class="quiz-q">You wrote SELECT amount * 1.1 AS gross … WHERE gross > 100. What's wrong?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Aliases in WHERE are illegal because filtering happens before SELECT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>* has low precedence</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>1.1 must be cast</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>gross is reserved</span></div></div>
+      <div class="quiz-explain">The logical order filters in WHERE before the SELECT computes aliases, so WHERE gross is undefined.</div>
       <div class="quiz-score"></div>
     </div>
     <div id="placement-result"></div>
   </section>
   
   <section class="section" id="sec-0">
-    <div class="section-header"><span class="section-num">01 //</span><h2>Query Plans Deep Dive — EXPLAIN ANALYZE</h2></div>
-    <div class="mantra"><strong>EXPLAIN shows the plan; EXPLAIN ANALYZE runs it and shows actuals. Compare estimated vs actual rows — divergence = stale stats or bad assumptions.</strong></div>
-<div><div class="code-label"><span>explain variants</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Plan only (no execution)
-EXPLAIN SELECT * FROM employees WHERE salary > <span class="num">50000</span>;
-
--- Execute + actual timings
-EXPLAIN ANALYZE SELECT * FROM employees WHERE salary > <span class="num">50000</span>;
-
--- JSON format (machine-readable)
-EXPLAIN (ANALYZE, FORMAT JSON) SELECT * FROM employees WHERE salary > <span class="num">50000</span>;
-
--- With buffers (I/O detail)
-EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM employees WHERE salary > <span class="num">50000</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL specific options</span>
-EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT ...;</code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL</span>
-EXPLAIN ANALYZE SELECT * FROM employees WHERE salary > <span class="num">50000</span>;
-EXPLAIN FORMAT=JSON SELECT ...;</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-
-<div class="code-block">
-  <div class="code-label">
-    <span>Seq Scan with Filter (Actual vs Estimated)</span>
-    <span class="badge blue">PostgreSQL</span>
-  </div>
-  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
-      <div class="plan-node-header">
-        <span class="plan-node-type">Seq Scan</span> on <code>employees</code> as <code>e</code>
-        <span class="plan-node-meta"> cost=0..185 rows=8500 width=72 actual time=0.024..12.45 actual rows=3200 loops=1</span>
-      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (salary > 50000)</div></div></div>
-</div>
-<div class="callout warn"><strong>Estimated rows: 8500 → Actual: 3200.</strong> Statistics may be stale (run ANALYZE) or filter selectivity misestimated. At L4 you'll learn to fix this with extended statistics.</div>
-<div class="quiz-card" data-quiz-key="s0-q29" data-answer="1">
-      <div class="quiz-q">If 'Actual Rows' >> 'Plan Rows', likely cause:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Index is missing</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Statistics are stale (run ANALYZE)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Query is too slow</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Wrong join type</span></div></div>
-      <div class="quiz-explain">Planner relies on pg_stats. Stale stats = wrong row estimates = bad plan choices.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q30" data-answer="1">
-      <div class="quiz-q">Buffers: shared hit=120 means:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>120 index pages read from disk</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>120 pages found in shared memory (cache)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>120 rows returned</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>120ms elapsed</span></div></div>
-      <div class="quiz-explain">Shared hit = pages already in RAM. Shared read = disk I/O. Dirtied = modified.</div>
-      <div class="quiz-score"></div>
-    </div>
+    <div class="section-header"><span class="section-num">01 //</span><h2>The Contract — Types, NULL, Evaluation Order</h2></div>
+    <div class="mantra"><strong>SQL's job is to transform data with clear contracts — types, NULL semantics, and the order of evaluation are that contract. Learn the domain, not the tuning.</strong></div>
   </section>
   <section class="section" id="sec-1">
-    <div class="section-header"><span class="section-num">02 //</span><h2>Index Types & When to Use</h2></div>
-    <h3>B-tree (Default) — The Workhorse</h3>
-<div><div class="code-label"><span>btree usage</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Created automatically <span class="kw">for</span> PRIMARY KEY, UNIQUE
--- Manual creation
-CREATE INDEX idx_employees_salary ON employees (salary);
+    <div class="section-header"><span class="section-num">02 //</span><h2>Data Types & Casting</h2></div>
+    <h3>Type Families — the Engine Decides Comparisons</h3>
+<p>Every column has a type, and the type decides how values compare, sort, and aggregate. <strong>Numeric</strong>: <code>int4</code>/<code>int8</code> are fixed-width and can overflow on big sums; <code>numeric</code> is arbitrary-precision and the safe choice for money and totals; <code>float8</code>/<code>real</code> are approximate binary floats. <strong>Character</strong>: <code>text</code>/<code>varchar</code>/<code>char</code>. <strong>Temporal</strong>: <code>timestamp</code> (no zone), <code>timestamptz</code> (zone-aware), <code>interval</code>. <strong>Logical</strong>: <code>boolean</code>. Mixing types triggers implicit casts the engine picks for you — working explicitly is the contract that removes surprise.</p>
+<div><div class="code-label"><span>type behavior in PostgreSQL</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Cast a text literal to a timestamp
+SELECT <span class="st">'2024-01-15 10:30:00'</span>::timestamp;
 
--- Composite (order matters!)
-CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary);
+-- Integer division truncates in PostgreSQL
+SELECT <span class="num">7</span>/<span class="num">2</span>   AS int_division;      -- <span class="num">3</span>
+SELECT <span class="num">7.0</span>/<span class="num">2</span> AS float_division;    -- <span class="num">3.5</span>
 
--- Supports: =, <, >, <=, >=, BETWEEN, IN, LIKE <span class="st">'prefix%'</span>
--- Does NOT support: LIKE <span class="st">'%suffix'</span>, functions on column</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Partial index (PostgreSQL)</span>
-CREATE INDEX idx_active_emp ON employees (salary) WHERE status = <span class="st">'active'</span>;
+-- Binary floats are approximate
+SELECT <span class="num">0.1</span> + <span class="num">0.2</span>;                  -- <span class="num">0.30000000000000004</span></code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Standard CAST() also works in PostgreSQL</span>
+SELECT CAST(<span class="st">'2024-01-15 10:30:00'</span> AS timestamp);</code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL has no :: syntax; use CAST(... AS ...)</span>
+SELECT CAST(<span class="st">'2024-01-15 10:30:00'</span> AS DATETIME);
+<span class="cm">-- 7 / 2 evaluates to 3.5000 in MySQL; DIV gives the integer part</span>
+SELECT <span class="num">7</span> DIV <span class="num">2</span>; <span class="cm">-- 3</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>explicit casts avoid ambiguity</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Two spellings of the same cast (PostgreSQL)
+SELECT CAST(<span class="st">'2024-01-15'</span> AS date) AS via_standard,
+       <span class="st">'2024-01-15'</span>::date          AS via_colon_cast;
 
-<span class="cm">-- Covering index</span>
-CREATE INDEX idx_emp_salary_name ON employees (salary) INCLUDE (name);</code></pre><pre data-lang="mysql"><code><span class="cm">-- Covering index (MySQL 8.0+)</span>
-CREATE INDEX idx_emp_salary_name ON employees (salary, name);
-<span class="cm">-- MySQL stores included cols in secondary index automatically</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<h3>Hash Index — Equality Only</h3>
-<p>Hash indexes only support <code>=</code> comparisons. Faster for point lookups but no range scans. PostgreSQL: <code>CREATE INDEX ... USING HASH</code>. MySQL MEMORY engine uses hash by default.</p>
-<h3>Other Types (PostgreSQL)</h3>
-<ul class="notes"><li><strong>GIN</strong> — Generalized Inverted Index: arrays, JSONB, full-text search, <code>col @> '{"key": "val"}'</code></li><li><strong>GiST</strong> — Generalized Search Tree: geometric data, <code>tsvector</code>, range types</li><li><strong>BRIN</strong> — Block Range Index: huge tables with natural correlation (timestamps, auto-increment IDs). Tiny size, coarse granularity.</li><li><strong>SP-GiST</strong> — Space-Partitioned GiST: non-balanced structures (quadtrees, prefix trees)</li></ul>
-<div class="quiz-card" data-quiz-key="s1-q31" data-answer="2">
-      <div class="quiz-q">Which index supports <code>col @> '{"a":1}'</code> (JSONB containment)?</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>B-tree</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Hash</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>GIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>BRIN</span></div></div>
-      <div class="quiz-explain">GIN is designed for composite values with containment/overlap operators.</div>
+-- Comparing a text column to a date literal relies on an implicit
+-- cast. It usually works, but be <span class="kw">explicit</span>:
+SELECT * FROM products
+WHERE  created_on = DATE <span class="st">'2024-01-15'</span>;
+-- or: WHERE created_on = CAST(<span class="st">'2024-01-15'</span> AS date)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- DATE 'literal' is a typed literal cast in PostgreSQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL prefers CAST; the comparison follows the same rules</span>
+SELECT * FROM products
+WHERE  created_on = CAST(<span class="st">'2024-01-15'</span> AS DATE);</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s1-q29" data-answer="3">
+      <div class="quiz-q">PostgreSQL evaluates 7 / 2 as:</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>3.5</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>2</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>4</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>3</span></div></div>
+      <div class="quiz-explain">Both operands are integers, so PostgreSQL truncates to 3; write 7.0/2 or CAST(7 AS numeric)/2 for a fractional result.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q32" data-answer="1">
-      <div class="quiz-q">BRIN index is best for:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Small tables with random data</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Huge tables with correlated columns (time, ID)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Full-text search</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Primary keys</span></div></div>
-      <div class="quiz-explain">BRIN stores min/max per block range. Tiny (KB vs GB) but only works when physical order matches logical.</div>
+    </div><div class="quiz-card" data-quiz-key="s1-q30" data-answer="1">
+      <div class="quiz-q">Why does 0.1 + 0.2 evaluate to 0.30000000000000004?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Numeric types round to 15 significant digits</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Binary floats represent 0.1 and 0.2 only approximately</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>An implicit CAST to integer happened</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Floating point division is exact by definition</span></div></div>
+      <div class="quiz-explain">float8 is a binary fraction; 0.1 and 0.2 have no exact binary representation, so their sum is inexact. Use numeric for exact decimal arithmetic.</div>
       <div class="quiz-score"></div>
     </div>
   </section>
   <section class="section" id="sec-2">
-    <div class="section-header"><span class="section-num">03 //</span><h2>Index Pitfalls — When Indexes Don't Help</h2></div>
-    <div><div class="code-label"><span>functions on columns kill indexes</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- BAD: function on column → Seq Scan
-SELECT * FROM employees WHERE UPPER(name) = <span class="st">'ALICE'</span>;
+    <div class="section-header"><span class="section-num">03 //</span><h2>NULL & Three-Valued Logic</h2></div>
+    <h3>NULL Means Unknown — and Unknown Participates in Logic</h3>
+<p>NULL is <strong>not</strong> zero and not the empty string — it is *unknown*. Any comparison with NULL evaluates to a third truth value: UNKNOWN. <code>col = NULL</code> is never TRUE, so it never matches; filter with <code>IS NULL</code> / <code>IS NOT NULL</code>. Aggregates mostly ignore NULLs, which is exactly why <code>count(*)</code> and <code>count(col)</code> can disagree.</p>
+<div><div class="code-label"><span>equality vs IS NULL</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- This matches nothing: NULL = NULL is UNKNOWN, not TRUE
+SELECT * FROM users WHERE email = NULL;
 
--- GOOD: functional index
-CREATE INDEX idx_emp_upper_name ON employees (UPPER(name));
--- or store normalized
-ALTER TABLE employees ADD COLUMN name_upper TEXT GENERATED ALWAYS AS (UPPER(name)) STORED;
-CREATE INDEX idx_emp_name_upper ON employees (name_upper);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Functional index (PostgreSQL)</span>
-CREATE INDEX idx_emp_upper_name ON employees (UPPER(name));</code></pre><pre data-lang="mysql"><code><span class="cm">-- Functional index (MySQL 8.0+)</span>
-CREATE INDEX idx_emp_upper_name ON employees ((UPPER(name)));</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div><div class="code-label"><span>leading wildcard kills index</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- BAD: leading % → Seq Scan
-SELECT * FROM employees WHERE name LIKE <span class="st">'%son'</span>;
+-- These are the correct filters
+SELECT * FROM users WHERE email IS NULL;
+SELECT * FROM users WHERE email IS NOT NULL;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL-only null-safe equality:</span>
+SELECT <span class="num">5</span> IS NOT DISTINCT FROM NULL;      <span class="cm">-- false</span>
+SELECT NULL IS NOT DISTINCT FROM NULL;   <span class="cm">-- true</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL uses the <=> null-safe equal operator instead:</span>
+SELECT NULL <=> NULL;  <span class="cm">-- 1</span>
+SELECT <span class="num">5</span> <=> NULL;     <span class="cm">-- 0</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>coalesce, nullif, counting</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Supply a fallback <span class="kw">for</span> NULL
+SELECT COALESCE(NULL, <span class="st">'default');   -- 'default'</span>
 
--- GOOD: trailing % uses B-tree
-SELECT * FROM employees WHERE name LIKE <span class="st">'J%'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Trigram index for leading wildcard (pg_trgm extension)</span>
-CREATE EXTENSION pg_trgm;
-CREATE INDEX idx_emp_name_trgm ON employees USING GIN (name gin_trgm_ops);
-<span class="cm">-- Now LIKE '%son' uses index!</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Fulltext index for text search</span>
-ALTER TABLE employees ADD FULLTEXT(name);
-SELECT * FROM employees WHERE MATCH(name) AGAINST(<span class="st">'son'</span>);</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="callout warn"><strong>Low selectivity = planner ignores index.</strong> If query returns >5-10% of table, Seq Scan is often faster (sequential I/O vs random). Check <code>reltuples</code> vs <code>rows</code> in EXPLAIN.</div>
-<div class="quiz-card" data-quiz-key="s2-q33" data-answer="1">
-      <div class="quiz-q">WHERE UPPER(name) = 'ALICE' ignores index on name because:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>UPPER is not deterministic</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Function on column prevents B-tree usage</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Case-insensitive collation needed</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index only stores lowercase</span></div></div>
-      <div class="quiz-explain">B-tree stores raw column values. Function transforms value → can't traverse tree. Fix: functional index.</div>
+-- NULLIF(a, b) returns NULL when a = b, otherwise a
+SELECT NULLIF(<span class="num">5</span>, <span class="num">5</span>), NULLIF(<span class="num">5</span>, <span class="num">6</span>);  -- NULL, <span class="num">5</span>
+
+-- count(*) counts rows; count(email) counts non-NULL emails
+SELECT count(*)      AS all_rows,
+       count(email)  AS with_email
+FROM   users;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- count(col) ignores NULLs; count(*) never ignores rows</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same semantics in MySQL 8.0; '' is a value there, NULL is separate</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>three-valued logic truth tables</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- AND truth table (x AND y)
+--   x\y   T      F      N
+--   T     T      F      N
+--   F     F      F      F
+--   N     N      F      N
+
+-- OR truth table (x OR y)
+--   x\y   T      F      N
+--   T     T      T      T
+--   F     T      F      N
+--   N     T      N      N
+
+-- T or F is enough to decide; N only flips results it cannot resolve.</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- NULL = the UNKNOWN truth value in PostgreSQL's three-valued logic</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL follows the same truth tables for the boolean NULL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q31" data-answer="1">
+      <div class="quiz-q">count(*) returns 100 rows but count(email) returns 80. Why?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Some rows duplicate an email value</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>20 rows have NULL in the email column</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>count(*) is an approximate statistic</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>The table has 20 rows deleted by a trigger</span></div></div>
+      <div class="quiz-explain">count(*) counts every row; count(email) skips NULLs, so the 20-row gap means 20 NULL emails.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s2-q34" data-answer="1">
-      <div class="quiz-q">Planner chooses Seq Scan over Index Scan when:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Table has < 100 rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Query returns large fraction of table (>5-10%)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Index is fragmented</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All of the above</span></div></div>
-      <div class="quiz-explain">Random I/O (index) vs sequential I/O (scan). Threshold depends on settings (random_page_cost).</div>
+    </div><div class="quiz-card" data-quiz-key="s2-q32" data-answer="3">
+      <div class="quiz-q">Which query returns rows whose middle_initial is NULL?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>middle_initial = NULL</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>middle_initial <> NULL</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>middle_initial IN (NULL)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>middle_initial IS NULL</span></div></div>
+      <div class="quiz-explain">Only IS NULL (or IS NOT DISTINCT FROM NULL) can match NULL; all comparisons against NULL yield UNKNOWN.</div>
       <div class="quiz-score"></div>
     </div>
   </section>
   <section class="section" id="sec-3">
-    <div class="section-header"><span class="section-num">04 //</span><h2>Dialect Differences — Date/Time & Limit</h2></div>
+    <div class="section-header"><span class="section-num">04 //</span><h2>DML & Transactions</h2></div>
+    <h3>INSERT / UPDATE / DELETE and All-or-Nothing Transactions</h3>
+<div><div class="code-label"><span>insert with returning</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- RETURNING hands back the generated key in the same statement
+INSERT INTO products (name, price)
+VALUES (<span class="st">'T-Shirt'</span>, <span class="num">19.99</span>)
+RETURNING id;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- RETURNING can also return just-modified rows:</span>
+UPDATE products SET price = <span class="num">22.50</span> WHERE id = <span class="num">4</span> RETURNING id, price;
+INSERT ... ON CONFLICT (slug) DO UPDATE SET price = EXCLUDED.price
+  RETURNING id;</code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0 has no RETURNING; read the key afterwards:</span>
+INSERT INTO products (name, price) VALUES (<span class="st">'T-Shirt'</span>, <span class="num">19.99</span>);
+SELECT LAST_INSERT_ID();</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>update</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>UPDATE products
+SET    price = <span class="num">21.99</span>
+WHERE  id = <span class="num">4</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Standard UPDATE; RETURNING shows the new row</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same statement in MySQL 8.0; multi-table UPDATE only joins extra tables</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>transaction with savepoints</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>BEGIN;
+
+INSERT INTO orders (user_id) VALUES (<span class="num">42</span>);
+
+SAVEPOINT p1;                            -- mark a safe point
+
+UPDATE stock SET qty = qty - <span class="num">1</span>
+WHERE  sku = <span class="st">'TS1'</span>;                     -- unwanted or failed step
+
+ROLLBACK TO p1;                         -- undo ONLY the update
+
+COMMIT;                                 -- commit the remaining INSERT</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- SAVEPOINT / ROLLBACK TO / RELEASE are SQL-standard and fully</span>
+<span class="cm">-- supported in PostgreSQL; a savepoint may overlap and nest</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0 supports SAVEPOINT and ROLLBACK TO SAVEPOINT inside</span>
+<span class="cm">-- transactions started with START TRANSACTION</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout green"><strong>Atomicity:</strong> a transaction commits all of its statements or none. <code>ROLLBACK TO p1</code> unwinds work performed after the savepoint *without* aborting the whole transaction, so the earlier <code>INSERT</code> can still commit. This is the tool for partial-recovery flows.</div>
+<div class="quiz-card" data-quiz-key="s3-q33" data-answer="1">
+      <div class="quiz-q">After ROLLBACK TO p1;, what state is the transaction in?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Aborted and closed — nothing can commit</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Statements after p1 are undone; the transaction stays open and COMMIT still works</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>The entire transaction is rolled back to BEGIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A brand-new transaction starts immediately</span></div></div>
+      <div class="quiz-explain">ROLLBACK TO returns to the savepoint, discarding later work, and the transaction remains usable.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Query Evaluation Order</h2></div>
+    <h3>Logical Order of Operations</h3>
+<div><div class="code-label"><span>logical processing order</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- SQL's documented logical order (a contract, not an execution plan)
+--  <span class="num">1</span>. FROM        build the row source(s)
+--  <span class="num">2</span>. WHERE       filter individual rows
+--  <span class="num">3</span>. GROUP BY    form groups
+--  <span class="num">4</span>. HAVING      filter groups (aggregates allowed)
+--  <span class="num">5</span>. SELECT      compute output expressions and aliases
+--  <span class="num">6</span>. ORDER BY    final ordering
+--
+-- Real engines optimize aggressively and may physically reorder;
+-- the clause order above is the logical contract that defines what
+-- each clause is allowed to reference.</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL's planner may reorder freely as long as the result matches</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0 honors the same logical contract</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>where vs having</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>SELECT dept, count(*) AS n
+FROM   emp
+WHERE  salary > <span class="num">3000</span>       -- filters rows BEFORE grouping
+GROUP  BY dept
+HAVING count(*) > <span class="num">5</span>       -- filters groups AFTER aggregation
+ORDER  BY n DESC;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- WHERE cannot reference count(*); HAVING can</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Same behavior in MySQL 8.0</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<p><code>WHERE</code> runs before grouping and can never reference aggregates. <code>HAVING</code> runs after grouping and can. The same reasoning explains why a <code>SELECT</code> alias is invisible in <code>WHERE</code> (aliases are computed last) yet perfectly legal in <code>ORDER BY</code>.</p>
+<div class="quiz-card" data-quiz-key="s4-q34" data-answer="1">
+      <div class="quiz-q">Which clause may reference an aggregate such as count(*)?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>WHERE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>HAVING</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>JOIN ... ON</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>LIMIT</span></div></div>
+      <div class="quiz-explain">HAVING runs after grouping, so it can test aggregate values; WHERE sees only raw input rows.</div>
+      <div class="quiz-score"></div>
+    </div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>WHERE filters rows before GroupAggregate</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">GroupAggregate</span>
+        <span class="plan-node-meta"> cost=0.29..42.15 rows=8 width=8</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (count(*) > 5)</div><div class="plan-node" style="margin-left: 24px;">
+      <div class="plan-node-header">
+        <span class="plan-node-type">Seq Scan</span> on <code>emp</code> as <code>e</code>
+        <span class="plan-node-meta"> cost=0..31.5 rows=2000 width=12</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (salary > 3000)</div></div></div></div>
+</div>
+<div class="callout blue"><strong>Reading the plan:</strong> the <code>Filter: (salary > 3000)</code> sits on the Seq Scan — rows are discarded before any grouping — then <code>GroupAggregate</code> forms groups by <code>dept</code> and drops groups via its own <code>Filter: (count(*) > 5)</code>. That is the WHERE-before-HAVING contract, visible in the tree.</div>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Dialect Differences — Types & NULL</h2></div>
     <div class="dialect-diff"><div class="dialect-diff-grid">
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">ANSI SQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT CURRENT_DATE;</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">SELECT CAST('2024-01-15' AS DATE);
+SELECT CURRENT_DATE;</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">PostgreSQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT CURRENT_DATE; -- or NOW()::date</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">SELECT '2024-01-15'::date;                -- :: cast
+SELECT '2024-01-15 10:30:00'::timestamp;
+SELECT 5 IS NOT DISTINCT FROM NULL;      -- false</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">MySQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT CURDATE();</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">SELECT CAST('2024-01-15' AS DATE);
+SELECT CAST('10:30' AS TIME);
+SELECT CONVERT('2024-01-15', DATE);      -- alias for CAST
+SELECT 5 <=> NULL;                       -- 0 (null-safe equal)</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">Python (pandas)</span>
         </div>
-        <pre class="has-py-alt"><code class="language-python">pd.Timestamp.now().date()</code></pre>
+        <pre class="has-py-alt"><code class="language-python">pd.to_datetime('2024-01-15')</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">Python (SQLAlchemy)</span>
         </div>
-        <pre class="has-py-alt"><code class="language-python">session.query(func.current_date()).scalar()</code></pre>
+        <pre class="has-py-alt"><code class="language-python">sa.cast(col, sa.Date)</code></pre>
       </div></div></div>
 <div class="dialect-diff"><div class="dialect-diff-grid">
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">ANSI SQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">-- NULL is UNKNOWN everywhere
+SELECT * FROM t WHERE col IS NULL;</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">PostgreSQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">SELECT NULL = NULL;    -- NULL (UNKNOWN)
+SELECT NULL IS NULL;   -- true
+-- NULLs sort LAST in ASC order by default</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">MySQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">SELECT NULL <=> NULL;  -- 1 (null-safe)
+SELECT '' IS NULL;     -- 0: empty string is a value, not NULL
+-- NULLs sort FIRST in ASC order by default</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">Python (pandas)</span>
         </div>
-        <pre class="has-py-alt"><code class="language-python">employees.nlargest(10, 'hire_date')</code></pre>
+        <pre class="has-py-alt"><code class="language-python">df[df['col'].isna()]</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">Python (SQLAlchemy)</span>
         </div>
-        <pre class="has-py-alt"><code class="language-python">session.query(Employee).order_by(Employee.hire_date.desc()).limit(10).all()</code></pre>
-      </div></div></div>
-<div class="dialect-diff"><div class="dialect-diff-grid">
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">ANSI SQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM employees OFFSET 20 LIMIT 10;</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">PostgreSQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM employees OFFSET 20 LIMIT 10;</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">MySQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT * FROM employees LIMIT 10 OFFSET 20; -- or LIMIT 20, 10</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">Python (pandas)</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-python">employees.iloc[20:30]</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">Python (SQLAlchemy)</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-python">session.query(Employee).offset(20).limit(10).all()</code></pre>
+        <pre class="has-py-alt"><code class="language-python">sa.or_(col.is_(None))</code></pre>
       </div></div></div>
   </section>
-  <section class="section" id="sec-4">
-    <div class="section-header"><span class="section-num">05 //</span><h2>Problem Set — L3 Drills</h2></div>
+  <section class="section" id="sec-6">
+    <div class="section-header"><span class="section-num">07 //</span><h2>Problem Set — L3 Drills</h2></div>
     <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
-      <div><div class="prob-name">Create Index for Salary Range Queries</div>
-        <div class="prob-meta">drill · create-index + btree</div></div>
+      <div><div class="prob-name">Fix the Implicit-Cast Bug</div>
+        <div class="prob-meta">drill · implicit-cast + text-to-date</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B301"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Create a B-tree index on employees.salary to speed up range queries.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8re" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8re">CREATE INDEX idx_emp_salary ON employees (salary);</div></div>
+      A table stores timestamps as text. <code>WHERE created = '2024-01-15'</code> silently misses rows whose stored value is '2024-01-15 10:30:00'. Explain why, then fix it with an explicit cast.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74ge" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74ge">The comparison is text = text: '2024-01-15' does not equal '2024-01-15 10:30:00' as a string</div><button class="reveal-btn" data-target="umtyet74gg" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet74gg">Use CAST(created AS timestamp) with a typed boundary, or store a real timestamptz column</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
-      <div><div class="prob-name">Composite Index for Dept + Salary</div>
-        <div class="prob-meta">drill · composite-index</div></div>
+      <div><div class="prob-name">NULL Equality Trap</div>
+        <div class="prob-meta">drill · is-null + three-valued-logic</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B302"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Create composite index for queries filtering by dept_id then ordering by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rf" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rf">Column order matters: equality first (dept_id), then range (salary)</div></div>
+      <code>SELECT * FROM users WHERE deactivated_at = NULL;</code> returns zero rows even though deactivated users exist. Fix the predicate and explain why the original matches nothing.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74gh" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74gh">NULL = NULL evaluates to UNKNOWN, which WHERE rejects</div><button class="reveal-btn" data-target="umtyet74gj" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet74gj">Use IS NULL or IS NOT NULL</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
-      <div><div class="prob-name">Partial Index for Active Employees</div>
-        <div class="prob-meta">drill · partial-index</div></div>
+      <div><div class="prob-name">Truth-Table Reasoning</div>
+        <div class="prob-meta">drill · three-valued-logic + boolean</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B303"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      90% of queries filter status='active'. Create partial index on salary for active employees only.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rg" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rg">WHERE status = 'active'</div></div>
+      Classify each expression as TRUE, FALSE, or UNKNOWN: NULL AND TRUE, NULL OR TRUE, NULL AND FALSE, NOT NULL. Which single one is TRUE, and why?
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74gk" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74gk">OR TRUE short-circuits to TRUE</div><button class="reveal-btn" data-target="umtyet74gm" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet74gm">AND FALSE short-circuits to FALSE</div><button class="reveal-btn" data-target="umtyet74go" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet74go">NOT NULL stays NULL (UNKNOWN)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
-      <div><div class="prob-name">Covering Index to Avoid Heap Fetch</div>
-        <div class="prob-meta">drill · covering-index</div></div>
+      <div><div class="prob-name">Transaction with Savepoints</div>
+        <div class="prob-meta">drill · savepoint + transaction</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B304"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Query: SELECT name, salary FROM employees WHERE salary > 50000. Create covering index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rh" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rh">INCLUDE (name) in PostgreSQL; (salary, name) in MySQL</div></div>
+      In one transaction: insert an order, mark a savepoint, update stock for sku 'TS1', then decide the stock update was wrong and roll back only that statement while still committing the insert. Write the statements in order.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74gp" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74gp">BEGIN; ... INSERT ...; SAVEPOINT p1; UPDATE ...; ROLLBACK TO p1; COMMIT;</div><button class="reveal-btn" data-target="umtyet74gr" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet74gr">ROLLBACK TO keeps the transaction alive; only the post-savepoint work is undone</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
-      <div><div class="prob-name">Analyze Query Plan</div>
-        <div class="prob-meta">drill · explain-analyze</div></div>
+      <div><div class="prob-name">COUNT(*) vs COUNT(col)</div>
+        <div class="prob-meta">drill · null + aggregate</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B305"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Run EXPLAIN ANALYZE on: SELECT * FROM employees WHERE dept_id = 3 AND salary > 60000. Note: Seq Scan vs Index Scan, actual rows.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8ri" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8ri">EXPLAIN (ANALYZE, BUFFERS) ...</div></div>
+      On one table, count(*) returns 1,000 but count(phone) returns 940. Explain the discrepancy and write the query that reports both numbers side by side.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74gs" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74gs">count(phone) skips NULLs; count(*) counts every row</div><button class="reveal-btn" data-target="umtyet74gu" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet74gu">SELECT count(*) AS total, count(phone) AS with_phone FROM t;</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
-      <div><div class="prob-name">Fix Function-on-Column Index Issue</div>
-        <div class="prob-meta">drill · functional-index</div></div>
+      <div><div class="prob-name">Alias-in-WHERE Ordering Bug</div>
+        <div class="prob-meta">drill · evaluation-order + having</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B306"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Query: SELECT * FROM employees WHERE LOWER(email) = 'alice@company.com'. Create index to support this.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8rj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8rj">Functional index on LOWER(email)</div></div>
+      SELECT amount * 1.1 AS gross FROM invoice WHERE gross > 100; refuses or misbehaves. Diagnose it against the logical evaluation order and produce a working query with the same intent.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74gv" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74gv">SELECT aliases are computed after WHERE, so WHERE gross cannot see the alias</div><button class="reveal-btn" data-target="umtyet74gx" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet74gx">Recompute the predicate: WHERE amount * 1.1 > 100 — or wrap it: SELECT * FROM (SELECT amount * 1.1 AS gross FROM invoice) t WHERE gross > 100;</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-7">
+    <div class="section-header"><span class="section-num">08 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/delete-duplicate-emails/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Delete Duplicate Emails</a></div>
+        <div class="prob-meta">leetcode · #196 · easy · leetcode-sql-50 · dml-delete + self-join-dedupe</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="B3-LC196"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">09 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
-      <ul><li>EXPLAIN vs EXPLAIN ANALYZE — estimated vs actual rows reveals stats issues</li><li>B-tree = default, supports ranges; Hash = equality only; GIN = JSONB/arrays; BRIN = huge correlated tables</li><li>Partial index (WHERE on index) for skewed query patterns</li><li>Covering index (INCLUDE) avoids heap lookups</li><li>Functions on columns kill indexes — use functional indexes</li><li>Leading wildcard (%text) kills B-tree — pg_trgm or fulltext for that</li></ul></div>
+      <ul><li>7/2 truncates to 3 in PostgreSQL; 7.0/2 is 3.5 — the operands' types decide</li><li>3VL: NULL compared with anything is UNKNOWN; only IS NULL / IS NOT NULL (or IS NOT DISTINCT FROM) match NULL</li><li>count(*) counts rows; count(col) skips NULLs</li><li>Logical order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY — WHERE can't see aliases or aggregates, HAVING can</li><li>SAVEPOINT / ROLLBACK TO / RELEASE let a transaction recover part-way without aborting</li><li>Always cast comparisons explicitly — implicit casts are a silent surprise</li></ul></div>
     <h3>Glossary</h3>
-    <table class="generic"><tbody><tr><td style="width:220px;"><code>covering index</code></td><td>Index that includes all columns needed by query (INCLUDE), avoiding table lookup.</td></tr><tr><td style="width:220px;"><code>partial index</code></td><td>Index with WHERE clause — only indexes subset of rows.</td></tr><tr><td style="width:220px;"><code>functional index</code></td><td>Index on expression (e.g., UPPER(col)) — supports queries with functions.</td></tr><tr><td style="width:220px;"><code>selectivity</code></td><td>Fraction of rows matching condition. Low selectivity = few rows = index friendly.</td></tr><tr><td style="width:220px;"><code>heap fetch</code></td><td>Table lookup after index finds row pointer. Covering index eliminates this.</td></tr><tr><td style="width:220px;"><code>random_page_cost</code></td><td>Planner parameter: cost of random I/O vs sequential. Higher = prefer Seq Scan.</td></tr></tbody></table>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>three-valued logic</code></td><td>Truth system with TRUE, FALSE, UNKNOWN; comparisons involving NULL yield UNKNOWN.</td></tr><tr><td style="width:220px;"><code>implicit cast</code></td><td>Automatic type conversion the engine picks when an expression's type differs from the context.</td></tr><tr><td style="width:220px;"><code>savepoint</code></td><td>Named marker inside a transaction; ROLLBACK TO returns to it without aborting the transaction.</td></tr><tr><td style="width:220px;"><code>atomicity</code></td><td>A transaction commits all of its changes or none; partial success is impossible.</td></tr><tr><td style="width:220px;"><code>non-null filtering</code></td><td>Matching NULL values with IS NULL / IS NOT NULL instead of = or <>.</td></tr><tr><td style="width:220px;"><code>evaluation order</code></td><td>SQL's documented logical clause order (FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY) that defines what each clause may reference.</td></tr></tbody></table>
   </section>
   <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
     <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L4 EXPERT file</p></div>

@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 05</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">advanced frames, nested windows, performance, optimization</span></div>
   <h1>Window Functions</h1>
-  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="promise">CTEs, recursion, query optimization, dialect differences. You justify the plan, not just the output.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="window-functions_L1" href="window-functions_L1.html">BEGINNER</a><a class="level-pill " data-lesson="window-functions_L2" href="window-functions_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="window-functions_L3" href="window-functions_L3.html">ADVANCED</a><a class="level-pill " data-lesson="window-functions_L4" href="window-functions_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Nested Windows & CTE Patterns</a><a href="#sec-1">02 · Performance — Work_Memory, Spills, Indexes</a><a href="#sec-2">03 · Dialect Deep Dive — Window Function Support</a><a href="#sec-3">04 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Nested Windows & CTE Patterns</a><a href="#sec-1">02 · Performance — work_mem, Spills, Indexes</a><a href="#sec-2">03 · Dialect Deep Dive — Window Function Support</a><a href="#sec-3">04 · Problem Set — L3 Drills</a><a href="#sec-4">05 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -37,9 +37,9 @@
       <div class="quiz-explain">EXCLUDE TIES removes all rows with same ORDER BY value as current row (all peers).</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="place-q208" data-answer="1">
-      <div class="quiz-q">Window function in SELECT vs CTE for reuse:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same performance</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CTE allows reuse + predicate pushdown</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Direct SELECT faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Window functions not allowed in CTE</span></div></div>
-      <div class="quiz-explain">CTE materializes window results once. Reuse in multiple outer queries. Planner can push predicates.</div>
+      <div class="quiz-q">A window result needed by several outer queries — what does the planner do with a CTE referenced multiple times?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Always inlines it</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Materializes it once by default (PG12+)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Never allows it</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Runs the window once per reference</span></div></div>
+      <div class="quiz-explain">PG12+: a CTE referenced multiple times is materialized by default (computed once, but an optimization fence — outer predicates are NOT pushed into it); referenced once, it is inlined instead.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="place-q209" data-answer="1">
       <div class="quiz-q">Two window functions with same PARTITION+ORDER — execution:</div>
@@ -49,7 +49,7 @@
     </div><div class="quiz-card" data-quiz-key="place-q210" data-answer="1">
       <div class="quiz-q">Window function in CTE can be referenced in outer query:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only in SELECT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>In SELECT, WHERE, ORDER BY of outer query</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only in ORDER BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not allowed</span></div></div>
-      <div class="quiz-explain">CTE materializes window result. Outer query can filter (WHERE) on window result.</div>
+      <div class="quiz-explain">The CTE's output columns (including window results) are plain columns to the outer query, so outer WHERE can filter them. When the CTE is referenced multiple times it is materialized once and the outer filter applies after the CTE scan.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="place-q211" data-answer="1">
       <div class="quiz-q">work_mem affects window functions by:</div>
@@ -111,10 +111,10 @@ FROM ranked;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
         <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
       </div></div></div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s0-q212" data-answer="1">
-      <div class="quiz-q">Window function in CTE can be referenced in outer query:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only in SELECT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>In SELECT, WHERE, ORDER BY of outer query</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only in ORDER BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not allowed</span></div></div>
-      <div class="quiz-explain">CTE materializes window result. Outer query can filter (WHERE) on window result.</div>
+<div class="quiz-card" data-quiz-key="s0-q212" data-answer="0">
+      <div class="quiz-q">The outer query can filter on a CTE's window-result column in its WHERE clause because…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>the window is computed before the outer query consumes the CTE's output</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>windows re-run for every filter value</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>the CTE is always materialized</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>materialized CTEs block all referencing</span></div></div>
+      <div class="quiz-explain">The CTE's output columns (including window results) are plain columns to the outer query, so outer WHERE can filter them. Materialized multi-reference CTEs stay an optimization fence; single-reference CTEs are inlined.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s0-q213" data-answer="1">
       <div class="quiz-q">Two window functions in same CTE — execution:</div>
@@ -124,8 +124,8 @@ FROM ranked;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
     </div>
   </section>
   <section class="section" id="sec-1">
-    <div class="section-header"><span class="section-num">02 //</span><h2>Performance — Work_Memory, Spills, Indexes</h2></div>
-    <h3>Work_Memory & Spilling</h3>
+    <div class="section-header"><span class="section-num">02 //</span><h2>Performance — work_mem, Spills, Indexes</h2></div>
+    <h3>work_mem & Spilling</h3>
 <div><div class="code-label"><span>work_mem tuning</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Check <span class="kw">for</span> spills
 EXPLAIN ANALYZE SELECT ROW_NUMBER() OVER (ORDER BY salary) FROM employees;
 -- Look <span class="kw">for</span>: <span class="st">'Sort Method: external merge Disk: 1234kB'</span>
@@ -138,9 +138,7 @@ SET max_parallel_workers_per_gather = <span class="num">4</span>;
 SET work_mem = <span class="st">'64MB'</span>;  -- per worker
 
 -- Monitor
-SELECT * FROM pg_stat_clear_snapshot();
-EXPLAIN ANALYZE ...;
-SELECT * FROM pg_stat_get_db_stat();</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- work_mem per operation. Sort/Hash/Window spills to disk if > work_mem</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: sort_buffer_size, join_buffer_size</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+SELECT pid, state, query FROM pg_stat_activity WHERE state = <span class="st">'active'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- work_mem per operation. Sort/Hash/Window spills to disk if > work_mem</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: sort_buffer_size, join_buffer_size</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 <div class="callout warn"><strong>Spill = massive slowdown.</strong> Window functions sort entire partition. If partition > work_mem → disk spill. Increase work_mem or reduce partition size (add PARTITION BY).</div>
 <h3>Indexes for Window Functions</h3>
 <div><div class="code-label"><span>indexes for window functions</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Window functions benefit from indexes on:
@@ -166,7 +164,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div><div class="quiz-card" data-quiz-key="s1-q216" data-answer="3">
       <div class="quiz-q">CTE with window function allows predicate pushdown:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Never</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Always</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only in PostgreSQL 14+</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>When CTE is not materialized</span></div></div>
-      <div class="quiz-explain">PostgreSQL 14+ can push predicates into non-materialized CTEs. Use NOT MATERIALIZED for pushdown.</div>
+      <div class="quiz-explain">Only a non-materialized (inlined, PG12+) CTE allows predicates to be pushed into it. Use NOT MATERIALIZED, or reference the CTE just once so the plan can inline it.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s1-q217" data-answer="1">
       <div class="quiz-q">Multiple window functions with different ORDER BY — sorts needed:</div>
@@ -251,7 +249,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Compute 3-period moving average of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3s">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75s4c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75s4c">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -261,17 +259,17 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Running sum of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3t">SUM(rn) OVER (ORDER BY rn)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75s4d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75s4d">SUM(rn) OVER (ORDER BY rn)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
-      <div><div class="prob-name">Work_Mem Tuning for Window Spill</div>
+      <div><div class="prob-name">work_mem Tuning for Window Spill</div>
         <div class="prob-meta">drill · work-mem + spill</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W303"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
       EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3u">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75s4e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75s4e">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -281,7 +279,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3v">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75s4f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75s4f">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -291,7 +289,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Rank employees by their running total of salary (ordered by hire_date).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3w">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75s4g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75s4g">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -301,16 +299,171 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9i3x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9i3x">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75s4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75s4h">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">15 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50 · LeetCode SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">SQL Project Planning</a></div>
+        <div class="prob-meta">hackerrank · #051 · hackerrank-sql-58 · gaps-and-islands + consecutive-runs</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-HR051"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/project-employees-iii/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Project Employees III</a></div>
+        <div class="prob-meta">leetcode · #1077 · medium · leetcode-advanced-sql-50 · dense-rank,partition,join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1077"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/highest-grade-for-each-student/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Highest Grade For Each Student</a></div>
+        <div class="prob-meta">leetcode · #1112 · medium · leetcode-advanced-sql-50 · row-number,partition,order-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1112"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/product-price-at-a-given-date/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Product Price at a Given Date</a></div>
+        <div class="prob-meta">leetcode · #1164 · medium · leetcode-sql-50 · as-of-join + last-value-before</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1164"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/find-the-start-and-end-number-of-continuous-ranges/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Find the Start and End Number of Continuous Ranges</a></div>
+        <div class="prob-meta">leetcode · #1285 · medium · leetcode-advanced-sql-50 · gaps-and-islands,row-number</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1285"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/restaurant-growth/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Restaurant Growth</a></div>
+        <div class="prob-meta">leetcode · #1321 · medium · leetcode-sql-50 · moving-average + rows-frame</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1321"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/find-the-quiet-students-in-all-exams/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Find the Quiet Students in All Exams</a></div>
+        <div class="prob-meta">leetcode · #1412 · medium · leetcode-advanced-sql-50 · dense-rank,min-max</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1412"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-most-recent-three-orders/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Most Recent Three Orders</a></div>
+        <div class="prob-meta">leetcode · #1532 · medium · leetcode-advanced-sql-50 · row-number,partition</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1532"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-most-recent-orders-for-each-product/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Most Recent Orders for Each Product</a></div>
+        <div class="prob-meta">leetcode · #1549 · medium · leetcode-advanced-sql-50 · row-number,partition</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1549"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-most-frequently-ordered-products-for-each-customer/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Most Frequently Ordered Products for Each Customer</a></div>
+        <div class="prob-meta">leetcode · #1596 · medium · leetcode-advanced-sql-50 · dense-rank,partition,group-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1596"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/biggest-window-between-visits/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Biggest Window Between Visits</a></div>
+        <div class="prob-meta">leetcode · #1709 · medium · leetcode-advanced-sql-50 · lag,date-difference</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1709"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/maximum-transaction-each-day/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Maximum Transaction Each Day</a></div>
+        <div class="prob-meta">leetcode · #1831 · medium · leetcode-advanced-sql-50 · row-number,partition,date</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1831"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/department-highest-salary/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Department Highest Salary</a></div>
+        <div class="prob-meta">leetcode · #184 · medium · leetcode-advanced-sql-50 · dense-rank,partition,join</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC184"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/the-latest-login-in-2020/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">The Latest Login in 2020</a></div>
+        <div class="prob-meta">leetcode · #1890 · easy · leetcode-advanced-sql-50 · row-number,partition,date-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC1890"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/game-play-analysis-iii/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Game Play Analysis III</a></div>
+        <div class="prob-meta">leetcode · #534 · medium · leetcode-advanced-sql-50 · running-sum,frame</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W3-LC534"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">05 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
-      <ul><li>Chain windows via CTE: inner computes, outer applies another window</li><li>Spill = Sort Method: external merge Disk; fix with work_mem</li><li>Index on (PARTITION BY, ORDER BY) avoids sort for window functions</li><li>Multiple windows with same PARTITION+ORDER = single sort, multiple WindowAgg</li><li>CTE materializes window result → allows WHERE/HAVING on window output</li><li>GROUPS frame (PG14) counts peer groups; EXCLUDE TIES/GROUP/CURRENT ROW</li></ul></div>
+      <ul><li>Chain windows via CTE: inner computes, outer applies another window</li><li>Spill = Sort Method: external merge Disk; fix with work_mem</li><li>Index on (PARTITION BY, ORDER BY) avoids sort for window functions</li><li>Multiple windows with same PARTITION+ORDER = single sort, multiple WindowAgg</li><li>CTE output cols (incl. window results) are filterable in outer WHERE; pushing into the CTE needs an inlined (NOT MATERIALIZED) CTE — materialized ones are a fence</li><li>GROUPS frame (PG14) counts peer groups; EXCLUDE TIES/GROUP/CURRENT ROW</li></ul></div>
     <h3>Glossary</h3>
-    <table class="generic"><tbody><tr><td style="width:220px;"><code>nested window</code></td><td>Window function applied to result of another window function via CTE.</td></tr><tr><td style="width:220px;"><code>WindowAgg</code></td><td>PostgreSQL executor node for window functions. Multiple passes for different functions.</td></tr><tr><td style="width:220px;"><code>work_mem</code></td><td>Memory budget for sort/hash/window operations per query. Spills to disk if exceeded.</td></tr><tr><td style="width:220px;"><code>CTE materialization</code></td><td>CTE result computed once, reused. Enables predicate pushdown on window results.</td></tr><tr><td style="width:220px;"><code>Sort Method: external merge</code></td><td>EXPLAIN ANALYZE indicator that sort spilled to disk (work_mem exceeded).</td></tr><tr><td style="width:220px;"><code>peer group</code></td><td>Rows with identical ORDER BY values. Relevant for RANGE/GROUPS frames and EXCLUDE TIES.</td></tr></tbody></table>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>nested window</code></td><td>Window function applied to result of another window function via CTE.</td></tr><tr><td style="width:220px;"><code>WindowAgg</code></td><td>PostgreSQL executor node for window functions. Multiple passes for different functions.</td></tr><tr><td style="width:220px;"><code>work_mem</code></td><td>Memory budget for sort/hash/window operations per query. Spills to disk if exceeded.</td></tr><tr><td style="width:220px;"><code>CTE materialization</code></td><td>PG12+ inlines single-reference CTEs (pushdown-friendly) and materializes multi-reference ones. A materialized CTE is computed once but acts as an optimization fence: outer predicates are not pushed into it.</td></tr><tr><td style="width:220px;"><code>Sort Method: external merge</code></td><td>EXPLAIN ANALYZE indicator that sort spilled to disk (work_mem exceeded).</td></tr><tr><td style="width:220px;"><code>peer group</code></td><td>Rows with identical ORDER BY values. Relevant for RANGE/GROUPS frames and EXCLUDE TIES.</td></tr></tbody></table>
   </section>
   <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
     <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L4 EXPERT file</p></div>

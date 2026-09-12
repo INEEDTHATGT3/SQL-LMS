@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 03</span><span class="badge blue">L3 · ADVANCED</span><span class="badge green">join optimization, predicate pushdown, join elimination, partitioning</span></div>
   <h1>Joins & Set Operations</h1>
-  <div class="promise">CTEs, recursive, query optimization, dialects.</div>
+  <div class="promise">CTEs, recursion, query optimization, dialect differences. You justify the plan, not just the output.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="joins_L1" href="joins_L1.html">BEGINNER</a><a class="level-pill " data-lesson="joins_L2" href="joins_L2.html">INTERVIEW READY</a><a class="level-pill current" data-lesson="joins_L3" href="joins_L3.html">ADVANCED</a><a class="level-pill " data-lesson="joins_L4" href="joins_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Join Elimination — When the Planner Skips the Join</a><a href="#sec-1">02 · Predicate Pushdown — Filter Early, Join Less</a><a href="#sec-2">03 · Partition-Wise Join — Parallel Join at Scale</a><a href="#sec-3">04 · Dialect Deep Dive — Join Hints & Controls</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Join Elimination — When the Planner Skips the Join</a><a href="#sec-1">02 · Predicate Pushdown — Filter Early, Join Less</a><a href="#sec-2">03 · Partition-Wise Join — Parallel Join at Scale</a><a href="#sec-3">04 · Dialect Deep Dive — Join Hints & Controls</a><a href="#sec-4">05 · Problem Set — L3 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -113,12 +113,12 @@ WHERE dept_id = <span class="num">3</span>;
 <span class="cm">-- Derived table pushdown (merged)</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
 <div class="callout warn">Pushdown blockers: VOLATILE functions (random(), now()), LIMIT/OFFSET in subquery, UNION/EXCEPT, window functions in subquery, set operations. Use CTEs carefully.</div>
 <div class="quiz-card" data-quiz-key="s1-q119" data-answer="0">
-      <div class="quiz-q">Predicate pushdown moves filter:</div>
+      <div class="quiz-q">Predicate pushdown shrinks the rows entering a join by moving the filter:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>From outer query INTO inner subquery/CTE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>From inner TO outer</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>To application layer</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>To storage engine only</span></div></div>
-      <div class="quiz-explain">Push filter down to where data originates — reduces rows before join/aggregation.</div>
+      <div class="quiz-explain">Pushing the predicate into the inner subquery/CTE filters rows at the source, so fewer rows enter the join — cheaper probe/build.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s1-q120" data-answer="2">
-      <div class="quiz-q">CTE with LIMIT blocks pushdown because:</div>
+      <div class="quiz-q">A LIMIT inside a CTE is a pushdown boundary because:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>LIMIT changes semantics if pushed</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CTEs are optimization fences</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Both A and B</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CTEs don't support pushdown</span></div></div>
       <div class="quiz-explain">In PostgreSQL, CTEs are optimization fences (materialized). LIMIT inside CTE prevents pushdown.</div>
       <div class="quiz-score"></div>
@@ -250,7 +250,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Query: SELECT e.dept_id FROM employees e JOIN departments d ON e.dept_id = d.id. Is join eliminated? Why/why not?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9622" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9622">Only FK column from child selected → yes, eliminated</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75c2m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75c2m">Only FK column from child selected → yes, eliminated</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -260,7 +260,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       View filters status='active'. Outer query adds dept_id=5. Verify pushdown in EXPLAIN.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9623" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9623">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75c2n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75c2n">EXPLAIN SELECT * FROM active_view WHERE dept_id = 5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -270,7 +270,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Design events and orders tables partitioned by month for partition-wise join on user_id.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9624" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9624">Partition both on month</div><button class="reveal-btn" data-target="umtxzqd9626" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9626">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75c2o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75c2o">Partition both on month</div><button class="reveal-btn" data-target="umtyet75c2q" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet75c2q">Join on user_id (not partition key!) — wait, partition-wise needs partition key = join key</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -280,7 +280,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Force join order: small → medium → large using join_collapse_limit.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9627" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9627">SET join_collapse_limit = 1; write joins in desired order</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75c2r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75c2r">SET join_collapse_limit = 1; write joins in desired order</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -290,7 +290,7 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       Describe when Adaptive Join switches from Nested Loop to Hash Join.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9628" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9628">Starts as NLJ; switches when outer rows exceed threshold</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75c2s" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75c2s">Starts as NLJ; switches when outer rows exceed threshold</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -300,12 +300,77 @@ SET enable_partitionwise_aggregate = on;</code></pre><pre data-lang="py" class="
     </div>
     <div class="prob-body">
       CTE with LIMIT blocks pushdown. Rewrite to allow pushdown.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9629" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9629">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet75c2t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet75c2t">Move LIMIT to outer query; use subquery instead of CTE</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">6 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=join-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Symmetric Pairs</a></div>
+        <div class="prob-meta">hackerrank · #053 · hackerrank-sql-58 · self-join + pair-dedupe</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-HR053"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/team-scores-in-football-tournament/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Team Scores in Football Tournament</a></div>
+        <div class="prob-meta">leetcode · #1212 · medium · leetcode-advanced-sql-50 · self-join,group-by,case-sum</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1212"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/page-recommendations/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Page Recommendations</a></div>
+        <div class="prob-meta">leetcode · #1264 · medium · leetcode-advanced-sql-50 · self-join,distinct,exclude-self</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1264"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/evaluate-boolean-expression/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Evaluate Boolean Expression</a></div>
+        <div class="prob-meta">leetcode · #1440 · medium · leetcode-advanced-sql-50 · join,case-operator,null-trap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1440"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/countries-you-can-safely-invest-in/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Countries You Can Safely Invest In</a></div>
+        <div class="prob-meta">leetcode · #1501 · medium · leetcode-advanced-sql-50 · join,group-by,having</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1501"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t3">L3</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/leetflex-banned-accounts/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Leetflex Banned Accounts</a></div>
+        <div class="prob-meta">leetcode · #1747 · medium · leetcode-advanced-sql-50 · self-join,interval-overlap</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="J3-LC1747"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>Join elimination: FK→PK, only PK columns, INNER JOIN → free scan</li><li>Predicate pushdown: move filter down to data source; blocked by VOLATILE, LIMIT, CTEs</li><li>Partition-wise join: same partition key on both tables → independent parallel partition joins</li><li>join_collapse_limit=1 forces written join order; pg_hint_plan for advanced hints</li><li>Adaptive Join (PG 17+): starts NLJ, switches to Hash if outer rows exceed threshold</li><li>CTE = optimization fence (materialized); subquery = pushdown-friendly</li></ul></div>
     <h3>Glossary</h3>

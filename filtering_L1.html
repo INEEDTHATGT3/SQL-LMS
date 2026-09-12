@@ -6,10 +6,10 @@
 <div class="hero" data-watermark="SQL">
   <div class="hero-tag"><span class="badge">MODULE 02</span><span class="badge blue">L1 · BEGINNER</span><span class="badge green">IN, BETWEEN, LIKE, CASE, NULL — precision filtering</span></div>
   <h1>Filtering & Conditionals</h1>
-  <div class="promise">Core syntax, mental models. Tables as grids.</div>
+  <div class="promise">Core syntax, mental models. Tables as grids. Every problem is solvable with one SELECT.</div>
   <div class="level-strip"><a class="level-pill current" data-lesson="filtering_L1" href="filtering_L1.html">BEGINNER</a><a class="level-pill " data-lesson="filtering_L2" href="filtering_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="filtering_L3" href="filtering_L3.html">ADVANCED</a><a class="level-pill " data-lesson="filtering_L4" href="filtering_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Mental Model — The Filter Funnel</a><a href="#sec-1">02 · List & Range Filters — IN, BETWEEN</a><a href="#sec-2">03 · Pattern Matching — LIKE, ILIKE</a><a href="#sec-3">04 · Conditional Logic — CASE, COALESCE, NULLIF</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — The Filter Funnel</a><a href="#sec-1">02 · List & Range Filters — IN, BETWEEN</a><a href="#sec-2">03 · Pattern Matching — LIKE, ILIKE</a><a href="#sec-3">04 · Conditional Logic — CASE, COALESCE, NULLIF</a><a href="#sec-4">05 · Problem Set — L1 Drills</a><a href="#sec-5">06 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
@@ -215,7 +215,7 @@ SELECT IFNULL(manager_id, <span class="num">0</span>) FROM employees;
     </div>
     <div class="prob-body">
       List all employees in departments 1, 3, or 5.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8vz" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8vz">Use IN (1, 3, 5)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74l1j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74l1j">Use IN (1, 3, 5)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -225,7 +225,7 @@ SELECT IFNULL(manager_id, <span class="num">0</span>) FROM employees;
     </div>
     <div class="prob-body">
       Find employees with salary between 50000 and 75000 inclusive.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8v10" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8v10">WHERE salary BETWEEN 50000 AND 75000</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74l1k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74l1k">WHERE salary BETWEEN 50000 AND 75000</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -235,7 +235,7 @@ SELECT IFNULL(manager_id, <span class="num">0</span>) FROM employees;
     </div>
     <div class="prob-body">
       Find employees whose name starts with 'A'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8v11" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8v11">WHERE name LIKE 'A%'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74l1l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74l1l">WHERE name LIKE 'A%'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -245,7 +245,7 @@ SELECT IFNULL(manager_id, <span class="num">0</span>) FROM employees;
     </div>
     <div class="prob-body">
       List employees who don't have a manager (manager_id IS NULL).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8v12" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8v12">WHERE manager_id IS NULL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74l1m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74l1m">WHERE manager_id IS NULL</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -255,7 +255,7 @@ SELECT IFNULL(manager_id, <span class="num">0</span>) FROM employees;
     </div>
     <div class="prob-body">
       Add column 'dept_name': 1='Eng', 2='Sales', 3='Marketing', else 'Other'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8v13" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8v13">CASE dept_id WHEN 1 THEN 'Engineering' ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74l1n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74l1n">CASE dept_id WHEN 1 THEN 'Engineering' ...</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t1">L1</span>
@@ -265,12 +265,217 @@ SELECT IFNULL(manager_id, <span class="num">0</span>) FROM employees;
     </div>
     <div class="prob-body">
       Return phone column, but show 'N/A' for NULL or empty string.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd8v14" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd8v14">COALESCE(NULLIF(TRIM(phone), ''), 'N/A')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet74l1o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet74l1o">COALESCE(NULLIF(TRIM(phone), ''), 'N/A')</div></div>
+    </div></li></ul>
+  </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Sourced Problem Set</h2></div>
+    <div class="callout blue">20 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50 · PGExercises. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
+<ul class="prob-list"><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 1</a></div>
+        <div class="prob-meta">hackerrank · #010 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR010"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 3</a></div>
+        <div class="prob-meta">hackerrank · #011 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR011"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 4</a></div>
+        <div class="prob-meta">hackerrank · #012 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR012"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 5</a></div>
+        <div class="prob-meta">hackerrank · #013 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR013"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 6</a></div>
+        <div class="prob-meta">hackerrank · #014 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR014"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 7</a></div>
+        <div class="prob-meta">hackerrank · #015 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR015"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 8</a></div>
+        <div class="prob-meta">hackerrank · #016 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR016"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 9</a></div>
+        <div class="prob-meta">hackerrank · #017 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR017"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 10</a></div>
+        <div class="prob-meta">hackerrank · #018 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR018"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 11</a></div>
+        <div class="prob-meta">hackerrank · #019 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR019"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Weather Observation Station 12</a></div>
+        <div class="prob-meta">hackerrank · #020 · hackerrank-sql-58 · distinct + string-pattern + regexp</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR020"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://www.hackerrank.com/domains/sql?filters%5Bsubdomains%5D%5B%5D=select-advanced" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Type of Triangle</a></div>
+        <div class="prob-meta">hackerrank · #021 · hackerrank-sql-58 · case-expression</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-HR021"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/list-the-products-ordered-in-a-period/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">List the Products Ordered in a Period</a></div>
+        <div class="prob-meta">leetcode · #1327 · easy · leetcode-sql-50 · date-range + having</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-LC1327"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/calculate-special-bonus/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Calculate Special Bonus</a></div>
+        <div class="prob-meta">leetcode · #1873 · easy · leetcode-advanced-sql-50 · conditional-agg,case-when,null-guard</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-LC1873"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/find-customer-referee/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Find Customer Referee</a></div>
+        <div class="prob-meta">leetcode · #584 · easy · leetcode-sql-50 · null-trap + three-valued-logic</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-LC584"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/triangle-judgement/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Triangle Judgement</a></div>
+        <div class="prob-meta">leetcode · #610 · easy · leetcode-sql-50 · case-expression</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-LC610"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://leetcode.com/problems/not-boring-movies/" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Not Boring Movies</a></div>
+        <div class="prob-meta">leetcode · #620 · easy · leetcode-sql-50 · modulo-filter + order-by</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-LC620"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://pgexercises.com/questions/basic/where.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Control Which Rows Are Retrieved</a></div>
+        <div class="prob-meta">pgexercises · #where · pgexercises · select-where,row-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-PGwhere"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://pgexercises.com/questions/basic/where2.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Control Which Rows Are Retrieved - Part 2</a></div>
+        <div class="prob-meta">pgexercises · #where2 · pgexercises · select-where,row-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-PGwhere2"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
+    </div></li><li class="problem-item">
+    <div class="problem-head">
+      <span class="diff t1">L1</span>
+      <div><div class="prob-name"><a class="prob-link" href="https://pgexercises.com/questions/basic/where4.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">Matching Against Multiple Possible Values</a></div>
+        <div class="prob-meta">pgexercises · #where4 · pgexercises · in-list,row-filter</div></div>
+      <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="F1-PGwhere4"><span>SOLVED</span></label></div>
+    </div>
+    <div class="prob-body">
+      
+      
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">06 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">07 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
       <ul><li>IN = multiple OR; NOT IN = multiple AND (watch for NULLs in subquery!)</li><li>BETWEEN = inclusive range; works on numbers, dates, strings</li><li>LIKE: % = any chars, _ = one char; leading % kills index</li><li>PostgreSQL: ILIKE for case-insensitive; MySQL: LIKE is case-insensitive by default</li><li>CASE: simple (equality) vs searched (conditions); always include ELSE</li><li>COALESCE = first non-NULL; NULLIF(a,b) = NULL if a=b else a</li></ul></div>
     <h3>Glossary</h3>

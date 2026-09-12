@@ -4,281 +4,196 @@
 <link rel="stylesheet" href="theme.css"></head>
 <body data-level="4" data-lang="sql">
 <div class="hero" data-watermark="SQL">
-  <div class="hero-tag"><span class="badge">MODULE 07</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">streaming aggregates, continuous aggregates, materialized views, parallel aggregation</span></div>
+  <div class="hero-tag"><span class="badge">MODULE 07</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">Storage engine internals — vacuum & bloat, buffer cache, read amplification, and PL/pgSQL at scale</span></div>
   <h1>Performance & Indexing</h1>
-  <div class="promise">Execution plans, partitioning, stored procs, triggers.</div>
+  <div class="promise">Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="performance_L1" href="performance_L1.html">BEGINNER</a><a class="level-pill " data-lesson="performance_L2" href="performance_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="performance_L3" href="performance_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="performance_L4" href="performance_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Parallel Aggregation — Multi-Core GROUP BY</a><a href="#sec-1">02 · Materialized Views & Continuous Aggregates</a><a href="#sec-2">03 · Advanced Patterns — Incremental, Streaming, Parallel</a><a href="#sec-3">04 · EXPLAIN — Incremental Aggregate Upsert</a><a href="#sec-4">05 · Dialect Mastery — Enterprise Aggregation</a><a href="#sec-5">06 · Stored Procedures & Functions — PL/pgSQL at Scale</a><a href="#sec-6">07 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Vacuum & Bloat — MVCC Garbage Collection</a><a href="#sec-1">02 · Buffer Cache & Read Amplification</a><a href="#sec-2">03 · Index-Only Scans & Covering Indexes</a><a href="#sec-3">04 · Fillfactor & Reorganization</a><a href="#sec-4">05 · Stored Procedures & Functions — PL/pgSQL at Scale</a><a href="#sec-5">06 · Dialect Mastery — Vacuum & Storage</a><a href="#sec-6">07 · Problem Set — L4 Drills</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q312" data-answer="1">
-      <div class="quiz-q">Continuous aggregate (TimescaleDB) automatically:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Refreshes on schedule</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Maintains real-time view via background workers</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only works with time-series</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Replaces materialized views</span></div></div>
-      <div class="quiz-explain">Continuous aggregates incrementally maintain pre-computed aggregates as new data arrives.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q313" data-answer="1">
-      <div class="quiz-q">Streaming aggregate in PostgreSQL (pg_streaming):</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Aggregates over infinite stream</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Incremental aggregate on append-only table</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Real-time dashboard only</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Requires TimescaleDB</span></div></div>
-      <div class="quiz-explain">Streaming aggregates maintain running aggregates as rows are inserted, without full recomputation.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q314" data-answer="1">
-      <div class="quiz-q">Parallel aggregate (PostgreSQL) splits:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>GROUP BY keys across workers</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Input scan across workers, each does partial aggregate, then combine</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Aggregate functions across workers</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Output rows across workers</span></div></div>
-      <div class="quiz-explain">Parallel aggregate: each worker scans partition, computes partial aggregate, leader combines.</div>
+    <div class="quiz-card" data-quiz-key="place-q314" data-answer="1">
+      <div class="quiz-q">A workload of frequent UPDATEs shows rising dead tuples. The right operational habit is…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Ignore it</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Let autovacuum work (tune thresholds if volume is high)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Drop the table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Disable the WAL</span></div></div>
+      <div class="quiz-explain">Rows are append-only in MVCC; dead tuples accumulate until autovacuum reclaims them — tune thresholds for heavy-churn tables.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="place-q315" data-answer="1">
-      <div class="quiz-q">Materialized view refresh CONCURRENTLY:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Locks table for duration</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>No exclusive lock; allows reads during refresh</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only works with fast refresh</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Requires primary key</span></div></div>
-      <div class="quiz-explain">CONCURRENTLY builds new version, swaps atomically — zero-downtime refresh.</div>
+      <div class="quiz-q">Index-Only Scan can skip the heap when…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>the index is unique</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>the visibility map marks all pages all-visible and needed columns are in the index</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>the table is empty</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>work_mem is huge</span></div></div>
+      <div class="quiz-explain">Index-Only Scan needs an all-visible heap page plus all queried columns in the index.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q316" data-answer="0">
-      <div class="quiz-q">Incremental aggregate vs full recompute:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same result, incremental faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Incremental may drift over time</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Full recompute always faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Incremental only for COUNT</span></div></div>
-      <div class="quiz-explain">Incremental applies delta (new/changed rows) to existing aggregate. Correct if logic handles updates/deletes.</div>
+    </div><div class="quiz-card" data-quiz-key="place-q316" data-answer="1">
+      <div class="quiz-q"><code>CREATE INDEX … INCLUDE (status)</code> serves which purpose?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Speeds up uniqueness checks</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Adds non-key columns so queries don't hit the heap</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Adds a default value</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Keeps crosstab stable</span></div></div>
+      <div class="quiz-explain">INCLUDE columns are stored payload — they let single-table queries resolve from the index alone.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q317" data-answer="1">
+      <div class="quiz-q"><code>fillfactor = 70</code> on a heap table aims to…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Make scans faster</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Reduce page splits/row movement on UPDATE</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Disable vacuum</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Reserve 30% for TOAST</span></div></div>
+      <div class="quiz-explain">Low fillfactor leaves update room in each page, limiting row relocations to new pages.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q318" data-answer="1">
+      <div class="quiz-q">Measuring bloat directly is done with…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>pg_stat_activity</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>pgstattuple (e.g., pgstattuple_approx)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>EXPLAIN</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>pg_stat_bgwriter</span></div></div>
+      <div class="quiz-explain">pgstattuple reports tuple/page occupancy; use it (or pg_repack's analysis) to quantify bloat before reorganizing.</div>
       <div class="quiz-score"></div>
     </div>
     <div id="placement-result"></div>
   </section>
   
   <section class="section" id="sec-0">
-    <div class="section-header"><span class="section-num">01 //</span><h2>Parallel Aggregation — Multi-Core GROUP BY</h2></div>
-    <div class="mantra">Parallel aggregate = scan partitions in parallel → partial aggregates per worker → combine at leader. Key params: max_parallel_workers_per_gather, min_parallel_table_scan_size, parallel_tuple_cost. Enable for large tables.</div>
-<div><div class="code-label"><span>parallel aggregate config</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Enable parallel query
-SET max_parallel_workers_per_gather = <span class="num">4</span>;
-SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;
-SET parallel_tuple_cost = <span class="num">0.1</span>;
-SET parallel_setup_cost = <span class="num">1000</span>;
+    <div class="section-header"><span class="section-num">01 //</span><h2>Vacuum & Bloat — MVCC Garbage Collection</h2></div>
+    <div class="mantra">Plans are only half the story — storage layout decides the other half. Vacuum health, cache behavior, and index-only scans are where real PostgreSQL tuning lives.</div>
+<h3>MVCC: rows are never edited in place</h3>
+<p>PostgreSQL does not update a heap tuple in place. An UPDATE writes a brand-new row version and leaves the old one available to transactions that might still see it; once no transaction can, the old version is a dead tuple. Dead tuples waste space, slow sequential scans (more pages to visit), and bloat indexes. Autovacuum is the background janitor: it removes dead tuples, advances the visibility map, refreshes statistics, and prevents transaction-id wraparound. It wakes on a schedule (autovacuum_naptime) and triggers per table from dead-tuple counts and scale factors. You tune those knobs for churn — you never switch autovacuum off.</p>
+<div><div class="code-label"><span>seeing vacuum pressure</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Which tables carry the most dead tuples?
+SELECT relname, n_live_tup, n_dead_tup
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC;
 
--- Force parallel <span class="kw">for</span> testing
-SET force_parallel_mode = on;
+-- How often the background janitor wakes up
+SHOW autovacuum_naptime;
 
--- Check <span class="kw">if</span> parallel used
-EXPLAIN ANALYZE SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;
--- Look <span class="kw">for</span>: Parallel Seq Scan, Partial Aggregate, Gather Merge</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Parallel aggregate (PG 10+)</span>
-<span class="cm">-- Partial Aggregate on workers → Gather Merge at leader</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native parallel GROUP BY</span>
-<span class="cm">-- Use partitioning + UNION ALL manually</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+-- One-off: reclaim free space + refresh stats + report
+VACUUM (VERBOSE, ANALYZE) orders;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Per table: ALTER TABLE orders SET (autovacuum_vacuum_scale_factor = 0.05);</span>
+<span class="cm">-- autovacuum_vacuum_threshold is the absolute minimum dead-tuple count</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- InnoDB: no autovacuum concept — purge threads reap old row versions asynchronously</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn"><strong>Don't disable autovacuum.</strong> It is the only thing stopping unconstrained table growth and transaction-id wraparound. For a heavy-churn table, tune it per table — lower <code>autovacuum_vacuum_scale_factor</code> (e.g. 0.05) or raise <code>autovacuum_vacuum_cost_limit</code> so the worker finishes faster — instead of freezing it.</div>
+<div class="quiz-card" data-quiz-key="s0-q319" data-answer="1">
+      <div class="quiz-q">Frequent UPDATEs send n_dead_tup climbing in pg_stat_user_tables. The right habit is…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Ignore it</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Let autovacuum work; tune scale_factor/threshold for heavy churn</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Drop the table</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Disable the WAL</span></div></div>
+      <div class="quiz-explain">MVCC appends new row versions; dead tuples accumulate until autovacuum — or manual VACUUM — reclaims them.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q320" data-answer="0">
+      <div class="quiz-q">The pg_stat_user_tables columns that expose vacuum pressure are…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>n_live_tup and n_dead_tup</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>seq_scan and idx_scan</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>shared_hit_blocks</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>heap_blks_hit only</span></div></div>
+      <div class="quiz-explain">n_live_tup / n_dead_tup are the direct live-vs-dead census that autovacuum uses to decide when to act.</div>
+      <div class="quiz-score"></div>
+    </div>
 
 <div class="code-block">
   <div class="code-label">
-    <span>Parallel Aggregate Plan</span>
+    <span>EXPLAIN ANALYZE UPDATE — a new row version, not an in-place edit (MVCC)</span>
     <span class="badge blue">PostgreSQL</span>
   </div>
   <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
       <div class="plan-node-header">
-        <span class="plan-node-type">Gather Merge</span>
-        <span class="plan-node-meta"> cost=1000..50000 rows=1000000 width=120</span>
+        <span class="plan-node-type">Update</span> on <code>orders</code>
+        <span class="plan-node-meta"> cost=0..860 rows=420 width=56 actual time=0.02..1.36 actual rows=420 loops=1</span>
       </div><div class="plan-node" style="margin-left: 24px;">
       <div class="plan-node-header">
-        <span class="plan-node-type">Parallel Hash Join</span>
-        <span class="plan-node-meta"> cost=5000..40000 rows=250000 width=120</span>
-      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Hash Cond: (a.id = b.id)</div></div></div></div>
+        <span class="plan-node-type">Seq Scan</span> on <code>orders</code>
+        <span class="plan-node-meta"> cost=0..860 rows=420 width=56 actual rows=420 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (status = 'old')</div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s0-q317" data-answer="1">
-      <div class="quiz-q">Partial Aggregate in parallel query means:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Incomplete result</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Each worker computes aggregate on its partition</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Aggregate stopped early</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error state</span></div></div>
-      <div class="quiz-explain">Each worker builds partial aggregate on its data partition; leader combines via Gather Merge.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q318" data-answer="1">
-      <div class="quiz-q">Gather Merge vs Gather:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Gather Merge preserves ORDER BY; Gather does not</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Gather Merge faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Gather for Hash Join only</span></div></div>
-      <div class="quiz-explain">Gather Merge merges sorted worker outputs; Gather just concatenates unordered.</div>
-      <div class="quiz-score"></div>
-    </div>
   </section>
   <section class="section" id="sec-1">
-    <div class="section-header"><span class="section-num">02 //</span><h2>Materialized Views & Continuous Aggregates</h2></div>
-    <h3>Materialized Views — Pre-computed Snapshots</h3>
-<div><div class="code-label"><span>materialized view</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Create materialized view
-CREATE MATERIALIZED VIEW dept_stats AS
-SELECT dept_id,
-  COUNT(*) AS emp_count,
-  AVG(salary) AS avg_salary,
-  SUM(salary) AS total_salary
-FROM employees
-GROUP BY dept_id;
+    <div class="section-header"><span class="section-num">02 //</span><h2>Buffer Cache & Read Amplification</h2></div>
+    <h3>shared_buffers and the cache-hit ratio</h3>
+<p>Every heap page and index page is 8KB of storage. Read amplification is how many pages a query must pull in to answer it: an index lookup walks root → branch → leaf → heap row, and a bad plan turns a handful of reads into millions. The first line of defense is shared_buffers — PostgreSQL's in-memory page cache. A hot table that already sits in shared_buffers costs nothing: a sequential scan of it is memory reads, not disk I/O. The number that matters is the cache hit ratio — pages served from memory over total pages read — not the scan type. Throwing a cold multi-GB scan at the cache evicts hot pages (their pg_buffercache usagecount drops), starving the workload that actually pays the bills.</p>
+<div><div class="code-label"><span>inspecting the buffer pool</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- How big is the buffer pool?
+SHOW shared_buffers;
 
--- Refresh (full rebuild)
-REFRESH MATERIALIZED VIEW dept_stats;
+-- How many pages of the orders heap are resident in memory right now?
+SELECT count(*) AS resident_pages
+FROM pg_buffercache
+WHERE relfilenode = <span class="st">'orders'</span>::regclass;
 
--- Refresh CONCURRENTLY (zero-downtime)
-REFRESH MATERIALIZED VIEW CONCURRENTLY dept_stats;
--- Requires: unique index on materialized view
-CREATE UNIQUE INDEX idx_dept_stats_dept ON dept_stats (dept_id);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- MATERIALIZED VIEW + REFRESH CONCURRENTLY (zero downtime)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native materialized view</span>
-<span class="cm">-- Workaround: table + trigger / scheduled refresh</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<h3>Continuous Aggregates (TimescaleDB)</h3>
-<div><div class="code-label"><span>continuous aggregate</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- TimescaleDB continuous aggregate
-CREATE MATERIALIZED VIEW hourly_events
-WITH (timescaledb.continuous) AS
-SELECT time_bucket(<span class="st">'1 hour'</span>, time) AS bucket,
-  device_id,
-  COUNT(*) AS event_count,
-  AVG(value) AS avg_value
-FROM events
-GROUP BY bucket, device_id;
-
--- Automatic refresh (background)
--- Add refresh policy
-SELECT add_continuous_aggregate_policy(<span class="st">'hourly_events'</span>,
-  start_offset => INTERVAL <span class="st">'3 hours'</span>,
-  end_offset => INTERVAL <span class="st">'1 hour'</span>,
-  schedule_interval => INTERVAL <span class="st">'1 hour'</span>);
-
--- Real-time view (combines materialized + raw)
-SELECT * FROM hourly_events WHERE bucket > now() - INTERVAL <span class="st">'1 day'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- TimescaleDB: continuous aggregates + real-time views</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no native continuous aggregates</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-
-<div class="quiz-card" data-quiz-key="s1-q319" data-answer="1">
-      <div class="quiz-q">REFRESH MATERIALIZED VIEW CONCURRENTLY requires:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Primary key on base table</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Unique index on materialized view</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>No indexes</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>TimescaleDB</span></div></div>
-      <div class="quiz-explain">Unique index on MV enables atomic swap without blocking reads.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q320" data-answer="0">
-      <div class="quiz-q">Continuous aggregate lag (end_offset) means:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>How far behind real-time</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>How often to refresh</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>How much history to keep</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Max query latency</span></div></div>
-      <div class="quiz-explain">end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag).</div>
+-- Which relations dominate the cache, and how hot are they?
+SELECT c.relname,
+       count(*) AS pages,
+       count(*) FILTER (WHERE b.isdirty) AS dirty,
+       max(b.usagecount) AS hottest_usage
+FROM pg_buffercache b
+JOIN pg_class c ON c.relfilenode = b.relfilenode
+GROUP BY <span class="num">1</span>
+ORDER BY pages DESC
+LIMIT <span class="num">10</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Requires: CREATE EXTENSION pg_buffercache;</span>
+<span class="cm">-- usagecount 1..5; 5 = recently touched heavily</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- InnoDB buffer pool: innodb_buffer_pool_size</span>
+<span class="cm">-- SHOW ENGINE INNODB STATUS reports pool hit-rate</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s1-q321" data-answer="1">
+      <div class="quiz-q">Why can a sequential scan of a small hot table be perfectly healthy?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Seq scans are always fastest</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Its pages already live in shared_buffers — the cache hit ratio, not the scan type, is the metric</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>It has no indexes</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Seq scan bypasses the cache</span></div></div>
+      <div class="quiz-explain">If every page read is a shared_buffers hit, the scan is RAM-speed regardless of the plan node.</div>
       <div class="quiz-score"></div>
     </div>
   </section>
   <section class="section" id="sec-2">
-    <div class="section-header"><span class="section-num">03 //</span><h2>Advanced Patterns — Incremental, Streaming, Parallel</h2></div>
-    <h3>Incremental Aggregate Maintenance</h3>
-<div><div class="code-label"><span>incremental aggregate pattern</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Table <span class="kw">for</span> incremental aggregates
-CREATE TABLE daily_sales_agg (
-  sale_date DATE PRIMARY KEY,
-  total_sales NUMERIC,
-  order_count BIGINT
-);
+    <div class="section-header"><span class="section-num">03 //</span><h2>Index-Only Scans & Covering Indexes</h2></div>
+    <h3>Index Only Scan — the visibility map decides</h3>
+<p>A plain btree index returns row pointers; fetching the actual row from the heap is the expensive tail. An Index Only Scan reverses that: if every column the query needs is IN the index (key columns + INCLUDE payload) AND the heap page is all-visible, PostgreSQL returns the index entry directly — Heap Fetches: 0. 'All-visible' is a per-page fact recorded in the visibility map, and only VACUUM/autovacuum marks pages all-visible. On pages still being touched — or not yet vacuumed — the planner must fetch the heap tuple to double-check visibility; EXPLAIN then shows Heap Fetches > 0 and the covering advantage quietly evaporates.</p>
+<div><div class="code-label"><span>covering index</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Key columns drive the scan; amount rides along as payload
+CREATE INDEX idx_orders_status_ts
+  ON orders (status, created_at) INCLUDE (amount);
 
--- Incremental refresh (daily)
-INSERT INTO daily_sales_agg (sale_date, total_sales, order_count)
-SELECT sale_date, SUM(amount), COUNT(*)
+-- All needed columns are in the index → eligible <span class="kw">for</span> Index Only Scan
+EXPLAIN SELECT amount
 FROM orders
-WHERE sale_date = CURRENT_DATE - <span class="num">1</span>
-GROUP BY sale_date
-ON CONFLICT (sale_date) DO UPDATE SET
-  total_sales = EXCLUDED.total_sales,
-  order_count = EXCLUDED.order_count;
-
--- Handle updates/deletes (complex)
--- Use CDC (Change Data Capture) or triggers <span class="kw">for</span> <span class="kw">true</span> incremental</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- UPSERT pattern for incremental aggregates</span>
-<span class="cm">-- For true CDC: pgoutput + logical replication</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- ON DUPLICATE KEY UPDATE</span>
-INSERT INTO daily_sales_agg ... ON DUPLICATE KEY UPDATE total_sales = VALUES(total_sales);</code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<h3>Streaming Aggregation (pg_streaming / PipelineDB)</h3>
-<div><div class="code-label"><span>streaming aggregate concept</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Concept: aggregate as data flows in
--- PipelineDB (PostgreSQL extension) / pg_streaming
-
--- Continuous view
-CREATE CONTINUOUS VIEW page_views_1min AS
-SELECT site_id, COUNT(*) AS views
-FROM page_views
-GROUP BY site_id, time_bucket(<span class="st">'1 minute'</span>, ts);
-
--- Query continuous view (always up-to-date)
-SELECT * FROM page_views_1min WHERE site_id = <span class="num">123</span>;
-
--- Combines: materialized (historical) + streaming (recent)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PipelineDB / pg_streaming for streaming SQL</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- No native streaming SQL</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="callout blue">Real-world: TimescaleDB continuous aggregates = 99% of streaming use cases. PipelineDB deprecated. For custom: Kafka + Flink/Spark Streaming + sink to DB.</div>
-<div class="quiz-card" data-quiz-key="s2-q321" data-answer="2">
-      <div class="quiz-q">REFRESH MATERIALIZED VIEW CONCURRENTLY blocks:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Writes to base tables</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Reads from materialized view</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Nothing (except brief schema lock)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>All queries</span></div></div>
-      <div class="quiz-explain">CONCURRENTLY builds new version, swaps with brief AccessExclusive lock — reads never blocked.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s2-q322" data-answer="1">
-      <div class="quiz-q">Incremental aggregate challenge:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Inserts only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Handling UPDATE/DELETE in base data</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Memory usage</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Index maintenance</span></div></div>
-      <div class="quiz-explain">Updates/deletes in source require reverse aggregation (subtract old, add new). Hard without CDC.</div>
+WHERE status = <span class="st">'paid' AND created_at > now() - interval '7 days'</span>;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- EXPLAIN ANALYZE: 'Heap Fetches: 0' = visibility map cooperated</span>
+<span class="cm">-- Heap Fetches > 0 = pages not all-visible; vacuum refreshes the map</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0: no INCLUDE — covering index = all columns in the key</span>
+<span class="cm">-- EXPLAIN shows 'Using index' when fully covered</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="quiz-card" data-quiz-key="s2-q322" data-answer="1">
+      <div class="quiz-q">EXPLAIN ANALYZE shows Index Only Scan ... Heap Fetches: 3200. Why are there heap fetches?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>The index is corrupted</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Some heap pages are not all-visible, so rows must be checked against the heap</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>work_mem is too small</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>The index has no INCLUDE columns</span></div></div>
+      <div class="quiz-explain">Heap Fetches > 0 means the visibility map doesn't cover those pages yet; autovacuum refreshes it and fetches trend toward 0.</div>
       <div class="quiz-score"></div>
     </div>
-  </section>
-  <section class="section" id="sec-3">
-    <div class="section-header"><span class="section-num">04 //</span><h2>EXPLAIN — Incremental Aggregate Upsert</h2></div>
-    
+
 <div class="code-block">
   <div class="code-label">
-    <span>EXPLAIN — Incremental Aggregate Upsert</span>
+    <span>Index Only Scan using idx_orders_status_ts — visibility map clean → Heap Fetches: 0</span>
     <span class="badge blue">PostgreSQL</span>
   </div>
   <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
       <div class="plan-node-header">
-        <span class="plan-node-type">Insert</span>
-        <span class="plan-node-meta"> cost=0..100 rows=1 width=48</span>
-      </div><div class="plan-node" style="margin-left: 24px;">
+        <span class="plan-node-type">Index Only Scan</span> on <code>orders</code>
+        <span class="plan-node-meta"> cost=0.29..12.4 rows=40 width=12 actual time=0.02..0.05 actual rows=40 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (status = 'paid') AND (created_at > (now() - interval '7 days'))</div></div></div>
+</div>
+
+<div class="code-block">
+  <div class="code-label">
+    <span>Index Only Scan using idx_orders_status_ts — stale visibility map → Heap Fetches > 0 (vacuum to fix)</span>
+    <span class="badge blue">PostgreSQL</span>
+  </div>
+  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
       <div class="plan-node-header">
-        <span class="plan-node-type">Subquery Scan</span>
-        <span class="plan-node-meta"> cost=0..50 rows=1 width=48</span>
-      </div><div class="plan-node" style="margin-left: 48px;">
-      <div class="plan-node-header">
-        <span class="plan-node-type">Aggregate</span>
-        <span class="plan-node-meta"> cost=0..50 rows=1 width=48</span>
-      </div><div class="plan-node" style="margin-left: 72px;">
-      <div class="plan-node-header">
-        <span class="plan-node-type">Seq Scan</span> on <code>orders</code>
-        <span class="plan-node-meta"> cost=0..40 rows=1000 width=24</span>
-      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Filter: (sale_date = (CURRENT_DATE - 1))</div></div></div></div></div></div>
+        <span class="plan-node-type">Index Only Scan</span> on <code>orders</code>
+        <span class="plan-node-meta"> cost=0.29..34.1 rows=40 width=12 actual time=0.03..0.31 actual rows=40 loops=1</span>
+      </div><div class="plan-node-filters" style="font-size:12px;color:var(--text-dim);margin:4px 0;">Index Cond: (status = 'paid') AND (created_at > (now() - interval '7 days'))</div></div></div>
 </div>
   </section>
-  <section class="section" id="sec-4">
-    <div class="section-header"><span class="section-num">05 //</span><h2>Dialect Mastery — Enterprise Aggregation</h2></div>
-    <div class="dialect-diff"><div class="dialect-diff-grid">
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">ANSI SQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">CREATE MATERIALIZED VIEW mv AS SELECT ...; REFRESH MATERIALIZED VIEW CONCURRENTLY mv;</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">PostgreSQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">CREATE MATERIALIZED VIEW mv AS ...;
-REFRESH MATERIALIZED VIEW CONCURRENTLY mv; -- requires unique index</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">MySQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">-- No MV. Use table + scheduled event:
-CREATE EVENT refresh_mv ON SCHEDULE EVERY 1 HOUR DO
-  REPLACE INTO mv SELECT ...;</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">Python (pandas)</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-python"># APScheduler / cron job to refresh pandas aggregation</code></pre>
-      </div></div></div>
-<div class="dialect-diff"><div class="dialect-diff-grid">
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">ANSI SQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">PostgreSQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id;</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">MySQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT dept_id, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) FROM emp GROUP BY dept_id; -- 8.0+</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">Python (pandas)</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-python">df.groupby('dept_id')['salary'].quantile(0.5)</code></pre>
-      </div></div></div>
+  <section class="section" id="sec-3">
+    <div class="section-header"><span class="section-num">04 //</span><h2>Fillfactor & Reorganization</h2></div>
+    <h3>fillfactor — page headroom is a policy decision</h3>
+<p>The default heap fillfactor is 100: every new page is packed full. That is fine for append-only loads but painful for UPDATE-heavy tables — an updated row that no longer fits its page is relocated, splitting pages and damaging locality. fillfactor = 70 reserves 30% of each page so short updates stay in place. It is a trade: more pages per table and slightly longer scans, in exchange for far less physical churn. The setting only affects new pages — existing pages keep their old packing until a rewrite. Index pages already default to fillfactor 90 for the same reason: room to insert without splitting.</p>
+<div><div class="code-label"><span>fillfactor & bloat measurement</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Create-time: leave headroom up front
+CREATE TABLE logs (
+  log_id   BIGSERIAL,
+  ts       TIMESTAMPTZ NOT NULL,
+  payload  TEXT
+) WITH (fillfactor = <span class="num">70</span>);
+
+-- Existing table: applies to pages created from now on
+ALTER TABLE orders SET (fillfactor = <span class="num">70</span>);
+
+-- Measure before you rewrite: how much of the table is empty?
+CREATE EXTENSION IF NOT EXISTS pgstattuple;
+SELECT free_percent FROM pgstattuple_approx(<span class="st">'orders'</span>);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- pgstattuple_approx is the fast sampled variant of pgstattuple</span>
+<span class="cm">-- Rewrite needed to re-pack pages written before the fillfactor change</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- InnoDB has no per-table fillfactor; OPTIMIZE TABLE rebuilds to reclaim space</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout blue"><strong>Reorganize when bloat is real.</strong> free_percent much above ~30% means the table is mostly holes. Options: <code>VACUUM FULL</code> rewrites and compacts but takes an AccessExclusive lock (writes block); <code>pg_repack</code> rewrites online behind a shadow table; CTAS into a fresh table and swap achieves the same offline. Plain <code>VACUUM</code> frees space for reuse but does not shrink the file.</div>
+<div class="quiz-card" data-quiz-key="s3-q323" data-answer="1">
+      <div class="quiz-q">What does fillfactor = 70 buy an UPDATE-heavy table?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Faster sequential scans</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Room in each page so short updates stay in-page (HOT) instead of relocating</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Autovacuum exemption</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>30% of pages reserved for TOAST</span></div></div>
+      <div class="quiz-explain">Lower fillfactor keeps updated rows in their original page — fewer relocations, splits, and index churn.</div>
+      <div class="quiz-score"></div>
+    </div>
   </section>
-  <section class="section" id="sec-5">
-    <div class="section-header"><span class="section-num">06 //</span><h2>Stored Procedures & Functions — PL/pgSQL at Scale</h2></div>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Stored Procedures & Functions — PL/pgSQL at Scale</h2></div>
     <h3>Function vs Procedure — and SETOF returns</h3>
 <div><div class="code-label"><span>function & procedure</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- FUNCTION returns a value / table; used inside SQL
 CREATE FUNCTION dept_stats(dept_id <span class="kw">int</span>)
@@ -356,79 +271,141 @@ SECURITY DEFINER SET search_path = <span class="kw">public</span> AS $$
 $$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- SECURITY DEFINER runs with owner rights;</span>
 <span class="cm">-- ALWAYS pin search_path to avoid hijack</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: cursors via DECLARE cur CURSOR FOR ...;</span>
 <span class="cm">-- SECURITY v/SQL SECURITY DEFINER on CREATE FUNCTION</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="quiz-card" data-quiz-key="s5-q323" data-answer="1">
+<div class="quiz-card" data-quiz-key="s4-q324" data-answer="1">
       <div class="quiz-q">A PROCEDURE differs from a FUNCTION in pg because it:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Returns tables</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Can run transaction control (COMMIT/ROLLBACK)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Cannot take parameters</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Is always SECURITY DEFINER</span></div></div>
       <div class="quiz-explain">Top-level transaction control (COMMIT) is only allowed in PROCEDURE bodies, never inside a FUNCTION called from a query.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s5-q324" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s4-q325" data-answer="1">
       <div class="quiz-q">Prepared/plan-cached generic plans are dangerous when:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Input values are uniform</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Inputs are heavily skewed and the plan is one-size-fits-all</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>The table is small</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Indexes are missing</span></div></div>
       <div class="quiz-explain">A single cached plan optimized for an average value mis-executes on outliers — consider custom plans for skewed keys.</div>
       <div class="quiz-score"></div>
     </div>
   </section>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Dialect Mastery — Vacuum & Storage</h2></div>
+    <h3>Same job, different vocabulary</h3>
+<p>PostgreSQL, MySQL 8.0 InnoDB, and SQL Server all reclaim dead storage eventually — the verbs differ. PostgreSQL: autovacuum on a tunable schedule plus explicit VACUUM, visibility maps, per-table tuning, pgstat views. MySQL: record-level purge runs inside InnoDB (purge threads), and you compact explicitly — OPTIMIZE TABLE rebuilds the table, information_schema.tables.data_free reports reclaimable bytes. SQL Server exposes a fill-factor knob (FILLFACTOR) as an index option to keep page headroom — the same idea as a low heap fillfactor. The vocabulary differs; the goal — compact storage so reads stay cheap — is shared.</p>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- Storage hygiene: reclaim dead versions of rows
+VACUUM ANALYZE orders;</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">VACUUM (VERBOSE, ANALYZE) orders;
+-- autovacuum does this on a tunable schedule;
+-- pg_stat_user_tables.n_dead_tup + pgstattuple quantify the problem</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- No autovacuum concept: InnoDB purge threads reap old versions automatically.
+ANALYZE TABLE orders;
+OPTIMIZE TABLE orders;  -- rebuild, free space (see information_schema.tables.data_free)</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python"># Filter out deleted rows: df = df[df['deleted'].isna()]</code></pre>
+      </div></div></div>
+<div class="dialect-diff"><div class="dialect-diff-grid">
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">ANSI SQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- SQL Server: same knob, index option
+CREATE INDEX i ON t (c) WITH (FILLFACTOR = 70);</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">PostgreSQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">CREATE TABLE t (...) WITH (fillfactor = 70);
+CREATE INDEX i ON t (c) WITH (fillfactor = 90); -- btree default is 90</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">MySQL</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-sql">-- InnoDB: no per-table fillfactor; OPTIMIZE TABLE repacks pages</code></pre>
+      </div>
+      <div class="dialect-panel">
+        <div class="dialect-panel-header">
+          <span class="badge">Python (pandas)</span>
+        </div>
+        <pre class="has-py-alt"><code class="language-python"># pandas: rebuild the frame to re-compact</code></pre>
+      </div></div></div>
+  </section>
   <section class="section" id="sec-6">
     <div class="section-header"><span class="section-num">07 //</span><h2>Problem Set — L4 Drills</h2></div>
     <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Parallel Aggregate Tuning</div>
-        <div class="prob-meta">drill · parallel-aggregate</div></div>
+      <div><div class="prob-name">Autovacuum Tuning Proposal</div>
+        <div class="prob-meta">drill · autovacuum + vacuum-tuning</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P401"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9u5k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9u5k">max_parallel_workers_per_gather</div><button class="reveal-btn" data-target="umtxzqd9u5m" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9u5m">work_mem</div><button class="reveal-btn" data-target="umtxzqd9u5o" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqd9u5o">min_parallel_table_scan_size</div></div>
+      A table of ~2M rows churns 20% of its live tuples every day; pg_stat_user_tables shows n_dead_tup climbing toward 400k between autovacuum runs. Propose per-table autovacuum settings (scale_factor / threshold), justify them with the pg_stat numbers, and say what else you would verify before touching the query.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76e6i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76e6i">Lower autovacuum_vacuum_scale_factor (e.g. 0.05) so a smaller dead-tuple fraction triggers a sweep</div><button class="reveal-btn" data-target="umtyet76e6k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76e6k">autovacuum_vacuum_threshold is the absolute minimum dead-tuple count before autovacuum acts</div><button class="reveal-btn" data-target="umtyet76e6m" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76e6m">autovacuum_vacuum_cost_limit / autovacuum_naptime control how aggressively the background worker runs</div><button class="reveal-btn" data-target="umtyet76e6o" data-show="Hint 4" data-hide="Hide hint 4">Hint 4</button><div class="reveal-target" id="umtyet76e6o">Per table: ALTER TABLE ... SET (autovacuum_vacuum_scale_factor = 0.05)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Materialized View with Concurrent Refresh</div>
-        <div class="prob-meta">drill · materialized-view</div></div>
+      <div><div class="prob-name">Measure Table Bloat</div>
+        <div class="prob-meta">drill · bloat + pgstattuple</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P402"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Create MV for daily sales by region with zero-downtime refresh.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9u5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9u5p">CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)</div></div>
+      orders has grown to roughly 3x its logical size. Write the pgstattuple_approx invocation to measure free_percent, interpret the value, and choose between plain VACUUM, VACUUM FULL, and pg_repack — explaining the lock trade-off of each.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76e6p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76e6p">CREATE EXTENSION IF NOT EXISTS pgstattuple; SELECT free_percent FROM pgstattuple_approx('orders');</div><button class="reveal-btn" data-target="umtyet76e6r" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76e6r">free_percent well above ~30% justifies a rewrite (VACUUM FULL / pg_repack / CTAS)</div><button class="reveal-btn" data-target="umtyet76e6t" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76e6t">VACUUM FULL rewrites and compacts but takes an AccessExclusive lock; pg_repack rewrites online</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Continuous Aggregate for Real-Time Dashboard</div>
-        <div class="prob-meta">drill · continuous-aggregate</div></div>
+      <div><div class="prob-name">Covering Index to Kill Heap Fetches</div>
+        <div class="prob-meta">drill · covering-index + index-only-scan</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P403"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9u5q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9u5q">time_bucket('5 min', ts)</div><button class="reveal-btn" data-target="umtxzqd9u5s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9u5s">add_continuous_aggregate_policy</div></div>
+      A hot dashboard runs SELECT amount FROM orders WHERE status = 'paid' AND created_at > now() - interval '7 days' thousands of times a minute; EXPLAIN ANALYZE reports Index Only Scan ... Heap Fetches: 3800. Design the covering index, explain why Heap Fetches should approach 0, and when the visibility map still matters.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76e6u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76e6u">CREATE INDEX idx_orders_status_ts ON orders (status, created_at) INCLUDE (amount);</div><button class="reveal-btn" data-target="umtyet76e6w" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76e6w">Index Only Scan still needs pages all-visible — VACUUM/autovacuum maintain the visibility map</div><button class="reveal-btn" data-target="umtyet76e6y" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76e6y">Heap Fetches > 0 signals not-all-visible pages, not a wrong index</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Incremental Aggregate with CDC</div>
-        <div class="prob-meta">drill · incremental-aggregate + cdc</div></div>
+      <div><div class="prob-name">Buffer Cache Arithmetic</div>
+        <div class="prob-meta">drill · buffer-cache + cache-hit-ratio</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P404"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Design incremental daily sales agg using pgoutput logical replication for CDC.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9u5t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9u5t">CREATE PUBLICATION</div><button class="reveal-btn" data-target="umtxzqd9u5v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtxzqd9u5v">pgoutput plugin</div><button class="reveal-btn" data-target="umtxzqd9u5x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtxzqd9u5x">apply delta to agg table</div></div>
+      shared_buffers = 8GB. The hot working set is 12GB (orders + recent activity) plus hundreds of GB of cold history. Reason about the cache-hit ratio: what would you cache first, and what happens to pg_buffercache.usagecount when a periodic full scan of the cold history table runs?
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76e6z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76e6z">CacheHitRatio = pages served from memory over total pages read — hits are RAM-speed, misses are disk I/O</div><button class="reveal-btn" data-target="umtyet76e71" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76e71">A small hot table: thousands of resident pages in shared_buffers means every read is a hit</div><button class="reveal-btn" data-target="umtyet76e73" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76e73">A periodic cold scan evicts hot pages (usagecount drops toward 1); batch it or shrink its footprint</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Right-Deep Tree for Parallel Hash Aggregate</div>
-        <div class="prob-meta">drill · join-tree + parallel-aggregate</div></div>
+      <div><div class="prob-name">Stored-Procedure Cost Audit</div>
+        <div class="prob-meta">drill · pl-pgsql + plan-caching</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="P405"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Explain when right-deep join tree enables better parallel aggregate distribution.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtxzqd9u5y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtxzqd9u5y">Build side on right (smaller), probe on left</div></div>
+      Audit a PL/pgSQL function for planner-friendliness. Findings to confirm: (1) no volatility marker — it should be STABLE; (2) it calls a user-defined function declared VOLATILE inside WHERE, defeating index use; (3) it is invoked through a cached generic plan with skewed inputs. Explain each cost to the planner and the fixes.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76e74" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76e74">Mark functions STABLE/IMMUTABLE where accurate so the planner can constant-fold and reuse the plan</div><button class="reveal-btn" data-target="umtyet76e76" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76e76">VOLATILE functions in WHERE force per-row evaluation — the planner cannot simplify or index-probe the predicate</div><button class="reveal-btn" data-target="umtyet76e78" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76e78">Skewed inputs + a one-size-fits-all cached plan → wrong estimates; check plan_cache_mode or re-prepare</div></div>
     </div></li></ul>
   </section>
   
   <section class="section" id="revision">
     <div class="section-header"><span class="section-num">08 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
-      <ul><li>Parallel aggregate: workers do Partial Aggregate → Gather Merge combines</li><li>Materialized view + CONCURRENTLY = zero-downtime refresh (needs unique index)</li><li>Continuous aggregates (TimescaleDB): incremental, automatic, near real-time</li><li>Incremental aggregates: apply delta (INSERT/UPDATE/DELETE) to existing aggregate</li><li>Streaming aggregates: continuous view = materialized + raw tail; PipelineDB/pg_streaming</li><li>REFRESH CONCURRENTLY = brief lock swap; requires unique index on MV</li></ul></div>
+      <ul><li>Dead tuples: MVCC appends new row versions on UPDATE; autovacuum reclaims them — tune scale_factor/threshold for churn, never disable it</li><li>Index-Only Scan triad: covering columns in the index + visibility map marks the page all-visible → Heap Fetches: 0</li><li>fillfactor: leave page headroom (e.g. 70) so short UPDATEs stay in-page (HOT); setting affects only new pages</li><li>Bloat path: pgstattuple_approx → free_percent; rewrite via VACUUM FULL (lock) or pg_repack (online)</li><li>Cache: CacheHitRatio + pg_buffercache.usagecount; a hot small table against shared_buffers reads from memory, not disk</li><li>PL/pgSQL: STABLE/IMMUTABLE markers; volatile calls in WHERE defeat the planner; cached generic plans go stale on skewed input</li></ul></div>
     <h3>Glossary</h3>
-    <table class="generic"><tbody><tr><td style="width:220px;"><code>partial aggregate</code></td><td>Per-worker aggregate on data partition; combined at leader via Gather Merge.</td></tr><tr><td style="width:220px;"><code>continuous aggregate</code></td><td>TimescaleDB: automatically maintained materialized view with incremental refresh.</td></tr><tr><td style="width:220px;"><code>materialized view</code></td><td>Pre-computed query result stored as table; refreshed manually or scheduled.</td></tr><tr><td style="width:220px;"><code>incremental aggregate</code></td><td>Aggregate updated by applying delta (new/changed rows) instead of full recompute.</td></tr><tr><td style="width:220px;"><code>continuous aggregate</code></td><td>TimescaleDB feature: auto-refreshed MV with configurable lag and refresh policy.</td></tr><tr><td style="width:220px;"><code>CDC (Change Data Capture)</code></td><td>Capture INSERT/UPDATE/DELETE from WAL for real-time incremental processing.</td></tr></tbody></table>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>MVCC</code></td><td>Multi-version concurrency control: writers append new row versions instead of overwriting, so readers never block writers.</td></tr><tr><td style="width:220px;"><code>dead tuple</code></td><td>Old row version no longer visible to any transaction; reclaimed by VACUUM/autovacuum.</td></tr><tr><td style="width:220px;"><code>bloat</code></td><td>Dead space in table or index pages from row churn that has not been reclaimed or repacked.</td></tr><tr><td style="width:220px;"><code>visibility map</code></td><td>Per-heap-page bits marking pages where every row version is visible to everyone — enables index-only scans and cheap VACUUM.</td></tr><tr><td style="width:220px;"><code>index-only scan</code></td><td>Answering a query from index entries alone; requires all needed columns in the index and all-visible heap pages (Heap Fetches: 0).</td></tr><tr><td style="width:220px;"><code>covering index</code></td><td>Index whose key + INCLUDE payload holds every column a query needs, removing heap fetches.</td></tr><tr><td style="width:220px;"><code>fillfactor</code></td><td>Per-table (and per-index) page fill policy; leaving headroom keeps UPDATEs in-page and reduces relocation.</td></tr><tr><td style="width:220px;"><code>cache-hit ratio</code></td><td>Fraction of page reads served from memory; the leading indicator for whether tuning should focus on caching or on reducing reads.</td></tr></tbody></table>
   </section>
   <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
     <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: next MODULE</p></div>
