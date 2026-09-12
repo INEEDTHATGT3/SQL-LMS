@@ -305,7 +305,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj13y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj13y">msfunc adds, minvfunc removes, state = running sum + count</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9ge4i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9ge4i">msfunc adds, minvfunc removes, state = running sum + count</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -315,7 +315,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj13z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj13z">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9ge4j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9ge4j">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -325,7 +325,7 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj140" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj140">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9ge4k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9ge4k">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -335,17 +335,17 @@ SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary
     </div>
     <div class="prob-body">
       Window function uses ORDER BY salary + bonus. Create expression index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj141" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj141">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9ge4l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9ge4l">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Window Function Pushdown (PG 17+)</div>
+      <div><div class="prob-name">Window Function Input Pruning</div>
         <div class="prob-meta">drill · optimization</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="W405"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Explain how PostgreSQL 17+ pushes predicates below window functions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj142" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj142">Predicate pushdown through WindowAgg when safe</div></div>
+      PostgreSQL pushes WHERE conditions into the scan feeding a WindowAgg, but never through the window itself. Explain where pruning happens and how to filter a window's own output.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9ge4m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9ge4m">Predicates push below WindowAgg into the input scan/sort; filtering window OUTPUT needs a CTE/subquery (or QUALIFY on MySQL/Snowflake) — WindowAgg is not transparent to pushes</div></div>
     </div></li></ul>
   </section>
   

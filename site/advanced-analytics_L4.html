@@ -4,58 +4,99 @@
 <link rel="stylesheet" href="theme.css"></head>
 <body data-level="4" data-lang="sql">
 <div class="hero" data-watermark="SQL">
-  <div class="hero-tag"><span class="badge">MODULE 08</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">custom aggregates, hypothetical sets, window function internals, extensibility</span></div>
+  <div class="hero-tag"><span class="badge">MODULE 08</span><span class="badge blue">L4 · EXPERT</span><span class="badge green">Dynamic pivot, custom aggregation machines, hypothetical sets, and trigger-guarded data</span></div>
   <h1>Advanced Analytics</h1>
   <div class="promise">Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet.</div>
   <div class="level-strip"><a class="level-pill " data-lesson="advanced-analytics_L1" href="advanced-analytics_L1.html">BEGINNER</a><a class="level-pill " data-lesson="advanced-analytics_L2" href="advanced-analytics_L2.html">INTERVIEW READY</a><a class="level-pill " data-lesson="advanced-analytics_L3" href="advanced-analytics_L3.html">ADVANCED</a><a class="level-pill current" data-lesson="advanced-analytics_L4" href="advanced-analytics_L4.html">EXPERT</a></div>
 </div>
-<nav class="toc"><a href="#sec-0">01 · Custom Window Aggregates (PostgreSQL 14+)</a><a href="#sec-1">02 · Hypothetical Set Functions</a><a href="#sec-2">03 · IGNORE NULLS & Advanced NULL Handling</a><a href="#sec-3">04 · Window Function Internals — WindowAgg, Sort, Spilling</a><a href="#sec-4">05 · Dialect Mastery — Window Function Gaps</a><a href="#sec-5">06 · Triggers & Transaction Control — Audit, Constraints, Cascades</a><a href="#sec-6">07 · Problem Set — L4 Drills</a><a href="#sec-7">08 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
+<nav class="toc"><a href="#sec-0">01 · Mental Model — Machines and Guardrails</a><a href="#sec-1">02 · Dynamic Pivot & Multi-Level Crosstab</a><a href="#sec-2">03 · Custom Aggregates — CREATE AGGREGATE … WINDOW (PG 14+)</a><a href="#sec-3">04 · Hypothetical Sets & IGNORE NULLS</a><a href="#sec-4">05 · Triggers & Transaction Control — Audit, Constraints, Cascades</a><a href="#sec-5">06 · Problem Set — L4 Drills</a><a href="#sec-6">07 · Sourced Problem Set</a><a href="#revision">REV CARD</a></nav>
 <div class="progress-wrap"><div class="progress-bar"></div></div>
 <div class="container">
   
   <section class="section" id="placement">
     <div class="section-header"><span class="section-num">00 //</span><h2>Which layer am I? (placement check)</h2></div>
     <p>Honest answers only. This decides whether <em>this</em> file is your entry point.</p>
-    <div class="quiz-card" data-quiz-key="place-q358" data-answer="1">
-      <div class="quiz-q">Custom window aggregate in PostgreSQL:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Not possible</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>CREATE AGGREGATE ... WINDOW</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only via C extension</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only via PL/pgSQL</span></div></div>
-      <div class="quiz-explain">CREATE AGGREGATE ... WINDOW (PostgreSQL 14+) defines custom window aggregate with moving window support.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q359" data-answer="0">
-      <div class="quiz-q">Hypothetical set functions (RANK, DENSE_RANK with hypothetical value):</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Standard SQL feature</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>PostgreSQL extension only</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Not implemented anywhere</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Only in Oracle</span></div></div>
-      <div class="quiz-explain">Standard SQL: RANK(x) WITHIN GROUP (ORDER BY col) — rank of hypothetical value x in existing data.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q360" data-answer="1">
-      <div class="quiz-q">Window function internal execution in PostgreSQL:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Separate executor node per function</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Single WindowAgg node, multiple passes for same partition/order</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Separate process per window</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Compiled to bytecode</span></div></div>
-      <div class="quiz-explain">WindowAgg node processes partition. Multiple functions with same PARTITION+ORDER share sort, multiple passes.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="place-q361" data-answer="1">
-      <div class="quiz-q">IGNORE NULLS in window functions:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>PostgreSQL only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Standard SQL (Oracle, PostgreSQL 15+, others)</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>MySQL only</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not implemented</span></div></div>
-      <div class="quiz-explain">IGNORE NULLS / RESPECT NULLS for LAG/LEAD/FIRST_VALUE/LAST_VALUE. Standard SQL, PG 15+.</div>
+    <div class="quiz-card" data-quiz-key="place-q361" data-answer="1">
+      <div class="quiz-q">A dynamic crosstab must enumerate column names at runtime. The safe pattern uses…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>string concatenation unguarded</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>EXECUTE format() with %I identifiers</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>a fixed 12-column report</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>CTEs only</span></div></div>
+      <div class="quiz-explain">Build the pivot's column list from DISTINCT values and exec with format('%I') so identifiers are quoted-safe.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="place-q362" data-answer="1">
-      <div class="quiz-q">Window function on expression vs column:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Same performance</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Expression may prevent index use</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Expression faster</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Expression not allowed</span></div></div>
-      <div class="quiz-explain">Expression in ORDER BY (e.g., salary + bonus) prevents index use. Consider computed column or expression index.</div>
+      <div class="quiz-q">On a moving-aggregate window function, which pair makes removals possible?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>SFUNC / STYPE</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>MSFUNC / MINVFUNC</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>FINALFUNC / COMBINEFUNC</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>none of these</span></div></div>
+      <div class="quiz-explain">Inverse transition functions (MINVFUNC) let the aggregate subtract a value leaving the window — required for moving windows.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q363" data-answer="1">
+      <div class="quiz-q"><code>RANK(60000) WITHIN GROUP (ORDER BY salary DESC)</code> returns…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>The salary of rank 60000</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Where a salary of 60000 ranks among salaries as if inserted</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A percentile</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>The 60000th row</span></div></div>
+      <div class="quiz-explain">WITHIN GROUP ordered-set aggregates compute the rank/position the argument would take inside the group.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q364" data-answer="1">
+      <div class="quiz-q">A BEFORE trigger fires…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>After the row is committed</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Before the row's insert/update/delete on that relation</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only on SELECT</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Once per statement always</span></div></div>
+      <div class="quiz-explain">BEFORE runs before the operation on the target table; AFTER runs after it, with per-row or per-statement granularity.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="place-q365" data-answer="1">
+      <div class="quiz-q">For a view you want updatable through a trigger. Which kind applies?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>BEFORE INSERT AFTER SELECT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>INSTEAD OF</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>CONSTRAINT</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>ENABLE ALWAYS</span></div></div>
+      <div class="quiz-explain">INSTEAD OF triggers on views intercept the write and run your procedure instead.</div>
       <div class="quiz-score"></div>
     </div>
     <div id="placement-result"></div>
   </section>
   
   <section class="section" id="sec-0">
-    <div class="section-header"><span class="section-num">01 //</span><h2>Custom Window Aggregates (PostgreSQL 14+)</h2></div>
-    <div class="mantra">CREATE AGGREGATE ... WINDOW enables custom window aggregates with moving window support. Define state transition, final function, and optional moving window functions (msfunc, minvfunc) for O(1) sliding.</div>
-<div><div class="code-label"><span>custom window aggregate</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Custom moving average aggregate
+    <div class="section-header"><span class="section-num">01 //</span><h2>Mental Model — Machines and Guardrails</h2></div>
+    <div class="mantra">Pivots and moving aggregates are machines; triggers are guardrails. Build the first, trust the second only when they are auditable.</div>
+  </section>
+  <section class="section" id="sec-1">
+    <div class="section-header"><span class="section-num">02 //</span><h2>Dynamic Pivot & Multi-Level Crosstab</h2></div>
+    <h3>Runtime Column Lists with format('%I')</h3>
+<div><div class="code-label"><span>static crosstab</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>CREATE EXTENSION IF NOT EXISTS tablefunc;
+
+SELECT *
+FROM crosstab(<span class="st">'SELECT region, date_trunc(''month''</span>, order_date)::date AS m, SUM(amount)
+              FROM orders GROUP BY <span class="num">1</span>, <span class="num">2</span> ORDER BY <span class="num">1</span>, <span class="num">2</span>',
+              <span class="st">'SELECT DISTINCT date_trunc(''month'', order_date)::date AS m FROM orders ORDER BY 1'</span>)
+     AS ct (region text, m1 numeric, m2 numeric, m3 numeric);</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Two-argument crosstab: month values become column names you declare here</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0: no crosstab(); emulate with prepared statements or CASE arms</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>dynamic pivot function</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>CREATE OR REPLACE FUNCTION monthly_sales_pivot()
+RETURNS SETOF record
+LANGUAGE plpgsql AS $$
+DECLARE
+  col_list text;
+BEGIN
+  SELECT string_agg(format(<span class="st">'%I numeric', 'm' || extract(month from d)), ', '</span> ORDER BY d)
+    INTO col_list
+    FROM (SELECT DISTINCT date_trunc(<span class="st">'month'</span>, order_date)::date AS d FROM orders) s;
+
+  RETURN QUERY EXECUTE format(
+    <span class="st">'SELECT * FROM crosstab(''SELECT region, date_trunc(''month'', order_date)::date AS m, SUM(amount) FROM orders GROUP BY 1, 2 ORDER BY 1, 2''</span>,
+                            <span class="st">''SELECT DISTINCT date_trunc(''month'', order_date)::date AS m FROM orders ORDER BY 1''</span>)
+     AS ct (region text, %s)',
+    col_list
+  );
+END;
+$$;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- format('%I ...') quotes each generated identifier; %s injects the built column list</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: PREPARE + CONCAT to build the same CASE-arm matrix</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<p>The fixed query hard-codes m1..m3; the function builds <code>col_list</code> from the months actually present, then interpolates it into the crosstab output declaration with <code>%s</code>. New months appear automatically without editing the report — that is the whole point of a dynamic pivot. When the category set is user-controlled, <code>%I</code> (identifier) quoting is what keeps a month name from becoming SQL structure.</p>
+<div class="callout warn"><strong>Identifier injection.</strong> Never glue user-supplied category names into a pivot with plain <code>||</code>. <code>format('%I', name)</code> double-quotes and escapes the identifier; <code>%L</code> would quote a literal. A category value that becomes a column name is code, and must be quoted as such.</div>
+<div class="quiz-card" data-quiz-key="s1-q366" data-answer="0">
+      <div class="quiz-q">Why format('%I') for dynamically-built identifiers?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>It quotes and escapes the identifier against injection</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>It is faster than ||</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>It only works in DO blocks</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>It uppercases identifiers</span></div></div>
+      <div class="quiz-explain">%I quotes the identifier with double quotes and escapes embedded quotes, so a malicious product name cannot turn into SQL structure.</div>
+      <div class="quiz-score"></div>
+    </div>
+  </section>
+  <section class="section" id="sec-2">
+    <div class="section-header"><span class="section-num">03 //</span><h2>Custom Aggregates — CREATE AGGREGATE … WINDOW (PG 14+)</h2></div>
+    <h3>Rolling Analytics Metrics You Can Tune</h3>
+<div><div class="code-label"><span>custom window aggregate</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Custom moving-average aggregate: rolling analytics you can tune
 CREATE FUNCTION mov_avg_sfunc(state internal, val numeric, window_start <span class="kw">int</span>, window_end <span class="kw">int</span>)
 RETURNS internal LANGUAGE C AS <span class="st">'...'</span>;
 
 CREATE FUNCTION mov_avg_final(state internal)
 RETURNS numeric LANGUAGE C AS <span class="st">'...'</span>;
 
--- Moving window functions <span class="kw">for</span> O(<span class="num">1</span>) sliding
+-- Moving window support <span class="kw">for</span> O(<span class="num">1</span>) sliding
 CREATE FUNCTION mov_avg_msfunc(state internal, val numeric, window_start <span class="kw">int</span>, window_end <span class="kw">int</span>)
 RETURNS internal LANGUAGE C AS <span class="st">'...'</span>;
 
@@ -71,11 +112,14 @@ CREATE AGGREGATE mov_avg(numeric) (
   WINDOW = <span class="kw">true</span>
 );
 
--- Usage
-SELECT mov_avg(salary) OVER (ORDER BY hire_date ROWS BETWEEN <span class="num">2</span> PRECEDING AND CURRENT ROW)
-FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- CREATE AGGREGATE ... WINDOW (PostgreSQL 14+)</span>
-<span class="cm">-- Requires C implementation for performance</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Not supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="callout warn">Moving window functions (msfunc/minvfunc) enable O(1) sliding window instead of O(k) recompute. Critical for high-frequency streaming aggregates. Must be implemented in C for performance.</div>
+-- Usage: O(<span class="num">1</span>) sliding average over a rolling <span class="num">3</span>-day window
+SELECT emp_id,
+       hire_date,
+       salary,
+       mov_avg(salary) OVER (ORDER BY hire_date
+                             ROWS BETWEEN <span class="num">2</span> PRECEDING AND CURRENT ROW) AS rolling_avg
+FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- CREATE AGGREGATE ... WINDOW (PostgreSQL 14+); C implementation for the transition functions</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- Not supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div class="callout warn">Moving window support needs both msfunc and minvfunc: msfunc folds a new value in, minvfunc removes the value leaving the frame. Without minvfunc the server recomputes each window from scratch — O(k) per row instead of O(1). This is C-level machinery; PL/pgSQL cannot supply inverse transition functions.</div>
 
 <div class="code-block">
   <div class="code-label">
@@ -96,196 +140,76 @@ FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Pytho
         <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
       </div></div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s0-q363" data-answer="1">
-      <div class="quiz-q">Moving window functions (msfunc/minvfunc) enable:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>O(k) per row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>O(1) sliding window update</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Parallel execution</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Parallel aggregation</span></div></div>
-      <div class="quiz-explain">msfunc adds new value, minvfunc removes old value — O(1) per slide vs O(k) recompute.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q364" data-answer="1">
-      <div class="quiz-q">Custom window aggregates require:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>PL/pgSQL only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>C implementation for performance</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Python extension</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>No special requirements</span></div></div>
-      <div class="quiz-explain">State transition functions must be IMMUTABLE and fast. C implementation required for msfunc/minvfunc performance.</div>
-      <div class="quiz-score"></div>
-    </div>
-  </section>
-  <section class="section" id="sec-1">
-    <div class="section-header"><span class="section-num">02 //</span><h2>Hypothetical Set Functions</h2></div>
-    <h3>RANK / DENSE_RANK / PERCENT_RANK WITHIN GROUP</h3>
-<div><div class="code-label"><span>hypothetical rank</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Rank of hypothetical value <span class="num">100000</span> in salary distribution
-SELECT 
-  RANK(<span class="num">100000</span>) WITHIN GROUP (ORDER BY salary) AS rank_of_100k,
-  DENSE_RANK(<span class="num">100000</span>) WITHIN GROUP (ORDER BY salary) AS dense_rank_of_100k,
-  PERCENT_RANK(<span class="num">100000</span>) WITHIN GROUP (ORDER BY salary) AS pct_rank_of_100k
-FROM employees;
-
--- Multiple hypothetical values
-SELECT 
-  RANK(<span class="num">50000</span>) WITHIN GROUP (ORDER BY salary) AS rank_50k,
-  RANK(<span class="num">100000</span>) WITHIN GROUP (ORDER BY salary) AS rank_100k,
-  RANK(<span class="num">200000</span>) WITHIN GROUP (ORDER BY salary) AS rank_200k
-FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Standard SQL: RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0+: not supported</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-<div class="callout blue">Hypothetical set functions = 'where would this value rank?' Single scan of data. No need to insert temp row. Standard SQL feature.</div>
-<div class="quiz-card" data-quiz-key="s1-q365" data-answer="1">
-      <div class="quiz-q">RANK(100000) WITHIN GROUP (ORDER BY salary) returns:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Rank of existing row with salary=100000</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Rank that value 100000 WOULD have if inserted</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Error</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Count of salaries < 100000</span></div></div>
-      <div class="quiz-explain">Hypothetical set function: rank of hypothetical value in existing distribution.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s1-q366" data-answer="0">
-      <div class="quiz-q">PERCENT_RANK(100000) WITHIN GROUP returns:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>0 to 1</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>0 to 100</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Rank integer</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Count</span></div></div>
-      <div class="quiz-explain">PERCENT_RANK returns relative rank 0.0 to 1.0.</div>
-      <div class="quiz-score"></div>
-    </div>
-  </section>
-  <section class="section" id="sec-2">
-    <div class="section-header"><span class="section-num">03 //</span><h2>IGNORE NULLS & Advanced NULL Handling</h2></div>
-    <h3>IGNORE NULLS / RESPECT NULLS (PostgreSQL 15+)</h3>
-<div><div class="code-label"><span>ignore nulls</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- LAG/LEAD with IGNORE NULLS
-SELECT 
-  sale_date,
-  amount,
-  LAG(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS prev_non_null,
-  LEAD(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS next_non_null
-FROM daily_sales;
-
--- FIRST_VALUE / LAST_VALUE with IGNORE NULLS
-SELECT 
-  sale_date,
-  amount,
-  FIRST_VALUE(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS first_sale,
-  LAST_VALUE(amount) IGNORE NULLS OVER (
-    ORDER BY sale_date
-    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-  ) AS last_sale
-FROM daily_sales;
-
--- RESPECT NULLS (default)
-LAG(amount) RESPECT NULLS OVER (ORDER BY sale_date)</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- PostgreSQL 15+: IGNORE NULLS / RESPECT NULLS</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no IGNORE NULLS</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<p>The WindowAgg node sorts by the window ORDER BY, then slides the aggregate state across the frame. With msfunc/minvfunc the per-row transition cost is constant regardless of window width — the difference between a 3-day and a 90-day rolling metric collapses to zero. Tuning the aggregate (adding weights, decay, or session-aware state) is a matter of writing the transition functions, not the query.</p>
 <div class="quiz-card" data-quiz-key="s2-q367" data-answer="1">
-      <div class="quiz-q">LAG(x) IGNORE NULLS returns:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Previous row value (even if NULL)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Previous non-NULL value</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Error if NULL encountered</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>0 instead of NULL</span></div></div>
-      <div class="quiz-explain">IGNORE NULLS skips NULLs and finds previous non-NULL value.</div>
+      <div class="quiz-q">Which transition pair lets a custom aggregate slide a window in constant time?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>O(k) per row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>MSFUNC adds in / MINVFUNC subtracts out</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Parallel execution</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A final function only</span></div></div>
+      <div class="quiz-explain">msfunc adds the new value, minvfunc removes the old one — O(1) per slide vs O(k) recompute.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s2-q368" data-answer="1">
-      <div class="quiz-q">LAST_VALUE IGNORE NULLS with default frame:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Returns last non-NULL in partition</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Returns current row value</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Error</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Returns NULL</span></div></div>
-      <div class="quiz-explain">Default frame = CURRENT ROW. Need explicit frame for true last non-NULL.</div>
+      <div class="quiz-q">Authoring a custom aggregate for a moving window means you must supply…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>PL/pgSQL transition functions only</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>SFUNC/STYPE plus MSFUNC and inverse MINVFUNC</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>A Python extension</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>A parallel-combine function, nothing else</span></div></div>
+      <div class="quiz-explain">Transition functions must be fast and IMMUTABLE; the msfunc/minvfunc pair lets the window slide incrementally.</div>
       <div class="quiz-score"></div>
     </div>
   </section>
   <section class="section" id="sec-3">
-    <div class="section-header"><span class="section-num">04 //</span><h2>Window Function Internals — WindowAgg, Sort, Spilling</h2></div>
-    <h3>WindowAgg Execution Model</h3>
-<p>PostgreSQL WindowAgg node: 1) Sort input by PARTITION BY + ORDER BY, 2) For each partition, evaluate window functions in sequence, 3) For each row, compute frame boundaries and evaluate functions. Multiple functions with same PARTITION+ORDER share sort and single WindowAgg pass.</p>
-<div><div class="code-label"><span>windowagg internals</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- EXPLAIN shows WindowAgg node
-EXPLAIN SELECT 
-  ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary),
-  RANK() OVER (PARTITION BY dept ORDER BY salary),
-  SUM(salary) OVER (PARTITION BY dept ORDER BY salary)
-FROM employees;
-
--- Single WindowAgg node with multiple functions
--- Plan shows:
---   -> WindowAgg
---       -> Sort (partition by dept, order by salary)
---             -> Seq Scan on employees</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Single WindowAgg for same PARTITION+ORDER</span>
-<span class="cm">-- Different PARTITION/ORDER = multiple WindowAgg nodes</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: similar window function execution</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
-
-
-<div class="code-block">
-  <div class="code-label">
-    <span>EXPLAIN — WindowAgg Shared Sort</span>
-    <span class="badge blue">PostgreSQL</span>
-  </div>
-  <div class="query-plan"><div class="plan-node" style="margin-left: 0px;">
-      <div class="plan-node-header">
-        <span class="plan-node-type">WindowAgg</span>
-        <span class="plan-node-meta"> cost=50..500 rows=8500 width=48</span>
-      </div><div class="plan-node" style="margin-left: 24px;">
-      <div class="plan-node-header">
-        <span class="plan-node-type">Sort</span>
-        <span class="plan-node-meta"> cost=50..200 rows=8500 width=40</span>
-      </div><div class="plan-node" style="margin-left: 48px;">
-      <div class="plan-node-header">
-        <span class="plan-node-type">Seq Scan</span> on <code>employees</code>
-        <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
-      </div></div></div></div></div>
-</div>
-<div class="quiz-card" data-quiz-key="s3-q369" data-answer="1">
-      <div class="quiz-q">Two window functions: ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) and SUM(salary) OVER (PARTITION BY dept ORDER BY salary). Execution:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Two sorts, two WindowAgg</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>One sort, two WindowAgg passes</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>One sort, one WindowAgg (both functions)</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Error</span></div></div>
-      <div class="quiz-explain">Same PARTITION+ORDER = shared sort. Each function = separate WindowAgg pass over sorted data.</div>
-      <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s3-q370" data-answer="1">
-      <div class="quiz-q">Frame evaluation per row:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Pre-computed for all rows</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Computed on-the-fly per row during WindowAgg pass</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Cached in memory</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Delegated to storage engine</span></div></div>
-      <div class="quiz-explain">WindowAgg iterates rows, computes frame boundaries per row, evaluates aggregate over frame.</div>
-      <div class="quiz-score"></div>
-    </div>
-  </section>
-  <section class="section" id="sec-4">
-    <div class="section-header"><span class="section-num">05 //</span><h2>Dialect Mastery — Window Function Gaps</h2></div>
-    <div class="dialect-diff"><div class="dialect-diff-grid">
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">ANSI SQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">SUM(x) OVER (PARTITION BY y ORDER BY z RANGE BETWEEN 1 PRECEDING AND 1 FOLLOWING)</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">PostgreSQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">Full RANGE frame support with numeric/date ORDER BY</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">MySQL</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-sql">MySQL 8.0+: RANGE supported for numeric/date. No GROUPS frame.</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">Python (pandas)</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-python">df.groupby('y')['x'].transform(lambda x: x.rolling(window=3, center=True).sum())</code></pre>
-      </div>
-      <div class="dialect-panel">
-        <div class="dialect-panel-header">
-          <span class="badge">Python (SQLAlchemy)</span>
-        </div>
-        <pre class="has-py-alt"><code class="language-python">func.sum(Emp.x).over(partition_by=Emp.y, order_by=Emp.z, range=(-1, 1))</code></pre>
-      </div></div></div>
+    <div class="section-header"><span class="section-num">04 //</span><h2>Hypothetical Sets & IGNORE NULLS</h2></div>
+    <h3>RANK WITHIN GROUP and Gap Filling</h3>
+<div><div class="code-label"><span>hypothetical rank</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- Where would a <span class="num">100000</span> salary rank, as <span class="kw">if</span> inserted?
+SELECT
+  RANK(<span class="num">100000</span>)       WITHIN GROUP (ORDER BY salary) AS rank_of_100k,
+  DENSE_RANK(<span class="num">100000</span>) WITHIN GROUP (ORDER BY salary) AS dense_rank_of_100k,
+  PERCENT_RANK(<span class="num">100000</span>) WITHIN GROUP (ORDER BY salary) AS pct_rank_of_100k
+FROM employees;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- Ordered-set aggregates: single pass, no temp row inserted</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL 8.0: no WITHIN GROUP for RANK; emulate with COUNT</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<div><div class="code-label"><span>ignore nulls gap fill</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>SELECT day,
+       sales,
+       LAG(sales) IGNORE NULLS OVER (ORDER BY day) AS prev_reported,
+       sales - LAG(sales) IGNORE NULLS OVER (ORDER BY day) AS delta_from_last_report
+FROM daily_sales;</code></pre><pre data-lang="py" class="py-missing"><code># Python version pending — add after validation.</code></pre><pre data-lang="pg"><code><span class="cm">-- LAG(... IGNORE NULLS) skips NULL rows while scanning back (PostgreSQL 15+)</span></code></pre><pre data-lang="mysql"><code><span class="cm">-- MySQL: no IGNORE NULLS; emulate with a correlated last-non-null join</span></code></pre><div class="py-note has-missing">⏳ Python slot reserved (added after validation)</div></div>
+<p><code>LAG(sales) IGNORE NULLS</code> backfills a sparse series: it skips rows where the value is NULL and attaches the most recent non-NULL figure to the current row — the classic pattern for non-trading days, partial reporting, or telemetry gaps, without inventing data.</p>
 <div class="dialect-diff"><div class="dialect-diff-grid">
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">ANSI SQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">SELECT ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) FROM emp QUALIFY rn <= 3;</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">SELECT RANK(100000) WITHIN GROUP (ORDER BY salary) FROM employees;</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">PostgreSQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">-- QUALIFY not in PostgreSQL
--- Use CTE: WITH cte AS (...) SELECT * FROM cte WHERE rn <= 3</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">SELECT RANK(100000) WITHIN GROUP (ORDER BY salary) FROM employees;
+-- ordered-set aggregate: rank of value as if inserted</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">MySQL</span>
         </div>
-        <pre class="has-py-alt"><code class="language-sql">-- MySQL 8.0+: QUALIFY supported
-SELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) <= 3;</code></pre>
+        <pre class="has-py-alt"><code class="language-sql">-- MySQL 8.0: no WITHIN GROUP for RANK
+-- emulate:
+-- SELECT (SELECT COUNT(*) FROM employees WHERE salary > 100000) + 1 AS rank_of_100k;</code></pre>
       </div>
       <div class="dialect-panel">
         <div class="dialect-panel-header">
           <span class="badge">Python (pandas)</span>
         </div>
-        <pre class="has-py-alt"><code class="language-python">df[df['rn'] <= 3]</code></pre>
+        <pre class="has-py-alt"><code class="language-python">(df['salary'] > 100000).sum() + 1  # rank of a hypothetical value</code></pre>
       </div></div></div>
+<div class="quiz-card" data-quiz-key="s3-q369" data-answer="1">
+      <div class="quiz-q">RANK(60000) WITHIN GROUP (ORDER BY salary DESC) returns…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>The salary of the employee ranked 60000</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Where a salary of 60000 would rank if inserted</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>60000 rows</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>The 60000th percentile</span></div></div>
+      <div class="quiz-explain">WITHIN GROUP asks: insert the argument — what is its rank in this distribution? Ordering follows the ORDER BY inside the call.</div>
+      <div class="quiz-score"></div>
+    </div><div class="quiz-card" data-quiz-key="s3-q370" data-answer="1">
+      <div class="quiz-q">LAG(sales) IGNORE NULLS is for…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Speeding up the window</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Backfilling sparse series with the last non-NULL value</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Dropping duplicate sales</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Replacing ROW_NUMBER</span></div></div>
+      <div class="quiz-explain">IGNORE NULLS skips NULL rows while scanning back, so the previous non-NULL figure attaches to the current row — gap fill, not speed.</div>
+      <div class="quiz-score"></div>
+    </div>
   </section>
-  <section class="section" id="sec-5">
-    <div class="section-header"><span class="section-num">06 //</span><h2>Triggers & Transaction Control — Audit, Constraints, Cascades</h2></div>
+  <section class="section" id="sec-4">
+    <div class="section-header"><span class="section-num">05 //</span><h2>Triggers & Transaction Control — Audit, Constraints, Cascades</h2></div>
     <h3>CREATE TRIGGER — BEFORE / AFTER / INSTEAD OF</h3>
 <div><div class="code-label"><span>audit triggers</span><div class="lang-tabs"><button data-set="sql">SQL (ANSI)</button><button data-set="pg">PostgreSQL</button><button data-set="mysql">MySQL</button><button data-set="py-pandas">Python (pandas)</button><button data-set="py-sqlalchemy">Python (SQLAlchemy)</button></div></div><pre data-lang="cpp" class=""><code>-- AFTER ROW: capture who changed what
 CREATE TABLE emp_audit (
@@ -364,74 +288,74 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
         <span class="plan-node-meta"> cost=0..12 rows=0 width=0</span>
       </div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s5-q371" data-answer="1">
+<div class="quiz-card" data-quiz-key="s4-q371" data-answer="1">
       <div class="quiz-q">INSTEAD OF triggers can only be created on:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Tables</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Views</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Materialized views</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Indexes</span></div></div>
       <div class="quiz-explain">INSTEAD OF is the view-writability mechanism; tables get BEFORE/AFTER row triggers.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s5-q372" data-answer="1">
+    </div><div class="quiz-card" data-quiz-key="s4-q372" data-answer="1">
       <div class="quiz-q">RAISE EXCEPTION inside a BEFORE trigger:</div>
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Continues the INSERT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Aborts the statement and rolls back the transaction</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only logs a warning</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Skips the row silently</span></div></div>
       <div class="quiz-explain">An uncaught exception aborts the transaction — the standard way to enforce invariants beyond FK constraints.</div>
       <div class="quiz-score"></div>
     </div>
   </section>
-  <section class="section" id="sec-6">
-    <div class="section-header"><span class="section-num">07 //</span><h2>Problem Set — L4 Drills</h2></div>
+  <section class="section" id="sec-5">
+    <div class="section-header"><span class="section-num">06 //</span><h2>Problem Set — L4 Drills</h2></div>
     <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Custom Window Aggregate (C)</div>
-        <div class="prob-meta">drill · custom-aggregate</div></div>
+      <div><div class="prob-name">Safer Dynamic Pivot Helper</div>
+        <div class="prob-meta">drill · dynamic-pivot</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X401"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6v">msfunc adds, minvfunc removes, state = running sum + count</div></div>
+      Write a PL/pgSQL helper that pivots sales by an unknown month set, building the crosstab column list from DISTINCT months with format('%I') so identifiers are injection-safe.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx8t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx8t">string_agg(format('%I numeric', ...), ', ' ORDER BY ...)</div><button class="reveal-btn" data-target="umtydd9gx8v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx8v">RETURN QUERY EXECUTE format('... AS ct (region text, %s)', col_list)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Hypothetical Rank for Salary Bands</div>
-        <div class="prob-meta">drill · hypothetical-rank</div></div>
+      <div><div class="prob-name">Custom Moving-Average Aggregate</div>
+        <div class="prob-meta">drill · custom-aggregate</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X402"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6w">RANK(150000) WITHIN GROUP (ORDER BY salary)</div></div>
+      Define CREATE AGGREGATE for a moving average: SFUNC/STYPE for the accumulator plus MSFUNC/MINFUNC so the WINDOW aggregate slides in O(1).
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx8w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx8w">state = running sum + count; msfunc folds in, minvfunc removes</div><button class="reveal-btn" data-target="umtydd9gx8y" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx8y">CREATE AGGREGATE mov_avg(numeric) (... WINDOW = true)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">IGNORE NULLS for Sparse Data</div>
-        <div class="prob-meta">drill · ignore-nulls</div></div>
+      <div><div class="prob-name">Hypothetical Salary Band</div>
+        <div class="prob-meta">drill · hypothetical-rank</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X403"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6x">LAG(reading) IGNORE NULLS OVER (ORDER BY ts)</div></div>
+      Bound a salary band by using RANK(x) WITHIN GROUP (ORDER BY salary) to find where the band thresholds would sit in the distribution.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx8z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx8z">RANK(low) WITHIN GROUP (ORDER BY salary) and RANK(high)</div><button class="reveal-btn" data-target="umtydd9gx91" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx91">The gap between the two ranks is the band's membership size</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Expression Index for Window ORDER BY</div>
-        <div class="prob-meta">drill · expression-index</div></div>
+      <div><div class="prob-name">Ignore-NULLS Gap Fill</div>
+        <div class="prob-meta">drill · ignore-nulls</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X404"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Window function uses ORDER BY salary + bonus. Create expression index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6y">CREATE INDEX ON employees ((salary + bonus) DESC)</div></div>
+      Fill a sparse daily metric: LAG(col) IGNORE NULLS attaches the last reported value to NULL days so the series stays continuous without inventing values.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx92" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx92">LAG(reading) IGNORE NULLS OVER (ORDER BY day)</div><button class="reveal-btn" data-target="umtydd9gx94" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx94">COALESCE(reading, prev_reported) when a filled value is desired</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
-      <div><div class="prob-name">Window Function Pushdown (PG 17+)</div>
-        <div class="prob-meta">drill · optimization</div></div>
+      <div><div class="prob-name">Audit Trigger with Row Guards</div>
+        <div class="prob-meta">drill · trigger-audit</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="X405"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">
-      Explain how PostgreSQL 17+ pushes predicates below window functions.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hkp6z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hkp6z">Predicate pushdown through WindowAgg when safe</div></div>
+      Add an AFTER ROW audit trigger that writes emp_audit rows and a BEFORE ROW guard that RAISE-Es when an invariant breaks — both inside the same transaction.
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gx95" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gx95">AFTER INSERT OR UPDATE ... FOR EACH ROW EXECUTE FUNCTION log_emp_change()</div><button class="reveal-btn" data-target="umtydd9gx97" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydd9gx97">BEFORE trigger with RAISE EXCEPTION aborts and rolls back</div></div>
     </div></li></ul>
   </section>
-  <section class="section" id="sec-7">
-    <div class="section-header"><span class="section-num">08 //</span><h2>Sourced Problem Set</h2></div>
+  <section class="section" id="sec-6">
+    <div class="section-header"><span class="section-num">07 //</span><h2>Sourced Problem Set</h2></div>
     <div class="callout blue">3 sourced problems from HackerRank SQL. Titles link to the platform. Generated from <code>content/problems.json</code> by <code>renderer/sync-problems.mjs</code> — do not hand-edit this section.</div>
 <ul class="prob-list"><li class="problem-item">
     <div class="problem-head">
@@ -467,11 +391,11 @@ FOR EACH ROW EXECUTE FUNCTION check_room_capacity();</code></pre><pre data-lang=
   </section>
   
   <section class="section" id="revision">
-    <div class="section-header"><span class="section-num">09 //</span><h2>60-second revision card</h2></div>
+    <div class="section-header"><span class="section-num">08 //</span><h2>60-second revision card</h2></div>
     <div class="rev-card"><h4>RE-READ BEFORE ANY INTERVIEW / CONTEST</h4>
-      <ul><li>Custom aggregates: CREATE AGGREGATE ... WINDOW (PG14+), msfunc/minvfunc for O(1) sliding</li><li>Hypothetical sets: RANK(x) WITHIN GROUP — where would x rank?</li><li>IGNORE NULLS (PG15): skip NULLs in LAG/LEAD/FIRST/LAST_VALUE</li><li>WindowAgg: shared sort for same PARTITION+ORDER, multiple passes per function</li><li>Expression in ORDER BY kills index use → expression index or computed column</li><li>QUALIFY (MySQL/Snowflake) vs CTE (PostgreSQL) for filtering window results</li></ul></div>
+      <ul><li>Dynamic identifiers: EXECUTE format('%I', name) quotes identifiers — never bare || for pivot columns</li><li>Moving support: msfunc folds values in, minvfunc removes them — the O(1) sliding window pair</li><li>WITHIN GROUP: ordered-set aggregates rank the argument as if inserted (RANK/PERCENT_RANK)</li><li>INSTEAD OF (views) vs BEFORE/AFTER (tables); RAISE EXCEPTION inside a trigger aborts the transaction</li><li>LAG(col) IGNORE NULLS backfills sparse series with the last non-NULL value</li></ul></div>
     <h3>Glossary</h3>
-    <table class="generic"><tbody><tr><td style="width:220px;"><code>custom window aggregate</code></td><td>CREATE AGGREGATE ... WINDOW with msfunc/minvfunc for O(1) sliding window.</td></tr><tr><td style="width:220px;"><code>hypothetical set function</code></td><td>RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP — rank of hypothetical value in distribution.</td></tr><tr><td style="width:220px;"><code>IGNORE NULLS</code></td><td>Skip NULLs in window frame; find previous/next non-NULL.</td></tr><tr><td style="width:220px;"><code>WindowAgg passes</code></td><td>Each window function with same PARTITION+ORDER gets separate pass over sorted data.</td></tr><tr><td style="width:220px;"><code>expression index</code></td><td>Index on expression (e.g., salary+bonus) to support window ORDER BY on expression.</td></tr><tr><td style="width:220px;"><code>QUALIFY</code></td><td>MySQL/Snowflake clause to filter window function results without CTE.</td></tr></tbody></table>
+    <table class="generic"><tbody><tr><td style="width:220px;"><code>msfunc/minvfunc</code></td><td>Transition functions that add (msfunc) and remove (minvfunc) a value from a moving-aggregate window state.</td></tr><tr><td style="width:220px;"><code>moving aggregate</code></td><td>A window aggregate whose state slides with the frame via inverse transition functions (O(1) per row).</td></tr><tr><td style="width:220px;"><code>hypothetical set</code></td><td>A function answering 'where would this value rank?' without inserting any row.</td></tr><tr><td style="width:220px;"><code>ordered-set aggregate</code></td><td>An aggregate with a WITHIN GROUP (ORDER BY ...) argument, e.g. RANK(x) WITHIN GROUP.</td></tr><tr><td style="width:220px;"><code>WITHIN GROUP</code></td><td>Clause supplying the ORDER BY and argument for ordered-set aggregates (RANK, percentiles).</td></tr><tr><td style="width:220px;"><code>INSTEAD OF trigger</code></td><td>A view-level trigger that intercepts a write and runs your procedure instead of the default action.</td></tr><tr><td style="width:220px;"><code>dynamic pivot</code></td><td>A crosstab whose category columns are built at runtime from the data, quoted with %I to stay safe.</td></tr></tbody></table>
   </section>
   <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
     <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: next MODULE</p></div>

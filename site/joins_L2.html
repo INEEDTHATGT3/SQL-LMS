@@ -253,7 +253,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each employee, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy1u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy1u">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2e">LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -263,7 +263,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Find customers who have never placed an order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy1v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy1v">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2f">NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -273,7 +273,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy1w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy1w">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2g">LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -283,7 +283,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Employees who placed at least one order in 2024.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy1x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy1x">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2h">EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -293,7 +293,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Products that have never been ordered.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy1y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy1y">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2i">NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -303,7 +303,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       Join small_table (100 rows) → medium (10k) → large (1M). Force order.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy1z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy1z">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2j" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2j">SET join_collapse_limit = 1; write joins in order small→medium→large</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -313,7 +313,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       User IDs in 'active' status but not in 'inactive'. Use EXCEPT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy20" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy20">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2k" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2k">SELECT id FROM users WHERE status='active' EXCEPT SELECT id FROM users WHERE status='inactive'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -323,7 +323,7 @@ SELECT * FROM a RIGHT JOIN b ON ...;</code></pre>
     </div>
     <div class="prob-body">
       MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhy21" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhy21">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fw2l" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fw2l">LEFT JOIN ... UNION RIGHT JOIN ...</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">

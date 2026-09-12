@@ -233,7 +233,7 @@
       "id": "advanced-analytics",
       "num": "08",
       "title": "Advanced Analytics",
-      "subtitle": "Pivot, lateral, advanced frames, sampling, triggers & transaction control",
+      "subtitle": "Metrics & grain, rollups, time intelligence, cohort & funnel, dynamic pivot, custom window aggregates, triggers",
       "deps": [
         "performance"
       ],

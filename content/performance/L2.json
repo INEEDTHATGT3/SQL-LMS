@@ -1,71 +1,75 @@
 {
   "level": 2,
   "title": "Performance & Indexing",
-  "tagline": "join algorithms, index tuning, statistics, query optimization",
+  "tagline": "Cost-based planning, join choice, statistics and advanced indexing",
   "placementQuiz": [
     {
-      "q": "Nested Loop Join is best when:",
+      "q": "The planner picks hash join over nested loop mainly when…",
       "options": [
-        "Both tables are large",
-        "One table is small, other has index on join key",
-        "No indexes exist",
-        "Joining on non-equality condition"
+        "the tables are tiny",
+        "both inputs are large and the hash fits in work_mem",
+        "the join key is indexed",
+        "parallel is off"
       ],
       "answer": 1,
-      "explain": "NLJ: for each outer row, probe inner index. Best when outer is small and inner has index."
+      "explain": "Hash join wins for large unsorted inputs whose hash tables fit in work_mem; spills degrade it toward nested-loop."
     },
     {
-      "q": "Hash Join builds hash table on:",
+      "q": "For a nested-loop join, which pairing is preferred?",
       "options": [
-        "Smaller table (build side)",
-        "Larger table",
-        "Both tables",
-        "Primary key only"
+        "Larger table first (outer)",
+        "Smaller input on the inner side",
+        "Either is identical",
+        "Sort both first"
+      ],
+      "answer": 1,
+      "explain": "The inner relation is rescanned per outer row, so the smaller/cheapest side should be inner."
+    },
+    {
+      "q": "If a hash join spills to disk, the practical mitigations are…",
+      "options": [
+        "Drop an index",
+        "Raise work_mem or rewrite the query",
+        "Add a covering index",
+        "Increase shared_buffers"
+      ],
+      "answer": 1,
+      "explain": "A hash spill happens when the hash table exceeds work_mem; raising work_mem (or reducing the hashed input) avoids it."
+    },
+    {
+      "q": "Stale statistics make the planner…",
+      "options": [
+        "Do nothing",
+        "Misestimate row counts and pick wrong join orders/indexes",
+        "Always use seq scan",
+        "Error out"
+      ],
+      "answer": 1,
+      "explain": "The cost model runs on estimates; stale stats → wrong cardinality → wrong plan."
+    },
+    {
+      "q": "Which factor most strongly justifies a covering index?",
+      "options": [
+        "Frequently run queries that only need the index's columns",
+        "The table is tiny",
+        "NULLs everywhere",
+        "The query uses OR"
       ],
       "answer": 0,
-      "explain": "Hash Join: build hash on smaller (build) table, probe with larger. Memory-intensive."
-    },
-    {
-      "q": "Merge Join requires:",
-      "options": [
-        "Both tables sorted on join key",
-        "Hash indexes",
-        "No indexes",
-        "Foreign keys"
-      ],
-      "answer": 0,
-      "explain": "Merge Join: both inputs sorted on join key, then merged like merge sort. O(N+M)."
-    },
-    {
-      "q": "work_mem affects:",
-      "options": [
-        "Only sort operations",
-        "Hash joins, sorts, materialization",
-        "Only index creation",
-        "Network buffers"
-      ],
-      "answer": 1,
-      "explain": "work_mem controls memory for sorts, hashes, and materialization. Spills to disk if exceeded."
-    },
-    {
-      "q": "ANALYZE updates:",
-      "options": [
-        "Indexes",
-        "Table statistics (pg_statistic)",
-        "Query cache",
-        "Query plans"
-      ],
-      "answer": 1,
-      "explain": "ANALYZE collects table statistics (n_distinct, most_common_vals, histograms) for planner."
+      "explain": "A covering index (INCLUDE) lets an Index-Only Scan satisfy the query without heap fetches."
     }
   ],
   "sections": [
     {
-      "title": "Join Algorithms — How the Planner Joins",
+      "title": "Join Algorithms — When the Planner Picks What",
       "blocks": [
         {
           "type": "mantra",
-          "md": "Planner picks algorithm: Nested Loop (small + index), Hash Join (large, no index), Merge Join (pre-sorted). EXPLAIN shows which. You can influence with indexes, stats, enable_* settings."
+          "md": "The optimizer is a cost calculator with an uncertain view of your data. Performance work is teaching it: better statistics, better index options, better habits."
+        },
+        {
+          "type": "prose",
+          "md": "Every join carries two competing costs. Startup cost is what it takes before the first row is emitted — building a hash table, sorting an input. Total/per-tuple cost is what each extra row adds over the whole job. Hash join pays setup once (build the hash), then probes every outer row cheaply — the win when both inputs are large and the hash table fits in work_mem. Nested loop pays almost no setup but rescans the inner side for every outer row, so it is only cheap when the outer input is small and the inner is an index probe. Merge join demands sorted inputs, so the query pays a sort (or an already-sorted index scan) up front; it wins on equality-heavy joins where the ordering exists, or where you want sorted output anyway. 'How the planner joins' is really 'which algorithm minimizes estimated total cost for inputs of this estimated size' — and those sizes come from statistics, so stale stats change the join verdict. Read the shape of a plan with EXPLAIN (costs off); the node order and the presence of Hash/Sort nodes tell you more than the numbers."
         },
         {
           "type": "code",
@@ -108,32 +112,54 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "**Hash Join:** Build side (5000 rows) → hash table in memory. Probe side (10000 rows) → hash probe. If hash table > work_mem → spills to disk (slow). Increase work_mem for big joins."
+          "md": "**Hash Join:** Build side (5000 rows) → hash table in memory. Probe side (10000 rows) → hash probe. If hash table > work_mem → spills to disk (slow). The planner chooses the build side from row estimates — underestimated statistics mean an unexpectedly large hash and a surprise spill. Increase work_mem for big joins."
         },
         {
           "type": "quiz",
           "items": [
             {
-              "q": "Hash Join spills to disk when:",
+              "q": "A hash join outgrows its memory budget and starts writing hash batches to disk when…",
               "options": [
-                "Hash table > work_mem",
-                "Table > 1GB",
-                "No index on join key",
-                "Join is FULL OUTER"
+                "working memory (work_mem) is exhausted by the hash table",
+                "the table is bigger than 1 GB",
+                "no index exists on the join key",
+                "the join is FULL OUTER"
               ],
               "answer": 0,
-              "explain": "work_mem controls hash table memory. Spill = massive slowdown. Increase work_mem or use indexes."
+              "explain": "work_mem controls hash table memory. Spill = massive slowdown. Increase work_mem or reduce the hashed input."
             },
             {
-              "q": "Merge Join is chosen when:",
+              "q": "A merge join demands two sorted inputs. The planner is most likely to pick it when…",
               "options": [
-                "Tables already sorted on join key",
-                "Indexes exist on join key",
-                "Both tables have ORDER BY on join key",
-                "All of the above"
+                "both inputs already arrive in join-key order, e.g. via index scans",
+                "both tables are tiny",
+                "a hash table would exceed work_mem",
+                "the WHERE clause filters on one table only"
               ],
-              "answer": 3,
+              "answer": 0,
               "explain": "Merge Join requires sorted input. Index scan or explicit sort provides ordering."
+            },
+            {
+              "q": "The planner picks hash join over nested loop mainly when…",
+              "options": [
+                "the tables are tiny",
+                "both inputs are large and the hash fits in work_mem",
+                "the join key is indexed",
+                "parallel is off"
+              ],
+              "answer": 1,
+              "explain": "Hash join wins for large unsorted inputs whose hash tables fit in work_mem; spills degrade it toward nested-loop."
+            },
+            {
+              "q": "For a nested-loop join, which pairing is preferred?",
+              "options": [
+                "Larger table first (outer)",
+                "Smaller input on the inner side",
+                "Either is identical",
+                "Sort both first"
+              ],
+              "answer": 1,
+              "explain": "The inner relation is rescanned per outer row, so the smaller/cheapest side should be inner."
             }
           ]
         }
@@ -148,7 +174,7 @@
         },
         {
           "type": "prose",
-          "md": "Planner uses: histogram (most common values), n_distinct, null_frac, correlation. For range: histogram bounds + linear interpolation. For equality: MCV list + 1/n_distinct for non-MCV. For correlated columns: independence assumption (wrong) unless extended stats exist."
+          "md": "Planner uses: histogram (most common values), n_distinct, null_frac, correlation. For range: histogram bounds + linear interpolation. For equality: MCV list + 1/n_distinct for non-MCV. For correlated columns: independence assumption (wrong) unless extended stats exist. These numbers ARE the cost model — they pick join order, join method, and index-vs-seq-scan. Stale statistics → wrong cardinality → wrong plan."
         },
         {
           "type": "code",
@@ -200,25 +226,25 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Bitmap Index Scan is chosen when:",
+              "q": "The planner combines two separate single-column index scans (bitmap AND) mainly when…",
               "options": [
-                "Single index matches",
-                "Multiple indexes can be combined for AND/OR",
-                "Table is tiny",
-                "Index is corrupted"
+                "the query's predicates each match a different individual index",
+                "a single composite index already exists",
+                "the table is tiny",
+                "the index is unique"
               ],
-              "answer": 1,
+              "answer": 0,
               "explain": "BitmapAnd/BitmapOr combines multiple index scans in memory before heap access."
             },
             {
-              "q": "\"Recheck Cond\" in Bitmap Heap Scan means:",
+              "q": "A Bitmap Heap Scan step that carries a Recheck Cond appears because…",
               "options": [
-                "Index is corrupted",
-                "Heap tuple rechecked due to lossy bitmap pages",
-                "Predicate pushed to storage",
-                "Statistics outdated"
+                "the bitmap was stored at page granularity (lossy) so each tuple must be re-verified",
+                "the index is corrupted",
+                "the predicate was pushed to storage",
+                "statistics are outdated"
               ],
-              "answer": 1,
+              "answer": 0,
               "explain": "Lossy bitmap pages store page-level not tuple-level. Must recheck each tuple."
             }
           ]
@@ -261,14 +287,14 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Partial index WHERE status='active' helps query:",
+              "q": "A partial index declared WHERE status = 'active' only accelerates queries whose predicates…",
               "options": [
-                "WHERE status = 'inactive'",
-                "WHERE status = 'active' AND salary > 50k",
-                "WHERE salary > 50k (no status filter)",
-                "All of the above"
+                "also pin status to the same constant, e.g. status = 'active' AND salary > 50000",
+                "filter on salary only",
+                "reference every column",
+                "include ORDER BY"
               ],
-              "answer": 1,
+              "answer": 0,
               "explain": "Partial index only contains 'active' rows. Predicate must include status='active' to match."
             },
             {
@@ -287,7 +313,7 @@
       ]
     },
     {
-      "title": "Dialect Mastery — Enterprise Indexing",
+      "title": "Dialect Mastery — Enterprise Indexes & Planner Costing",
       "blocks": [
         {
           "type": "dialect-diff",
@@ -314,14 +340,16 @@
             {
               "id": "P201",
               "tier": 2,
-              "title": "Hash Join vs Nested Loop Decision",
+              "title": "Hash vs Nested-Loop Decision",
               "platform": "drill",
               "patterns": [
                 "join-algorithm"
               ],
-              "statement": "Query joins large_table (1M rows) with small_table (100 rows) on id. Which algorithm? Why?",
+              "statement": "Query joins large_table (1M rows) with small_table (100 rows) on id. Which algorithm should the planner pick, and why — in cost terms? What gets built, how many times is the other side read, and what changes if work_mem is tiny?",
               "hints": [
-                "Hash Join — small table builds hash, large probes"
+                "Hash Join: build a hash on the 100-row side, probe once per large row — ~1M probes, no rescan",
+                "Nested Loop would rescan the inner for every outer row, so the 100-row side must be inner",
+                "If the hash table exceeds work_mem it spills to disk — re-order inputs or raise work_mem"
               ]
             },
             {
@@ -371,22 +399,25 @@
               "patterns": [
                 "sargability-fix"
               ],
-              "statement": "Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.",
+              "statement": "WHERE YEAR(created_at) = 2024 never uses the index on created_at: the function call hides the column from the planner's cost model. Rewrite it as a sargable range so the planner can actually estimate and use the index.",
               "hints": [
-                "created_at >= '2024-01-01' AND created_at < '2025-01-01'"
+                "created_at >= '2024-01-01' AND created_at < '2025-01-01'",
+                "An index on created_at becomes eligible for Index Scan / Bitmap scan once the column stands alone"
               ]
             },
             {
               "id": "P206",
               "tier": 2,
-              "title": "Bitmap Index Scan for Multiple Conditions",
+              "title": "Bitmap AND Reasoning",
               "platform": "drill",
               "patterns": [
                 "bitmap-scan"
               ],
-              "statement": "Query: WHERE dept_id = 1 AND salary > 50000. No composite index. Explain plan.",
+              "statement": "Query: WHERE dept_id = 1 AND salary > 50000. There is no composite index, only single-column idx_emp_dept and idx_emp_salary. Justify why the planner combines both via BitmapAnd instead of committing to one index, and when you'd replace them with a composite index.",
               "hints": [
-                "BitmapAnd combines idx_dept and idx_salary"
+                "Each index yields a bitmap; BitmapAnd intersects them in memory; the heap is fetched once",
+                "Recheck Cond appears when bitmaps are lossy (page-level, not tuple-level)",
+                "When both predicates are highly selective — or the query is hot — a composite (dept_id, salary) index wins"
               ]
             },
             {
@@ -405,14 +436,17 @@
             {
               "id": "P208",
               "tier": 2,
-              "title": "Fix Non-Sargable: salary * 1.1 > 55000",
+              "title": "work_mem Hash Spill Predicament",
               "platform": "drill",
               "patterns": [
-                "sargability-fix"
+                "hash-spill",
+                "work-mem"
               ],
-              "statement": "Rewrite to use index on salary.",
+              "statement": "A hash join with a ~2GB build side is orders of magnitude slower than expected. Read the EXPLAIN ANALYZE (it shows hash batches > 1, i.e., spill), then choose mitigations: what does raising work_mem do, and what query-level change could shrink the build side?",
               "hints": [
-                "salary > 50000"
+                "EXPLAIN ANALYZE reports 'Hash Batches: 2' or more — the hash table exceeded work_mem and spilled to temp files",
+                "Raise work_mem (per-operation memory) so the hash stays resident, or pre-filter rows so a smaller input feeds the hash",
+                "The build side is chosen from row estimates — stale stats pick the wrong (bigger) build side"
               ]
             }
           ]
@@ -421,37 +455,45 @@
     }
   ],
   "revisionCard": [
-    "Nested Loop: small outer + indexed inner; Hash: large both, build hash on smaller; Merge: pre-sorted",
-    "Composite index: equality first, then range; (a,b) works for a=1 and a=1,b=2",
-    "Partial index: WHERE clause on index — smaller, faster for skewed access",
-    "Covering index (INCLUDE): index-only scan, avoids heap fetch",
-    "Sargable: column naked on left, constant on right. No functions/math/casts on column",
-    "Bitmap Index Scan: combines multiple indexes in memory; Recheck Cond = lossy pages"
+    "Hash vs Nested-Loop: hash when both inputs are large but the hash fits in work_mem; nested loop when one side is small and the other is an indexed probe",
+    "Inner side: nested loop re-probes the inner for every outer row — put the smaller / cheapest input on the inside",
+    "work_mem: budget for sorts, hash tables, materialization; exceed it and the hash spills to disk (slow)",
+    "Covering index (INCLUDE): index-only scan holds the answer, no heap fetch",
+    "Stats freshness: ANALYZE keeps n_distinct, MCV lists, histograms current — stale stats → wrong cardinality → wrong join order",
+    "Merge join needs sorted inputs; the sort or an actually-sorted index must beat the hash+nested-loop alternatives"
   ],
   "glossary": [
     {
-      "term": "nested loop join",
-      "def": "For each outer row, probe inner index. Best: small outer + indexed inner."
+      "term": "cost model",
+      "def": "Planner's estimate of work (startup + per-tuple cost) for each plan node; drives join order and node choice."
     },
     {
       "term": "hash join",
-      "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem."
+      "def": "Build a hash table on one input, probe with the other. Memory-heavy; spills to disk if over work_mem."
+    },
+    {
+      "term": "nested-loop join",
+      "def": "For each outer row, probe the inner input. Best when the outer is small and the inner is an index probe."
     },
     {
       "term": "merge join",
-      "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input."
+      "def": "Both inputs sorted on the join key, then merged linearly. Requires sorted inputs or a sort."
     },
     {
-      "term": "partial index",
-      "def": "Index with WHERE clause — only indexes subset of rows matching condition."
+      "term": "work_mem",
+      "def": "Per-operation memory budget for sorts, hash tables, and materialization. Exceeding it spills to disk."
+    },
+    {
+      "term": "spill",
+      "def": "When an operation exceeds work_mem and writes intermediate data to temp files — much slower than in-memory."
+    },
+    {
+      "term": "estimate / cardinality",
+      "def": "Row-count predictions that statistics feed the planner; selectivity drives the cost model."
     },
     {
       "term": "covering index",
-      "def": "Index with INCLUDE columns — satisfies query without heap lookup."
-    },
-    {
-      "term": "sargable",
-      "def": "Search ARGument ABLE — predicate that can use index seek (e.g., col = 5)."
+      "def": "Index whose key + INCLUDE payload holds every column a query needs — enabling index-only scans."
     }
   ]
 }

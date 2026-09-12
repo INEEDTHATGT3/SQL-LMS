@@ -1,276 +1,336 @@
 {
   "level": 3,
   "title": "SQL Fundamentals",
-  "tagline": "query plans, indexes, dialect nuances — optimization begins",
+  "tagline": "Data types, NULL and three-valued logic, DML & transactions, and query evaluation order",
   "placementQuiz": [
     {
-      "q": "An Index Scan is generally faster than Seq Scan because:",
+      "q": "A column holds whole numbers only and must never overflow on aggregates. Which type is the safe choice?",
       "options": [
-        "It reads fewer pages by jumping via B-tree",
-        "It sorts data automatically",
-        "It uses more CPU but less I/O",
-        "It only works on primary keys"
+        "int4",
+        "int8",
+        "numeric",
+        "float8"
       ],
-      "answer": 0,
-      "explain": "B-tree index lets the database jump directly to matching rows instead of scanning all pages."
+      "answer": 2,
+      "explain": "numeric is arbitrary-precision; int4/int8 overflow on big sums, float8 rounds."
     },
     {
-      "q": "In EXPLAIN output, 'cost=0.29..42.15' means:",
+      "q": "Which condition correctly matches rows where a nullable column is NULL?",
       "options": [
-        "Startup cost 0.29, total cost 42.15 (arbitrary units)",
-        "Takes 0.29ms to start, 42.15ms total",
-        "Cost is 0.29 for index, 42.15 for table",
-        "Rows 0.29 to 42.15"
-      ],
-      "answer": 0,
-      "explain": "Cost is planner's estimate in arbitrary units. First = startup, second = total."
-    },
-    {
-      "q": "Which index type supports range queries (>, <, BETWEEN) efficiently?",
-      "options": [
-        "Hash index",
-        "B-tree index",
-        "GIN index",
-        "BRIN index"
+        "WHERE col = NULL",
+        "WHERE col IS NULL",
+        "WHERE NOT col = NULL",
+        "WHERE col <> NULL"
       ],
       "answer": 1,
-      "explain": "B-tree maintains sorted order, enabling range scans. Hash only supports equality."
+      "explain": "NULL = anything yields NULL (unknown), so equality never matches; use IS NULL."
     },
     {
-      "q": "Partial index (WHERE clause on index) is useful when:",
+      "q": "In SQL's three-valued logic, which is TRUE?",
       "options": [
-        "You always query the same subset (e.g., status='active')",
-        "Table has fewer than 100 rows",
-        "Column has all unique values",
-        "You need full-text search"
-      ],
-      "answer": 0,
-      "explain": "Partial index only indexes rows matching condition — smaller, faster for that subset."
-    },
-    {
-      "q": "Covering index (INCLUDE columns) avoids:",
-      "options": [
-        "Index creation",
-        "Heap lookups (table access)",
-        "Sort operations",
-        "Join operations"
+        "NULL AND TRUE",
+        "NULL OR TRUE",
+        "NULL AND FALSE",
+        "NULL OR FALSE"
       ],
       "answer": 1,
-      "explain": "INCLUDE columns stored in index leaf — query satisfied from index alone, no heap fetch."
+      "explain": "OR TRUE short-circuits the unknown to TRUE; AND TRUE stays unknown."
+    },
+    {
+      "q": "A multi-statement change must be fully reversible on an error. Which mechanism fits?",
+      "options": [
+        "A view",
+        "A transaction with SAVEPOINT",
+        "An index",
+        "A CHECK constraint"
+      ],
+      "answer": 1,
+      "explain": "Wrap statements in BEGIN…COMMIT with SAVEPOINTs to roll back to a known point."
+    },
+    {
+      "q": "You wrote SELECT amount * 1.1 AS gross … WHERE gross > 100. What's wrong?",
+      "options": [
+        "Aliases in WHERE are illegal because filtering happens before SELECT",
+        "* has low precedence",
+        "1.1 must be cast",
+        "gross is reserved"
+      ],
+      "answer": 0,
+      "explain": "The logical order filters in WHERE before the SELECT computes aliases, so WHERE gross is undefined."
     }
   ],
   "sections": [
     {
-      "title": "Query Plans Deep Dive — EXPLAIN ANALYZE",
+      "title": "The Contract — Types, NULL, Evaluation Order",
       "blocks": [
         {
           "type": "mantra",
-          "md": "**EXPLAIN shows the plan; EXPLAIN ANALYZE runs it and shows actuals. Compare estimated vs actual rows — divergence = stale stats or bad assumptions.**"
+          "md": "**SQL's job is to transform data with clear contracts — types, NULL semantics, and the order of evaluation are that contract. Learn the domain, not the tuning.**"
+        }
+      ]
+    },
+    {
+      "title": "Data Types & Casting",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Type Families — the Engine Decides Comparisons"
+        },
+        {
+          "type": "prose",
+          "md": "Every column has a type, and the type decides how values compare, sort, and aggregate. **Numeric**: `int4`/`int8` are fixed-width and can overflow on big sums; `numeric` is arbitrary-precision and the safe choice for money and totals; `float8`/`real` are approximate binary floats. **Character**: `text`/`varchar`/`char`. **Temporal**: `timestamp` (no zone), `timestamptz` (zone-aware), `interval`. **Logical**: `boolean`. Mixing types triggers implicit casts the engine picks for you — working explicitly is the contract that removes surprise."
         },
         {
           "type": "code",
-          "label": "explain variants",
-          "code": "-- Plan only (no execution)\nEXPLAIN SELECT * FROM employees WHERE salary > 50000;\n\n-- Execute + actual timings\nEXPLAIN ANALYZE SELECT * FROM employees WHERE salary > 50000;\n\n-- JSON format (machine-readable)\nEXPLAIN (ANALYZE, FORMAT JSON) SELECT * FROM employees WHERE salary > 50000;\n\n-- With buffers (I/O detail)\nEXPLAIN (ANALYZE, BUFFERS) SELECT * FROM employees WHERE salary > 50000;",
-          "pg": "-- PostgreSQL specific options\nEXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT ...;",
-          "mysql": "-- MySQL\nEXPLAIN ANALYZE SELECT * FROM employees WHERE salary > 50000;\nEXPLAIN FORMAT=JSON SELECT ...;"
+          "label": "type behavior in PostgreSQL",
+          "code": "-- Cast a text literal to a timestamp\nSELECT '2024-01-15 10:30:00'::timestamp;\n\n-- Integer division truncates in PostgreSQL\nSELECT 7/2   AS int_division;      -- 3\nSELECT 7.0/2 AS float_division;    -- 3.5\n\n-- Binary floats are approximate\nSELECT 0.1 + 0.2;                  -- 0.30000000000000004",
+          "pg": "-- Standard CAST() also works in PostgreSQL\nSELECT CAST('2024-01-15 10:30:00' AS timestamp);",
+          "mysql": "-- MySQL has no :: syntax; use CAST(... AS ...)\nSELECT CAST('2024-01-15 10:30:00' AS DATETIME);\n-- 7 / 2 evaluates to 3.5000 in MySQL; DIV gives the integer part\nSELECT 7 DIV 2; -- 3"
+        },
+        {
+          "type": "code",
+          "label": "explicit casts avoid ambiguity",
+          "code": "-- Two spellings of the same cast (PostgreSQL)\nSELECT CAST('2024-01-15' AS date) AS via_standard,\n       '2024-01-15'::date          AS via_colon_cast;\n\n-- Comparing a text column to a date literal relies on an implicit\n-- cast. It usually works, but be explicit:\nSELECT * FROM products\nWHERE  created_on = DATE '2024-01-15';\n-- or: WHERE created_on = CAST('2024-01-15' AS date)",
+          "pg": "-- DATE 'literal' is a typed literal cast in PostgreSQL",
+          "mysql": "-- MySQL prefers CAST; the comparison follows the same rules\nSELECT * FROM products\nWHERE  created_on = CAST('2024-01-15' AS DATE);"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "PostgreSQL evaluates 7 / 2 as:",
+              "options": [
+                "3.5",
+                "2",
+                "4",
+                "3"
+              ],
+              "answer": 3,
+              "explain": "Both operands are integers, so PostgreSQL truncates to 3; write 7.0/2 or CAST(7 AS numeric)/2 for a fractional result."
+            },
+            {
+              "q": "Why does 0.1 + 0.2 evaluate to 0.30000000000000004?",
+              "options": [
+                "Numeric types round to 15 significant digits",
+                "Binary floats represent 0.1 and 0.2 only approximately",
+                "An implicit CAST to integer happened",
+                "Floating point division is exact by definition"
+              ],
+              "answer": 1,
+              "explain": "float8 is a binary fraction; 0.1 and 0.2 have no exact binary representation, so their sum is inexact. Use numeric for exact decimal arithmetic."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "NULL & Three-Valued Logic",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "NULL Means Unknown — and Unknown Participates in Logic"
+        },
+        {
+          "type": "prose",
+          "md": "NULL is **not** zero and not the empty string — it is *unknown*. Any comparison with NULL evaluates to a third truth value: UNKNOWN. `col = NULL` is never TRUE, so it never matches; filter with `IS NULL` / `IS NOT NULL`. Aggregates mostly ignore NULLs, which is exactly why `count(*)` and `count(col)` can disagree."
+        },
+        {
+          "type": "code",
+          "label": "equality vs IS NULL",
+          "code": "-- This matches nothing: NULL = NULL is UNKNOWN, not TRUE\nSELECT * FROM users WHERE email = NULL;\n\n-- These are the correct filters\nSELECT * FROM users WHERE email IS NULL;\nSELECT * FROM users WHERE email IS NOT NULL;",
+          "pg": "-- PostgreSQL-only null-safe equality:\nSELECT 5 IS NOT DISTINCT FROM NULL;      -- false\nSELECT NULL IS NOT DISTINCT FROM NULL;   -- true",
+          "mysql": "-- MySQL uses the <=> null-safe equal operator instead:\nSELECT NULL <=> NULL;  -- 1\nSELECT 5 <=> NULL;     -- 0"
+        },
+        {
+          "type": "code",
+          "label": "coalesce, nullif, counting",
+          "code": "-- Supply a fallback for NULL\nSELECT COALESCE(NULL, 'default');   -- 'default'\n\n-- NULLIF(a, b) returns NULL when a = b, otherwise a\nSELECT NULLIF(5, 5), NULLIF(5, 6);  -- NULL, 5\n\n-- count(*) counts rows; count(email) counts non-NULL emails\nSELECT count(*)      AS all_rows,\n       count(email)  AS with_email\nFROM   users;",
+          "pg": "-- count(col) ignores NULLs; count(*) never ignores rows",
+          "mysql": "-- Same semantics in MySQL 8.0; '' is a value there, NULL is separate"
+        },
+        {
+          "type": "code",
+          "label": "three-valued logic truth tables",
+          "code": "-- AND truth table (x AND y)\n--   x\\y   T      F      N\n--   T     T      F      N\n--   F     F      F      F\n--   N     N      F      N\n\n-- OR truth table (x OR y)\n--   x\\y   T      F      N\n--   T     T      T      T\n--   F     T      F      N\n--   N     T      N      N\n\n-- T or F is enough to decide; N only flips results it cannot resolve.",
+          "pg": "-- NULL = the UNKNOWN truth value in PostgreSQL's three-valued logic",
+          "mysql": "-- MySQL follows the same truth tables for the boolean NULL"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "count(*) returns 100 rows but count(email) returns 80. Why?",
+              "options": [
+                "Some rows duplicate an email value",
+                "20 rows have NULL in the email column",
+                "count(*) is an approximate statistic",
+                "The table has 20 rows deleted by a trigger"
+              ],
+              "answer": 1,
+              "explain": "count(*) counts every row; count(email) skips NULLs, so the 20-row gap means 20 NULL emails."
+            },
+            {
+              "q": "Which query returns rows whose middle_initial is NULL?",
+              "options": [
+                "middle_initial = NULL",
+                "middle_initial <> NULL",
+                "middle_initial IN (NULL)",
+                "middle_initial IS NULL"
+              ],
+              "answer": 3,
+              "explain": "Only IS NULL (or IS NOT DISTINCT FROM NULL) can match NULL; all comparisons against NULL yield UNKNOWN."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "DML & Transactions",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "INSERT / UPDATE / DELETE and All-or-Nothing Transactions"
+        },
+        {
+          "type": "code",
+          "label": "insert with returning",
+          "code": "-- RETURNING hands back the generated key in the same statement\nINSERT INTO products (name, price)\nVALUES ('T-Shirt', 19.99)\nRETURNING id;",
+          "pg": "-- RETURNING can also return just-modified rows:\nUPDATE products SET price = 22.50 WHERE id = 4 RETURNING id, price;\nINSERT ... ON CONFLICT (slug) DO UPDATE SET price = EXCLUDED.price\n  RETURNING id;",
+          "mysql": "-- MySQL 8.0 has no RETURNING; read the key afterwards:\nINSERT INTO products (name, price) VALUES ('T-Shirt', 19.99);\nSELECT LAST_INSERT_ID();"
+        },
+        {
+          "type": "code",
+          "label": "update",
+          "code": "UPDATE products\nSET    price = 21.99\nWHERE  id = 4;",
+          "pg": "-- Standard UPDATE; RETURNING shows the new row",
+          "mysql": "-- Same statement in MySQL 8.0; multi-table UPDATE only joins extra tables"
+        },
+        {
+          "type": "code",
+          "label": "transaction with savepoints",
+          "code": "BEGIN;\n\nINSERT INTO orders (user_id) VALUES (42);\n\nSAVEPOINT p1;                            -- mark a safe point\n\nUPDATE stock SET qty = qty - 1\nWHERE  sku = 'TS1';                     -- unwanted or failed step\n\nROLLBACK TO p1;                         -- undo ONLY the update\n\nCOMMIT;                                 -- commit the remaining INSERT",
+          "pg": "-- SAVEPOINT / ROLLBACK TO / RELEASE are SQL-standard and fully\n-- supported in PostgreSQL; a savepoint may overlap and nest",
+          "mysql": "-- MySQL 8.0 supports SAVEPOINT and ROLLBACK TO SAVEPOINT inside\n-- transactions started with START TRANSACTION"
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "**Atomicity:** a transaction commits all of its statements or none. `ROLLBACK TO p1` unwinds work performed after the savepoint *without* aborting the whole transaction, so the earlier `INSERT` can still commit. This is the tool for partial-recovery flows."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "After ROLLBACK TO p1;, what state is the transaction in?",
+              "options": [
+                "Aborted and closed — nothing can commit",
+                "Statements after p1 are undone; the transaction stays open and COMMIT still works",
+                "The entire transaction is rolled back to BEGIN",
+                "A brand-new transaction starts immediately"
+              ],
+              "answer": 1,
+              "explain": "ROLLBACK TO returns to the savepoint, discarding later work, and the transaction remains usable."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Query Evaluation Order",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Logical Order of Operations"
+        },
+        {
+          "type": "code",
+          "label": "logical processing order",
+          "code": "-- SQL's documented logical order (a contract, not an execution plan)\n--  1. FROM        build the row source(s)\n--  2. WHERE       filter individual rows\n--  3. GROUP BY    form groups\n--  4. HAVING      filter groups (aggregates allowed)\n--  5. SELECT      compute output expressions and aliases\n--  6. ORDER BY    final ordering\n--\n-- Real engines optimize aggressively and may physically reorder;\n-- the clause order above is the logical contract that defines what\n-- each clause is allowed to reference.",
+          "pg": "-- PostgreSQL's planner may reorder freely as long as the result matches",
+          "mysql": "-- MySQL 8.0 honors the same logical contract"
+        },
+        {
+          "type": "code",
+          "label": "where vs having",
+          "code": "SELECT dept, count(*) AS n\nFROM   emp\nWHERE  salary > 3000       -- filters rows BEFORE grouping\nGROUP  BY dept\nHAVING count(*) > 5       -- filters groups AFTER aggregation\nORDER  BY n DESC;",
+          "pg": "-- WHERE cannot reference count(*); HAVING can",
+          "mysql": "-- Same behavior in MySQL 8.0"
+        },
+        {
+          "type": "prose",
+          "md": "`WHERE` runs before grouping and can never reference aggregates. `HAVING` runs after grouping and can. The same reasoning explains why a `SELECT` alias is invisible in `WHERE` (aliases are computed last) yet perfectly legal in `ORDER BY`."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Which clause may reference an aggregate such as count(*)?",
+              "options": [
+                "WHERE",
+                "HAVING",
+                "JOIN ... ON",
+                "LIMIT"
+              ],
+              "answer": 1,
+              "explain": "HAVING runs after grouping, so it can test aggregate values; WHERE sees only raw input rows."
+            }
+          ]
         },
         {
           "type": "query-plan",
-          "title": "Seq Scan with Filter (Actual vs Estimated)",
+          "title": "WHERE filters rows before GroupAggregate",
           "plan": {
             "Plan": {
-              "Node Type": "Seq Scan",
-              "Relation Name": "employees",
-              "Alias": "e",
-              "Startup Cost": 0,
-              "Total Cost": 185,
-              "Plan Rows": 8500,
-              "Plan Width": 72,
-              "Filter": "(salary > 50000)",
-              "Actual Startup Time": 0.024,
-              "Actual Total Time": 12.45,
-              "Actual Rows": 3200,
-              "Actual Loops": 1,
-              "Shared Hit Blocks": 120
+              "Node Type": "GroupAggregate",
+              "Startup Cost": 0.29,
+              "Total Cost": 42.15,
+              "Plan Rows": 8,
+              "Plan Width": 8,
+              "Group Key": [
+                "dept"
+              ],
+              "Filter": "(count(*) > 5)",
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Relation Name": "emp",
+                  "Alias": "e",
+                  "Startup Cost": 0,
+                  "Total Cost": 31.5,
+                  "Plan Rows": 2000,
+                  "Plan Width": 12,
+                  "Filter": "(salary > 3000)"
+                }
+              ]
             }
           },
           "dialect": "pg"
         },
         {
           "type": "callout",
-          "tone": "warn",
-          "md": "**Estimated rows: 8500 → Actual: 3200.** Statistics may be stale (run ANALYZE) or filter selectivity misestimated. At L4 you'll learn to fix this with extended statistics."
-        },
-        {
-          "type": "quiz",
-          "items": [
-            {
-              "q": "If 'Actual Rows' >> 'Plan Rows', likely cause:",
-              "options": [
-                "Index is missing",
-                "Statistics are stale (run ANALYZE)",
-                "Query is too slow",
-                "Wrong join type"
-              ],
-              "answer": 1,
-              "explain": "Planner relies on pg_stats. Stale stats = wrong row estimates = bad plan choices."
-            },
-            {
-              "q": "Buffers: shared hit=120 means:",
-              "options": [
-                "120 index pages read from disk",
-                "120 pages found in shared memory (cache)",
-                "120 rows returned",
-                "120ms elapsed"
-              ],
-              "answer": 1,
-              "explain": "Shared hit = pages already in RAM. Shared read = disk I/O. Dirtied = modified."
-            }
-          ]
+          "tone": "blue",
+          "md": "**Reading the plan:** the `Filter: (salary > 3000)` sits on the Seq Scan — rows are discarded before any grouping — then `GroupAggregate` forms groups by `dept` and drops groups via its own `Filter: (count(*) > 5)`. That is the WHERE-before-HAVING contract, visible in the tree."
         }
       ]
     },
     {
-      "title": "Index Types & When to Use",
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "B-tree (Default) — The Workhorse"
-        },
-        {
-          "type": "code",
-          "label": "btree usage",
-          "code": "-- Created automatically for PRIMARY KEY, UNIQUE\n-- Manual creation\nCREATE INDEX idx_employees_salary ON employees (salary);\n\n-- Composite (order matters!)\nCREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary);\n\n-- Supports: =, <, >, <=, >=, BETWEEN, IN, LIKE 'prefix%'\n-- Does NOT support: LIKE '%suffix', functions on column",
-          "pg": "-- Partial index (PostgreSQL)\nCREATE INDEX idx_active_emp ON employees (salary) WHERE status = 'active';\n\n-- Covering index\nCREATE INDEX idx_emp_salary_name ON employees (salary) INCLUDE (name);",
-          "mysql": "-- Covering index (MySQL 8.0+)\nCREATE INDEX idx_emp_salary_name ON employees (salary, name);\n-- MySQL stores included cols in secondary index automatically"
-        },
-        {
-          "type": "heading",
-          "text": "Hash Index — Equality Only"
-        },
-        {
-          "type": "prose",
-          "md": "Hash indexes only support `=` comparisons. Faster for point lookups but no range scans. PostgreSQL: `CREATE INDEX ... USING HASH`. MySQL MEMORY engine uses hash by default."
-        },
-        {
-          "type": "heading",
-          "text": "Other Types (PostgreSQL)"
-        },
-        {
-          "type": "list",
-          "items": [
-            "**GIN** — Generalized Inverted Index: arrays, JSONB, full-text search, `col @> '{\"key\": \"val\"}'`",
-            "**GiST** — Generalized Search Tree: geometric data, `tsvector`, range types",
-            "**BRIN** — Block Range Index: huge tables with natural correlation (timestamps, auto-increment IDs). Tiny size, coarse granularity.",
-            "**SP-GiST** — Space-Partitioned GiST: non-balanced structures (quadtrees, prefix trees)"
-          ]
-        },
-        {
-          "type": "quiz",
-          "items": [
-            {
-              "q": "Which index supports `col @> '{\"a\":1}'` (JSONB containment)?",
-              "options": [
-                "B-tree",
-                "Hash",
-                "GIN",
-                "BRIN"
-              ],
-              "answer": 2,
-              "explain": "GIN is designed for composite values with containment/overlap operators."
-            },
-            {
-              "q": "BRIN index is best for:",
-              "options": [
-                "Small tables with random data",
-                "Huge tables with correlated columns (time, ID)",
-                "Full-text search",
-                "Primary keys"
-              ],
-              "answer": 1,
-              "explain": "BRIN stores min/max per block range. Tiny (KB vs GB) but only works when physical order matches logical."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Index Pitfalls — When Indexes Don't Help",
-      "blocks": [
-        {
-          "type": "code",
-          "label": "functions on columns kill indexes",
-          "code": "-- BAD: function on column → Seq Scan\nSELECT * FROM employees WHERE UPPER(name) = 'ALICE';\n\n-- GOOD: functional index\nCREATE INDEX idx_emp_upper_name ON employees (UPPER(name));\n-- or store normalized\nALTER TABLE employees ADD COLUMN name_upper TEXT GENERATED ALWAYS AS (UPPER(name)) STORED;\nCREATE INDEX idx_emp_name_upper ON employees (name_upper);",
-          "pg": "-- Functional index (PostgreSQL)\nCREATE INDEX idx_emp_upper_name ON employees (UPPER(name));",
-          "mysql": "-- Functional index (MySQL 8.0+)\nCREATE INDEX idx_emp_upper_name ON employees ((UPPER(name)));"
-        },
-        {
-          "type": "code",
-          "label": "leading wildcard kills index",
-          "code": "-- BAD: leading % → Seq Scan\nSELECT * FROM employees WHERE name LIKE '%son';\n\n-- GOOD: trailing % uses B-tree\nSELECT * FROM employees WHERE name LIKE 'J%';",
-          "pg": "-- Trigram index for leading wildcard (pg_trgm extension)\nCREATE EXTENSION pg_trgm;\nCREATE INDEX idx_emp_name_trgm ON employees USING GIN (name gin_trgm_ops);\n-- Now LIKE '%son' uses index!",
-          "mysql": "-- Fulltext index for text search\nALTER TABLE employees ADD FULLTEXT(name);\nSELECT * FROM employees WHERE MATCH(name) AGAINST('son');"
-        },
-        {
-          "type": "callout",
-          "tone": "warn",
-          "md": "**Low selectivity = planner ignores index.** If query returns >5-10% of table, Seq Scan is often faster (sequential I/O vs random). Check `reltuples` vs `rows` in EXPLAIN."
-        },
-        {
-          "type": "quiz",
-          "items": [
-            {
-              "q": "WHERE UPPER(name) = 'ALICE' ignores index on name because:",
-              "options": [
-                "UPPER is not deterministic",
-                "Function on column prevents B-tree usage",
-                "Case-insensitive collation needed",
-                "Index only stores lowercase"
-              ],
-              "answer": 1,
-              "explain": "B-tree stores raw column values. Function transforms value → can't traverse tree. Fix: functional index."
-            },
-            {
-              "q": "Planner chooses Seq Scan over Index Scan when:",
-              "options": [
-                "Table has < 100 rows",
-                "Query returns large fraction of table (>5-10%)",
-                "Index is fragmented",
-                "All of the above"
-              ],
-              "answer": 1,
-              "explain": "Random I/O (index) vs sequential I/O (scan). Threshold depends on settings (random_page_cost)."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Dialect Differences — Date/Time & Limit",
+      "title": "Dialect Differences — Types & NULL",
       "blocks": [
         {
           "type": "dialect-diff",
-          "sql": "SELECT CURRENT_DATE;",
-          "pg": "SELECT CURRENT_DATE; -- or NOW()::date",
-          "mysql": "SELECT CURDATE();",
-          "py-pandas": "pd.Timestamp.now().date()",
-          "py-sqlalchemy": "session.query(func.current_date()).scalar()"
+          "sql": "SELECT CAST('2024-01-15' AS DATE);\nSELECT CURRENT_DATE;",
+          "pg": "SELECT '2024-01-15'::date;                -- :: cast\nSELECT '2024-01-15 10:30:00'::timestamp;\nSELECT 5 IS NOT DISTINCT FROM NULL;      -- false",
+          "mysql": "SELECT CAST('2024-01-15' AS DATE);\nSELECT CAST('10:30' AS TIME);\nSELECT CONVERT('2024-01-15', DATE);      -- alias for CAST\nSELECT 5 <=> NULL;                       -- 0 (null-safe equal)",
+          "py-pandas": "pd.to_datetime('2024-01-15')",
+          "py-sqlalchemy": "sa.cast(col, sa.Date)"
         },
         {
           "type": "dialect-diff",
-          "sql": "SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;",
-          "pg": "SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;",
-          "mysql": "SELECT * FROM employees ORDER BY hire_date DESC LIMIT 10;",
-          "py-pandas": "employees.nlargest(10, 'hire_date')",
-          "py-sqlalchemy": "session.query(Employee).order_by(Employee.hire_date.desc()).limit(10).all()"
-        },
-        {
-          "type": "dialect-diff",
-          "sql": "SELECT * FROM employees OFFSET 20 LIMIT 10;",
-          "pg": "SELECT * FROM employees OFFSET 20 LIMIT 10;",
-          "mysql": "SELECT * FROM employees LIMIT 10 OFFSET 20; -- or LIMIT 20, 10",
-          "py-pandas": "employees.iloc[20:30]",
-          "py-sqlalchemy": "session.query(Employee).offset(20).limit(10).all()"
+          "sql": "-- NULL is UNKNOWN everywhere\nSELECT * FROM t WHERE col IS NULL;",
+          "pg": "SELECT NULL = NULL;    -- NULL (UNKNOWN)\nSELECT NULL IS NULL;   -- true\n-- NULLs sort LAST in ASC order by default",
+          "mysql": "SELECT NULL <=> NULL;  -- 1 (null-safe)\nSELECT '' IS NULL;     -- 0: empty string is a value, not NULL\n-- NULLs sort FIRST in ASC order by default",
+          "py-pandas": "df[df['col'].isna()]",
+          "py-sqlalchemy": "sa.or_(col.is_(None))"
         }
       ]
     },
@@ -279,84 +339,97 @@
       "blocks": [
         {
           "type": "problems",
+          "subtitle": "Synthetic drills to lock in types, NULL logic, transactions and evaluation order.",
           "items": [
             {
               "id": "B301",
               "tier": 3,
-              "title": "Create Index for Salary Range Queries",
+              "title": "Fix the Implicit-Cast Bug",
               "platform": "drill",
               "patterns": [
-                "create-index",
-                "btree"
+                "implicit-cast",
+                "text-to-date"
               ],
-              "statement": "Create a B-tree index on employees.salary to speed up range queries.",
+              "statement": "A table stores timestamps as text. `WHERE created = '2024-01-15'` silently misses rows whose stored value is '2024-01-15 10:30:00'. Explain why, then fix it with an explicit cast.",
               "hints": [
-                "CREATE INDEX idx_emp_salary ON employees (salary);"
+                "The comparison is text = text: '2024-01-15' does not equal '2024-01-15 10:30:00' as a string",
+                "Use CAST(created AS timestamp) with a typed boundary, or store a real timestamptz column"
               ]
             },
             {
               "id": "B302",
               "tier": 3,
-              "title": "Composite Index for Dept + Salary",
+              "title": "NULL Equality Trap",
               "platform": "drill",
               "patterns": [
-                "composite-index"
+                "is-null",
+                "three-valued-logic"
               ],
-              "statement": "Create composite index for queries filtering by dept_id then ordering by salary.",
+              "statement": "`SELECT * FROM users WHERE deactivated_at = NULL;` returns zero rows even though deactivated users exist. Fix the predicate and explain why the original matches nothing.",
               "hints": [
-                "Column order matters: equality first (dept_id), then range (salary)"
+                "NULL = NULL evaluates to UNKNOWN, which WHERE rejects",
+                "Use IS NULL or IS NOT NULL"
               ]
             },
             {
               "id": "B303",
               "tier": 3,
-              "title": "Partial Index for Active Employees",
+              "title": "Truth-Table Reasoning",
               "platform": "drill",
               "patterns": [
-                "partial-index"
+                "three-valued-logic",
+                "boolean"
               ],
-              "statement": "90% of queries filter status='active'. Create partial index on salary for active employees only.",
+              "statement": "Classify each expression as TRUE, FALSE, or UNKNOWN: NULL AND TRUE, NULL OR TRUE, NULL AND FALSE, NOT NULL. Which single one is TRUE, and why?",
               "hints": [
-                "WHERE status = 'active'"
+                "OR TRUE short-circuits to TRUE",
+                "AND FALSE short-circuits to FALSE",
+                "NOT NULL stays NULL (UNKNOWN)"
               ]
             },
             {
               "id": "B304",
               "tier": 3,
-              "title": "Covering Index to Avoid Heap Fetch",
+              "title": "Transaction with Savepoints",
               "platform": "drill",
               "patterns": [
-                "covering-index"
+                "savepoint",
+                "transaction"
               ],
-              "statement": "Query: SELECT name, salary FROM employees WHERE salary > 50000. Create covering index.",
+              "statement": "In one transaction: insert an order, mark a savepoint, update stock for sku 'TS1', then decide the stock update was wrong and roll back only that statement while still committing the insert. Write the statements in order.",
               "hints": [
-                "INCLUDE (name) in PostgreSQL; (salary, name) in MySQL"
+                "BEGIN; ... INSERT ...; SAVEPOINT p1; UPDATE ...; ROLLBACK TO p1; COMMIT;",
+                "ROLLBACK TO keeps the transaction alive; only the post-savepoint work is undone"
               ]
             },
             {
               "id": "B305",
               "tier": 3,
-              "title": "Analyze Query Plan",
+              "title": "COUNT(*) vs COUNT(col)",
               "platform": "drill",
               "patterns": [
-                "explain-analyze"
+                "null",
+                "aggregate"
               ],
-              "statement": "Run EXPLAIN ANALYZE on: SELECT * FROM employees WHERE dept_id = 3 AND salary > 60000. Note: Seq Scan vs Index Scan, actual rows.",
+              "statement": "On one table, count(*) returns 1,000 but count(phone) returns 940. Explain the discrepancy and write the query that reports both numbers side by side.",
               "hints": [
-                "EXPLAIN (ANALYZE, BUFFERS) ..."
+                "count(phone) skips NULLs; count(*) counts every row",
+                "SELECT count(*) AS total, count(phone) AS with_phone FROM t;"
               ]
             },
             {
               "id": "B306",
               "tier": 3,
-              "title": "Fix Function-on-Column Index Issue",
+              "title": "Alias-in-WHERE Ordering Bug",
               "platform": "drill",
               "patterns": [
-                "functional-index"
+                "evaluation-order",
+                "having"
               ],
-              "statement": "Query: SELECT * FROM employees WHERE LOWER(email) = 'alice@company.com'. Create index to support this.",
+              "statement": "SELECT amount * 1.1 AS gross FROM invoice WHERE gross > 100; refuses or misbehaves. Diagnose it against the logical evaluation order and produce a working query with the same intent.",
               "hints": [
-                "Functional index on LOWER(email)"
+                "SELECT aliases are computed after WHERE, so WHERE gross cannot see the alias",
+                "Recompute the predicate: WHERE amount * 1.1 > 100 — or wrap it: SELECT * FROM (SELECT amount * 1.1 AS gross FROM invoice) t WHERE gross > 100;"
               ]
             }
           ]
@@ -395,37 +468,37 @@
     }
   ],
   "revisionCard": [
-    "EXPLAIN vs EXPLAIN ANALYZE — estimated vs actual rows reveals stats issues",
-    "B-tree = default, supports ranges; Hash = equality only; GIN = JSONB/arrays; BRIN = huge correlated tables",
-    "Partial index (WHERE on index) for skewed query patterns",
-    "Covering index (INCLUDE) avoids heap lookups",
-    "Functions on columns kill indexes — use functional indexes",
-    "Leading wildcard (%text) kills B-tree — pg_trgm or fulltext for that"
+    "7/2 truncates to 3 in PostgreSQL; 7.0/2 is 3.5 — the operands' types decide",
+    "3VL: NULL compared with anything is UNKNOWN; only IS NULL / IS NOT NULL (or IS NOT DISTINCT FROM) match NULL",
+    "count(*) counts rows; count(col) skips NULLs",
+    "Logical order: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY — WHERE can't see aliases or aggregates, HAVING can",
+    "SAVEPOINT / ROLLBACK TO / RELEASE let a transaction recover part-way without aborting",
+    "Always cast comparisons explicitly — implicit casts are a silent surprise"
   ],
   "glossary": [
     {
-      "term": "covering index",
-      "def": "Index that includes all columns needed by query (INCLUDE), avoiding table lookup."
+      "term": "three-valued logic",
+      "def": "Truth system with TRUE, FALSE, UNKNOWN; comparisons involving NULL yield UNKNOWN."
     },
     {
-      "term": "partial index",
-      "def": "Index with WHERE clause — only indexes subset of rows."
+      "term": "implicit cast",
+      "def": "Automatic type conversion the engine picks when an expression's type differs from the context."
     },
     {
-      "term": "functional index",
-      "def": "Index on expression (e.g., UPPER(col)) — supports queries with functions."
+      "term": "savepoint",
+      "def": "Named marker inside a transaction; ROLLBACK TO returns to it without aborting the transaction."
     },
     {
-      "term": "selectivity",
-      "def": "Fraction of rows matching condition. Low selectivity = few rows = index friendly."
+      "term": "atomicity",
+      "def": "A transaction commits all of its changes or none; partial success is impossible."
     },
     {
-      "term": "heap fetch",
-      "def": "Table lookup after index finds row pointer. Covering index eliminates this."
+      "term": "non-null filtering",
+      "def": "Matching NULL values with IS NULL / IS NOT NULL instead of = or <>."
     },
     {
-      "term": "random_page_cost",
-      "def": "Planner parameter: cost of random I/O vs sequential. Higher = prefer Seq Scan."
+      "term": "evaluation order",
+      "def": "SQL's documented logical clause order (FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY) that defines what each clause may reference."
     }
   ]
 }

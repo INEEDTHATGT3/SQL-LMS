@@ -286,7 +286,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Each employee with their department's average salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj549" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj549">SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh4t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh4t">SELECT AVG(salary) FROM employees e2 WHERE e2.dept_id = e.dept_id</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -296,7 +296,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       For each customer, show their most recent order date and total.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj54a" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj54a">LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh4u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh4u">LEFT JOIN LATERAL (SELECT * FROM orders WHERE cust_id = c.id ORDER BY date DESC LIMIT 1)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -306,7 +306,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Customers who placed at least one order over $1000.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj54b" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj54b">EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh4v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh4v">EXISTS (SELECT 1 FROM orders WHERE cust_id = c.id AND total > 1000)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -316,7 +316,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       CTE filters status='active', outer query adds dept_id=5. Use NOT MATERIALIZED.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj54c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj54c">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh4w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh4w">WITH cte AS NOT MATERIALIZED (SELECT * FROM users WHERE status='active') SELECT * FROM cte WHERE dept_id=5</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -326,7 +326,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Find all subordinates (direct + indirect) of manager_id = 5.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj54d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj54d">WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh4x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh4x">WITH RECURSIVE subs AS (SELECT ... UNION ALL SELECT ...)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -336,7 +336,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Find path from node 'A' to 'B' in graph edges table.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj54e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj54e">Track path in array: path || next_node</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh4y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh4y">Track path in array: path || next_node</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -346,7 +346,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       Departments without employees. Fix NOT IN NULL trap.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj54f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj54f">NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh4z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh4z">NOT EXISTS (SELECT 1 FROM employees WHERE dept_id = d.id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -356,7 +356,7 @@ while results[-1] < 5: results.append(results[-1] + 1)</code></pre>
     </div>
     <div class="prob-body">
       For each category, list top 3 products by sales.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hj54g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hj54g">LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9gh50" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9gh50">LATERAL (SELECT * FROM products WHERE cat_id = c.id ORDER BY sales DESC LIMIT 3)</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-6">

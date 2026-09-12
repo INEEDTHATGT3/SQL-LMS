@@ -1,436 +1,325 @@
 {
   "level": 1,
   "title": "Advanced Analytics",
-  "tagline": "PIVOT, LATERAL, advanced frames, sampling — analytics beyond GROUP BY",
+  "tagline": "Metrics, dimensions, grain, conditional aggregation, and cross-tabs — analytics beyond GROUP BY",
   "placementQuiz": [
     {
-      "q": "PIVOT rotates rows to columns. In PostgreSQL, PIVOT is:",
+      "q": "A report is unique per (date, country). Which word names that row-level uniqueness?",
       "options": [
-        "Built-in syntax (PIVOT ... FOR)",
-        "Done via crosstab() from tablefunc extension",
-        "Only available in MySQL",
-        "Not possible"
-      ],
-      "answer": 1,
-      "explain": "PostgreSQL uses crosstab() from tablefunc extension for pivot. MySQL has PIVOT syntax in 8.0+."
-    },
-    {
-      "q": "LATERAL join allows the right side to:",
-      "options": [
-        "Reference columns from left side",
-        "Run independently of left side",
-        "Only work with LEFT JOIN",
-        "Replace CTE"
-      ],
-      "answer": 0,
-      "explain": "LATERAL allows right subquery to reference columns from left side of join."
-    },
-    {
-      "q": "Advanced frame: ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING includes:",
-      "options": [
-        "Current row only",
-        "Current row ± 2 rows (5 rows total)",
-        "2 rows before, current, 2 rows after (5 rows total)",
-        "All rows"
+        "Metric",
+        "Dimension",
+        "Grain",
+        "Filter"
       ],
       "answer": 2,
-      "explain": "2 PRECEDING + current + 2 FOLLOWING = 5 rows total centered on current."
+      "explain": "Grain is the unit of observation a result set is unique by; (date, country) is the grain."
     },
     {
-      "q": "TABLESAMPLE SYSTEM (10) returns:",
+      "q": "Which aggregate counts distinct buyers, ignoring the rest?",
       "options": [
-        "Exactly 10% of rows",
-        "~10% of pages (approximate 10% of rows)",
-        "First 10% of table",
-        "Random 10 rows"
+        "COUNT(*)",
+        "COUNT(user_id)",
+        "COUNT(DISTINCT user_id)",
+        "SUM(user_id)"
       ],
-      "answer": 1,
-      "explain": "TABLESAMPLE SYSTEM samples at page level. Returns approximate percentage."
+      "answer": 2,
+      "explain": "COUNT(DISTINCT col) counts unique non-null values of col — distinct buyers, not rows."
     },
     {
-      "q": "LATERAL with LIMIT 1 for top-N per group — execution:",
+      "q": "You need SUM(amount) for paid orders only. If the dialect supports it, the cleanest form is…",
       "options": [
-        "Full scan per outer row",
-        "Index seek + LIMIT per outer row",
-        "Full sort per outer row",
-        "Cross join optimization"
+        "SUM(CASE WHEN status='paid' THEN amount END)",
+        "SUM(amount) FILTER (WHERE status='paid')",
+        "FILTER(SUM(amount))",
+        "SUM(amount) WHERE status='paid'"
       ],
       "answer": 1,
-      "explain": "LATERAL + ORDER BY + LIMIT 1 with index on (partition, order) = index seek + LIMIT per outer row."
+      "explain": "FILTER (WHERE …) scopes an aggregate to matching rows and is available in PostgreSQL and modern SQL."
+    },
+    {
+      "q": "Which statement about a cross-tab pivot is true?",
+      "options": [
+        "It needs a GROUP BY with one row group per horizontal band",
+        "It is the same as a self-join",
+        "PIVOT is available on all DBs identically",
+        "It converts row-dimension values into columns"
+      ],
+      "answer": 3,
+      "explain": "A pivot rotates values of a row dimension into separate columns; PostgreSQL uses CASE aggregation or crosstab()."
+    },
+    {
+      "q": "Compute share of total as a percentage. Which expression gives each row's percent of the whole table?",
+      "options": [
+        "SUM(amount) OVER () / SUM(amount)",
+        "amount / SUM(amount) OVER ()",
+        "amount / (SELECT SUM(amount)) is the only way",
+        "amount / COUNT(*)"
+      ],
+      "answer": 1,
+      "explain": "amount / SUM(amount) OVER () divides each amount by the grand-total window sum."
     }
   ],
   "sections": [
     {
-      "title": "Mental Model — Analytics Beyond GROUP BY",
+      "title": "Mental Model — Events → Decision Tables",
       "blocks": [
         {
           "type": "mantra",
-          "md": "GROUP BY collapses rows. Advanced analytics keeps rows but adds computed columns: PIVOT for cross-tabs, LATERAL for per-row subqueries, advanced frames for moving analytics, sampling for big data."
-        },
-        {
-          "type": "visual",
-          "kind": "table-diff",
-          "spec": {
-            "before": [
-              {
-                "concept": "GROUP BY",
-                "behavior": "Collapses rows",
-                "output": "One row per group",
-                "example": "SELECT dept, AVG(sal) FROM emp GROUP BY dept"
-              },
-              {
-                "concept": "PIVOT/crosstab",
-                "behavior": "Rows → columns",
-                "output": "Cross-tabulation",
-                "example": "dept vs quarter matrix"
-              },
-              {
-                "concept": "LATERAL",
-                "behavior": "Per-row subquery",
-                "output": "Same row count, extra cols",
-                "example": "Top-N per group"
-              },
-              {
-                "concept": "Advanced frames",
-                "behavior": "Window with custom boundaries",
-                "output": "Moving stats per row",
-                "example": "3-day moving average"
-              }
-            ],
-            "after": [],
-            "highlight": [
-              "behavior"
-            ]
-          }
-        },
-        {
-          "type": "list",
-          "items": [
-            "GROUP BY reduces rows; advanced analytics adds columns without collapsing",
-            "PIVOT/crosstab: row values become column headers (cross-tabulation)",
-            "LATERAL: correlated subquery in FROM clause — right side sees left columns",
-            "Frame clauses: ROWS/RANGE/GROUPS with PRECEDING/FOLLOWING/UNBOUNDED",
-            "Sampling: TABLESAMPLE for approximate queries on massive tables"
-          ]
+          "md": "Analytics SQL is the practice of turning transactional events into decision tables. Pick your identifier (user, order, session), pick your metric, be explicit about grain — everything else follows."
         }
       ]
     },
     {
-      "title": "PIVOT / Crosstab — Cross-Tabulation",
+      "title": "Metrics, Dimensions & Grain",
       "blocks": [
-        {
-          "type": "heading",
-          "text": "PostgreSQL crosstab()"
-        },
-        {
-          "type": "code",
-          "label": "crosstab example",
-          "code": "-- Enable extension\nCREATE EXTENSION IF NOT EXISTS tablefunc;\n\n-- Crosstab: row_header, category, value\nSELECT * FROM crosstab(\n  'SELECT dept, quarter, SUM(sales) FROM sales GROUP BY dept, quarter ORDER BY 1,2',\n  'SELECT DISTINCT quarter FROM sales ORDER BY 1'\n) AS ct(dept TEXT, q1 NUMERIC, q2 NUMERIC, q3 NUMERIC, q4 NUMERIC);\n\n-- Dynamic columns not possible directly; use dynamic SQL or fixed columns",
-          "pg": "-- crosstab() from tablefunc extension",
-          "mysql": "-- MySQL 8.0+: PIVOT not native; use CASE + GROUP BY\nSELECT dept,\n  SUM(CASE WHEN quarter='Q1' THEN sales END) AS q1,\n  SUM(CASE WHEN quarter='Q2' THEN sales END) AS q2\nFROM sales GROUP BY dept;",
-          "py-pandas": "# pandas pivot_table\ndf.pivot_table(index='dept', columns='quarter', values='sales', aggfunc='sum')"
-        },
-        {
-          "type": "heading",
-          "text": "LATERAL JOIN — Correlated Subquery in FROM"
-        },
-        {
-          "type": "code",
-          "label": "lateral basics",
-          "code": "-- For each employee, get latest order\nSELECT e.name, o.order_date, o.total\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT order_date, total\n  FROM orders o\n  WHERE o.emp_id = e.id\n  ORDER BY o.order_date DESC\n  LIMIT 1\n) o ON true;\n\n-- Equivalent correlated subquery (harder to read)\nSELECT e.name,\n  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_date,\n  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_total\nFROM employees e;",
-          "pg": "-- LATERAL is PostgreSQL standard",
-          "mysql": "-- MySQL 8.0.14+: LATERAL supported\n-- Same syntax",
-          "py-pandas": "# GroupBy + head(1)\nlatest = orders.sort_values('order_date').groupby('emp_id').head(1)\nmerged = employees.merge(latest, left_on='id', right_on='emp_id', how='left')"
-        },
         {
           "type": "visual",
           "kind": "table-diff",
           "spec": {
             "before": [
               {
-                "pattern": "LATERAL",
-                "readability": "High — looks like join",
-                "performance": "Same as correlated subquery",
-                "use_case": "Top-N per group, complex per-row logic"
+                "user_id": 101,
+                "event": "checkout",
+                "amount": 32.5
               },
               {
-                "pattern": "Correlated Subquery",
-                "readability": "Low — nested in SELECT",
-                "performance": "Same",
-                "use_case": "Single column, simple"
+                "user_id": 101,
+                "event": "refund",
+                "amount": -5
               },
               {
-                "pattern": "Window Function",
-                "readability": "Medium",
-                "performance": "Better for full scan",
-                "use_case": "All rows need rank/row_number"
+                "user_id": 102,
+                "event": "checkout",
+                "amount": 19.99
               }
             ],
-            "after": [],
+            "after": [
+              {
+                "day": "2024-01-05",
+                "country": "US",
+                "revenue": 47.49,
+                "buyers": 2
+              },
+              {
+                "day": "2024-01-05",
+                "country": "DE",
+                "revenue": 12,
+                "buyers": 1
+              }
+            ],
             "highlight": [
-              "readability",
-              "performance"
+              "revenue"
             ]
           }
         },
         {
-          "type": "quiz",
-          "items": [
-            {
-              "q": "LATERAL subquery can reference:",
-              "options": [
-                "Only tables in same FROM",
-                "Columns from LEFT side of join",
-                "Only columns from same subquery",
-                "Global variables only"
-              ],
-              "answer": 1,
-              "explain": "LATERAL allows right side to see left side columns. Like correlated subquery in FROM."
-            },
-            {
-              "q": "CROSS JOIN LATERAL vs LEFT JOIN LATERAL:",
-              "options": [
-                "Same",
-                "CROSS = inner (drops left rows with no match), LEFT = preserves left",
-                "LEFT not allowed with LATERAL",
-                "CROSS not allowed"
-              ],
-              "answer": 1,
-              "explain": "CROSS JOIN LATERAL = INNER JOIN LATERAL. LEFT JOIN LATERAL preserves left rows (NULL if no match)."
-            }
-          ]
+          "type": "prose",
+          "md": "A **metric** is a quantifiable number you aggregate (revenue, buyers). A **dimension** is the label you slice by (day, country). The **grain** is the unit of observation a result row is unique by — here, one row per (day, country). Deciding the grain before writing SQL is the decision every downstream table inherits: change the grain and every ratio in the report changes meaning."
+        },
+        {
+          "type": "code",
+          "label": "daily revenue & buyers by country",
+          "code": "SELECT order_date::date AS day,\n       country,\n       SUM(amount)            AS revenue,\n       COUNT(DISTINCT user_id) AS buyers\nFROM orders\nGROUP BY order_date::date, country;",
+          "pg": "-- PostgreSQL: GROUP BY fixes the (day, country) grain",
+          "mysql": "-- MySQL 8.0: replace order_date::date with DATE(order_date)",
+          "py-pandas": "orders.assign(day=orders['order_date'].dt.date).groupby(['day', 'country'], dropna=False).agg(revenue=('amount', 'sum'), buyers=('user_id', 'nunique'))"
         },
         {
           "type": "query-plan",
-          "title": "EXPLAIN — LATERAL Join Index Seek",
+          "title": "EXPLAIN — GROUP BY grain (HashAggregate)",
           "plan": {
             "Plan": {
-              "Node Type": "Nested Loop Left Join",
-              "Startup Cost": 0,
-              "Total Cost": 5000,
-              "Plan Rows": 8500,
-              "Plan Width": 120,
-              "Join Filter": "true",
+              "Node Type": "HashAggregate",
+              "Startup Cost": 50,
+              "Total Cost": 92,
+              "Plan Rows": 45,
+              "Plan Width": 32,
+              "Group Key": [
+                "order_date",
+                "country"
+              ],
               "Plans": [
                 {
                   "Node Type": "Seq Scan",
-                  "Relation Name": "employees",
+                  "Relation Name": "orders",
                   "Startup Cost": 0,
-                  "Total Cost": 185,
-                  "Plan Rows": 8500,
-                  "Plan Width": 72
-                },
-                {
-                  "Node Type": "Subquery Scan",
-                  "Startup Cost": 0.29,
-                  "Total Cost": 0.55,
-                  "Plan Rows": 1,
-                  "Plan Width": 48,
-                  "SubPlan": {
-                    "Node Type": "Limit",
-                    "Startup Cost": 0.29,
-                    "Total Cost": 0.55,
-                    "Plan Rows": 1,
-                    "Plan Width": 48,
-                    "Plans": [
-                      {
-                        "Node Type": "Index Scan",
-                        "Relation Name": "orders",
-                        "Index Name": "idx_orders_emp_date",
-                        "Startup Cost": 0.29,
-                        "Total Cost": 0.55,
-                        "Plan Rows": 1,
-                        "Plan Width": 48,
-                        "Index Cond": "(emp_id = employees.id)",
-                        "Order By": "order_date DESC"
-                      }
-                    ]
-                  }
+                  "Total Cost": 45,
+                  "Plan Rows": 1000,
+                  "Plan Width": 32
                 }
               ]
             }
           },
           "dialect": "pg"
-        }
-      ]
-    },
-    {
-      "title": "Advanced Frames — ROWS/RANGE/GROUPS, EXCLUDE",
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "Frame Clauses Deep Dive"
-        },
-        {
-          "type": "code",
-          "label": "frame syntax",
-          "code": "-- ROWS: physical row count\nSUM(amount) OVER (\n  ORDER BY sale_date\n  ROWS BETWEEN 3 PRECEDING AND CURRENT ROW\n) AS moving_sum_4days\n\n-- RANGE: value-based (ORDER BY must be numeric/date)\nSUM(amount) OVER (\n  ORDER BY sale_date\n  RANGE BETWEEN INTERVAL '3 days' PRECEDING AND CURRENT ROW\n) AS moving_sum_3days\n\n-- Unbounded\nSUM(amount) OVER (\n  ORDER BY sale_date\n  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n) AS total_so_far",
-          "pg": "-- Same syntax",
-          "mysql": "-- MySQL 8.0+: frame clauses supported",
-          "py-pandas": "# Rolling window\ndf['amount'].rolling(4).sum()  # 4-row window\n\n# Date-based\nfrom pandas import Timedelta\ndf.set_index('sale_date')['amount'].rolling(Timedelta('3D')).sum()"
-        },
-        {
-          "type": "visual",
-          "kind": "table-diff",
-          "spec": {
-            "before": [
-              {
-                "frame": "ROWS 3 PRECEDING",
-                "meaning": "Current row + 3 rows before",
-                "use_case": "Moving average N rows"
-              },
-              {
-                "frame": "RANGE 3 PRECEDING",
-                "meaning": "Current row + rows with ORDER BY value within 3",
-                "use_case": "Time-based windows"
-              },
-              {
-                "frame": "UNBOUNDED PRECEDING",
-                "meaning": "All rows from start",
-                "use_case": "Running total"
-              },
-              {
-                "frame": "CURRENT ROW",
-                "meaning": "Only current row",
-                "use_case": "Point lookup"
-              }
-            ],
-            "after": [],
-            "highlight": [
-              "frame"
-            ]
-          }
         },
         {
           "type": "quiz",
           "items": [
             {
-              "q": "RANGE INTERVAL '1 day' PRECEDING with ORDER BY ts includes:",
+              "q": "The query above reports revenue per (day, country). What is the grain?",
               "options": [
-                "Exactly 1 row before",
-                "All rows where ts >= current_ts - 1 day",
-                "Current row only",
-                "Error"
+                "One row per order",
+                "One row per (day, country)",
+                "One row per user",
+                "One row total"
               ],
               "answer": 1,
-              "explain": "RANGE uses value semantics. All rows with ts within 1 day of current row's ts."
+              "explain": "GROUP BY day, country makes the grain (day, country): one output row (plus aggregates) per valid pair."
             },
             {
-              "q": "ROWS 1 PRECEDING vs RANGE 1 PRECEDING with ORDER BY salary:",
+              "q": "Why does the same query use COUNT(DISTINCT user_id) for buyers?",
               "options": [
-                "Same",
-                "ROWS = 1 row before; RANGE = salaries within 1 of current",
-                "RANGE = 1 row; ROWS = salary ± 1",
-                "Both invalid"
+                "A buyer can place several orders in one day, so rows would double-count them",
+                "user_id is an aggregate column",
+                "DISTINCT shrinks the revenue column",
+                "The grain forces one buyer per row"
               ],
-              "answer": 1,
-              "explain": "ROWS counts rows. RANGE uses ORDER BY value difference (salary ± 1)."
+              "answer": 0,
+              "explain": "Each order is a row; COUNT(*) would count orders, not buyers. COUNT(DISTINCT user_id) counts each user once per (day, country) group."
             }
           ]
         }
       ]
     },
     {
-      "title": "NTILE, Sampling, Advanced Aggregates",
+      "title": "Conditional Aggregates — FILTER & CASE",
       "blocks": [
         {
           "type": "heading",
-          "text": "NTILE(n) — Equal-Size Buckets"
+          "text": "FILTER (WHERE …) and CASE"
         },
         {
           "type": "code",
-          "label": "ntile",
-          "code": "-- Quartiles (4 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(4) OVER (ORDER BY salary) AS quartile\nFROM employees;\n\n-- Deciles (10 buckets)\nSELECT \n  name,\n  salary,\n  NTILE(10) OVER (ORDER BY salary) AS decile\nFROM employees;\n\n-- Per department\nSELECT \n  dept_id,\n  name,\n  salary,\n  NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary) AS dept_quartile\nFROM employees;",
-          "pg": "-- Same syntax",
-          "mysql": "-- MySQL 8.0+: NTILE supported",
-          "py-pandas": "# Quantile bins\ndf['quartile'] = pd.qcut(df['salary'], 4, labels=[1,2,3,4])\n\n# Per group\ndf['dept_quartile'] = df.groupby('dept_id')['salary'].transform(lambda x: pd.qcut(x, 4, labels=[1,2,3,4]))"
+          "label": "conditional aggregates",
+          "code": "-- Baseline: one row per status\nSELECT status,\n       COUNT(*)  AS n,\n       SUM(amount) AS total\nFROM orders\nGROUP BY status;\n\n-- FILTER: several conditional aggregates in a single scan, no GROUP BY needed\nSELECT COUNT(*) FILTER (WHERE status = 'paid')   AS paid_orders,\n       SUM(amount) FILTER (WHERE status = 'paid') AS paid_gmv,\n       COUNT(*) FILTER (WHERE status = 'pending') AS pending_orders\nFROM orders;\n\n-- CASE equivalent: identical numbers, different spelling\nSELECT COUNT(CASE WHEN status = 'paid' THEN 1 END)    AS paid_orders,\n       SUM(CASE WHEN status = 'paid' THEN amount END) AS paid_gmv,\n       COUNT(CASE WHEN status = 'pending' THEN 1 END) AS pending_orders\nFROM orders;",
+          "pg": "-- FILTER clause is PostgreSQL standard; CASE form works everywhere",
+          "mysql": "-- MySQL 8.0: no FILTER — use the SUM(CASE WHEN ... THEN ... END) spelling",
+          "py-pandas": "paid = (df['status'] == 'paid'); n_paid = paid.sum(); gmv_paid = df.loc[paid, 'amount'].sum()"
         },
         {
           "type": "callout",
           "tone": "warn",
-          "md": "NTILE distributes rows as evenly as possible. If rows % n ≠ 0, first buckets get 1 extra row. NTILE(4) on 10 rows → buckets: 3,3,2,2 rows."
-        },
-        {
-          "type": "heading",
-          "text": "TABLESAMPLE — Fast Approximate Queries"
-        },
-        {
-          "type": "code",
-          "label": "tablesample",
-          "code": "-- SYSTEM: page-level sampling\nSELECT * FROM large_table TABLESAMPLE SYSTEM (10);\n-- ~10% of pages\n\n-- BERNOULLI: row-level sampling\nSELECT * FROM large_table TABLESAMPLE BERNOULLI (10);\n-- True 10% of rows, slower\n\n-- Repeatable (deterministic)\nSELECT * FROM large_table TABLESAMPLE SYSTEM (10) REPEATABLE (42);",
-          "pg": "-- SYSTEM (page-level) vs BERNOULLI (row-level)",
-          "mysql": "-- MySQL: no TABLESAMPLE\n-- Use: WHERE RAND() < 0.1",
-          "py-pandas": "# df.sample(frac=0.1)"
-        },
-        {
-          "type": "heading",
-          "text": "Advanced Aggregates — FILTER, Percentile, Approximate"
-        },
-        {
-          "type": "code",
-          "label": "filter clause / percentile",
-          "code": "-- FILTER: conditional aggregate in one scan\nSELECT dept_id,\n  COUNT(*) FILTER (WHERE status = 'active') AS active_cnt,\n  COUNT(*) FILTER (WHERE status = 'pending') AS pending_cnt\nFROM employees\nGROUP BY dept_id;\n\n-- Percentile aggregates\nSELECT \n  percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) AS median,\n  percentile_disc(0.5) WITHIN GROUP (ORDER BY salary) AS median_discrete\nFROM employees;\n\n-- With GROUP BY\nSELECT dept_id,\n  percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) AS median_sal\nFROM employees\nGROUP BY dept_id;",
-          "pg": "-- FILTER is PostgreSQL standard",
-          "mysql": "-- MySQL 8.0+: no FILTER; use SUM(CASE...)\n-- PERCENTILE_CONT/DISC in 8.0+",
-          "py-pandas": "# FILTER equivalent\nactive_cnt = df[df['status']=='active'].groupby('dept_id').size()\n\n# Quantiles\ndf.groupby('dept_id')['salary'].quantile(0.5)"
-        },
-        {
-          "type": "query-plan",
-          "title": "EXPLAIN — NTILE Partition Sort",
-          "plan": {
-            "Plan": {
-              "Node Type": "WindowAgg",
-              "Startup Cost": 50,
-              "Total Cost": 300,
-              "Plan Rows": 8500,
-              "Plan Width": 48,
-              "Plans": [
-                {
-                  "Node Type": "Sort",
-                  "Startup Cost": 50,
-                  "Total Cost": 200,
-                  "Plan Rows": 8500,
-                  "Plan Width": 40,
-                  "Plans": [
-                    {
-                      "Node Type": "Seq Scan",
-                      "Relation Name": "employees",
-                      "Startup Cost": 0,
-                      "Total Cost": 185,
-                      "Plan Rows": 8500,
-                      "Plan Width": 40
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "dialect": "pg"
+          "md": "MySQL 8.0 has no FILTER clause — reach for the CASE form (`SUM(CASE WHEN status='paid' THEN amount END)`) there. Both compute identical numbers; FILTER is the modern spelling and keeps the predicate next to the aggregate it decorates."
         },
         {
           "type": "quiz",
           "items": [
             {
-              "q": "percentile_cont(0.5) on [10, 20, 30, 40] returns:",
+              "q": "FILTER (WHERE status='paid') — which is true?",
               "options": [
-                "20",
-                "25",
-                "30",
-                "15"
+                "It removes rows from the result set",
+                "It applies only to the aggregate it decorates",
+                "It is a PostgreSQL-only join hint",
+                "It disables the WHERE clause"
               ],
               "answer": 1,
-              "explain": "Even count (4): cont interpolates between 20 and 30 = 25. disc = 20 (lower middle)."
+              "explain": "FILTER scopes a single aggregate to matching rows without altering the result set's other columns."
             },
             {
-              "q": "STRING_AGG with ORDER BY inside aggregate:",
+              "q": "In SUM(CASE WHEN status='paid' THEN amount END), what does an unpaid order contribute?",
               "options": [
-                "Syntax error",
-                "Orders concatenated values by that column",
-                "Orders groups",
-                "Only works with FILTER"
+                "0",
+                "NULL",
+                "Negative amount",
+                "It drops the whole group"
               ],
               "answer": 1,
-              "explain": "STRING_AGG(x, ',' ORDER BY y) sorts the x values by y before concatenation."
+              "explain": "CASE returns NULL when no branch matches; SUM ignores NULLs, so unpaid orders add nothing while the row's other aggregates stay intact."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Cross-Tabs — CASE Pivot & crosstab()",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CASE Pivot — Months as Columns"
+        },
+        {
+          "type": "code",
+          "label": "case pivot",
+          "code": "SELECT region,\n       SUM(CASE WHEN date_trunc('month', order_date) = DATE '2024-01-01' THEN amount END) AS m1,\n       SUM(CASE WHEN date_trunc('month', order_date) = DATE '2024-02-01' THEN amount END) AS m2\nFROM orders\nGROUP BY region;",
+          "pg": "-- PostgreSQL: date_trunc('month', ...) buckets to the 1st of the month",
+          "mysql": "-- MySQL 8.0: use DATE_FORMAT(order_date, '%Y-%m-01') instead of date_trunc",
+          "py-pandas": "df.assign(m=df['order_date'].dt.to_period('M')).pivot_table(index='region', columns='m', values='amount', aggfunc='sum')"
+        },
+        {
+          "type": "code",
+          "label": "crosstab() version",
+          "code": "CREATE EXTENSION IF NOT EXISTS tablefunc;\n\n-- Two-argument crosstab: (row query, category query)\n-- The category query's values become column names; you DECLARE their types below.\nSELECT *\nFROM crosstab('SELECT region, date_trunc(''month'', order_date)::date AS m, SUM(amount)\n              FROM orders GROUP BY 1, 2 ORDER BY 1, 2',\n              'SELECT DISTINCT date_trunc(''month'', order_date)::date AS m FROM orders ORDER BY 1')\n     AS ct (region text, m1 numeric, m2 numeric);",
+          "pg": "-- crosstab() from the tablefunc extension; output columns must be declared manually",
+          "mysql": "-- MySQL 8.0: no crosstab() — use the CASE pivot or a prepared statement",
+          "py-pandas": "df.pivot_table(index='region', columns='m', values='amount', aggfunc='sum')"
+        },
+        {
+          "type": "prose",
+          "md": "Two-argument `crosstab(row_sql, category_sql)` pairs every row of the first query with a category list produced by the second. The output shape (`AS ct (…)`) is written by you — crosstab can't infer column names or types from the SQL strings. That manual declaration is exactly what makes dynamic pivots tricky (see L4)."
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {
+                "region": "US",
+                "month": "2024-01",
+                "amount": 100
+              },
+              {
+                "region": "US",
+                "month": "2024-02",
+                "amount": 120
+              },
+              {
+                "region": "DE",
+                "month": "2024-01",
+                "amount": 40
+              }
+            ],
+            "after": [
+              {
+                "region": "US",
+                "m1": 100,
+                "m2": 120
+              },
+              {
+                "region": "DE",
+                "m1": 40,
+                "m2": null
+              }
+            ],
+            "highlight": [
+              "m1",
+              "m2"
+            ]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Why must crosstab() output column types be declared explicitly?",
+              "options": [
+                "Because column names must be quoted",
+                "Because the second query's values become column names with unknown types",
+                "Because crosstab is not a function",
+                "Stored procedures forbid it"
+              ],
+              "answer": 1,
+              "explain": "The category values become output columns; PostgreSQL needs the explicit AS ct (...) column list with types."
+            },
+            {
+              "q": "The CASE pivot needs which clause to collapse many order rows into one row per region?",
+              "options": [
+                "WHERE",
+                "GROUP BY region",
+                "ORDER BY",
+                "DISTINCT ON"
+              ],
+              "answer": 1,
+              "explain": "GROUP BY region condenses the raw rows; each SUM(CASE ...) fills one month column of that region's pivot row."
             }
           ]
         }
@@ -441,6 +330,7 @@
       "blocks": [
         {
           "type": "problems",
+          "subtitle": "Synthetic drills to lock in metrics, grain, FILTER and pivots.",
           "items": [
             {
               "id": "X101",
@@ -448,76 +338,82 @@
               "title": "Department × Quarter Sales Matrix",
               "platform": "drill",
               "patterns": [
-                "crosstab"
+                "case-pivot"
               ],
-              "statement": "Create cross-tabulation: departments as rows, quarters as columns, sales as values.",
+              "statement": "Build a sales matrix: one row per department, one column per quarter (Q1..Q4), each cell the SUM(sales) for that department and quarter.",
               "hints": [
-                "crosstab() from tablefunc"
+                "SUM(CASE WHEN quarter = 'Q1' THEN sales END) AS q1, ...",
+                "GROUP BY department"
               ]
             },
             {
               "id": "X102",
               "tier": 1,
-              "title": "Latest Order per Customer (LATERAL)",
+              "title": "Share of Total per Department",
               "platform": "drill",
               "patterns": [
-                "lateral-join"
+                "share-of-total"
               ],
-              "statement": "For each customer, show their most recent order date and total.",
+              "statement": "For each department, compute its share of total sales as a percentage, ordered from largest to smallest share.",
               "hints": [
-                "LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"
+                "SUM(amount) / SUM(amount) OVER () * 100",
+                "ORDER BY share DESC"
               ]
             },
             {
               "id": "X103",
               "tier": 1,
-              "title": "4-Row Moving Average",
+              "title": "Paid vs Pending Side by Side",
               "platform": "drill",
               "patterns": [
-                "frame-rows"
+                "filter-clause"
               ],
-              "statement": "Compute 4-row moving average of daily sales (current + 3 preceding).",
+              "statement": "Return a single result row with paid_orders, paid_gmv, pending_orders, and pending_gmv side by side using FILTER.",
               "hints": [
-                "ROWS BETWEEN 3 PRECEDING AND CURRENT ROW"
+                "COUNT(*) FILTER (WHERE status = 'paid')",
+                "SUM(amount) FILTER (WHERE status = 'paid')"
               ]
             },
             {
               "id": "X104",
               "tier": 1,
-              "title": "7-Day Moving Sum (RANGE)",
+              "title": "Right-Grain Daily Metric",
               "platform": "drill",
               "patterns": [
-                "frame-range"
+                "distinct-aggregate"
               ],
-              "statement": "Sum of sales for each day + previous 6 days using RANGE.",
+              "statement": "Report daily active buyers as COUNT(DISTINCT user_id) grouped by day, and explain in a comment why the DISTINCT is required for the buyer metric.",
               "hints": [
-                "RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW"
+                "COUNT(DISTINCT user_id) counts users, COUNT(*) counts events",
+                "One user can appear in many events on the same day"
               ]
             },
             {
               "id": "X105",
               "tier": 1,
-              "title": "Quartile Assignment",
+              "title": "Turn a Row Listing into a Matrix",
               "platform": "drill",
               "patterns": [
-                "ntile"
+                "case-pivot"
               ],
-              "statement": "Assign each employee to a salary quartile (1-4) within their department.",
+              "statement": "Rewrite a row-per-month result into month columns (m1..m3) per region, using the CASE pivot recipe.",
               "hints": [
-                "NTILE(4) OVER (PARTITION BY dept_id ORDER BY salary)"
+                "One SUM(CASE WHEN month = 'M1' THEN amount END) per target column",
+                "GROUP BY region"
               ]
             },
             {
               "id": "X106",
               "tier": 1,
-              "title": "Conditional Counts with FILTER",
+              "title": "COUNT(*) vs COUNT(column)",
               "platform": "drill",
               "patterns": [
-                "filter-clause"
+                "null-semantics"
               ],
-              "statement": "Per department: count of active, pending, inactive employees using FILTER.",
+              "statement": "Compare COUNT(*) with COUNT(ship_date) on orders where some ship_date values are NULL, and explain why the two counts diverge.",
               "hints": [
-                "COUNT(*) FILTER (WHERE status = 'active')"
+                "COUNT(*) counts rows; COUNT(ship_date) skips NULLs",
+                "Unshipped orders have NULL ship_date"
               ]
             }
           ]
@@ -526,37 +422,36 @@
     }
   ],
   "revisionCard": [
-    "PIVOT/crosstab: rows → columns; PostgreSQL uses crosstab() from tablefunc",
-    "LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer",
-    "Frame clauses: ROWS = row count; RANGE = ORDER BY value distance; GROUPS = peer groups",
-    "NTILE(n) = n buckets; extra rows to first buckets",
-    "TABLESAMPLE SYSTEM/BERNOULLI for approximate queries",
-    "FILTER clause: conditional aggregate in one scan; cleaner than CASE"
+    "Grain = the unit of observation a result row is unique by (e.g. one row per (day, country)); pick it before writing SQL",
+    "COUNT(*) counts rows; COUNT(column) skips NULLs; COUNT(DISTINCT column) counts unique non-null values",
+    "FILTER (WHERE …) scopes one aggregate; CASE scopes one value — identical math, FILTER is the modern spelling",
+    "CASE pivot: one SUM(CASE …) per column inside GROUP BY; crosstab() rotates without hand-written expressions",
+    "crosstab() output columns must be declared in AS ct (…); the category query decides which columns exist"
   ],
   "glossary": [
     {
-      "term": "crosstab",
-      "def": "PostgreSQL function (tablefunc) for pivot/cross-tabulation."
+      "term": "grain",
+      "def": "The unit of observation a result set is unique by — e.g. one row per (day, country)."
     },
     {
-      "term": "LATERAL join",
-      "def": "Right subquery references left columns. Like correlated subquery in FROM clause."
+      "term": "metric",
+      "def": "A quantifiable number computed from rows (revenue, buyers, GMV)."
     },
     {
-      "term": "frame clause",
-      "def": "ROWS/RANGE/GROUPS BETWEEN ... defines window boundaries relative to current row."
+      "term": "dimension",
+      "def": "A label used to slice or group rows (day, country, region)."
     },
     {
-      "term": "NTILE",
-      "def": "Divides partition into n roughly equal buckets (1..n)."
-    },
-    {
-      "term": "TABLESAMPLE",
-      "def": "Fast approximate sampling of tables (SYSTEM = page-level, BERNOULLI = row-level)."
+      "term": "cross-tab",
+      "def": "A pivot report rotating row-dimension values into columns; done with CASE aggregation or crosstab()."
     },
     {
       "term": "FILTER clause",
-      "def": "Conditional aggregate: AGG(expr) FILTER (WHERE condition)."
+      "def": "AGG(expr) FILTER (WHERE cond) — a conditional aggregate that scopes only the aggregate it decorates."
+    },
+    {
+      "term": "additive metric",
+      "def": "A metric that sums correctly across grains (revenue); non-additive metrics (distinct buyers) need explicit re-aggregation per grain."
     }
   ]
 }

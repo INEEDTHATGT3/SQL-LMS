@@ -252,7 +252,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Users login with email case-insensitively. Create index for WHERE LOWER(email) = ?.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhu1d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhu1d">CREATE INDEX ON users (LOWER(email))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb1x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb1x">CREATE INDEX ON users (LOWER(email))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -262,7 +262,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       95% queries filter status='active'. Create partial index on users(created_at) for active users.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhu1e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhu1e">WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb1y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb1y">WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -272,7 +272,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Rewrite WHERE YEAR(created_at) = 2024 to be sargable using range.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhu1f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhu1f">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb1z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb1z">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -282,7 +282,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Query: WHERE salary * 12 > 120000. Create functional index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhu1g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhu1g">CREATE INDEX ON employees ((salary * 12))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb20" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb20">CREATE INDEX ON employees ((salary * 12))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -292,7 +292,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Allow same email for inactive users, but only one active per email.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhu1h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhu1h">CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb21" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb21">CREATE UNIQUE INDEX ON users (email) WHERE status = 'active'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -302,7 +302,7 @@ CREATE INDEX idx_not_deleted ON items (not_deleted);</code></pre><div class="py-
     </div>
     <div class="prob-body">
       Rewrite to use index on salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyc3hhu1i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyc3hhu1i">salary > 50000</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydd9fb22" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydd9fb22">salary > 50000</div></div>
     </div></li></ul>
   </section>
   

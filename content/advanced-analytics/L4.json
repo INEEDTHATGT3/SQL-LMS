@@ -1,84 +1,143 @@
 {
   "level": 4,
   "title": "Advanced Analytics",
-  "tagline": "custom aggregates, hypothetical sets, window function internals, extensibility",
+  "tagline": "Dynamic pivot, custom aggregation machines, hypothetical sets, and trigger-guarded data",
   "placementQuiz": [
     {
-      "q": "Custom window aggregate in PostgreSQL:",
+      "q": "A dynamic crosstab must enumerate column names at runtime. The safe pattern uses…",
       "options": [
-        "Not possible",
-        "CREATE AGGREGATE ... WINDOW",
-        "Only via C extension",
-        "Only via PL/pgSQL"
+        "string concatenation unguarded",
+        "EXECUTE format() with %I identifiers",
+        "a fixed 12-column report",
+        "CTEs only"
       ],
       "answer": 1,
-      "explain": "CREATE AGGREGATE ... WINDOW (PostgreSQL 14+) defines custom window aggregate with moving window support."
+      "explain": "Build the pivot's column list from DISTINCT values and exec with format('%I') so identifiers are quoted-safe."
     },
     {
-      "q": "Hypothetical set functions (RANK, DENSE_RANK with hypothetical value):",
+      "q": "On a moving-aggregate window function, which pair makes removals possible?",
       "options": [
-        "Standard SQL feature",
-        "PostgreSQL extension only",
-        "Not implemented anywhere",
-        "Only in Oracle"
-      ],
-      "answer": 0,
-      "explain": "Standard SQL: RANK(x) WITHIN GROUP (ORDER BY col) — rank of hypothetical value x in existing data."
-    },
-    {
-      "q": "Window function internal execution in PostgreSQL:",
-      "options": [
-        "Separate executor node per function",
-        "Single WindowAgg node, multiple passes for same partition/order",
-        "Separate process per window",
-        "Compiled to bytecode"
+        "SFUNC / STYPE",
+        "MSFUNC / MINVFUNC",
+        "FINALFUNC / COMBINEFUNC",
+        "none of these"
       ],
       "answer": 1,
-      "explain": "WindowAgg node processes partition. Multiple functions with same PARTITION+ORDER share sort, multiple passes."
+      "explain": "Inverse transition functions (MINVFUNC) let the aggregate subtract a value leaving the window — required for moving windows."
     },
     {
-      "q": "IGNORE NULLS in window functions:",
+      "q": "`RANK(60000) WITHIN GROUP (ORDER BY salary DESC)` returns…",
       "options": [
-        "PostgreSQL only",
-        "Standard SQL (Oracle, PostgreSQL 15+, others)",
-        "MySQL only",
-        "Not implemented"
+        "The salary of rank 60000",
+        "Where a salary of 60000 ranks among salaries as if inserted",
+        "A percentile",
+        "The 60000th row"
       ],
       "answer": 1,
-      "explain": "IGNORE NULLS / RESPECT NULLS for LAG/LEAD/FIRST_VALUE/LAST_VALUE. Standard SQL, PG 15+."
+      "explain": "WITHIN GROUP ordered-set aggregates compute the rank/position the argument would take inside the group."
     },
     {
-      "q": "Window function on expression vs column:",
+      "q": "A BEFORE trigger fires…",
       "options": [
-        "Same performance",
-        "Expression may prevent index use",
-        "Expression faster",
-        "Expression not allowed"
+        "After the row is committed",
+        "Before the row's insert/update/delete on that relation",
+        "Only on SELECT",
+        "Once per statement always"
       ],
       "answer": 1,
-      "explain": "Expression in ORDER BY (e.g., salary + bonus) prevents index use. Consider computed column or expression index."
+      "explain": "BEFORE runs before the operation on the target table; AFTER runs after it, with per-row or per-statement granularity."
+    },
+    {
+      "q": "For a view you want updatable through a trigger. Which kind applies?",
+      "options": [
+        "BEFORE INSERT AFTER SELECT",
+        "INSTEAD OF",
+        "CONSTRAINT",
+        "ENABLE ALWAYS"
+      ],
+      "answer": 1,
+      "explain": "INSTEAD OF triggers on views intercept the write and run your procedure instead."
     }
   ],
   "sections": [
     {
-      "title": "Custom Window Aggregates (PostgreSQL 14+)",
+      "title": "Mental Model — Machines and Guardrails",
       "blocks": [
         {
           "type": "mantra",
-          "md": "CREATE AGGREGATE ... WINDOW enables custom window aggregates with moving window support. Define state transition, final function, and optional moving window functions (msfunc, minvfunc) for O(1) sliding."
+          "md": "Pivots and moving aggregates are machines; triggers are guardrails. Build the first, trust the second only when they are auditable."
+        }
+      ]
+    },
+    {
+      "title": "Dynamic Pivot & Multi-Level Crosstab",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Runtime Column Lists with format('%I')"
         },
         {
           "type": "code",
-          "label": "custom window aggregate",
-          "code": "-- Custom moving average aggregate\nCREATE FUNCTION mov_avg_sfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE FUNCTION mov_avg_final(state internal)\nRETURNS numeric LANGUAGE C AS '...';\n\n-- Moving window functions for O(1) sliding\nCREATE FUNCTION mov_avg_msfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE FUNCTION mov_avg_minvfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE AGGREGATE mov_avg(numeric) (\n  SFUNC = mov_avg_sfunc,\n  STYPE = internal,\n  FINALFUNC = mov_avg_final,\n  MSFUNC = mov_avg_msfunc,\n  MINVFUNC = mov_avg_minvfunc,\n  WINDOW = true\n);\n\n-- Usage\nSELECT mov_avg(salary) OVER (ORDER BY hire_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)\nFROM employees;",
-          "pg": "-- CREATE AGGREGATE ... WINDOW (PostgreSQL 14+)\n-- Requires C implementation for performance",
-          "mysql": "-- Not supported",
-          "py-pandas": "# Rolling apply\ndf['salary'].rolling(3).apply(custom_func)"
+          "label": "static crosstab",
+          "code": "CREATE EXTENSION IF NOT EXISTS tablefunc;\n\nSELECT *\nFROM crosstab('SELECT region, date_trunc(''month'', order_date)::date AS m, SUM(amount)\n              FROM orders GROUP BY 1, 2 ORDER BY 1, 2',\n              'SELECT DISTINCT date_trunc(''month'', order_date)::date AS m FROM orders ORDER BY 1')\n     AS ct (region text, m1 numeric, m2 numeric, m3 numeric);",
+          "pg": "-- Two-argument crosstab: month values become column names you declare here",
+          "mysql": "-- MySQL 8.0: no crosstab(); emulate with prepared statements or CASE arms",
+          "py-pandas": "df.pivot_table(index='region', columns='m', values='amount', aggfunc='sum')"
+        },
+        {
+          "type": "code",
+          "label": "dynamic pivot function",
+          "code": "CREATE OR REPLACE FUNCTION monthly_sales_pivot()\nRETURNS SETOF record\nLANGUAGE plpgsql AS $$\nDECLARE\n  col_list text;\nBEGIN\n  SELECT string_agg(format('%I numeric', 'm' || extract(month from d)), ', ' ORDER BY d)\n    INTO col_list\n    FROM (SELECT DISTINCT date_trunc('month', order_date)::date AS d FROM orders) s;\n\n  RETURN QUERY EXECUTE format(\n    'SELECT * FROM crosstab(''SELECT region, date_trunc(''month'', order_date)::date AS m, SUM(amount) FROM orders GROUP BY 1, 2 ORDER BY 1, 2'',\n                            ''SELECT DISTINCT date_trunc(''month'', order_date)::date AS m FROM orders ORDER BY 1'')\n     AS ct (region text, %s)',\n    col_list\n  );\nEND;\n$$;",
+          "pg": "-- format('%I ...') quotes each generated identifier; %s injects the built column list",
+          "mysql": "-- MySQL: PREPARE + CONCAT to build the same CASE-arm matrix",
+          "py-pandas": "# pandas handles variable columns natively via pivot_table"
+        },
+        {
+          "type": "prose",
+          "md": "The fixed query hard-codes m1..m3; the function builds `col_list` from the months actually present, then interpolates it into the crosstab output declaration with `%s`. New months appear automatically without editing the report — that is the whole point of a dynamic pivot. When the category set is user-controlled, `%I` (identifier) quoting is what keeps a month name from becoming SQL structure."
         },
         {
           "type": "callout",
           "tone": "warn",
-          "md": "Moving window functions (msfunc/minvfunc) enable O(1) sliding window instead of O(k) recompute. Critical for high-frequency streaming aggregates. Must be implemented in C for performance."
+          "md": "**Identifier injection.** Never glue user-supplied category names into a pivot with plain `||`. `format('%I', name)` double-quotes and escapes the identifier; `%L` would quote a literal. A category value that becomes a column name is code, and must be quoted as such."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Why format('%I') for dynamically-built identifiers?",
+              "options": [
+                "It quotes and escapes the identifier against injection",
+                "It is faster than ||",
+                "It only works in DO blocks",
+                "It uppercases identifiers"
+              ],
+              "answer": 0,
+              "explain": "%I quotes the identifier with double quotes and escapes embedded quotes, so a malicious product name cannot turn into SQL structure."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Custom Aggregates — CREATE AGGREGATE … WINDOW (PG 14+)",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Rolling Analytics Metrics You Can Tune"
+        },
+        {
+          "type": "code",
+          "label": "custom window aggregate",
+          "code": "-- Custom moving-average aggregate: rolling analytics you can tune\nCREATE FUNCTION mov_avg_sfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE FUNCTION mov_avg_final(state internal)\nRETURNS numeric LANGUAGE C AS '...';\n\n-- Moving window support for O(1) sliding\nCREATE FUNCTION mov_avg_msfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE FUNCTION mov_avg_minvfunc(state internal, val numeric, window_start int, window_end int)\nRETURNS internal LANGUAGE C AS '...';\n\nCREATE AGGREGATE mov_avg(numeric) (\n  SFUNC = mov_avg_sfunc,\n  STYPE = internal,\n  FINALFUNC = mov_avg_final,\n  MSFUNC = mov_avg_msfunc,\n  MINVFUNC = mov_avg_minvfunc,\n  WINDOW = true\n);\n\n-- Usage: O(1) sliding average over a rolling 3-day window\nSELECT emp_id,\n       hire_date,\n       salary,\n       mov_avg(salary) OVER (ORDER BY hire_date\n                             ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS rolling_avg\nFROM employees;",
+          "pg": "-- CREATE AGGREGATE ... WINDOW (PostgreSQL 14+); C implementation for the transition functions",
+          "mysql": "-- Not supported",
+          "py-pandas": "# Rolling apply: df['salary'].rolling(3).apply(mov_avg)"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "Moving window support needs both msfunc and minvfunc: msfunc folds a new value in, minvfunc removes the value leaving the frame. Without minvfunc the server recomputes each window from scratch — O(k) per row instead of O(1). This is C-level machinery; PL/pgSQL cannot supply inverse transition functions."
         },
         {
           "type": "query-plan",
@@ -117,266 +176,98 @@
           "dialect": "pg"
         },
         {
+          "type": "prose",
+          "md": "The WindowAgg node sorts by the window ORDER BY, then slides the aggregate state across the frame. With msfunc/minvfunc the per-row transition cost is constant regardless of window width — the difference between a 3-day and a 90-day rolling metric collapses to zero. Tuning the aggregate (adding weights, decay, or session-aware state) is a matter of writing the transition functions, not the query."
+        },
+        {
           "type": "quiz",
           "items": [
             {
-              "q": "Moving window functions (msfunc/minvfunc) enable:",
+              "q": "Which transition pair lets a custom aggregate slide a window in constant time?",
               "options": [
                 "O(k) per row",
-                "O(1) sliding window update",
+                "MSFUNC adds in / MINVFUNC subtracts out",
                 "Parallel execution",
-                "Parallel aggregation"
+                "A final function only"
               ],
               "answer": 1,
-              "explain": "msfunc adds new value, minvfunc removes old value — O(1) per slide vs O(k) recompute."
+              "explain": "msfunc adds the new value, minvfunc removes the old one — O(1) per slide vs O(k) recompute."
             },
             {
-              "q": "Custom window aggregates require:",
+              "q": "Authoring a custom aggregate for a moving window means you must supply…",
               "options": [
-                "PL/pgSQL only",
-                "C implementation for performance",
-                "Python extension",
-                "No special requirements"
+                "PL/pgSQL transition functions only",
+                "SFUNC/STYPE plus MSFUNC and inverse MINVFUNC",
+                "A Python extension",
+                "A parallel-combine function, nothing else"
               ],
               "answer": 1,
-              "explain": "State transition functions must be IMMUTABLE and fast. C implementation required for msfunc/minvfunc performance."
+              "explain": "Transition functions must be fast and IMMUTABLE; the msfunc/minvfunc pair lets the window slide incrementally."
             }
           ]
         }
       ]
     },
     {
-      "title": "Hypothetical Set Functions",
+      "title": "Hypothetical Sets & IGNORE NULLS",
       "blocks": [
         {
           "type": "heading",
-          "text": "RANK / DENSE_RANK / PERCENT_RANK WITHIN GROUP"
+          "text": "RANK WITHIN GROUP and Gap Filling"
         },
         {
           "type": "code",
           "label": "hypothetical rank",
-          "code": "-- Rank of hypothetical value 100000 in salary distribution\nSELECT \n  RANK(100000) WITHIN GROUP (ORDER BY salary) AS rank_of_100k,\n  DENSE_RANK(100000) WITHIN GROUP (ORDER BY salary) AS dense_rank_of_100k,\n  PERCENT_RANK(100000) WITHIN GROUP (ORDER BY salary) AS pct_rank_of_100k\nFROM employees;\n\n-- Multiple hypothetical values\nSELECT \n  RANK(50000) WITHIN GROUP (ORDER BY salary) AS rank_50k,\n  RANK(100000) WITHIN GROUP (ORDER BY salary) AS rank_100k,\n  RANK(200000) WITHIN GROUP (ORDER BY salary) AS rank_200k\nFROM employees;",
-          "pg": "-- Standard SQL: RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP",
-          "mysql": "-- MySQL 8.0+: not supported",
-          "py-pandas": "# Manual: (df['salary'] < val).sum() + 1"
-        },
-        {
-          "type": "callout",
-          "tone": "blue",
-          "md": "Hypothetical set functions = 'where would this value rank?' Single scan of data. No need to insert temp row. Standard SQL feature."
-        },
-        {
-          "type": "quiz",
-          "items": [
-            {
-              "q": "RANK(100000) WITHIN GROUP (ORDER BY salary) returns:",
-              "options": [
-                "Rank of existing row with salary=100000",
-                "Rank that value 100000 WOULD have if inserted",
-                "Error",
-                "Count of salaries < 100000"
-              ],
-              "answer": 1,
-              "explain": "Hypothetical set function: rank of hypothetical value in existing distribution."
-            },
-            {
-              "q": "PERCENT_RANK(100000) WITHIN GROUP returns:",
-              "options": [
-                "0 to 1",
-                "0 to 100",
-                "Rank integer",
-                "Count"
-              ],
-              "answer": 0,
-              "explain": "PERCENT_RANK returns relative rank 0.0 to 1.0."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "IGNORE NULLS & Advanced NULL Handling",
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "IGNORE NULLS / RESPECT NULLS (PostgreSQL 15+)"
+          "code": "-- Where would a 100000 salary rank, as if inserted?\nSELECT\n  RANK(100000)       WITHIN GROUP (ORDER BY salary) AS rank_of_100k,\n  DENSE_RANK(100000) WITHIN GROUP (ORDER BY salary) AS dense_rank_of_100k,\n  PERCENT_RANK(100000) WITHIN GROUP (ORDER BY salary) AS pct_rank_of_100k\nFROM employees;",
+          "pg": "-- Ordered-set aggregates: single pass, no temp row inserted",
+          "mysql": "-- MySQL 8.0: no WITHIN GROUP for RANK; emulate with COUNT",
+          "py-pandas": "(df['salary'] < 100000).sum() + 1"
         },
         {
           "type": "code",
-          "label": "ignore nulls",
-          "code": "-- LAG/LEAD with IGNORE NULLS\nSELECT \n  sale_date,\n  amount,\n  LAG(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS prev_non_null,\n  LEAD(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS next_non_null\nFROM daily_sales;\n\n-- FIRST_VALUE / LAST_VALUE with IGNORE NULLS\nSELECT \n  sale_date,\n  amount,\n  FIRST_VALUE(amount) IGNORE NULLS OVER (ORDER BY sale_date) AS first_sale,\n  LAST_VALUE(amount) IGNORE NULLS OVER (\n    ORDER BY sale_date\n    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING\n  ) AS last_sale\nFROM daily_sales;\n\n-- RESPECT NULLS (default)\nLAG(amount) RESPECT NULLS OVER (ORDER BY sale_date)",
-          "pg": "-- PostgreSQL 15+: IGNORE NULLS / RESPECT NULLS",
-          "mysql": "-- MySQL: no IGNORE NULLS",
-          "py-pandas": "# Forward/backward fill\ndf['amount'].ffill()  # forward fill (LAG IGNORE NULLS)\ndf['amount'].bfill()  # backward fill (LEAD IGNORE NULLS)"
-        },
-        {
-          "type": "quiz",
-          "items": [
-            {
-              "q": "LAG(x) IGNORE NULLS returns:",
-              "options": [
-                "Previous row value (even if NULL)",
-                "Previous non-NULL value",
-                "Error if NULL encountered",
-                "0 instead of NULL"
-              ],
-              "answer": 1,
-              "explain": "IGNORE NULLS skips NULLs and finds previous non-NULL value."
-            },
-            {
-              "q": "LAST_VALUE IGNORE NULLS with default frame:",
-              "options": [
-                "Returns last non-NULL in partition",
-                "Returns current row value",
-                "Error",
-                "Returns NULL"
-              ],
-              "answer": 1,
-              "explain": "Default frame = CURRENT ROW. Need explicit frame for true last non-NULL."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "Window Function Internals — WindowAgg, Sort, Spilling",
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "WindowAgg Execution Model"
+          "label": "ignore nulls gap fill",
+          "code": "SELECT day,\n       sales,\n       LAG(sales) IGNORE NULLS OVER (ORDER BY day) AS prev_reported,\n       sales - LAG(sales) IGNORE NULLS OVER (ORDER BY day) AS delta_from_last_report\nFROM daily_sales;",
+          "pg": "-- LAG(... IGNORE NULLS) skips NULL rows while scanning back (PostgreSQL 15+)",
+          "mysql": "-- MySQL: no IGNORE NULLS; emulate with a correlated last-non-null join",
+          "py-pandas": "df['sales'].ffill()"
         },
         {
           "type": "prose",
-          "md": "PostgreSQL WindowAgg node: 1) Sort input by PARTITION BY + ORDER BY, 2) For each partition, evaluate window functions in sequence, 3) For each row, compute frame boundaries and evaluate functions. Multiple functions with same PARTITION+ORDER share sort and single WindowAgg pass."
+          "md": "`LAG(sales) IGNORE NULLS` backfills a sparse series: it skips rows where the value is NULL and attaches the most recent non-NULL figure to the current row — the classic pattern for non-trading days, partial reporting, or telemetry gaps, without inventing data."
         },
         {
-          "type": "code",
-          "label": "windowagg internals",
-          "code": "-- EXPLAIN shows WindowAgg node\nEXPLAIN SELECT \n  ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary),\n  RANK() OVER (PARTITION BY dept ORDER BY salary),\n  SUM(salary) OVER (PARTITION BY dept ORDER BY salary)\nFROM employees;\n\n-- Single WindowAgg node with multiple functions\n-- Plan shows:\n--   -> WindowAgg\n--       -> Sort (partition by dept, order by salary)\n--             -> Seq Scan on employees",
-          "pg": "-- Single WindowAgg for same PARTITION+ORDER\n-- Different PARTITION/ORDER = multiple WindowAgg nodes",
-          "mysql": "-- MySQL: similar window function execution",
-          "py-pandas": "# No direct equivalent; pandas uses groupby + transform"
-        },
-        {
-          "type": "visual",
-          "kind": "table-diff",
-          "spec": {
-            "before": [
-              {
-                "functions": "Same PARTITION+ORDER",
-                "sorts": 1,
-                "windowagg_passes": "N (one per function)",
-                "note": "Shared sort"
-              },
-              {
-                "functions": "Different PARTITION",
-                "sorts": "N",
-                "windowagg_passes": "N",
-                "note": "Separate sorts"
-              },
-              {
-                "functions": "Same PARTITION, different ORDER",
-                "sorts": "N",
-                "windowagg_passes": "N",
-                "note": "Separate sorts"
-              },
-              {
-                "functions": "Same PARTITION+ORDER, diff frames",
-                "sorts": 1,
-                "windowagg_passes": "N",
-                "note": "Frames evaluated per row"
-              }
-            ],
-            "after": [],
-            "highlight": [
-              "sorts",
-              "windowagg_passes"
-            ]
-          }
-        },
-        {
-          "type": "query-plan",
-          "title": "EXPLAIN — WindowAgg Shared Sort",
-          "plan": {
-            "Plan": {
-              "Node Type": "WindowAgg",
-              "Startup Cost": 50,
-              "Total Cost": 500,
-              "Plan Rows": 8500,
-              "Plan Width": 48,
-              "Plans": [
-                {
-                  "Node Type": "Sort",
-                  "Startup Cost": 50,
-                  "Total Cost": 200,
-                  "Plan Rows": 8500,
-                  "Plan Width": 40,
-                  "Sort Key": [
-                    "dept",
-                    "salary"
-                  ],
-                  "Plans": [
-                    {
-                      "Node Type": "Seq Scan",
-                      "Relation Name": "employees",
-                      "Startup Cost": 0,
-                      "Total Cost": 185,
-                      "Plan Rows": 8500,
-                      "Plan Width": 40
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "dialect": "pg"
+          "type": "dialect-diff",
+          "sql": "SELECT RANK(100000) WITHIN GROUP (ORDER BY salary) FROM employees;",
+          "pg": "SELECT RANK(100000) WITHIN GROUP (ORDER BY salary) FROM employees;\n-- ordered-set aggregate: rank of value as if inserted",
+          "mysql": "-- MySQL 8.0: no WITHIN GROUP for RANK\n-- emulate:\n-- SELECT (SELECT COUNT(*) FROM employees WHERE salary > 100000) + 1 AS rank_of_100k;",
+          "py-pandas": "(df['salary'] > 100000).sum() + 1  # rank of a hypothetical value"
         },
         {
           "type": "quiz",
           "items": [
             {
-              "q": "Two window functions: ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) and SUM(salary) OVER (PARTITION BY dept ORDER BY salary). Execution:",
+              "q": "RANK(60000) WITHIN GROUP (ORDER BY salary DESC) returns…",
               "options": [
-                "Two sorts, two WindowAgg",
-                "One sort, two WindowAgg passes",
-                "One sort, one WindowAgg (both functions)",
-                "Error"
+                "The salary of the employee ranked 60000",
+                "Where a salary of 60000 would rank if inserted",
+                "60000 rows",
+                "The 60000th percentile"
               ],
               "answer": 1,
-              "explain": "Same PARTITION+ORDER = shared sort. Each function = separate WindowAgg pass over sorted data."
+              "explain": "WITHIN GROUP asks: insert the argument — what is its rank in this distribution? Ordering follows the ORDER BY inside the call."
             },
             {
-              "q": "Frame evaluation per row:",
+              "q": "LAG(sales) IGNORE NULLS is for…",
               "options": [
-                "Pre-computed for all rows",
-                "Computed on-the-fly per row during WindowAgg pass",
-                "Cached in memory",
-                "Delegated to storage engine"
+                "Speeding up the window",
+                "Backfilling sparse series with the last non-NULL value",
+                "Dropping duplicate sales",
+                "Replacing ROW_NUMBER"
               ],
               "answer": 1,
-              "explain": "WindowAgg iterates rows, computes frame boundaries per row, evaluates aggregate over frame."
+              "explain": "IGNORE NULLS skips NULL rows while scanning back, so the previous non-NULL figure attaches to the current row — gap fill, not speed."
             }
           ]
-        }
-      ]
-    },
-    {
-      "title": "Dialect Mastery — Window Function Gaps",
-      "blocks": [
-        {
-          "type": "dialect-diff",
-          "sql": "SUM(x) OVER (PARTITION BY y ORDER BY z RANGE BETWEEN 1 PRECEDING AND 1 FOLLOWING)",
-          "pg": "Full RANGE frame support with numeric/date ORDER BY",
-          "mysql": "MySQL 8.0+: RANGE supported for numeric/date. No GROUPS frame.",
-          "py-pandas": "df.groupby('y')['x'].transform(lambda x: x.rolling(window=3, center=True).sum())",
-          "py-sqlalchemy": "func.sum(Emp.x).over(partition_by=Emp.y, order_by=Emp.z, range=(-1, 1))"
-        },
-        {
-          "type": "dialect-diff",
-          "sql": "SELECT ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) FROM emp QUALIFY rn <= 3;",
-          "pg": "-- QUALIFY not in PostgreSQL\n-- Use CTE: WITH cte AS (...) SELECT * FROM cte WHERE rn <= 3",
-          "mysql": "-- MySQL 8.0+: QUALIFY supported\nSELECT ... FROM emp QUALIFY ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary) <= 3;",
-          "py-pandas": "df[df['rn'] <= 3]"
         }
       ]
     },
@@ -474,70 +365,76 @@
       "blocks": [
         {
           "type": "problems",
+          "subtitle": "Dynamic pivots, custom aggregates, hypothetical sets, gap fills and audit triggers.",
           "items": [
             {
               "id": "X401",
               "tier": 4,
-              "title": "Custom Window Aggregate (C)",
+              "title": "Safer Dynamic Pivot Helper",
               "platform": "drill",
               "patterns": [
-                "custom-aggregate"
+                "dynamic-pivot"
               ],
-              "statement": "Sketch C function signatures for custom moving SUM aggregate with O(1) sliding window.",
+              "statement": "Write a PL/pgSQL helper that pivots sales by an unknown month set, building the crosstab column list from DISTINCT months with format('%I') so identifiers are injection-safe.",
               "hints": [
-                "msfunc adds, minvfunc removes, state = running sum + count"
+                "string_agg(format('%I numeric', ...), ', ' ORDER BY ...)",
+                "RETURN QUERY EXECUTE format('... AS ct (region text, %s)', col_list)"
               ]
             },
             {
               "id": "X402",
               "tier": 4,
-              "title": "Hypothetical Rank for Salary Bands",
+              "title": "Custom Moving-Average Aggregate",
               "platform": "drill",
               "patterns": [
-                "hypothetical-rank"
+                "custom-aggregate"
               ],
-              "statement": "Find rank of salary 150000 in company distribution. Show RANK, DENSE_RANK, PERCENT_RANK.",
+              "statement": "Define CREATE AGGREGATE for a moving average: SFUNC/STYPE for the accumulator plus MSFUNC/MINFUNC so the WINDOW aggregate slides in O(1).",
               "hints": [
-                "RANK(150000) WITHIN GROUP (ORDER BY salary)"
+                "state = running sum + count; msfunc folds in, minvfunc removes",
+                "CREATE AGGREGATE mov_avg(numeric) (... WINDOW = true)"
               ]
             },
             {
               "id": "X403",
               "tier": 4,
-              "title": "IGNORE NULLS for Sparse Data",
+              "title": "Hypothetical Salary Band",
               "platform": "drill",
               "patterns": [
-                "ignore-nulls"
+                "hypothetical-rank"
               ],
-              "statement": "Sparse sensor data with NULL gaps. Use LAG IGNORE NULLS to find last reading.",
+              "statement": "Bound a salary band by using RANK(x) WITHIN GROUP (ORDER BY salary) to find where the band thresholds would sit in the distribution.",
               "hints": [
-                "LAG(reading) IGNORE NULLS OVER (ORDER BY ts)"
+                "RANK(low) WITHIN GROUP (ORDER BY salary) and RANK(high)",
+                "The gap between the two ranks is the band's membership size"
               ]
             },
             {
               "id": "X404",
               "tier": 4,
-              "title": "Expression Index for Window ORDER BY",
+              "title": "Ignore-NULLS Gap Fill",
               "platform": "drill",
               "patterns": [
-                "expression-index"
+                "ignore-nulls"
               ],
-              "statement": "Window function uses ORDER BY salary + bonus. Create expression index.",
+              "statement": "Fill a sparse daily metric: LAG(col) IGNORE NULLS attaches the last reported value to NULL days so the series stays continuous without inventing values.",
               "hints": [
-                "CREATE INDEX ON employees ((salary + bonus) DESC)"
+                "LAG(reading) IGNORE NULLS OVER (ORDER BY day)",
+                "COALESCE(reading, prev_reported) when a filled value is desired"
               ]
             },
             {
               "id": "X405",
               "tier": 4,
-              "title": "Window Function Pushdown (PG 17+)",
+              "title": "Audit Trigger with Row Guards",
               "platform": "drill",
               "patterns": [
-                "optimization"
+                "trigger-audit"
               ],
-              "statement": "Explain how PostgreSQL 17+ pushes predicates below window functions.",
+              "statement": "Add an AFTER ROW audit trigger that writes emp_audit rows and a BEFORE ROW guard that RAISE-Es when an invariant breaks — both inside the same transaction.",
               "hints": [
-                "Predicate pushdown through WindowAgg when safe"
+                "AFTER INSERT OR UPDATE ... FOR EACH ROW EXECUTE FUNCTION log_emp_change()",
+                "BEFORE trigger with RAISE EXCEPTION aborts and rolls back"
               ]
             }
           ]
@@ -604,37 +501,40 @@
     }
   ],
   "revisionCard": [
-    "Custom aggregates: CREATE AGGREGATE ... WINDOW (PG14+), msfunc/minvfunc for O(1) sliding",
-    "Hypothetical sets: RANK(x) WITHIN GROUP — where would x rank?",
-    "IGNORE NULLS (PG15): skip NULLs in LAG/LEAD/FIRST/LAST_VALUE",
-    "WindowAgg: shared sort for same PARTITION+ORDER, multiple passes per function",
-    "Expression in ORDER BY kills index use → expression index or computed column",
-    "QUALIFY (MySQL/Snowflake) vs CTE (PostgreSQL) for filtering window results"
+    "Dynamic identifiers: EXECUTE format('%I', name) quotes identifiers — never bare || for pivot columns",
+    "Moving support: msfunc folds values in, minvfunc removes them — the O(1) sliding window pair",
+    "WITHIN GROUP: ordered-set aggregates rank the argument as if inserted (RANK/PERCENT_RANK)",
+    "INSTEAD OF (views) vs BEFORE/AFTER (tables); RAISE EXCEPTION inside a trigger aborts the transaction",
+    "LAG(col) IGNORE NULLS backfills sparse series with the last non-NULL value"
   ],
   "glossary": [
     {
-      "term": "custom window aggregate",
-      "def": "CREATE AGGREGATE ... WINDOW with msfunc/minvfunc for O(1) sliding window."
+      "term": "msfunc/minvfunc",
+      "def": "Transition functions that add (msfunc) and remove (minvfunc) a value from a moving-aggregate window state."
     },
     {
-      "term": "hypothetical set function",
-      "def": "RANK/DENSE_RANK/PERCENT_RANK WITHIN GROUP — rank of hypothetical value in distribution."
+      "term": "moving aggregate",
+      "def": "A window aggregate whose state slides with the frame via inverse transition functions (O(1) per row)."
     },
     {
-      "term": "IGNORE NULLS",
-      "def": "Skip NULLs in window frame; find previous/next non-NULL."
+      "term": "hypothetical set",
+      "def": "A function answering 'where would this value rank?' without inserting any row."
     },
     {
-      "term": "WindowAgg passes",
-      "def": "Each window function with same PARTITION+ORDER gets separate pass over sorted data."
+      "term": "ordered-set aggregate",
+      "def": "An aggregate with a WITHIN GROUP (ORDER BY ...) argument, e.g. RANK(x) WITHIN GROUP."
     },
     {
-      "term": "expression index",
-      "def": "Index on expression (e.g., salary+bonus) to support window ORDER BY on expression."
+      "term": "WITHIN GROUP",
+      "def": "Clause supplying the ORDER BY and argument for ordered-set aggregates (RANK, percentiles)."
     },
     {
-      "term": "QUALIFY",
-      "def": "MySQL/Snowflake clause to filter window function results without CTE."
+      "term": "INSTEAD OF trigger",
+      "def": "A view-level trigger that intercepts a write and runs your procedure instead of the default action."
+    },
+    {
+      "term": "dynamic pivot",
+      "def": "A crosstab whose category columns are built at runtime from the data, quoted with %I to stay safe."
     }
   ]
 }

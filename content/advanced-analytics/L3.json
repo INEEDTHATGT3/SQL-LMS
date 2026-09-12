@@ -1,261 +1,244 @@
 {
   "level": 3,
   "title": "Advanced Analytics",
-  "tagline": "approximate aggregates, percentile optimization, streaming, parallel",
+  "tagline": "Time intelligence, retention curves, deep funnels, and approximate analytics at scale",
   "placementQuiz": [
     {
-      "q": "approx_count_distinct(col) vs COUNT(DISTINCT col):",
+      "q": "Weekly revenue on a Friday vs the previous Friday needs which adjustment?",
       "options": [
-        "Same result, approx is faster",
-        "approx is exact, COUNT DISTINCT is approximate",
-        "approx only works on integers",
-        "COUNT DISTINCT is deprecated"
+        "Weekday alignment of buckets",
+        "A LATERAL join",
+        "A materialized view",
+        "An index"
       ],
       "answer": 0,
-      "explain": "Approximate aggregates (HyperLogLog) trade small error for massive speed on large datasets."
+      "explain": "Compare like-for-like periods: bucket to ISO weeks or align weekdays before LAG(7)."
     },
     {
-      "q": "percentile_cont(0.5) WITHIN GROUP (ORDER BY salary):",
+      "q": "A calendar table's main analytics job is…",
       "options": [
-        "Average salary",
-        "Median salary",
-        "5th percentile salary",
-        "50% of rows"
+        "Indexing dates",
+        "Filling date gaps so LEFT JOINs keep every bucket",
+        "Replacing DATE_TRUNC",
+        "Defining constraints"
       ],
       "answer": 1,
-      "explain": "percentile_cont(0.5) = continuous percentile at 0.5 = median."
+      "explain": "A generate_series/calendar spine preserves zero-activity buckets that a plain GROUP BY would drop."
     },
     {
-      "q": "percentile_disc vs percentile_cont:",
+      "q": "A retention cohort is keyed by what?",
       "options": [
-        "Same",
-        "disc = discrete (actual value), cont = interpolated",
-        "cont = discrete, disc = continuous",
-        "Only disc exists"
+        "The user's last activity date",
+        "The user's first activity date",
+        "Order total",
+        "Signup hour"
       ],
       "answer": 1,
-      "explain": "disc = existing value at percentile; cont = interpolated between values."
+      "explain": "Cohort identity = first (min) activity date; later periods are measured against it."
     },
     {
-      "q": "TABLESAMPLE with REPEATABLE ensures:",
+      "q": "Which SQL shape measures a multi-step funnel per user?",
       "options": [
-        "Faster sampling",
-        "Same sample every run (deterministic)",
-        "Exact 10% rows",
-        "No page-level bias"
+        "One window ranking over ordered step events, then aggregate",
+        "A single SELECT with OR conditions",
+        "A UNION of independent counts",
+        "A GROUPING SETS of steps"
       ],
-      "answer": 1,
-      "explain": "REPEATABLE(seed) makes sampling deterministic — same sample every run."
+      "answer": 0,
+      "explain": "Row-number each user's step sequence and aggregate the deepest rank reached."
     },
     {
-      "q": "Approximate percentile (TDigest) vs exact percentile:",
+      "q": "Approximate distinct-counting trades what for what?",
       "options": [
-        "Same accuracy",
-        "TDigest ~1% error, O(1) memory",
-        "TDigest only for integers",
-        "Exact percentile always faster"
+        "Memory for speed — small error",
+        "Speed for memory — exact always",
+        "Latency for consistency",
+        "Storage for correctness"
       ],
-      "answer": 1,
-      "explain": "TDigest streaming algorithm: O(1) memory, ~1% error, merges across workers."
+      "answer": 0,
+      "explain": "HLL/approx algorithms bound memory use with a small fixed error (e.g. ~1%), perfect for high-cardinality dashboards."
     }
   ],
   "sections": [
     {
-      "title": "Approximate Aggregates — HyperLogLog, TDigest, KMV",
+      "title": "Mental Model — Time Is the Hard Dimension",
       "blocks": [
         {
           "type": "mantra",
-          "md": "Exact COUNT(DISTINCT) = O(N) memory. Approximate = O(1) memory, ~1-2% error. HyperLogLog for distinct count, TDigest for percentiles, KMV for top-K. Essential for 1B+ row tables."
+          "md": "Time is the hardest dimension because it is never sparse and never aligned. Bucket it, align it, and compare like with like."
+        }
+      ]
+    },
+    {
+      "title": "Time Buckets & Calendar Tables",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Bucketing and the Calendar Spine"
         },
         {
           "type": "code",
-          "label": "hyperloglog distinct count",
-          "code": "-- PostgreSQL: HyperLogLog extension\nCREATE EXTENSION IF NOT EXISTS hll;\n\n-- Create HLL sketch\nSELECT hll_add_agg(hll_empty(), user_id) FROM events;\n\n-- Distinct count from sketch\nhll_cardinality(hll_add_agg(hll_empty(), user_id));\n\n-- Merge sketches (parallel/distributed)\nhll_union(hll_sketch1, hll_sketch2);",
-          "pg": "-- hll extension: hll_add_agg, hll_cardinality, hll_union",
-          "mysql": "-- MySQL: APPROX_COUNT_DISTINCT() (8.0.13+)\nSELECT APPROX_COUNT_DISTINCT(user_id) FROM events;",
-          "py-pandas": "# datasketches / hyperstream for Python"
+          "label": "daily buckets",
+          "code": "SELECT date_trunc('day', ts)::date AS day,\n       COUNT(*) AS events\nFROM events\nGROUP BY 1\nORDER BY 1;",
+          "pg": "-- PostgreSQL date_trunc buckets any timestamp to the requested unit",
+          "mysql": "-- MySQL 8.0: DATE(ts) for days, DATE_FORMAT(ts, '%Y-%m') for months",
+          "py-pandas": "df.groupby(df['ts'].dt.date).size()"
         },
         {
           "type": "code",
-          "label": "tdigest percentile",
-          "code": "-- TDigest for approximate percentiles\nSELECT tdigest_agg(value) FROM measurements;\n\n-- Query percentiles from sketch\nSELECT percentile(t, 0.5) FROM (SELECT tdigest_agg(value) AS t FROM measurements) s;\n\n-- Merge sketches (distributed)\ntdigest_union(sketch1, sketch2);",
-          "pg": "-- PostgreSQL: tdigest extension or HyperLogLog with percentile approximation",
-          "mysql": "-- MySQL: no native TDigest",
-          "py-pandas": "# tdigest library\nfrom tdigest import TDigest\nt = TDigest()\nfor v in data: t.add(v)\nprint(t.percentile(50))"
+          "label": "calendar spine",
+          "code": "WITH days AS (\n  SELECT generate_series(DATE '2024-01-01', DATE '2024-12-31', INTERVAL '1 day')::date AS day\n)\nSELECT d.day,\n       COUNT(e.id) AS events\nFROM days d\nLEFT JOIN events e ON e.ts::date = d.day\nGROUP BY d.day\nORDER BY d.day;",
+          "pg": "-- generate_series emits one row per bucket; LEFT JOIN keeps empty days",
+          "mysql": "-- MySQL 8.0: recursive CTE calendar (see dialect-diff section)",
+          "py-pandas": "import pandas as pd; idx = pd.date_range('2024-01-01', '2024-12-31'); df.set_index('ts').resample('D').size().reindex(idx, fill_value=0)"
         },
         {
-          "type": "visual",
-          "kind": "table-diff",
-          "spec": {
-            "before": [
-              {
-                "method": "COUNT(DISTINCT)",
-                "memory": "O(N)",
-                "accuracy": "Exact",
-                "speed": "Slow on large N"
-              },
-              {
-                "method": "HyperLogLog",
-                "memory": "O(1) ~few KB",
-                "accuracy": "~1-2% error",
-                "speed": "Very fast"
-              },
-              {
-                "method": "TDigest (percentile)",
-                "memory": "O(1) ~few KB",
-                "accuracy": "~1% error",
-                "speed": "Very fast"
-              },
-              {
-                "method": "KMV (top-K)",
-                "memory": "O(K)",
-                "accuracy": "Exact top-K",
-                "speed": "Fast"
-              }
-            ],
-            "after": [],
-            "highlight": [
-              "memory",
-              "accuracy"
-            ]
-          }
+          "type": "prose",
+          "md": "A plain GROUP BY silently omits any day with zero events, so a line chart develops tooth-shaped gaps and week-over-week math compares Tuesday against Thursday. The **calendar spine** — every desired bucket generated up front, then LEFT JOINed to the facts — guarantees an aligned, gap-free series where a zero is a real zero."
         },
         {
           "type": "quiz",
           "items": [
             {
-              "q": "HyperLogLog memory usage is:",
+              "q": "Why LEFT JOIN from the calendar to events rather than the reverse?",
               "options": [
-                "O(N) where N = distinct count",
-                "O(log N)",
-                "O(1) fixed size",
-                "O(N log N)"
+                "LEFT preserves every calendar row even when events has none for it",
+                "It is faster by definition",
+                "Events has no primary key",
+                "RIGHT JOIN is faster"
               ],
-              "answer": 2,
-              "explain": "HLL uses fixed-size registers (e.g., 2^14 registers = ~16KB). Memory constant regardless of distinct count."
+              "answer": 0,
+              "explain": "Driving from the calendar keeps a row for every bucket — LEFT JOIN never drops calendar days that had zero events."
             },
             {
-              "q": "TDigest vs exact percentile_cont:",
+              "q": "What does generate_series(DATE '2024-01-01', DATE '2024-12-31', INTERVAL '1 day') return?",
               "options": [
-                "TDigest always exact",
-                "TDigest ~1% error, O(1) memory",
-                "TDigest only for integers",
-                "Cont is deprecated"
+                "A single date",
+                "One timestamp per day across the range",
+                "All orders from 2024",
+                "A calendar view"
               ],
               "answer": 1,
-              "explain": "TDigest approximates CDF with compressed centroids. ~1% error, constant memory."
+              "explain": "generate_series yields one row per step of the range — a bucket spine you can join. Swap the interval to '1 month' to get month-start buckets."
             }
           ]
         }
       ]
     },
     {
-      "title": "Streaming Analytics — Continuous Views, PipelineDB, pg_streaming",
+      "title": "Aligned Periods — WoW / MoM / YoY",
       "blocks": [
         {
           "type": "heading",
-          "text": "Continuous Aggregates (TimescaleDB)"
+          "text": "Weekly Aligned Deltas"
         },
         {
           "type": "code",
-          "label": "continuous aggregate",
-          "code": "-- TimescaleDB continuous aggregate\nCREATE MATERIALIZED VIEW hourly_events\nWITH (timescaledb.continuous) AS\nSELECT time_bucket('1 hour', time) AS bucket,\n  device_id,\n  COUNT(*) AS event_count,\n  AVG(value) AS avg_value\nFROM events\nGROUP BY bucket, device_id;\n\n-- Automatic refresh (background)\nSELECT add_continuous_aggregate_policy('hourly_events',\n  start_offset => INTERVAL '3 hours',\n  end_offset => INTERVAL '1 hour',\n  schedule_interval => INTERVAL '1 hour');\n\n-- Real-time view (combines materialized + raw)\nSELECT * FROM hourly_events WHERE bucket > now() - INTERVAL '1 day';",
-          "pg": "-- TimescaleDB: continuous aggregates + real-time views",
-          "mysql": "-- MySQL: no native continuous aggregates",
-          "py-pandas": "# Scheduled incremental refresh\ndef refresh_hourly():\n    new_data = get_new_events()\n    incremental_update(hourly_agg, new_data)"
+          "label": "week-over-week",
+          "code": "WITH daily AS (\n  SELECT ts::date AS day,\n         SUM(amount) AS revenue\n  FROM orders\n  GROUP BY ts::date\n)\nSELECT day,\n       revenue,\n       LAG(revenue, 7) OVER (ORDER BY day) AS prev_week_revenue,\n       ROUND(100.0 * (revenue - LAG(revenue, 7) OVER (ORDER BY day))\n             / NULLIF(LAG(revenue, 7) OVER (ORDER BY day), 0), 2) AS wow_pct\nFROM daily\nORDER BY day;",
+          "pg": "-- Dense daily spine makes LAG(revenue, 7) a true week-ago value",
+          "mysql": "-- MySQL 8.0: same LAG(..., 7) with a DATE-backed spine",
+          "py-pandas": "d.shift(7) # prev week; (d / d.shift(7) - 1) * 100"
         },
         {
-          "type": "heading",
-          "text": "Streaming Aggregation (pg_streaming / PipelineDB)"
-        },
-        {
-          "type": "code",
-          "label": "streaming aggregate concept",
-          "code": "-- Concept: aggregate as data flows in\n-- PipelineDB (PostgreSQL extension) / pg_streaming\n\n-- Continuous view\nCREATE CONTINUOUS VIEW page_views_1min AS\nSELECT site_id, COUNT(*) AS views\nFROM page_views\nGROUP BY site_id, time_bucket('1 minute', ts);\n\n-- Query continuous view (always up-to-date)\nSELECT * FROM page_views_1min WHERE site_id = 123;\n\n-- Combines: materialized (historical) + streaming (recent)",
-          "pg": "-- PipelineDB / pg_streaming for streaming SQL",
-          "mysql": "-- No native streaming SQL",
-          "py-pandas": "# Streaming: use Faust, Bytewax, or Kafka Streams\n# Not native SQL"
-        },
-        {
-          "type": "callout",
-          "tone": "blue",
-          "md": "Real-world: TimescaleDB continuous aggregates = 99% of streaming use cases. PipelineDB deprecated. For custom: Kafka + Flink/Spark Streaming + sink to DB."
+          "type": "dialect-diff",
+          "sql": "SELECT date_trunc('month', order_date) AS m, SUM(amount) FROM orders GROUP BY 1;",
+          "pg": "SELECT date_trunc('month', order_date) AS m, SUM(amount) FROM orders GROUP BY 1;\n-- calendar spine via generate_series\nWITH RECURSIVE days AS (\n  SELECT generate_series(DATE '2024-01-01', DATE '2024-12-31', INTERVAL '1 day')::date AS day\n)\nSELECT * FROM days;",
+          "mysql": "-- MySQL 8.0: DATE_FORMAT makes text buckets\nSELECT DATE_FORMAT(order_date, '%Y-%m-01') AS m, SUM(amount) FROM orders GROUP BY 1;\n-- calendar spine via recursive CTE\nWITH RECURSIVE days AS (\n  SELECT DATE '2024-01-01' AS day\n  UNION ALL\n  SELECT day + INTERVAL 1 DAY FROM days WHERE day < DATE '2024-12-31'\n)\nSELECT day FROM days;",
+          "py-pandas": "df.resample('W', on='ts')['amount'].sum()  # weekly buckets\ndf.resample('M', on='ts')['amount'].sum()  # month-end buckets"
         },
         {
           "type": "quiz",
           "items": [
             {
-              "q": "Continuous aggregate lag (end_offset) means:",
+              "q": "LAG(revenue, 7) assumes what about the series?",
               "options": [
-                "How far behind real-time",
-                "How often to refresh",
-                "How much history to keep",
-                "Max query latency"
+                "One row per day from the calendar spine so 7 lags = one week",
+                "That weeks have exactly 5 days",
+                "That revenue never changes",
+                "That the table is sorted by month"
               ],
               "answer": 0,
-              "explain": "end_offset = how far behind real-time the aggregate is (e.g., 1 hour lag)."
-            },
-            {
-              "q": "Continuous aggregate combines:",
-              "options": [
-                "Materialized view + raw tail",
-                "Two materialized views",
-                "View + trigger",
-                "Index + partition"
-              ],
-              "answer": 0,
-              "explain": "Real-time view = materialized (historical) + raw tail (recent data)."
+              "explain": "With a dense daily spine, seven LAG steps always land on the same weekday a week earlier — that is what makes WoW valid."
             }
           ]
         }
       ]
     },
     {
-      "title": "Advanced Sampling & Parallel Query",
+      "title": "Retention Curves & Churn",
       "blocks": [
         {
           "type": "heading",
-          "text": "Parallel Query for Analytics"
+          "text": "Cohort × Period Retention with Guards"
         },
         {
           "type": "code",
-          "label": "parallel query config",
-          "code": "-- Enable parallel query\nSET max_parallel_workers_per_gather = 4;\nSET min_parallel_table_scan_size = '8MB';\nSET parallel_tuple_cost = 0.1;\nSET parallel_setup_cost = 1000;\n\n-- Force parallel for testing\nSET force_parallel_mode = on;\n\n-- Check if parallel used\nEXPLAIN ANALYZE SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;\n-- Look for: Parallel Seq Scan, Partial Aggregate, Gather Merge",
-          "pg": "-- Parallel query (PG 10+)\n-- Partial Aggregate on workers → Gather Merge at leader",
-          "mysql": "-- MySQL: no native parallel GROUP BY\n-- Use partitioning + UNION ALL manually",
-          "py-pandas": "# Manual parallel: split, merge in parallel\nimport dask.dataframe as dd\nddf = dd.from_pandas(df, npartitions=4)\nresult = ddf.groupby('dept_id').size().compute()"
+          "label": "retention matrix",
+          "code": "WITH first_orders AS (\n  SELECT user_id, MIN(order_date)::date AS first_day\n  FROM orders\n  GROUP BY user_id\n),\nmat AS (\n  SELECT f.first_day AS cohort,\n         o.order_date::date AS order_day,\n         COUNT(DISTINCT o.user_id) AS retained\n  FROM first_orders f\n  JOIN orders o USING (user_id)\n  GROUP BY 1, 2\n)\nSELECT m.cohort,\n       m.order_day,\n       m.retained,\n       ROUND(100.0 * m.retained /\n             (SELECT COUNT(*) FROM first_orders WHERE first_day = m.cohort), 2) AS pct\nFROM mat m\nORDER BY 1, 2;",
+          "pg": "-- cohort size = scalar subquery counting users whose first_day matches",
+          "mysql": "-- MySQL 8.0: same shape; guard the ratio with NULLIF on the subquery",
+          "py-pandas": "f = df.groupby('user_id')['order_date'].min().rename('first_day'); j = df.join(f); j.groupby(['first_day', 'order_date'])['user_id'].nunique()"
         },
         {
           "type": "query-plan",
-          "title": "Parallel Hash Join Plan",
+          "title": "EXPLAIN — Retention GroupAggregate",
           "plan": {
             "Plan": {
-              "Node Type": "Gather Merge",
-              "Workers Planned": 4,
-              "Startup Cost": 10000,
-              "Total Cost": 50000,
-              "Plan Rows": 1000000,
-              "Plan Width": 120,
+              "Node Type": "GroupAggregate",
+              "Startup Cost": 120,
+              "Total Cost": 420,
+              "Plan Rows": 850,
+              "Plan Width": 48,
+              "Group Key": [
+                "f.first_day",
+                "o.order_date"
+              ],
               "Plans": [
                 {
-                  "Node Type": "Parallel Hash Join",
-                  "Startup Cost": 5000,
-                  "Total Cost": 40000,
-                  "Plan Rows": 250000,
-                  "Plan Width": 120,
-                  "Hash Cond": "(a.id = b.id)",
-                  "Worker 0": {
-                    "Actual Rows": 250123
-                  },
-                  "Worker 1": {
-                    "Actual Rows": 249876
-                  },
-                  "Worker 2": {
-                    "Actual Rows": 250045
-                  },
-                  "Worker 3": {
-                    "Actual Rows": 249956
-                  }
+                  "Node Type": "Incremental Sort",
+                  "Startup Cost": 90,
+                  "Total Cost": 300,
+                  "Sort Key": [
+                    "f.first_day",
+                    "o.order_date"
+                  ],
+                  "Plans": [
+                    {
+                      "Node Type": "Merge Join",
+                      "Merge Cond": "(o.user_id = f.user_id)",
+                      "Plans": [
+                        {
+                          "Node Type": "Index Scan",
+                          "Relation Name": "orders",
+                          "Index Name": "orders_user_date_idx",
+                          "Startup Cost": 30,
+                          "Total Cost": 220,
+                          "Plan Rows": 10000,
+                          "Plan Width": 24
+                        },
+                        {
+                          "Node Type": "Sort",
+                          "Startup Cost": 40,
+                          "Total Cost": 60,
+                          "Sort Key": [
+                            "user_id",
+                            "first_day"
+                          ],
+                          "Plans": [
+                            {
+                              "Node Type": "HashAggregate",
+                              "Relation Name": "orders",
+                              "Startup Cost": 25,
+                              "Total Cost": 40,
+                              "Plan Rows": 1000,
+                              "Plan Width": 16
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -263,50 +246,135 @@
           "dialect": "pg"
         },
         {
+          "type": "prose",
+          "md": "The planner computes MIN(order_date) per user (HashAggregate), merges back to orders, and group-aggregates by (cohort, order_day). When user_id is already the leading sort key, PostgreSQL can use an **Incremental Sort** on (first_day, order_day) — a favoured shape for daily retention jobs that stream through one ordered feed."
+        },
+        {
           "type": "quiz",
           "items": [
             {
-              "q": "Parallel Hash Join workers each build:",
+              "q": "Where does the cohort size denominator come from?",
               "options": [
-                "Full hash table on entire build side",
-                "Hash table on their partition of build side",
-                "Shared hash table in shared memory",
-                "No hash table — use NLJ"
+                "The MAX of retained",
+                "The count of users whose first_day equals the cohort key",
+                "The total order count",
+                "A window COUNT(*)"
               ],
               "answer": 1,
-              "explain": "Each worker builds hash on its partition of build side. No shared memory — independent."
+              "explain": "The scalar subquery counts users whose MIN(order_date) matches the cohort — the acquisition size of that first-month bucket."
             },
             {
-              "q": "Gather vs Gather Merge:",
+              "q": "How should the division guard against a zero or absent denominator?",
               "options": [
-                "Same thing",
-                "Gather = unordered collect; Gather Merge = ordered merge",
-                "Gather Merge faster",
-                "Gather for Hash Join only"
+                "NULLIF(denominator, 0)",
+                "COALESCE(retained, 1)",
+                "IGNORE NULLS",
+                "A CASE for negative pct"
               ],
-              "answer": 1,
-              "explain": "Gather Merge: workers return sorted data, leader merges. Gather: unordered collect."
+              "answer": 0,
+              "explain": "NULLIF(denom, 0) turns a missing or empty cohort into NULL so ROUND returns NULL instead of a divide-by-zero error."
             }
           ]
         }
       ]
     },
     {
-      "title": "Dialect Mastery — Advanced Analytics",
+      "title": "Funnel Analysis at Depth",
       "blocks": [
         {
-          "type": "dialect-diff",
-          "sql": "SELECT approx_count_distinct(user_id) FROM events;",
-          "pg": "SELECT approx_count_distinct(user_id) FROM events; -- hll extension",
-          "mysql": "SELECT APPROX_COUNT_DISTINCT(user_id) FROM events; -- 8.0.13+",
-          "py-pandas": "df['user_id'].nunique()  # exact"
+          "type": "heading",
+          "text": "One Path, Ranked Steps, Timing"
         },
         {
-          "type": "dialect-diff",
-          "sql": "SELECT * FROM events TABLESAMPLE SYSTEM (10) REPEATABLE (42);",
-          "pg": "SELECT * FROM events TABLESAMPLE SYSTEM (10) REPEATABLE (42);",
-          "mysql": "-- No TABLESAMPLE\nSELECT * FROM events WHERE RAND() < 0.1;",
-          "py-pandas": "events.sample(frac=0.1, random_state=42)"
+          "type": "code",
+          "label": "deep funnel with timing",
+          "code": "WITH ranked AS (\n  SELECT user_id, event, ts,\n         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts) AS rn,\n         MAX(CASE WHEN event = 'purchase' THEN ts END)\n           OVER (PARTITION BY user_id) AS bought_at\n  FROM events\n  WHERE event IN ('view', 'cart', 'checkout', 'purchase')\n)\nSELECT event,\n       COUNT(DISTINCT user_id) AS users\nFROM ranked\nGROUP BY event;",
+          "pg": "-- rn ranks each user's own funnel path; bought_at flags the deepest step's time",
+          "mysql": "-- MySQL 8.0: same window shape",
+          "py-pandas": "df['rn'] = df.sort_values('ts').groupby('user_id').cumcount() + 1; df.groupby('event')['user_id'].nunique()"
+        },
+        {
+          "type": "prose",
+          "md": "For step-to-step timing (how long between cart and checkout), correlate each step with the next event's timestamp — a LATERAL `(SELECT ts FROM events e2 WHERE e2.user_id = r.user_id AND e2.rn = r.rn + 1)` — or simply take `LEAD(ts)` inside the same ranking window. Funnel depth is strictly within a single user path."
+        },
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "**Funnel ≠ retention.** A funnel measures depth along one user's ordered journey (view → cart → purchase). Retention measures survival across periods, by cohort. Mixing the two vocabularies is the most common BI reporting error."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Funnel vs retention — which distinction is right?",
+              "options": [
+                "Funnel is per-path step depth; retention is per-cohort survival across periods",
+                "They are synonyms",
+                "Retention is a funnel with one step",
+                "Funnels need timestamps only"
+              ],
+              "answer": 0,
+              "explain": "Funnel = how deep one user got in a single journey; retention = how many of a cohort are still active in later periods."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Approximate Analytics at Scale",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "HyperLogLog, MySQL APPROX_COUNT_DISTINCT, Sampling"
+        },
+        {
+          "type": "prose",
+          "md": "Exact COUNT(DISTINCT) keeps the full set of seen values in memory — O(distinct), growing per row. HyperLogLog (HLL) instead folds values into a fixed-size register array and returns an estimate with a bounded error (~1%). That is precisely the contract a high-cardinality dashboard needs: constant memory, near-exact counts."
+        },
+        {
+          "type": "code",
+          "label": "postgres hll",
+          "code": "CREATE EXTENSION IF NOT EXISTS hll;\n\nSELECT hll_cardinality(hll_add_agg(hll_hash_integer(user_id))) AS approx_users\nFROM events;",
+          "pg": "-- Citus pg-hll: hll_hash_integer + hll_add_agg build a sketch, hll_cardinality reads it",
+          "mysql": "-- MySQL 8.0.13+: APPROX_COUNT_DISTINCT(user_id)",
+          "py-pandas": "# exact: df['user_id'].nunique()  |  HLL: datasketch.HyperLogLog"
+        },
+        {
+          "type": "code",
+          "label": "mysql approximate",
+          "code": "-- MySQL 8.0.13+\nSELECT APPROX_COUNT_DISTINCT(user_id) AS approx_users\nFROM events;",
+          "pg": "-- PostgreSQL equivalent uses the hll extension (above)",
+          "mysql": "-- APPROX_COUNT_DISTINCT returns an estimated distinct count",
+          "py-pandas": "# exact distinct: df['user_id'].nunique()"
+        },
+        {
+          "type": "code",
+          "label": "sampling",
+          "code": "SELECT * FROM events TABLESAMPLE SYSTEM (1);",
+          "pg": "-- SYSTEM (page-level) samples ~1% of pages; BERNOULLI (row-level) is more accurate",
+          "mysql": "-- MySQL: no TABLESAMPLE — WHERE RAND() < 0.01 instead",
+          "py-pandas": "df.sample(frac=0.01)"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "Approximation is for metrics, not for financial-grade facts. HLL errors are stable but nonzero; if a number leaves the building as revenue or a legal exposure, count it exactly."
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "Why does HLL beat exact DISTINCT on high cardinality?",
+              "options": [
+                "It is exact at low cardinality only",
+                "Fixed memory budget regardless of distinct count",
+                "It compresses the output table instead",
+                "It stores sampled rows to disk"
+              ],
+              "answer": 1,
+              "explain": "HLL keeps a fixed register array (e.g. ~16 KB) and never stores the values themselves — memory is constant while exact DISTINCT grows with the distinct count."
+            }
+          ]
         }
       ]
     },
@@ -315,90 +383,91 @@
       "blocks": [
         {
           "type": "problems",
+          "subtitle": "Time intelligence, retention curves, funnels and approximations — advanced analytics drills.",
           "items": [
             {
               "id": "X301",
               "tier": 3,
-              "title": "HyperLogLog for Unique Users",
+              "title": "Aligned WoW with Calendar Spine",
               "platform": "drill",
               "patterns": [
-                "hyperloglog"
+                "calendar-spine",
+                "lag"
               ],
-              "statement": "Estimate daily active users from 100M events using HyperLogLog. Compare with exact COUNT(DISTINCT).",
+              "statement": "Build a weekly revenue table with a midweek-aligned day spine: generate every day, LEFT JOIN orders, aggregate by ISO week, then LAG(week_sum, 1) for the aligned week-over-week comparison.",
               "hints": [
-                "CREATE EXTENSION hll; hll_add_agg()"
+                "generate_series spine + LEFT JOIN keeps zero-week rows",
+                "date_trunc('week', ts)::date as iso_week before LAG"
               ]
             },
             {
               "id": "X302",
               "tier": 3,
-              "title": "TDigest for Latency Percentiles",
+              "title": "Retention Matrix Rounded",
               "platform": "drill",
               "patterns": [
-                "tdigest"
+                "cohort-retention"
               ],
-              "statement": "Compute p50, p95, p99 latency from 10M requests using TDigest.",
+              "statement": "Produce a cohort × week retention matrix with ROUND(pct, 2): cohort = first order week, denominator = cohort size, and guard the ratio with NULLIF.",
               "hints": [
-                "tdigest_agg(latency)",
-                "percentile(t, 0.99)"
+                "MIN(order_date) per user defines the cohort",
+                "ROUND(100.0 * retained / NULLIF(cohort_size, 0), 2)"
               ]
             },
             {
               "id": "X303",
               "tier": 3,
-              "title": "Continuous Aggregate for 5-min Buckets",
+              "title": "Funnel Conversion Rates",
               "platform": "drill",
               "patterns": [
-                "continuous-aggregate"
+                "funnel"
               ],
-              "statement": "Design TimescaleDB continuous aggregate for 5-min metrics with 1-hour lag.",
+              "statement": "For a 4-step funnel (view → cart → checkout → purchase), report per-step distinct users and the step-to-step conversion percent between consecutive steps.",
               "hints": [
-                "time_bucket('5 min', ts)",
-                "add_continuous_aggregate_policy"
+                "ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY ts) ranks one path",
+                "conversion_i = users_i / users_(i-1)"
               ]
             },
             {
               "id": "X304",
               "tier": 3,
-              "title": "Streaming Page Views (PipelineDB)",
+              "title": "Approximate Active Users",
               "platform": "drill",
               "patterns": [
-                "streaming-aggregate"
+                "hyperloglog"
               ],
-              "statement": "Create continuous view for page views per minute per site.",
+              "statement": "Estimate daily active users on a huge events table with APPROX_COUNT_DISTINCT (or hll) and quantify the difference versus exact COUNT(DISTINCT) on a sample.",
               "hints": [
-                "CREATE CONTINUOUS VIEW",
-                "time_bucket('1 minute', ts)"
+                "SELECT APPROX_COUNT_DISTINCT(user_id) vs COUNT(DISTINCT user_id)",
+                "HLL error is bounded (~1%); exact count on a slice to measure it"
               ]
             },
             {
               "id": "X305",
               "tier": 3,
-              "title": "Parallel GROUP BY on 100M Rows",
+              "title": "Year-to-Date Running Total",
               "platform": "drill",
               "patterns": [
-                "parallel-aggregate"
+                "running-total"
               ],
-              "statement": "Tune parallel GROUP BY: set workers, work_mem, parallel_tuple_cost.",
+              "statement": "Compute a year-to-date revenue running total: SUM(amount) OVER (PARTITION BY year ORDER BY day) with a calendar spine so every trading day appears.",
               "hints": [
-                "max_parallel_workers_per_gather",
-                "work_mem",
-                "parallel_tuple_cost"
+                "PARTITION BY extract(year from day) resets the running total each year",
+                "calendar spine LEFT JOIN keeps the zero-revenue days"
               ]
             },
             {
               "id": "X306",
               "tier": 3,
-              "title": "Approximate Top-K with KMV",
+              "title": "First-Month vs Repeat-Month Revenue",
               "platform": "drill",
               "patterns": [
-                "kmv",
-                "top-k"
+                "cohort-revenue"
               ],
-              "statement": "Find top 100 most frequent IPs from 100M requests using KMV sketch.",
+              "statement": "Show how cohort revenue persists: for each cohort month, report revenue in the first month vs each later month using a first-order join to realign months.",
               "hints": [
-                "KMV sketch",
-                "top-K distinct"
+                "first_order = MIN(order_date) per user; months_since = month(order) - month(first)",
+                "GROUP BY cohort_month, months_since; SUM(amount)"
               ]
             }
           ]
@@ -407,37 +476,40 @@
     }
   ],
   "revisionCard": [
-    "HyperLogLog: O(1) memory, ~1-2% error for COUNT(DISTINCT). hll extension.",
-    "TDigest: streaming percentile algorithm, O(1) memory, ~1% error.",
-    "Continuous aggregates (TimescaleDB): auto-refreshed MV with incremental refresh.",
-    "Streaming aggregates: continuous view = materialized + raw tail; PipelineDB/pg_streaming.",
-    "Parallel aggregate: workers do Partial Aggregate → Gather Merge combines.",
-    "TABLESAMPLE SYSTEM (fast) vs BERNOULLI (accurate) + REPEATABLE for determinism."
+    "Calendar spine: generate_series / recursive CTE keeps every bucket; LEFT JOIN makes zeros visible",
+    "Aligned-period LAG: a dense daily series makes LAG(x, 7) a true week-ago; bucket weeks before comparing",
+    "Cohort denominator: scalar subquery counting users whose first_day equals the cohort key",
+    "Funnel by rank: ROW_NUMBER per user over ordered steps, then aggregate the deepest step",
+    "HLL trade-off: fixed memory and ~1% error vs exact DISTINCT whose memory grows with cardinality"
   ],
   "glossary": [
     {
+      "term": "calendar table",
+      "def": "A generated spine of every desired time bucket (generate_series / recursive CTE) used to keep zero-activity periods visible."
+    },
+    {
+      "term": "aligned period",
+      "def": "Comparing the same weekday/period of a previous cycle (WoW/MoM/YoY) so like compares with like."
+    },
+    {
+      "term": "retention cohort",
+      "def": "Users grouped by first-activity period; retention = survivors in later periods divided by cohort size."
+    },
+    {
+      "term": "churn",
+      "def": "The complement of retention: users lost between periods; chased with cohort curves."
+    },
+    {
+      "term": "funnel",
+      "def": "An ordered step sequence counted per user along one path, ranked with ROW_NUMBER."
+    },
+    {
       "term": "HyperLogLog",
-      "def": "Probabilistic algorithm for approximate distinct count with fixed memory."
+      "def": "Probabilistic cardinality sketch with fixed memory and ~1% error for COUNT DISTINCT at scale."
     },
     {
-      "term": "TDigest",
-      "def": "Streaming percentile algorithm with O(1) memory and bounded error."
-    },
-    {
-      "term": "continuous aggregate",
-      "def": "TimescaleDB: automatically maintained materialized view with incremental refresh."
-    },
-    {
-      "term": "continuous view",
-      "def": "PipelineDB/pg_streaming: real-time view combining materialized history + streaming tail."
-    },
-    {
-      "term": "parallel aggregate",
-      "def": "Workers compute partial aggregates; leader combines via Gather Merge."
-    },
-    {
-      "term": "KMV sketch",
-      "def": "K Minimum Values sketch for top-K distinct elements with bounded memory."
+      "term": "approximate aggregate",
+      "def": "An aggregate that trades a tiny bounded error for constant memory (HLL, APPROX_COUNT_DISTINCT, sampling)."
     }
   ]
 }
