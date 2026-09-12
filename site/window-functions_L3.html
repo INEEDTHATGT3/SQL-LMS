@@ -111,9 +111,9 @@ FROM ranked;</code></pre><pre data-lang="py" class="py-missing"><code># Python v
         <span class="plan-node-meta"> cost=0..185 rows=8500 width=40</span>
       </div></div></div></div></div></div>
 </div>
-<div class="quiz-card" data-quiz-key="s0-q212" data-answer="1">
-      <div class="quiz-q">Window function in CTE can be referenced in outer query:</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Only in SELECT</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>In SELECT, WHERE, ORDER BY of outer query</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Only in ORDER BY</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Not allowed</span></div></div>
+<div class="quiz-card" data-quiz-key="s0-q212" data-answer="0">
+      <div class="quiz-q">The outer query can filter on a CTE's window-result column in its WHERE clause because…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>the window is computed before the outer query consumes the CTE's output</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>windows re-run for every filter value</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>the CTE is always materialized</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>materialized CTEs block all referencing</span></div></div>
       <div class="quiz-explain">The CTE's output columns (including window results) are plain columns to the outer query, so outer WHERE can filter them. Materialized multi-reference CTEs stay an optimization fence; single-reference CTEs are inlined.</div>
       <div class="quiz-score"></div>
     </div><div class="quiz-card" data-quiz-key="s0-q213" data-answer="1">
@@ -249,7 +249,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Compute 3-period moving average of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnd4c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnd4c">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4c" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4c">CTE with ROW_NUMBER, then AVG(rn) OVER (ORDER BY rn ROWS 2 PRECEDING)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -259,7 +259,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Running sum of ROW_NUMBER() ordered by salary.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnd4d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnd4d">SUM(rn) OVER (ORDER BY rn)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4d">SUM(rn) OVER (ORDER BY rn)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -269,7 +269,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       EXPLAIN ANALYZE shows spill. Set work_mem to eliminate spill.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnd4e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnd4e">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4e">SET work_mem = '256MB'; watch for 'Sort Method: external merge'</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -279,7 +279,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Create optimal index for ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY hire_date DESC).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnd4f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnd4f">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4f">CREATE INDEX ON employees (dept_id, hire_date DESC)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -289,7 +289,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Rank employees by their running total of salary (ordered by hire_date).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnd4g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnd4g">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4g">CTE: running total, then RANK() OVER (ORDER BY running_total)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -299,7 +299,7 @@ CREATE INDEX idx_emp_dept_salary ON employees (dept_id, salary DESC);
     </div>
     <div class="prob-body">
       Employees in top 10% salary per department (use CTE + PERCENT_RANK filter).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnd4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnd4h">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslir4h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslir4h">CTE with PERCENT_RANK, outer WHERE pct_rank <= 0.1</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-4">

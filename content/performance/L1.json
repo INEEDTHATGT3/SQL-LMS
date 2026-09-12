@@ -224,15 +224,15 @@
               "explain": "Planner estimated 100 rows but actual was 1000. Statistics may be stale (run ANALYZE)."
             },
             {
-              "q": "Buffers in EXPLAIN (ANALYZE, BUFFERS) show:",
+              "q": "In EXPLAIN (ANALYZE, BUFFERS), 'shared read' blocks mean the server…",
               "options": [
-                "Memory usage",
-                "Shared hit/read/dirtied blocks",
-                "CPU usage",
-                "Network I/O"
+                "missed the buffer cache and fetched pages from disk",
+                "used the CPU cache",
+                "wrote new WAL records",
+                "hit the network"
               ],
-              "answer": 1,
-              "explain": "Buffers show shared hit (cache), shared read (disk), dirtied (modified), written (flushed)."
+              "answer": 0,
+              "explain": "Shared read counts page reads that missed the buffer cache; shared hit counts the ones answered from cache."
             }
           ]
         }

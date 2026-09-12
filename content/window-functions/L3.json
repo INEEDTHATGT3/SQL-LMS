@@ -155,14 +155,14 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Window function in CTE can be referenced in outer query:",
+              "q": "The outer query can filter on a CTE's window-result column in its WHERE clause because…",
               "options": [
-                "Only in SELECT",
-                "In SELECT, WHERE, ORDER BY of outer query",
-                "Only in ORDER BY",
-                "Not allowed"
+                "the window is computed before the outer query consumes the CTE's output",
+                "windows re-run for every filter value",
+                "the CTE is always materialized",
+                "materialized CTEs block all referencing"
               ],
-              "answer": 1,
+              "answer": 0,
               "explain": "The CTE's output columns (including window results) are plain columns to the outer query, so outer WHERE can filter them. Materialized multi-reference CTEs stay an optimization fence; single-reference CTEs are inlined."
             },
             {

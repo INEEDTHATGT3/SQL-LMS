@@ -87,7 +87,7 @@
           "type": "quiz",
           "items": [
             {
-              "q": "WHERE status IN ('active', 'pending') is equivalent to:",
+              "q": "Which condition is a literal expansion of `status IN ('active', 'pending')`?",
               "options": [
                 "status = 'active' AND status = 'pending'",
                 "status = 'active' OR status = 'pending'",
@@ -126,7 +126,7 @@
           "type": "quiz",
           "items": [
             {
-              "q": "A AND B OR C is evaluated as:",
+              "q": "Because AND binds tighter than OR, the expression A AND B OR C parses as…",
               "options": [
                 "A AND (B OR C)",
                 "(A AND B) OR C",
@@ -137,7 +137,7 @@
               "explain": "AND binds tighter than OR. Use parentheses to be explicit."
             },
             {
-              "q": "NOT (A OR B) is equivalent to:",
+              "q": "Applying De Morgan's law, NOT (A OR B) becomes…",
               "options": [
                 "NOT A OR NOT B",
                 "NOT A AND NOT B",

@@ -96,14 +96,14 @@ SET enable_mergejoin = off;</code></pre><pre data-lang="mysql"><code><span class
       <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>both inputs already arrive in join-key order, e.g. via index scans</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>both tables are tiny</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>a hash table would exceed work_mem</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>the WHERE clause filters on one table only</span></div></div>
       <div class="quiz-explain">Merge Join requires sorted input. Index scan or explicit sort provides ordering.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q297" data-answer="1">
-      <div class="quiz-q">The planner picks hash join over nested loop mainly when…</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>the tables are tiny</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>both inputs are large and the hash fits in work_mem</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>the join key is indexed</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>parallel is off</span></div></div>
-      <div class="quiz-explain">Hash join wins for large unsorted inputs whose hash tables fit in work_mem; spills degrade it toward nested-loop.</div>
+    </div><div class="quiz-card" data-quiz-key="s0-q297" data-answer="0">
+      <div class="quiz-q">Holding the query fixed, how does raising work_mem most directly change join choice?</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>it lets hash joins avoid spills, widening the input sizes they win on</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>it switches the planner to brute-force search</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>it disables nested loops</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>it only affects sorts</span></div></div>
+      <div class="quiz-explain">More hash memory means fewer spills, so hash join stays competitive on larger inputs.</div>
       <div class="quiz-score"></div>
-    </div><div class="quiz-card" data-quiz-key="s0-q298" data-answer="1">
-      <div class="quiz-q">For a nested-loop join, which pairing is preferred?</div>
-      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>Larger table first (outer)</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>Smaller input on the inner side</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>Either is identical</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>Sort both first</span></div></div>
+    </div><div class="quiz-card" data-quiz-key="s0-q298" data-answer="0">
+      <div class="quiz-q">A nested-loop join pays its biggest per-outer-row cost because…</div>
+      <div class="quiz-opts"><div class="quiz-opt" data-i="0"><span class="opt-key">A</span><span>the inner scan is restarted for every outer row</span></div><div class="quiz-opt" data-i="1"><span class="opt-key">B</span><span>the hash must be rebuilt each time</span></div><div class="quiz-opt" data-i="2"><span class="opt-key">C</span><span>both inputs must first be fully sorted</span></div><div class="quiz-opt" data-i="3"><span class="opt-key">D</span><span>of parallel worker coordination</span></div></div>
       <div class="quiz-explain">The inner relation is rescanned per outer row, so the smaller/cheapest side should be inner.</div>
       <div class="quiz-score"></div>
     </div>
@@ -269,7 +269,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query joins large_table (1M rows) with small_table (100 rows) on id. Which algorithm should the planner pick, and why — in cost terms? What gets built, how many times is the other side read, and what changes if work_mem is tiny?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5i">Hash Join: build a hash on the 100-row side, probe once per large row — ~1M probes, no rescan</div><button class="reveal-btn" data-target="umtydnsnr5k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnr5k">Nested Loop would rescan the inner for every outer row, so the 100-row side must be inner</div><button class="reveal-btn" data-target="umtydnsnr5m" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydnsnr5m">If the hash table exceeds work_mem it spills to disk — re-order inputs or raise work_mem</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45i">Hash Join: build a hash on the 100-row side, probe once per large row — ~1M probes, no rescan</div><button class="reveal-btn" data-target="umtydslj45k" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj45k">Nested Loop would rescan the inner for every outer row, so the 100-row side must be inner</div><button class="reveal-btn" data-target="umtydslj45m" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydslj45m">If the hash table exceeds work_mem it spills to disk — re-order inputs or raise work_mem</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -279,7 +279,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: WHERE user_id = 123 AND created_at > '2024-01-01'. Design index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5n">Column order: equality first (user_id), then range (created_at)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45n" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45n">Column order: equality first (user_id), then range (created_at)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -289,7 +289,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       99% queries filter deleted=false. Create partial index on orders(user_id, created_at).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5o">WHERE deleted = false</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45o" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45o">WHERE deleted = false</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -299,7 +299,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: SELECT name, email FROM users WHERE status='active'. Create covering index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5p">INCLUDE (name, email) or (status, name, email)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45p" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45p">INCLUDE (name, email) or (status, name, email)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -309,7 +309,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       WHERE YEAR(created_at) = 2024 never uses the index on created_at: the function call hides the column from the planner's cost model. Rewrite it as a sargable range so the planner can actually estimate and use the index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5q">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div><button class="reveal-btn" data-target="umtydnsnr5s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnr5s">An index on created_at becomes eligible for Index Scan / Bitmap scan once the column stands alone</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45q" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45q">created_at >= '2024-01-01' AND created_at < '2025-01-01'</div><button class="reveal-btn" data-target="umtydslj45s" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj45s">An index on created_at becomes eligible for Index Scan / Bitmap scan once the column stands alone</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -319,7 +319,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: WHERE dept_id = 1 AND salary > 50000. There is no composite index, only single-column idx_emp_dept and idx_emp_salary. Justify why the planner combines both via BitmapAnd instead of committing to one index, and when you'd replace them with a composite index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5t">Each index yields a bitmap; BitmapAnd intersects them in memory; the heap is fetched once</div><button class="reveal-btn" data-target="umtydnsnr5v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnr5v">Recheck Cond appears when bitmaps are lossy (page-level, not tuple-level)</div><button class="reveal-btn" data-target="umtydnsnr5x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydnsnr5x">When both predicates are highly selective — or the query is hot — a composite (dept_id, salary) index wins</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45t" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45t">Each index yields a bitmap; BitmapAnd intersects them in memory; the heap is fetched once</div><button class="reveal-btn" data-target="umtydslj45v" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj45v">Recheck Cond appears when bitmaps are lossy (page-level, not tuple-level)</div><button class="reveal-btn" data-target="umtydslj45x" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydslj45x">When both predicates are highly selective — or the query is hot — a composite (dept_id, salary) index wins</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -329,7 +329,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       Query: WHERE salary * 12 > 120000. Create functional index.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5y">CREATE INDEX ON employees ((salary * 12))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45y">CREATE INDEX ON employees ((salary * 12))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -339,7 +339,7 @@ CREATE INDEX idx ON t ((col1 + col2));
     </div>
     <div class="prob-body">
       A hash join with a ~2GB build side is orders of magnitude slower than expected. Read the EXPLAIN ANALYZE (it shows hash batches > 1, i.e., spill), then choose mitigations: what does raising work_mem do, and what query-level change could shrink the build side?
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsnr5z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsnr5z">EXPLAIN ANALYZE reports 'Hash Batches: 2' or more — the hash table exceeded work_mem and spilled to temp files</div><button class="reveal-btn" data-target="umtydnsnr61" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydnsnr61">Raise work_mem (per-operation memory) so the hash stays resident, or pre-filter rows so a smaller input feeds the hash</div><button class="reveal-btn" data-target="umtydnsnr63" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydnsnr63">The build side is chosen from row estimates — stale stats pick the wrong (bigger) build side</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslj45z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslj45z">EXPLAIN ANALYZE reports 'Hash Batches: 2' or more — the hash table exceeded work_mem and spilled to temp files</div><button class="reveal-btn" data-target="umtydslj461" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtydslj461">Raise work_mem (per-operation memory) so the hash stays resident, or pre-filter rows so a smaller input feeds the hash</div><button class="reveal-btn" data-target="umtydslj463" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtydslj463">The build side is chosen from row estimates — stale stats pick the wrong (bigger) build side</div></div>
     </div></li></ul>
   </section>
   

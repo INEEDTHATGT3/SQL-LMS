@@ -255,7 +255,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       On NVMe SSD, random_page_cost=4.0 overestimates. Set optimal value and explain impact on Hash vs NLJ choice.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn12u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn12u">SET random_page_cost = 1.1; favors Hash Join over NLJ</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslid2u" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslid2u">SET random_page_cost = 1.1; favors Hash Join over NLJ</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -265,7 +265,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       15-table query produces different plans on each run. Fix for stability.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn12v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn12v">SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslid2v" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslid2v">SET geqo = off; SET join_collapse_limit = 15; or use pg_hint_plan</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -275,7 +275,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       Parallel Hash Join spills to disk (Lossy). Fix with work_mem.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn12w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn12w">SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslid2w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslid2w">SET work_mem = '256MB'; monitor 'Lossy' in EXPLAIN</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -285,7 +285,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       JOIN on PK column. Show how planner optimizes (stops after first match).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn12x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn12x">EXPLAIN shows 'Unique Inner: true' or stops early in NLJ</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslid2x" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslid2x">EXPLAIN shows 'Unique Inner: true' or stops early in NLJ</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t4">L4</span>
@@ -295,7 +295,7 @@ SET min_parallel_table_scan_size = <span class="st">'8MB'</span>;</code></pre><p
     </div>
     <div class="prob-body">
       Explain when right-deep tree (Hash Join build on right) beats left-deep.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn12y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn12y">When right side is smaller; Hash Join builds on right (build side)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslid2y" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslid2y">When right side is smaller; Hash Join builds on right (build side)</div></div>
     </div></li></ul>
   </section>
   

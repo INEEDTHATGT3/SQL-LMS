@@ -254,7 +254,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Per department: count of active, pending, inactive employees using FILTER.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn63d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn63d">COUNT(*) FILTER (WHERE status = 'active')</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3d" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3d">COUNT(*) FILTER (WHERE status = 'active')</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -264,7 +264,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Median salary per department using percentile_cont.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn63e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn63e">percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3e" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3e">percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -274,7 +274,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Approximate distinct user count per day from events table.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn63f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn63f">approx_count_distinct(user_id)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3f" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3f">approx_count_distinct(user_id)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -284,7 +284,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Concatenate top 3 employee names by salary per department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn63g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn63g">STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3g" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3g">STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -294,7 +294,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Return JSON array of {name, salary} objects per department.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn63h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn63h">JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3h" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3h">JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t3">L3</span>
@@ -304,7 +304,7 @@ SELECT CORR(salary, years_exp) FROM employees;</code></pre><pre data-lang="py" c
     </div>
     <div class="prob-body">
       Most common employee status per department (PostgreSQL 15+).
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtydnsn63i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydnsn63i">mode() WITHIN GROUP (ORDER BY status)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtydslij3i" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtydslij3i">mode() WITHIN GROUP (ORDER BY status)</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-5">

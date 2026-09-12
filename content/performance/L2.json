@@ -140,25 +140,25 @@
               "explain": "Merge Join requires sorted input. Index scan or explicit sort provides ordering."
             },
             {
-              "q": "The planner picks hash join over nested loop mainly when…",
+              "q": "Holding the query fixed, how does raising work_mem most directly change join choice?",
               "options": [
-                "the tables are tiny",
-                "both inputs are large and the hash fits in work_mem",
-                "the join key is indexed",
-                "parallel is off"
+                "it lets hash joins avoid spills, widening the input sizes they win on",
+                "it switches the planner to brute-force search",
+                "it disables nested loops",
+                "it only affects sorts"
               ],
-              "answer": 1,
-              "explain": "Hash join wins for large unsorted inputs whose hash tables fit in work_mem; spills degrade it toward nested-loop."
+              "answer": 0,
+              "explain": "More hash memory means fewer spills, so hash join stays competitive on larger inputs."
             },
             {
-              "q": "For a nested-loop join, which pairing is preferred?",
+              "q": "A nested-loop join pays its biggest per-outer-row cost because…",
               "options": [
-                "Larger table first (outer)",
-                "Smaller input on the inner side",
-                "Either is identical",
-                "Sort both first"
+                "the inner scan is restarted for every outer row",
+                "the hash must be rebuilt each time",
+                "both inputs must first be fully sorted",
+                "of parallel worker coordination"
               ],
-              "answer": 1,
+              "answer": 0,
               "explain": "The inner relation is rescanned per outer row, so the smaller/cheapest side should be inner."
             }
           ]
