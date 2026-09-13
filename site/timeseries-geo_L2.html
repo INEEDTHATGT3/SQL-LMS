@@ -318,7 +318,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       Count distinct users per day for the last 30 days from a 20M-row events table (user_id, ts). Return every day, including days with zero activity.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76r9m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76r9m">generate_series for the 30-day grid</div><button class="reveal-btn" data-target="umtyet76r9o" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76r9o">left join the daily distinct counts</div><button class="reveal-btn" data-target="umtyet76r9q" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76r9q">COALESCE(..., 0)</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7y9m" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7y9m">generate_series for the 30-day grid</div><button class="reveal-btn" data-target="umtz7ow7y9o" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7y9o">left join the daily distinct counts</div><button class="reveal-btn" data-target="umtz7ow7y9q" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtz7ow7y9q">COALESCE(..., 0)</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -328,7 +328,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       A weather sensor publishes readings every 5 minutes but drops occasionally. Return one row per hour for the last 24 hours with the reading count, filling missing hours with 0.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76r9r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76r9r">date_trunc('hour', ts)</div><button class="reveal-btn" data-target="umtyet76r9t" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76r9t">generate_series window</div><button class="reveal-btn" data-target="umtyet76r9v" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76r9v">count the readings inside each hour</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7y9r" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7y9r">date_trunc('hour', ts)</div><button class="reveal-btn" data-target="umtz7ow7y9t" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7y9t">generate_series window</div><button class="reveal-btn" data-target="umtz7ow7y9v" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtz7ow7y9v">count the readings inside each hour</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -338,7 +338,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       Load readings (ts, temp_c) with sparse NULLs. Produce temp_c_filled that carries forward the last observed value, and flag which rows were imputed.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76r9w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76r9w">LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY ts)</div><button class="reveal-btn" data-target="umtyet76r9y" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76r9y">compare temp_c IS NULL to build the flag</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7y9w" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7y9w">LAST_VALUE(x IGNORE NULLS) OVER (ORDER BY ts)</div><button class="reveal-btn" data-target="umtz7ow7y9y" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7y9y">compare temp_c IS NULL to build the flag</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -348,7 +348,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       Compute a 7-day moving average of daily revenue. Some days have no transactions. Decide between ROWS and RANGE and explain which is correct for 'last 7 calendar days'.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76r9z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76r9z">RANGE BETWEEN INTERVAL '7 day' PRECEDING</div><button class="reveal-btn" data-target="umtyet76ra1" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ra1">ROWS counts trading days, not calendar days</div><button class="reveal-btn" data-target="umtyet76ra3" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76ra3">fill the calendar first for ROWS equivalence</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7y9z" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7y9z">RANGE BETWEEN INTERVAL '7 day' PRECEDING</div><button class="reveal-btn" data-target="umtz7ow7ya1" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7ya1">ROWS counts trading days, not calendar days</div><button class="reveal-btn" data-target="umtz7ow7ya3" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtz7ow7ya3">fill the calendar first for ROWS equivalence</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -358,7 +358,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       Given cafÃ©s (id, name, geom) and a user point, return the 3 nearest cafÃ©s with distance in meters. Use the fast path in pg and the portable fallback for MySQL.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ra4" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ra4">geom <-> point in ORDER BY</div><button class="reveal-btn" data-target="umtyet76ra6" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ra6">GiST index on geom</div><button class="reveal-btn" data-target="umtyet76ra8" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76ra8">ST_Distance(geom::geography, p) for meters</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7ya4" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7ya4">geom <-> point in ORDER BY</div><button class="reveal-btn" data-target="umtz7ow7ya6" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7ya6">GiST index on geom</div><button class="reveal-btn" data-target="umtz7ow7ya8" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtz7ow7ya8">ST_Distance(geom::geography, p) for meters</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -368,7 +368,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       Tag each restaurant with a band (within 1km / within 5km / farther) relative to a fixed hub point, using an index-friendly pre-filter.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76ra9" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76ra9">ST_DWithin(geog, hub, 1000) then 5000</div><button class="reveal-btn" data-target="umtyet76rab" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76rab">CASE over two DWithin tests</div><button class="reveal-btn" data-target="umtyet76rad" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76rad">order evaluation cheap-first</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7ya9" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7ya9">ST_DWithin(geog, hub, 1000) then 5000</div><button class="reveal-btn" data-target="umtz7ow7yab" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7yab">CASE over two DWithin tests</div><button class="reveal-btn" data-target="umtz7ow7yad" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtz7ow7yad">order evaluation cheap-first</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -378,7 +378,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       Weekly signups for 12 weeks. Compute week-over-week percentage change, skipping the first row gracefully.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76rae" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76rae">LAG(signups) OVER (ORDER BY week)</div><button class="reveal-btn" data-target="umtyet76rag" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76rag">NULLIF for divide-by-zero</div><button class="reveal-btn" data-target="umtyet76rai" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76rai">pct = 100.0 * (cur - prev) / prev</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7yae" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7yae">LAG(signups) OVER (ORDER BY week)</div><button class="reveal-btn" data-target="umtz7ow7yag" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7yag">NULLIF for divide-by-zero</div><button class="reveal-btn" data-target="umtz7ow7yai" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtz7ow7yai">pct = 100.0 * (cur - prev) / prev</div></div>
     </div></li><li class="problem-item">
     <div class="problem-head">
       <span class="diff t2">L2</span>
@@ -388,7 +388,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
     </div>
     <div class="prob-body">
       For two consecutive readings surrounding a gap of exactly one missing probe, estimate the missing value as the linear mid-point between them.
-      <div class="prob-hints"><button class="reveal-btn" data-target="umtyet76raj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtyet76raj">self-join next/prev non-null</div><button class="reveal-btn" data-target="umtyet76ral" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtyet76ral">AVG(prev, nxt) over the gap</div><button class="reveal-btn" data-target="umtyet76ran" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtyet76ran">target only rows where temp_c IS NULL</div></div>
+      <div class="prob-hints"><button class="reveal-btn" data-target="umtz7ow7yaj" data-show="Hint 1" data-hide="Hide hint 1">Hint 1</button><div class="reveal-target" id="umtz7ow7yaj">self-join next/prev non-null</div><button class="reveal-btn" data-target="umtz7ow7yal" data-show="Hint 2" data-hide="Hide hint 2">Hint 2</button><div class="reveal-target" id="umtz7ow7yal">AVG(prev, nxt) over the gap</div><button class="reveal-btn" data-target="umtz7ow7yan" data-show="Hint 3" data-hide="Hide hint 3">Hint 3</button><div class="reveal-target" id="umtz7ow7yan">target only rows where temp_c IS NULL</div></div>
     </div></li></ul>
   </section>
   <section class="section" id="sec-6">
@@ -467,7 +467,7 @@ LIMIT <span class="num">5</span>;</code></pre><div class="py-note has-missing">â
   <div class="complete-box"><button id="mark-complete">MARK ARTIFACT COMPLETE</button>
     <p style="margin-top:10px;font-size:12px;color:var(--text-dim);">Progress saved locally (localStorage). Next up: L3 ADVANCED file</p></div>
 </div>
-<div class="footer">SQL LAYERED SYSTEM Â· MODULE 09 Â· L2/INTERVIEW READY Â· GENERATED 2026-09-12</div>
+<div class="footer">SQL LAYERED SYSTEM Â· MODULE 09 Â· L2/INTERVIEW READY Â· GENERATED 2026-09-13</div>
 <script src="lang-toggle.js"></script><script src="recall.js"></script>
 <script>initLangToggle();initRecall('timeseries-geo_L2');</script>
 </body></html>

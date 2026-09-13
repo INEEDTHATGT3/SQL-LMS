@@ -22,11 +22,11 @@ const read = p => JSON.parse(fs.readFileSync(p, 'utf8'));
 const URL_RE = /https?:\/\/[^\s"')\]]+/g;
 
 function walkBlocks(node, urls) {
-  if (!node || typeof node !== 'object') return;
   if (typeof node === 'string') {
     for (const m of node.match(URL_RE) || []) urls.add(m.replace(/[.,;]+$/, ''));
     return;
   }
+  if (!node || typeof node !== 'object') return;
   for (const v of Object.values(node)) walkBlocks(v, urls);
 }
 

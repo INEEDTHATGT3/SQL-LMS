@@ -460,7 +460,8 @@
               "patterns": [
                 "dml-delete",
                 "self-join-dedupe"
-              ]
+              ],
+              "company": "Google"
             }
           ]
         }

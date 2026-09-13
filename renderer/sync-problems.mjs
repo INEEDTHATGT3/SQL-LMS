@@ -22,7 +22,7 @@ const read = p => JSON.parse(fs.readFileSync(p, 'utf8'));
 const bank = read(path.join(CONTENT, 'problems.json'));
 const mods = read(path.join(CONTENT, 'modules.json'));
 
-const KEEP = ['id', 'tier', 'title', 'platform', 'ref', 'url', 'sheet', 'sheetSection', 'difficulty', 'patterns'];
+const KEEP = ['id', 'tier', 'title', 'platform', 'ref', 'url', 'sheet', 'sheetSection', 'difficulty', 'patterns', 'company'];
 
 function toLessonItem(p) {
   const out = {};

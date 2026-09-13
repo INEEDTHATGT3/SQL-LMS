@@ -614,7 +614,8 @@
               "patterns": [
                 "date-range",
                 "having"
-              ]
+              ],
+              "company": "Amazon"
             },
             {
               "id": "F1-LC1873",
@@ -632,7 +633,8 @@
                   "case-when",
                   "null-guard"
                 ]
-              ]
+              ],
+              "company": "Microsoft"
             },
             {
               "id": "F1-LC584",
@@ -647,7 +649,8 @@
               "patterns": [
                 "null-trap",
                 "three-valued-logic"
-              ]
+              ],
+              "company": "Google"
             },
             {
               "id": "F1-LC610",
@@ -661,7 +664,8 @@
               "difficulty": "easy",
               "patterns": [
                 "case-expression"
-              ]
+              ],
+              "company": "Amazon"
             },
             {
               "id": "F1-LC620",
@@ -676,7 +680,8 @@
               "patterns": [
                 "modulo-filter",
                 "order-by"
-              ]
+              ],
+              "company": "Meta"
             },
             {
               "id": "F1-PGwhere",

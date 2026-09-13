@@ -18,7 +18,7 @@ rules that keep it from drifting.
 | [LeetCode Advanced SQL 50](https://leetcode.com/studyplan/premium-sql-50/) | Spine extension (L3/L4) | 50 | Premium | **Yes — 50/50 since 2.2.0** | Striver SDE Sheet |
 | [DataLemur](https://datalemur.com/questions) | Company realism (L3/L4) | ~80+ free | Freemium | No | company-tagged LC problems |
 | [StrataScratch](https://platform.stratascratch.com/coding) | Company realism (L3/L4) | large | Freemium | No | — |
-| [PGExercises](https://pgexercises.com/) | Postgres-native + recursive (L2/L3) | 12 | Free | Partial (12) | — |
+| [PGExercises](https://pgexercises.com/) | Postgres-native + recursive (L2/L3) | 12 | Free | Yes — 12/12 | — |
 | [Ankit Bansal](https://www.youtube.com/@ankitbansal6) | **Reference only** | — | Free | n/a | Striver's videos |
 | [techTFQ](https://www.youtube.com/@techTFQ) | **Reference only** | — | Free | n/a | Babbar's videos |
 

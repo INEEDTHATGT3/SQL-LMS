@@ -5,7 +5,10 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: '17 3 * * *'
+    - cron: '17 3 * * 0'
+
+permissions:
+  contents: read
 
 jobs:
   verify:
@@ -26,8 +29,45 @@ jobs:
         run: npm run lint
       - name: Inline scripts resolve on every page
         run: npm run check:pages
+      - name: PostgreSQL plan-shape harness
+        run: npm run harness
       - name: Full build (sync + verify + 36 artifacts + index)
         run: npm run build
-      - name: Link rot (report-only — failures are informational)
-        run: node renderer/check-links.mjs
-        continue-on-error: true
+
+  link-rot:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Strict weekly link check
+        run: npm run check:links -- --strict
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -441,7 +441,8 @@
               "difficulty": "easy",
               "patterns": [
                 "regexp"
-              ]
+              ],
+              "company": "Microsoft"
             },
             {
               "id": "F2-LC1527",
@@ -456,7 +457,8 @@
               "patterns": [
                 "like-prefix",
                 "token-match"
-              ]
+              ],
+              "company": "Amazon"
             },
             {
               "id": "F2-LC1907",
@@ -471,7 +473,8 @@
               "patterns": [
                 "bucketing",
                 "zero-row-union"
-              ]
+              ],
+              "company": "Google"
             },
             {
               "id": "F2-PGclassify",

@@ -53,9 +53,10 @@ Full rationale, precedence rules and the gap list live in
 Every problem is either **sourced** (carries `platform` + `ref` + `url`) or **synthesised**
 (`"platform": "drill"`). There is no third kind, and sourced problems are never invented.
 
-Known gaps, recorded rather than papered over: `performance` and `timeseries-geo` have zero
-sourced problems — no free judge grades an execution plan, and no sheet covers PostGIS.
-Those modules stay synthesised by design.
+Known gaps, recorded rather than papered over: `performance` has zero sourced problems
+because no free judge grades an execution plan; it is covered by the local Docker harness.
+`timeseries-geo` has six sourced date-arithmetic problems, while PostGIS/H3 remain
+synthesised because no mainstream sheet covers them.
 
 ## Structure
 
@@ -94,13 +95,6 @@ provenance schema every problem must carry, and the ID scheme.
 1. Push to GitHub
 2. Enable GitHub Pages (source: GitHub Actions)
 3. Site deploys automatically on push to main
-
-## Upgrading Core
-
-```bash
-npm run upgrade
-npm run build
-```
 
 ## License
 

@@ -169,7 +169,7 @@ function renderProblem(p, skillConfig) {
     <div class="problem-head">
       <span class="diff t${p.tier}">L${p.tier}</span>
       <div><div class="prob-name">${p.url ? `<a class="prob-link" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--accent2);">${md(p.title)}</a>` : md(p.title)}</div>
-        <div class="prob-meta">${esc(p.platform || '')}${p.ref ? ' · #' + esc(p.ref) : (p.lc ? ' · LC ' + p.lc : '')}${p.difficulty ? ' · ' + esc(p.difficulty) : ''}${p.sheet ? ' · ' + esc(p.sheet) : ''}${p.patterns ? ' · ' + p.patterns.join(' + ') : ''}${p.srcFile ? ' · your: CODES/' + p.srcFile : ''}</div></div>
+        <div class="prob-meta">${esc(p.platform || '')}${p.ref ? ' · #' + esc(p.ref) : (p.lc ? ' · LC ' + p.lc : '')}${p.difficulty ? ' · ' + esc(p.difficulty) : ''}${p.sheet ? ' · ' + esc(p.sheet) : ''}${p.company ? ' · ' + esc(p.company) : ''}${p.patterns ? ' · ' + p.patterns.join(' + ') : ''}${p.srcFile ? ' · your: CODES/' + p.srcFile : ''}</div></div>
       <div class="prob-actions"><label class="solved-check"><input type="checkbox" data-pid="${pid}"><span>SOLVED</span></label></div>
     </div>
     <div class="prob-body">

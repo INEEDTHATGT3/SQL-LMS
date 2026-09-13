@@ -62,6 +62,15 @@ body[data-level="{{level}}"]{ --lvl:{{color}}; --lvl-rgba:{{rgba}}; --lvl-border
 Accompanied by a content-side colour fix: `content/theme-config.json` level 4 moved from
 `#0077b6` to `#c084fc` (violet) to separate EXPERT from the cyan L1–L3 family.
 
+## 4. `renderer/render.js` + `renderer/sync-problems.mjs` — render sourced company tags
+
+*Why:* company realism is provenance metadata on sourced problems. The bank-to-lesson
+projection must preserve `company`, and the problem meta line must display it without
+changing the stable problem ID or source fields.
+
+The local renderer appends `company` to `prob-meta`; the local sync script includes the
+field in its generated sourced-problem allowlist.
+
 ## 4. `js/language-switcher.js` — expose `window.initLangToggle` + idempotent init
 
 *Why:* the renderer emits `<script>initLangToggle();initRecall('<lesson>');</script>`

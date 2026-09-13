@@ -60,8 +60,7 @@
       "access": "premium",
       "count": 50,
       "enumerated": true,
-      "authority": "LeetCode Premium study plan. Enumerated 50/50; 0 collisions with the free SQL 50 rows already in the bank.",
-      "blockedOn": "LeetCode Premium. Enumerate from the account, then append with sheet='leetcode-advanced-sql-50'."
+      "authority": "LeetCode Premium study plan. Enumerated 50/50; 0 collisions with the free SQL 50 rows already in the bank."
     },
     "datalemur": {
       "role": "company-realism overlay (L3/L4)",
@@ -85,7 +84,7 @@
       "title": "PGExercises",
       "url": "https://pgexercises.com/",
       "access": "free",
-      "enumerated": false,
+      "enumerated": true,
       "authority": "All 12 enumerated from the live site (Basic SELECT x6, Working with Timestamps x6). No official difficulty labels, so difficulty=null.",
       "categories": {
         "basic": "https://pgexercises.com/questions/basic/",
@@ -261,6 +260,7 @@
       },
       {
         "id": "B1-LC1148",
+        "company": "Google",
         "tier": 1,
         "title": "Article Views I",
         "platform": "leetcode",
@@ -276,6 +276,7 @@
       },
       {
         "id": "B1-LC1683",
+        "company": "Amazon",
         "tier": 1,
         "title": "Invalid Tweets",
         "platform": "leetcode",
@@ -290,6 +291,7 @@
       },
       {
         "id": "B1-LC1757",
+        "company": "Meta",
         "tier": 1,
         "title": "Recyclable and Low Fat Products",
         "platform": "leetcode",
@@ -304,6 +306,7 @@
       },
       {
         "id": "B1-LC595",
+        "company": "Microsoft",
         "tier": 1,
         "title": "Big Countries",
         "platform": "leetcode",
@@ -318,6 +321,7 @@
       },
       {
         "id": "B2-LC1667",
+        "company": "Amazon",
         "tier": 2,
         "title": "Fix Names in a Table",
         "platform": "leetcode",
@@ -333,6 +337,7 @@
       },
       {
         "id": "B3-LC196",
+        "company": "Google",
         "tier": 3,
         "title": "Delete Duplicate Emails",
         "platform": "leetcode",
@@ -552,6 +557,7 @@
       },
       {
         "id": "F1-LC1327",
+        "company": "Amazon",
         "tier": 1,
         "title": "List the Products Ordered in a Period",
         "platform": "leetcode",
@@ -568,6 +574,7 @@
       {
         "module": "filtering",
         "id": "F1-LC1873",
+        "company": "Microsoft",
         "tier": 1,
         "title": "Calculate Special Bonus",
         "platform": "leetcode",
@@ -586,6 +593,7 @@
       },
       {
         "id": "F1-LC584",
+        "company": "Google",
         "tier": 1,
         "title": "Find Customer Referee",
         "platform": "leetcode",
@@ -601,6 +609,7 @@
       },
       {
         "id": "F1-LC610",
+        "company": "Amazon",
         "tier": 1,
         "title": "Triangle Judgement",
         "platform": "leetcode",
@@ -615,6 +624,7 @@
       },
       {
         "id": "F1-LC620",
+        "company": "Meta",
         "tier": 1,
         "title": "Not Boring Movies",
         "platform": "leetcode",
@@ -701,6 +711,7 @@
       },
       {
         "id": "F2-LC1517",
+        "company": "Microsoft",
         "tier": 2,
         "title": "Find Users With Valid E-Mails",
         "platform": "leetcode",
@@ -715,6 +726,7 @@
       },
       {
         "id": "F2-LC1527",
+        "company": "Amazon",
         "tier": 2,
         "title": "Patients With a Condition",
         "platform": "leetcode",
@@ -730,6 +742,7 @@
       },
       {
         "id": "F2-LC1907",
+        "company": "Google",
         "tier": 2,
         "title": "Count Salary Categories",
         "platform": "leetcode",
@@ -849,6 +862,7 @@
       },
       {
         "id": "J1-LC1068",
+        "company": "Amazon",
         "tier": 1,
         "title": "Product Sales Analysis I",
         "platform": "leetcode",
@@ -864,6 +878,7 @@
       {
         "module": "joins",
         "id": "J1-LC1350",
+        "company": "Google",
         "tier": 1,
         "title": "Students With Invalid Departments",
         "platform": "leetcode",
@@ -881,6 +896,7 @@
       },
       {
         "id": "J1-LC1378",
+        "company": "Microsoft",
         "tier": 1,
         "title": "Replace Employee ID With The Unique Identifier",
         "platform": "leetcode",
@@ -896,6 +912,7 @@
       {
         "module": "joins",
         "id": "J1-LC1407",
+        "company": "Amazon",
         "tier": 1,
         "title": "Top Travellers",
         "platform": "leetcode",
@@ -915,6 +932,7 @@
       {
         "module": "joins",
         "id": "J1-LC1495",
+        "company": "Meta",
         "tier": 1,
         "title": "Friendly Movies Streamed Last Month",
         "platform": "leetcode",
@@ -933,6 +951,7 @@
       },
       {
         "id": "J1-LC1581",
+        "company": "Google",
         "tier": 1,
         "title": "Customer Who Visited but Did Not Make Any Transactions",
         "platform": "leetcode",

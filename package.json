@@ -10,6 +10,7 @@
     "lint": "layered-study-lint",
     "check:pages": "node renderer/check-page-scripts.mjs",
     "check:links": "node renderer/check-links.mjs",
+    "harness": "node harness/run.mjs",
     "verify": "npm run check:provenance && npm run lint",
     "build": "npm run sync:problems && npm run verify && layered-study-build",
     "dev": "npm run build && npx serve site -p 3000",

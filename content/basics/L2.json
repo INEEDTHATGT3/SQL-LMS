@@ -397,7 +397,8 @@
               "patterns": [
                 "string-functions",
                 "concat-upper-lower"
-              ]
+              ],
+              "company": "Amazon"
             }
           ]
         }

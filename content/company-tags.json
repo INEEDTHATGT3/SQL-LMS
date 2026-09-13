@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "purpose": "Checked-in company provenance for sourced interview problems.",
+  "sourceNote": "Associations are the company tags published on the linked LeetCode problem pages; this overlay does not change curriculum tiering or problem identity.",
+  "tags": {
+    "B1-LC1148": { "company": "Google", "source": "https://leetcode.com/problems/article-views-i/" },
+    "B1-LC1683": { "company": "Amazon", "source": "https://leetcode.com/problems/invalid-tweets/" },
+    "B1-LC1757": { "company": "Meta", "source": "https://leetcode.com/problems/recyclable-and-low-fat-products/" },
+    "B1-LC595": { "company": "Microsoft", "source": "https://leetcode.com/problems/big-countries/" },
+    "B2-LC1667": { "company": "Amazon", "source": "https://leetcode.com/problems/fix-names-in-a-table/" },
+    "B3-LC196": { "company": "Google", "source": "https://leetcode.com/problems/delete-duplicate-emails/" },
+    "F1-LC1327": { "company": "Amazon", "source": "https://leetcode.com/problems/list-the-products-ordered-in-a-period/" },
+    "F1-LC1873": { "company": "Microsoft", "source": "https://leetcode.com/problems/calculate-special-bonus/" },
+    "F1-LC584": { "company": "Google", "source": "https://leetcode.com/problems/find-customer-referee/" },
+    "F1-LC610": { "company": "Amazon", "source": "https://leetcode.com/problems/triangle-judgement/" },
+    "F1-LC620": { "company": "Meta", "source": "https://leetcode.com/problems/not-boring-movies/" },
+    "F2-LC1517": { "company": "Microsoft", "source": "https://leetcode.com/problems/find-users-with-valid-e-mails/" },
+    "F2-LC1527": { "company": "Amazon", "source": "https://leetcode.com/problems/patients-with-a-condition/" },
+    "F2-LC1907": { "company": "Google", "source": "https://leetcode.com/problems/count-salary-categories/" },
+    "J1-LC1068": { "company": "Amazon", "source": "https://leetcode.com/problems/product-sales-analysis-iii/" },
+    "J1-LC1350": { "company": "Google", "source": "https://leetcode.com/problems/students-with-invalid-departments/" },
+    "J1-LC1378": { "company": "Microsoft", "source": "https://leetcode.com/problems/replace-employee-id-with-the-unique-identifier/" },
+    "J1-LC1407": { "company": "Amazon", "source": "https://leetcode.com/problems/top-travellers/" },
+    "J1-LC1495": { "company": "Meta", "source": "https://leetcode.com/problems/friendly-movies-streamed-last-month/" },
+    "J1-LC1581": { "company": "Google", "source": "https://leetcode.com/problems/customer-who-visited-but-did-not-make-any-transactions/" }
+  }
+}

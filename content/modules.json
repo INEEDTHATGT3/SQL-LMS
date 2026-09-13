@@ -11,14 +11,12 @@
       "stratascratch",
       "pgexercises"
     ],
-    "pending": [
-      "leetcode-advanced-sql-50"
-    ],
+    "pending": [],
     "references": [
       "reference-ankit-bansal",
       "reference-techtfq"
     ],
-    "sourcedTotal": 108
+    "sourcedTotal": 170
   },
   "tierRule": {
     "L1": "Single concept, guided. Boundary = LeetCode SQL 50 Easy + HackerRank Basic Select/Aggregation.",

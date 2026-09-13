@@ -571,7 +571,8 @@
               "patterns": [
                 "distinct",
                 "order-by"
-              ]
+              ],
+              "company": "Google"
             },
             {
               "id": "B1-LC1683",
@@ -585,7 +586,8 @@
               "difficulty": "easy",
               "patterns": [
                 "string-length"
-              ]
+              ],
+              "company": "Amazon"
             },
             {
               "id": "B1-LC1757",
@@ -599,7 +601,8 @@
               "difficulty": "easy",
               "patterns": [
                 "where-and"
-              ]
+              ],
+              "company": "Meta"
             },
             {
               "id": "B1-LC595",
@@ -613,7 +616,8 @@
               "difficulty": "easy",
               "patterns": [
                 "where-or"
-              ]
+              ],
+              "company": "Microsoft"
             }
           ]
         }

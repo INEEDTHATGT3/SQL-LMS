@@ -527,7 +527,8 @@
               "difficulty": "easy",
               "patterns": [
                 "inner-join"
-              ]
+              ],
+              "company": "Amazon"
             },
             {
               "id": "J1-LC1350",
@@ -544,7 +545,8 @@
                   "left-join",
                   "null-trap"
                 ]
-              ]
+              ],
+              "company": "Google"
             },
             {
               "id": "J1-LC1378",
@@ -558,7 +560,8 @@
               "difficulty": "easy",
               "patterns": [
                 "left-join"
-              ]
+              ],
+              "company": "Microsoft"
             },
             {
               "id": "J1-LC1407",
@@ -576,7 +579,8 @@
                   "group-by",
                   "sum"
                 ]
-              ]
+              ],
+              "company": "Amazon"
             },
             {
               "id": "J1-LC1495",
@@ -594,7 +598,8 @@
                   "date-range",
                   "distinct"
                 ]
-              ]
+              ],
+              "company": "Meta"
             },
             {
               "id": "J1-LC1581",
@@ -609,7 +614,8 @@
               "patterns": [
                 "anti-join",
                 "left-join-is-null"
-              ]
+              ],
+              "company": "Google"
             },
             {
               "id": "J1-LC1607",
