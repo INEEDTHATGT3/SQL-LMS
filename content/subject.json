@@ -1,0 +1,27 @@
+{
+  "id": "sql",
+  "name": "SQL",
+  "title": "SQL Layered Study System",
+  "hubPromise": "LeetCode SQL 50 spine × four layers. Run every query in the browser; your mentor schedules the reviews.",
+  "storageKey": "sql_progress_v2",
+  "legacyStorageKey": "sql_lms_progress_v1",
+  "langStorageKey": "sql_lang",
+  "languages": [
+    { "id": "sql", "label": "SQL", "field": "code", "highlight": "sql" },
+    { "id": "pg", "label": "PostgreSQL", "field": "pg", "highlight": "sql" },
+    { "id": "mysql", "label": "MySQL", "field": "mysql", "highlight": "sql" },
+    { "id": "py-pandas", "label": "pandas", "field": "py-pandas", "highlight": "py" },
+    { "id": "py-sqlalchemy", "label": "SQLAlchemy", "field": "py-sqlalchemy", "highlight": "py" }
+  ],
+  "quotas": {
+    "minPlacementQuiz": 5,
+    "minMcqsTotal": 6,
+    "minTraces": 1,
+    "traceTypes": ["trace", "query-plan", "query-trace", "schedule", "fd-stepper", "nf-decomposition"],
+    "minProblems": { "1": 6, "2": 8, "3": 6, "4": 5 },
+    "minRevisionBullets": 4,
+    "minGlossaryTerms": 5,
+    "requireQueryPlan": { "3": 1, "4": 2 },
+    "requireDialectNote": { "3": true, "4": true }
+  }
+}

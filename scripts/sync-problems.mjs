@@ -7,7 +7,7 @@
  *   - IDEMPOTENT. The generated section is rebuilt from the bank on every run.
  *   - The bank is the single source of truth. Never hand-edit the generated section.
  *
- * Usage:  node renderer/sync-problems.mjs [--dry] [--only=<moduleId>]
+ * Usage:  node scripts/sync-problems.mjs [--dry] [--only=<moduleId>]
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -48,7 +48,7 @@ function buildSection(items) {
     blocks: [
       { type: 'callout', tone: 'blue',
         md: `${items.length} sourced problem${items.length === 1 ? '' : 's'} from ${sheetLabel(items)}. ` +
-            `Titles link to the platform. Generated from \`content/problems.json\` by \`renderer/sync-problems.mjs\` — do not hand-edit this section.` },
+            `Titles link to the platform. Generated from \`content/problems.json\` by \`scripts/sync-problems.mjs\` — do not hand-edit this section.` },
       { type: 'problems', items }
     ]
   };

@@ -8,7 +8,7 @@
  * Then probes each unique URL (HEAD → GET fallback, 8s timeout). Report-only by
  * default; `--strict` turns failures into exit 1 for CI.
  *
- * Usage: node renderer/check-links.mjs [--strict] [--concurrency=8]
+ * Usage: node scripts/check-links.mjs [--strict] [--concurrency=8]
  */
 import fs from 'node:fs';
 import path from 'node:path';

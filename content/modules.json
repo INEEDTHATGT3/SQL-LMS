@@ -50,7 +50,25 @@
           "hackerrank-sql-58": 9,
           "leetcode-sql-50": 6
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "LeetCode SQL 50 (spine)",
+          "url": "https://leetcode.com/studyplan/top-sql-50/"
+        },
+        {
+          "label": "SQLZoo interactive tutorial",
+          "url": "https://sqlzoo.net/wiki/SQL_Tutorial"
+        },
+        {
+          "label": "Gate Smashers — SQL playlist (Hindi, 44 videos)",
+          "url": "https://www.youtube.com/playlist?list=PLxCzCOWd7aiHqU4HKL7-SITyuSIcD93id"
+        },
+        {
+          "label": "techTFQ (YouTube)",
+          "url": "https://www.youtube.com/@techTFQ"
+        }
+      ]
     },
     {
       "id": "filtering",
@@ -84,7 +102,25 @@
           "leetcode-advanced-sql-50": 1,
           "pgexercises": 6
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "LeetCode SQL 50 (spine)",
+          "url": "https://leetcode.com/studyplan/top-sql-50/"
+        },
+        {
+          "label": "SQLZoo interactive tutorial",
+          "url": "https://sqlzoo.net/wiki/SQL_Tutorial"
+        },
+        {
+          "label": "DataLemur SQL tutorial (ordered lessons)",
+          "url": "https://datalemur.com/sql-tutorial"
+        },
+        {
+          "label": "techTFQ (YouTube)",
+          "url": "https://www.youtube.com/@techTFQ"
+        }
+      ]
     },
     {
       "id": "joins",
@@ -116,7 +152,25 @@
           "leetcode-sql-50": 11,
           "leetcode-advanced-sql-50": 15
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "DataLemur SQL tutorial (ordered lessons)",
+          "url": "https://datalemur.com/sql-tutorial"
+        },
+        {
+          "label": "Ankit Bansal — Complex SQL interview series (96 videos)",
+          "url": "https://www.youtube.com/playlist?list=PLBTZqjSKn0IeKBQDjLmzisazhqQy4iGkb"
+        },
+        {
+          "label": "SQLZoo interactive tutorial",
+          "url": "https://sqlzoo.net/wiki/SQL_Tutorial"
+        },
+        {
+          "label": "PGExercises",
+          "url": "https://pgexercises.com/"
+        }
+      ]
     },
     {
       "id": "aggregation",
@@ -149,7 +203,21 @@
           "leetcode-sql-50": 16,
           "leetcode-advanced-sql-50": 12
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "DataLemur SQL tutorial (ordered lessons)",
+          "url": "https://datalemur.com/sql-tutorial"
+        },
+        {
+          "label": "Ankit Bansal — Complex SQL interview series (96 videos)",
+          "url": "https://www.youtube.com/playlist?list=PLBTZqjSKn0IeKBQDjLmzisazhqQy4iGkb"
+        },
+        {
+          "label": "PGExercises",
+          "url": "https://pgexercises.com/"
+        }
+      ]
     },
     {
       "id": "window-functions",
@@ -179,7 +247,21 @@
           "leetcode-advanced-sql-50": 17,
           "hackerrank-sql-58": 1
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "DataLemur SQL tutorial (ordered lessons)",
+          "url": "https://datalemur.com/sql-tutorial"
+        },
+        {
+          "label": "Ankit Bansal — Complex SQL interview series (96 videos)",
+          "url": "https://www.youtube.com/playlist?list=PLBTZqjSKn0IeKBQDjLmzisazhqQy4iGkb"
+        },
+        {
+          "label": "modern-sql.com — feature & dialect support",
+          "url": "https://modern-sql.com/"
+        }
+      ]
     },
     {
       "id": "subqueries-ctes",
@@ -209,7 +291,21 @@
           "hackerrank-sql-58": 1,
           "leetcode-advanced-sql-50": 3
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "DataLemur SQL tutorial (ordered lessons)",
+          "url": "https://datalemur.com/sql-tutorial"
+        },
+        {
+          "label": "techTFQ (YouTube)",
+          "url": "https://www.youtube.com/@techTFQ"
+        },
+        {
+          "label": "PGExercises",
+          "url": "https://pgexercises.com/"
+        }
+      ]
     },
     {
       "id": "performance",
@@ -231,7 +327,17 @@
           "4": 0
         },
         "bySheet": {}
-      }
+      },
+      "refs": [
+        {
+          "label": "Use The Index, Luke (Markus Winand)",
+          "url": "https://use-the-index-luke.com/"
+        },
+        {
+          "label": "CMU 15-445 (Andy Pavlo) — lectures",
+          "url": "https://15445.courses.cs.cmu.edu/fall2025/schedule.html"
+        }
+      ]
     },
     {
       "id": "advanced-analytics",
@@ -259,7 +365,21 @@
           "leetcode-advanced-sql-50": 2,
           "hackerrank-sql-58": 4
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "Ankit Bansal — Complex SQL interview series (96 videos)",
+          "url": "https://www.youtube.com/playlist?list=PLBTZqjSKn0IeKBQDjLmzisazhqQy4iGkb"
+        },
+        {
+          "label": "DataLemur company questions",
+          "url": "https://datalemur.com/questions"
+        },
+        {
+          "label": "StrataScratch",
+          "url": "https://www.stratascratch.com/"
+        }
+      ]
     },
     {
       "id": "timeseries-geo",
@@ -283,7 +403,17 @@
         "bySheet": {
           "pgexercises": 6
         }
-      }
+      },
+      "refs": [
+        {
+          "label": "PGExercises",
+          "url": "https://pgexercises.com/"
+        },
+        {
+          "label": "modern-sql.com — feature & dialect support",
+          "url": "https://modern-sql.com/"
+        }
+      ]
     }
   ],
   "levels": [
@@ -308,7 +438,7 @@
     {
       "level": 4,
       "name": "EXPERT",
-      "color": "#0077b6",
+      "color": "#c084fc",
       "promise": "Execution plans, partitioning, stored procs, triggers. Constraint-driven — mostly beyond any public sheet."
     }
   ]

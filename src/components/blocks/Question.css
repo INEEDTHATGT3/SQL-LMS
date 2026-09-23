@@ -1,0 +1,16 @@
+/* question / predict inputs - extends theme .quiz-opt */
+.quiz-opt.on{border-color:var(--lvl)}
+label.quiz-opt{align-items:flex-start}
+label.quiz-opt input{accent-color:var(--lvl);margin-top:5px;flex:none}
+.q-input{width:10em;max-width:100%}
+.q-input.wide{flex:1;min-width:0;width:auto}
+.q-order{list-style:none;padding:0;margin:0}
+.q-order .quiz-opt{align-items:center}
+.q-move{display:flex;gap:6px;flex:none}
+.q-move .reveal-btn{padding:6px 12px;letter-spacing:0;font-size:13px}
+.q-move .reveal-btn[aria-disabled=true]{opacity:.3;cursor:default;background:var(--lvl-rgba);color:var(--lvl)}
+.q-match-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.q-match-row select{width:100%;min-width:0}
+.q-match-row .q-mark{grid-column:1/-1;font-size:12px;font-family:'Space Mono',monospace}
+.q-src{margin-top:10px}
+@media(max-width:480px){.q-match-row{grid-template-columns:1fr}}

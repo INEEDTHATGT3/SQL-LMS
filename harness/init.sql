@@ -40,7 +40,7 @@ SELECT id,
        ((id - 1) % 10000) + 1,
        DATE '2022-01-01' + ((id - 1) % 1460),
        10 + ((id * 17) % 990),
-       id % 100 <> 0
+       id % 100 = 0   -- 1% soft-deleted, so "active" is the common case the partial index serves
 FROM generate_series(1, 500000) AS id
 ON CONFLICT (id) DO NOTHING;
 

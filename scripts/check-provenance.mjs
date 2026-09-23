@@ -7,7 +7,7 @@
  *   synthesised  — platform === 'drill', MUST carry a statement
  *
  * Exits 1 on any error so it can gate CI.
- * Usage:  node renderer/check-provenance.mjs [--only=<moduleId>]
+ * Usage:  node scripts/check-provenance.mjs [--only=<moduleId>]
  */
 import fs from 'node:fs';
 import path from 'node:path';

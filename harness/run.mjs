@@ -22,7 +22,7 @@ const scenarios = [
   { id: 'P202', name: 'composite index equality plus range', sql: "EXPLAIN (ANALYZE, FORMAT JSON) SELECT id, amount FROM orders WHERE user_id = 123 AND created_at > DATE '2024-01-01';", nodes: ['Index Scan'], factor: 10 },
   { id: 'P203', name: 'partial index for active orders', sql: "EXPLAIN (ANALYZE, FORMAT JSON) SELECT id FROM orders WHERE deleted = false AND user_id = 123;", nodes: ['Index Scan'], factor: 10 },
   { id: 'P204', name: 'covering employee lookup', sql: "EXPLAIN (ANALYZE, FORMAT JSON) SELECT id, email FROM employees WHERE salary BETWEEN 100000 AND 100010;", nodes: ['Index Scan', 'Index Only Scan'], factor: 10 },
-  { id: 'P205', name: 'sargable date range', sql: "EXPLAIN (ANALYZE, FORMAT JSON) SELECT count(*) FROM orders WHERE created_at >= DATE '2024-01-01' AND created_at < DATE '2025-01-01';", nodes: ['Index Scan', 'Bitmap Heap Scan', 'Seq Scan'], factor: 10 },
+  { id: 'P205', name: 'sargable date range', sql: "EXPLAIN (ANALYZE, FORMAT JSON) SELECT count(*) FROM orders WHERE created_at >= DATE '2024-03-01' AND created_at < DATE '2024-03-08';", nodes: ['Index Scan', 'Index Only Scan', 'Bitmap Heap Scan'], factor: 10 },
   { id: 'P206', name: 'bitmap combination', sql: "EXPLAIN (ANALYZE, FORMAT JSON) SELECT id FROM employees WHERE dept_id = 1 AND salary > 190000;", nodes: ['BitmapAnd', 'Bitmap Heap Scan'], factor: 10 },
   { id: 'P208', name: 'hash join memory decision', sql: "EXPLAIN (ANALYZE, FORMAT JSON) SELECT count(*) FROM employees e JOIN departments d ON d.id = e.dept_id;", nodes: ['Hash Join'], factor: 10 }
 ];

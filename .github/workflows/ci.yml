@@ -23,16 +23,20 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Provenance (sourced drills carried correctly, bank coherent)
-        run: npm run check:provenance
-      - name: Lint (structure + quotas)
+      - name: ESLint
         run: npm run lint
-      - name: Inline scripts resolve on every page
-        run: npm run check:pages
+      - name: Engine self-tests (FD, schedules, ER mapping, result compare)
+        run: npm run test:engines
+      - name: Every exercise solution runs on its datasets (PGlite)
+        run: npm run check:exercises
       - name: PostgreSQL plan-shape harness
         run: npm run harness
-      - name: Full build (sync + verify + 36 artifacts + index)
+      - name: Build (sync problems + provenance + content lint + gen + vite)
         run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          path: dist
 
   link-rot:
     if: github.event_name == 'schedule'
@@ -52,22 +56,11 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
       - id: deployment
         uses: actions/deploy-pages@v4
