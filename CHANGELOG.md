@@ -3,6 +3,31 @@
 All notable changes to SQL-LMS. Releases map to the phase plan; see
 `content/SOURCING.md` and `content/problems.json.gaps` for sourcing context.
 
+## 3.0.0 — 2026-10-18 — React SPA rebuild
+
+### Added
+- The static site is replaced by a React 18 + Vite SPA sharing the dsa-lms engine:
+  spaced-repetition review, mistake log, mock interview, timed sprint, stats, search.
+- In-browser PostgreSQL (PGlite in a Web Worker). `sql-exercise` grades every
+  submission on a visible and a hidden `_edge` dataset with a NULL-aware multiset
+  compare and a row diff. Datasets `hr`, `shop`, `events` (+ `_edge` twins).
+- Blocks: `question` (mcq/msq/nat/order/match), `flashcards`, `misconception`,
+  `predict`, `explain-back`, `query-trace`, `query-plan`, `dialect-diff`,
+  `schema-diagram`, `table-diff`, `er-diagram`, `fd-stepper`, `nf-decomposition`,
+  `schedule`. Gallery at `/#/lab`.
+- Approach ladder (Brute → Optimal) on worked problems; `check:exercises` runs every
+  approach against the reference solution.
+- Engine self-tests (`npm run test:engines`), GitHub templates, Dependabot.
+
+### Fixed
+- Escaping, dialect toggle, pandas/SQLAlchemy snippets, SQL highlighting, and quiz
+  answers keyed by question text instead of build order.
+- Options that refer to other options ("Both B and C", "All of the above") keep their
+  authored order instead of being shuffled out of sync.
+- Joins module realigned with its problem set (SQL-J11); the self-join question no longer
+  claims a foreign key is required. The remaining modules' audit fixes
+  (`docs/SPEC-SQL.md`) land with job cards SQL-J09–J17.
+
 ## 2.2.0 — 2026-09-12 — sourced spine extended
 
 ### Added
