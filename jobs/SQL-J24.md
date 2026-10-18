@@ -8,6 +8,7 @@ est: 60
 workdir: 'C:\MEGA NZ\SKILLS MATERIAL\sql-lms'
 seq: 22
 depends: [SQL-J18]
+exclusive: true
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J24 · Answer payloads · filtering L2–L3 and subqueries.md"
 created: 2026-10-17
 updated: 2026-10-17

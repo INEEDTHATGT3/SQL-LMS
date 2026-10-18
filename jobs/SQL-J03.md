@@ -20,7 +20,7 @@ Give SQL its dry-run trace: show the intermediate table after each clause.
 ## Done when
 - [ ] `QueryTrace.jsx` implements BLOCKS.md `query-trace`: Run trace boots PGlite, runs every stage, prev/next + show all, row count per stage, rows dropped since the previous stage marked `.cell-del` when columns match
 - [ ] `content/lab/sql-trace.json` has ≥ 2 traces (WHERE → GROUP BY → HAVING on hr; the LEFT JOIN + WHERE-on-right-table trap on shop); `node scripts/check-exercises.mjs --lab` passes
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-check --emptyOutDir` passes (then delete `dist-check`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J03 --emptyOutDir` passes (then delete `dist-SQL-J03`)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

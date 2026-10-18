@@ -8,6 +8,7 @@ est: 60
 workdir: 'C:\MEGA NZ\SKILLS MATERIAL\sql-lms'
 seq: 19
 depends: [SQL-J09, SQL-J10, SQL-J11, SQL-J12, SQL-J13, SQL-J14, SQL-J15, SQL-J16, SQL-J17]
+exclusive: true
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J18 · Widen sourcing with all PGExercises categories.md"
 created: 2026-10-17
 updated: 2026-10-17

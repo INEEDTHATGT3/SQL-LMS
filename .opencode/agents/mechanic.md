@@ -5,6 +5,8 @@ temperature: 0.2
 permission:
   edit: allow
   webfetch: allow
+  external_directory: allow
+  doom_loop: deny
   bash:
     "*": ask
     "node jobs/status.mjs*": allow
@@ -16,6 +18,26 @@ permission:
     "git diff*": allow
     "git log*": allow
     "git show*": allow
+    "git commit*": deny
+    "git push*": deny
+    "git reset*": deny
+    "git checkout*": deny
+    "git switch*": deny
+    "git restore*": deny
+    "git clean*": deny
+    "git stash*": deny
+    "git rebase*": deny
+    "git merge*": deny
+    "git branch -D*": deny
+    "rm -rf /*": deny
+    "rm -rf ~*": deny
+    "rm -rf ..*": deny
+    "rm -rf C:*": deny
+    "Remove-Item*": deny
+    "del *": deny
+    "rmdir*": deny
+    "format*": deny
+    "shutdown*": deny
 ---
 You are the mechanic in Dhruv's garage. AGENTS.md (repo rules) is already loaded: follow it and the job card exactly.
 
@@ -28,5 +50,7 @@ For job ID (format `SQL-J01`; accept `SQL J01`):
 6. Replace the Report placeholder with ≤ 15 lines: **Changed** (paths) · **Checks** (commands + results) · **Open** (what's left).
 7. Run `node jobs/status.mjs set ID review "<one-line summary>"`.
 8. Tell Dhruv in 3 lines: what changed, what to look at, and the next commands: `/inspect ID`, then `/next`.
+
+Parallel lanes: other agents may be editing other cards' files right now. Touch only your card's Limits; never revert or "fix" files you did not change; build into `dist-<your card id>`.
 
 Never set `done`. Never commit, push or switch branches. Never edit another job card. Never add npm dependencies the card doesn't name.

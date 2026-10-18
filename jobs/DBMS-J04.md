@@ -31,7 +31,7 @@ Author DBMS module `er-model` L1–L2. Use `er-diagram` with `mapping: true` for
 - format example: `content\basics\L1.json`
 
 ## Steps
-0. Run `node jobs/status.mjs show DBMS-J04`; if it prints UNMET depends, stop and tell Dhruv which card to run first. (After DBMS-J01 this card lives in `dbms-lms/jobs/`; run it there.)
+0. Run `node jobs/status.mjs show DBMS-J04`; if it prints UNMET depends, stop and tell Dhruv which card to run first.
 1. Plan sections: mental model → core ideas → procedures/diagrams → interview angle → question set (revision card and glossary are separate keys).
 2. Write the lessons; keep L1 analogies everyday, L4 tied to PostgreSQL/InnoDB.
 3. Lint, fix, repeat.

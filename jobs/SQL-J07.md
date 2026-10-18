@@ -21,7 +21,7 @@ Build the ER diagram block (Chen and crow's foot) and the ER→relational mappin
 - [ ] `src/engines/er.js` exports `mapToTables(spec)` → `{ tables: [{ name, columns: [{ name, pk, fk }] }], minTables }` (strong/weak entity, 1:N, 1:1 total side, M:N, multivalued, composite flattened, derived omitted, ISA table-per-subclass); `er.test.mjs` has ≥ 8 cases incl. a recursive relationship and a GATE 'minimum tables' classic; tests pass
 - [ ] `ErDiagram.jsx`: Chen (double rect weak, double diamond identifying, double oval multivalued, dashed oval derived, underline key, dashed underline partial key, double line total participation, 1/N/M labels, ISA triangle) and crow's foot, `both`; automatic layout when `layout` is absent; `mapping: true` renders the tables; `ask` graded
 - [ ] `content/lab/er.json` has ≥ 3 diagrams (company, university with a weak entity, an ISA); SVG scales to 360 px
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-check --emptyOutDir` passes (then delete `dist-check`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J07 --emptyOutDir` passes (then delete `dist-SQL-J07`)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

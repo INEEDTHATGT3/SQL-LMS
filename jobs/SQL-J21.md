@@ -22,7 +22,7 @@ Bring DSA's answer-payload system and Striver's Brute → Optimal ladder into th
 - [ ] Problem block renders `approaches` as a ladder (Brute → Better → Optimal, revealed one at a time: idea, code tabs, cost, pitfalls) per `docs/STYLE.md` §4; Interview shows the approaches in order in its solution phase; Review's problem answer shows the optimal approach
 - [ ] `scripts/check-exercises.mjs` also runs every approach's `code` on the exercise datasets and fails if one disagrees with the graded result; `lint-content.mjs` validates the `approaches` shape; `content/BLOCKS.md` documents it
 - [ ] `scripts/solution-coverage.mjs` (npm script `coverage`) prints per module × tier: problems, with approaches, with exercise, with follow-ups, premium skipped — the DSA `solution-coverage.mjs` equivalent
-- [ ] `content/answers/basics.json` holds 2 real entries that survive sync → lesson → check-exercises; `npx eslint <your files>` clean; `npx vite build --outDir dist-check --emptyOutDir` passes (then delete `dist-check`)
+- [ ] `content/answers/basics.json` holds 2 real entries that survive sync → lesson → check-exercises; `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J21 --emptyOutDir` passes (then delete `dist-SQL-J21`)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

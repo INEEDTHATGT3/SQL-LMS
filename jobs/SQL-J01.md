@@ -21,7 +21,7 @@ Make graded SQL possible: verify the PGlite runner and the six datasets in Node,
 - [ ] `src/engines/resultcompare.js` exports `compare(expected, got, opts)`; `resultcompare.test.mjs` covers multiset order, duplicates, NULL vs empty string, numeric string vs number, float tolerance, column-count mismatch, `orderMatters`; `node scripts/test-engines.mjs` passes
 - [ ] `node scripts/check-exercises.mjs --lab` loads all six `content/datasets/*.sql`, asserts each `_edge` file has exactly the tables and columns of its base, and prints a summary
 - [ ] `node scripts/check-exercises.mjs --explain <dataset-or-.sql-path> "<sql>"` prints `EXPLAIN (FORMAT JSON)` (works with `harness/init.sql`)
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-check --emptyOutDir` passes (then delete `dist-check`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J01 --emptyOutDir` passes (then delete `dist-SQL-J01`)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

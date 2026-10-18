@@ -21,7 +21,7 @@ Adversarially check the functional-dependency engine and its two blocks before l
 - [ ] ≥ 6 new independent cases in `fd.test.mjs`, answers derived by hand with a cited source: closure, candidate keys, superkey count, minimal cover, a 3NF-but-not-BCNF relation, R(ABC) AB→C, C→B (BCNF lossless but not dependency-preserving), a 3-way chase; all pass
 - [ ] FdStepper practice answers are stored under a qkey and wrong ones call `logMistake`; NfDecomposition `ask` is graded (Report cites the lines)
 - [ ] `content/lab/fd.json` covers every `tasks` value and both targets
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-check --emptyOutDir` passes (then delete `dist-check`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J06 --emptyOutDir` passes (then delete `dist-SQL-J06`)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

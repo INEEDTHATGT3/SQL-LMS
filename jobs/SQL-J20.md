@@ -8,6 +8,7 @@ est: 30
 workdir: 'C:\MEGA NZ\SKILLS MATERIAL\sql-lms'
 seq: 29
 depends: [SQL-J19]
+exclusive: true
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J20 · Final gate before merge.md"
 created: 2026-10-17
 updated: 2026-10-17

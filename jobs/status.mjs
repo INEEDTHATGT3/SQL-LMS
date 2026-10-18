@@ -5,6 +5,10 @@
      node jobs/status.mjs next [CODE]           next runnable card: open, all depends done, lowest seq
      node jobs/status.mjs show ID               path, status, unmet depends (exit 2 if any)
      node jobs/status.mjs set ID STATUS ["note"]  set status (+ dated note in ## Report)
+     node jobs/status.mjs get ID [field]         print one field (default status)
+     node jobs/status.mjs claim LANE [CODE]      driver lanes: resume this lane's card, else claim the
+                                                next runnable one (prints ID | wait | none).
+                                                exclusive cards never run beside another card.
    `set` mirrors to Dhruv's Obsidian pit wall (comms.py) when the vault exists;
    override its location with PIT_WALL=<vault path>. */
 import fs from 'node:fs';
@@ -28,6 +32,7 @@ function parse(file) {
   }
   meta.depends = (meta.depends || '').replace(/[[\]]/g, '').split(',').map(norm).filter(Boolean);
   meta.seq = Number(meta.seq) || 999;
+  meta.exclusive = meta.exclusive === 'true';
   return { file, text, meta, id: `${meta.code}-${meta.id}` };
 }
 
@@ -37,14 +42,23 @@ const byId = Object.fromEntries(cards.map(c => [c.id, c]));
 const unmet = c => c.meta.depends.filter(d => byId[d]?.meta.status !== 'done');
 const runnable = c => ['open', 'doing'].includes(c.meta.status) && !unmet(c).length;
 
+/* set or insert a frontmatter field */
+function setField(text, key, value) {
+  const re = new RegExp(`^${key}:.*$`, 'm');
+  const fm = text.match(/^---\r?\n[\s\S]*?\r?\n---/)[0];
+  if (re.test(fm)) return text.replace(re, `${key}: ${value}`);
+  return text.replace(/^(---\r?\n[\s\S]*?)(\r?\n---)/, `$1\n${key}: ${value}$2`);
+}
+const active = c => ['doing', 'review'].includes(c.meta.status);
+
 function mirror(c, status, note) {
   const comms = path.join(VAULT, '.obs-studio', 'comms.py');
-  if (!fs.existsSync(comms)) return console.log('(pit wall not found; repo card updated only)');
+  if (!fs.existsSync(comms)) return console.error('(pit wall not found; repo card updated only)');
   const py = process.platform === 'win32' ? 'python' : 'python3';
   const run = args => spawnSync(py, [comms, ...args], { cwd: VAULT, encoding: 'utf8', env: { ...process.env, PYTHONUTF8: '1' } });
   const r = run(['job-set', c.meta.code, c.meta.id, 'status', status]);
   if (note) run(['job-note', c.meta.code, c.meta.id, note]);
-  console.log(r.status === 0 ? `mirrored to pit wall: ${c.id} ${status}` : `pit wall mirror failed: ${(r.stderr || r.stdout).trim().split('\n').pop()}`);
+  console.error(r.status === 0 ? `mirrored to pit wall: ${c.id} ${status}` : `pit wall mirror failed: ${(r.stderr || r.stdout).trim().split('\n').pop()}`);
 }
 
 const [cmd, a1, a2, ...rest] = process.argv.slice(2);
@@ -76,7 +90,29 @@ if (!cmd || cmd === 'list') {
   fs.writeFileSync(c.file, t);
   console.log(`${c.id} → ${a2}`);
   mirror(c, a2, note);
+} else if (cmd === 'get') {
+  const c = byId[norm(a1)];
+  if (!c) { console.error(`no card ${a1}`); process.exit(1); }
+  console.log(a2 ? (c.meta[a2] ?? '') : c.meta.status);
+} else if (cmd === 'claim') {
+  const lane = String(a1 || '0'), code = a2 ? a2.toUpperCase() : null;
+  const mine = cards.find(c => active(c) && c.meta.lane === lane);
+  if (mine) { console.log(mine.id); process.exit(0); }
+  const others = cards.filter(c => active(c) && c.meta.lane !== lane);
+  if (others.some(c => c.meta.exclusive)) { console.log('wait'); process.exit(0); }
+  const pick = cards.find(c => c.meta.status === 'open' && !unmet(c).length &&
+    (!code || c.meta.code === code) && !(c.meta.exclusive && others.length));
+  if (pick) {
+    let t = setField(setField(pick.text, 'lane', lane), 'status', 'doing');
+    t = setField(t, 'updated', today());
+    fs.writeFileSync(pick.file, t);
+    mirror(pick, 'doing', `claimed by driver lane ${lane}`);
+    console.log(pick.id);
+  } else {
+    const anyOpen = cards.some(c => c.meta.status === 'open' && (!code || c.meta.code === code));
+    console.log(others.length && anyOpen ? 'wait' : 'none');
+  }
 } else {
-  console.error('commands: list | next [CODE] | show ID | set ID STATUS ["note"]');
+  console.error('commands: list | next [CODE] | show ID | get ID [field] | set ID STATUS ["note"] | claim LANE [CODE]');
   process.exit(1);
 }

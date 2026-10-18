@@ -22,7 +22,7 @@ Turn the existing schedule engine into the block that teaches serializability, r
 - [ ] `mode: predict` hides verdicts until the ask is answered; graded and stored under `qkey(ask.q)`; wrong → `logMistake`
 - [ ] ≥ 4 new schedules in `schedule.test.mjs` with hand-derived answers and a cited source (Korth ch 17–18, Gate Smashers, or a GATE Overflow id); `node scripts/test-engines.mjs` passes
 - [ ] `content/lab/txn.json` has ≥ 5 samples covering none / 2PL family / TO or Thomas / wait-die or wound-wait
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-check --emptyOutDir` passes (then delete `dist-check`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J05 --emptyOutDir` passes (then delete `dist-SQL-J05`)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

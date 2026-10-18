@@ -22,7 +22,7 @@ Port the three old static blocks to React; 57 lesson query plans and 42 dialect 
 - [ ] `DialectDiff.jsx`: tabs or columns via `Code`; empty or comment-only fields show a "same as SQL" chip
 - [ ] `SchemaDiagram.jsx`: pure-SVG table cards with PK/FK markers and FK lines; accepts plain table names; reads `b.spec ?? b`
 - [ ] `content/lab/plans.json` has samples incl. two plans copied from lessons; `node scripts/lint-content.mjs` 0 errors
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-check --emptyOutDir` passes (then delete `dist-check`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J04 --emptyOutDir` passes (then delete `dist-SQL-J04`)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

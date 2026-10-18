@@ -20,7 +20,7 @@ node scripts/gen.mjs && node scripts/lint-content.mjs
 node scripts/check-provenance.mjs
 node scripts/check-exercises.mjs     # every exercise solution runs on its datasets (PGlite in Node)
 npx eslint src scripts
-npx vite build --outDir dist-check --emptyOutDir   # then delete dist-check
+npx vite build --outDir dist-<CARD-ID> --emptyOutDir   # then delete it (one dir per card: lanes run in parallel)
 ```
 `npm run build` = sync problems + provenance + content lint + gen + vite build. `npm run dev` serves on :5173.
 
