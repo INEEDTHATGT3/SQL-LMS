@@ -18,7 +18,7 @@ updated: 2026-10-17
 Make every doc describe the React app, not the retired static renderer.
 
 ## Done when
-- [ ] README.md: features (mirror `docs/PARITY.md`), commands (each exists in package.json), curriculum, sources, `/#/lab`
+- [ ] README.md already has the dsa-lms GitHub layout (badges, screenshots in `docs/screenshots/`, features, curriculum, sourcing). Keep that layout and update facts in place: features (mirror `docs/PARITY.md`), commands (each exists in package.json), counts, `/#/lab`. Update CHANGELOG 3.0.0 "Fixed" with the modules J09–J17 actually fixed.
 - [ ] content/AUTHORING.md rewritten: layer contract, quotas from subject.json, link to BLOCKS.md, author → lint → check-exercises → build loop; AGENT_BRIEF.md state of play points to AGENTS.md
 - [ ] CHANGELOG.md 3.0.0 entry and a `content/changelog.json` entry (shown on the hub)
 - [ ] `grep -rn "renderer/\|vendor/\|site/" README.md content/*.md` returns nothing stale
