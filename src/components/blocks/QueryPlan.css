@@ -1,0 +1,26 @@
+/* query-plan tree */
+.qp-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}
+.qp-grid.two{grid-template-columns:1fr 1fr}
+@media (max-width:760px){.qp-grid.two{grid-template-columns:1fr}}
+.qp-panel{min-width:0;background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px}
+.qp-panel-h{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent3);margin-bottom:8px}
+.qp-node{font-size:13px}
+.qp-node+.qp-node{margin-top:6px}
+.qp-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:3px 6px;border:1px solid transparent;border-radius:4px}
+.qp-node.hot>.qp-head{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.4)}
+.qp-toggle{width:16px;height:16px;flex:none;padding:0;display:grid;place-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:3px;color:var(--lvl);font-size:9px;line-height:1;cursor:pointer}
+.qp-toggle:hover{border-color:var(--lvl)}
+.qp-sp{width:16px;flex:none}
+.qp-type{color:var(--text-bright);font-weight:600}
+.qp-rel{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent3);background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 6px}
+.qp-idx{font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);padding:1px 2px}
+.qp-flag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--warn);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.4);border-radius:3px;padding:1px 6px}
+.qp-body{margin-left:22px}
+.qp-meta{display:flex;flex-wrap:wrap;align-items:center;gap:2px 10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:2px}
+.qp-ratio{font-size:10px;padding:0 5px;border-radius:3px;border:1px solid var(--border);color:var(--text-dim)}
+.qp-ratio.warn{color:var(--warn);background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.5)}
+.qp-ratio.ok{color:var(--green);background:rgba(0,255,157,.07);border-color:rgba(0,255,157,.35)}
+.qp-conds{list-style:none;margin:4px 0 0;padding:0}
+.qp-conds li{font-family:'Space Mono',monospace;font-size:11px;color:var(--text);line-height:1.6;overflow-wrap:anywhere}
+.qp-k{color:var(--text-dim)}
+.qp-kids{margin-top:6px;padding-left:10px;border-left:1px solid var(--border)}

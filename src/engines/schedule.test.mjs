@@ -198,3 +198,52 @@ assert.deepEqual(kinds('W1(A) C1 R2(A) W2(A) C2'), []);
   assert.throws(() => verdictAsk({ options: ['Deadlock free'] }, run(s).verdicts, keys, s), /not a verdict name/);
   assert.equal(verdictAsk({ q: 'x', options: ['a', 'b'], answer: [0] }, run(s).verdicts, keys, s).answer[0], 0);
 }
+
+/* --- extra cases (SQL-J05) --- */
+
+/* 14. Gate Smashers: 2PL deadlock with 2 txns (cited: Gate Smashers - Concurrency Control) */
+{
+  const sDead = parseSchedule('R1(A) R2(A) W1(A) W2(A) C1 C2');
+  const r = simulate(sDead, '2PL');
+  assert.equal(r.deadlocks.length, 1);
+  assert.deepEqual(r.aborted, [2]);
+}
+
+/* 15. Korth: Thomas' write rule skips obsolete write (Korth ch 17-18) */
+{
+  const s = parseSchedule('W1(A) W2(A) W1(A) C1 C2');
+  const t = simulate(s, 'thomas');
+  assert.equal(t.steps[2].status, 'ignored');
+  assert.deepEqual(t.aborted, []);
+}
+
+/* 16. Korth: dirty read leads to nonrecoverable if reader commits (Korth ch 17-18) */
+{
+  const s = 'W1(A) R2(A) C2 A1';
+  assert.equal(v(s, 'recoverable'), false);
+  assert.equal(v(s, 'cascadeless'), false);
+}
+
+/* 17. Korth Fig. 14.12: view serializable with blind writes (Korth ch 17-18) */
+{
+  const s = 'R1(A) W2(A) W1(A) W3(A) C1 C2 C3';
+  const a = run(s);
+  assert.equal(a.verdicts.conflictSerializable.value, false);
+  assert.equal(a.verdicts.viewSerializable.value, true);
+}
+
+/* 18. Wait-die: younger dies when older holds lock (Korth ch 17-18) */
+{
+  const s = parseSchedule('W1(A) W2(A) C1 C2');
+  const r = simulate(s, 'waitDie');
+  assert.deepEqual(r.aborted, [2]);
+}
+
+/* 19. Wound-wait: older wounds younger when younger holds lock (Korth ch 17-18) */
+{
+  const s = parseSchedule('W2(A) W1(A) C1 C2');
+  const r = simulate(s, 'woundWait');
+  assert.deepEqual(r.aborted, [2]);
+}
+
+

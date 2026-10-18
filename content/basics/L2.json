@@ -53,7 +53,7 @@
         "TRUE",
         "FALSE",
         "UNKNOWN (NULL)",
-        "Error"
+        "An error is raised"
       ],
       "answer": 2,
       "explain": "NULL = NULL is UNKNOWN, not TRUE. Use IS NULL instead."
@@ -64,8 +64,25 @@
       "title": "Advanced Filtering — IN, NOT IN, LIKE, BETWEEN",
       "blocks": [
         {
+          "type": "callout",
+          "tone": "info",
+          "md": "**The sentence you will rewrite most often in interviews:** \"Show me customers who signed up in January but never placed an order.\" Filtering is the first draft of half the SQL you will ever write."
+        },
+        {
           "type": "mantra",
           "md": "**WHERE is your precision tool. IN for lists, LIKE for patterns, BETWEEN for ranges. Chain with AND/OR — parentheses control precedence.**"
+        },
+        {
+          "type": "visual",
+          "kind": "flow",
+          "spec": {
+            "steps": [
+              "**dept_id IN (1, 3, 5)** → keeps rows whose department is in the list",
+              "**first_name LIKE 'A%'** → keeps rows whose name starts with A",
+              "**AND** → both must survive; one predicate can veto a row",
+              "**ORDER BY salary DESC LIMIT 5** → the survivors, ranked, capped"
+            ]
+          }
         },
         {
           "type": "code",
@@ -73,6 +90,20 @@
           "code": "-- Multiple values\nSELECT * FROM employees WHERE dept_id IN (1, 3, 5);\n\n-- Exclude\nSELECT * FROM employees WHERE dept_id NOT IN (2, 4);\n\n-- Subquery (preview)\nSELECT * FROM employees WHERE dept_id IN (SELECT id FROM departments WHERE location = 'NYC');",
           "py-pandas": "# IN\ne = employees[employees['dept_id'].isin([1, 3, 5])]\n\n# NOT IN\ne = employees[~employees['dept_id'].isin([2, 4])]\n\n# Subquery\nyc_depts = departments[departments['location'] == 'NYC']['id']\ne = employees[employees['dept_id'].isin(yc_depts)]",
           "py-sqlalchemy": "# IN\nsession.query(Employee).filter(Employee.dept_id.in_([1, 3, 5])).all()\n\n# NOT IN\nsession.query(Employee).filter(~Employee.dept_id.in_([2, 4])).all()\n\n# Subquery\nnyc_subq = session.query(Department.id).filter(Department.location == 'NYC')\nsession.query(Employee).filter(Employee.dept_id.in_(nyc_subq)).all()"
+        },
+        {
+          "type": "misconception",
+          "claim": "WHERE dept_id NOT IN (SELECT dept_id FROM contractors) returns everyone who is not a contractor — the opposite of IN, exactly like NOT EXISTS.",
+          "verdict": false,
+          "askFirst": true,
+          "refutation": "This is false — and it is the most expensive typo in SQL. If the subquery's column holds even one NULL, every row's NOT IN test evaluates to UNKNOWN, WHERE discards every row, and the query silently returns **zero rows** instead of \"everyone else\". NOT EXISTS has no such trap: it tests row-by-row existence and treats NULLs safely.",
+          "correctModel": "NOT IN over a nullable subquery is a NULL bomb. Either guarantee the column is NOT NULL, filter the NULLs out of the subquery, or reach for NOT EXISTS / an anti-join.",
+          "cue": "Ask: can the subquery column be NULL? One NULL in the list poisons the whole IN.",
+          "evidence": {
+            "type": "code",
+            "label": "NOT IN vs NOT EXISTS on hr — manager_id holds the CEO's NULL",
+            "code": "-- The subquery picks up the CEO's NULL manager_id...\nSELECT count(*) AS not_in_count\nFROM   employees\nWHERE  emp_id NOT IN (SELECT manager_id FROM employees);\n-- ...so NOT IN evaluates to UNKNOWN for every row and returns 0.\n\n-- NOT EXISTS answers the same intent safely: emp_ids nobody manages\nSELECT count(*) AS not_exists_count\nFROM   employees e\nWHERE  NOT EXISTS (SELECT 1 FROM employees m\n                   WHERE  m.manager_id = e.emp_id);"
+          }
         },
         {
           "type": "code",
@@ -100,9 +131,9 @@
             {
               "q": "LIKE '%test_' matches:",
               "options": [
-                "Any string containing 'test'",
-                "Strings ending with 'test' plus one char",
-                "Strings starting with 'test'",
+                "Any string that contains 'test'",
+                "Ends with 'test' plus one more char",
+                "Strings starting with 'test' at the top",
                 "Exactly 'test_'"
               ],
               "answer": 1,
@@ -139,7 +170,7 @@
             {
               "q": "Applying De Morgan's law, NOT (A OR B) becomes…",
               "options": [
-                "NOT A OR NOT B",
+                "NOT (A) OR NOT (B)",
                 "NOT A AND NOT B",
                 "A AND B",
                 "A OR B"
@@ -229,9 +260,9 @@
               "q": "Index Cond in EXPLAIN means:",
               "options": [
                 "Index is corrupted",
-                "Index is being used for filtering",
+                "Index used to filter rows",
                 "Index needs rebuilding",
-                "Full index scan"
+                "A full scan of the index itself"
               ],
               "answer": 1,
               "explain": "Index Cond shows the condition applied during index lookup."
@@ -262,6 +293,33 @@
       "title": "Problem Set — L2 Drills",
       "blocks": [
         {
+          "type": "query-trace",
+          "dataset": "hr",
+          "title": "B201 dry run — FROM → WHERE (IN) → ORDER BY → LIMIT",
+          "stages": [
+            {
+              "label": "FROM",
+              "sql": "SELECT emp_id, first_name, dept_id, salary FROM employees ORDER BY emp_id;",
+              "note": "Logical step 1 — **FROM** produces the full grid: all 21 employees in hr (12 in the edge twin), no filtering yet."
+            },
+            {
+              "label": "WHERE",
+              "sql": "SELECT emp_id, first_name, dept_id, salary FROM employees WHERE dept_id IN (1, 3, 5) ORDER BY emp_id;",
+              "note": "**WHERE** keeps only rows whose department is in the list — 10 of 21 employees survive in hr (6 of 12 in the edge twin)."
+            },
+            {
+              "label": "ORDER BY",
+              "sql": "SELECT first_name, salary FROM employees WHERE dept_id IN (1, 3, 5) ORDER BY salary DESC;",
+              "note": "**ORDER BY** ranks the survivors highest salary first — the row set has not changed, only its order."
+            },
+            {
+              "label": "LIMIT",
+              "sql": "SELECT first_name, salary FROM employees WHERE dept_id IN (1, 3, 5) ORDER BY salary DESC LIMIT 5;",
+              "note": "**LIMIT** caps the result at 5 rows — the final answer. Each stage is a complete query showing the intermediate table."
+            }
+          ]
+        },
+        {
           "type": "problems",
           "items": [
             {
@@ -272,9 +330,48 @@
               "patterns": [
                 "where-in"
               ],
-              "statement": "List all employees in departments 1, 3, or 5.",
+              "statement": "List all employees in departments 1 (Executive), 3 (Sales) or 5 (Finance). Expected: all employee columns, exactly the 10 rows in hr (6 in the edge twin), any order. The trace above is the dry run of the optimal approach.",
               "hints": [
                 "Use IN (1, 3, 5)"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Spell the list as an OR chain — one equality per department.",
+                  "code": {
+                    "code": "SELECT *\nFROM employees\nWHERE dept_id = 1 OR dept_id = 3 OR dept_id = 5;"
+                  },
+                  "cost": "same scan as the optimal form — the planner rewrites OR-of-equalities into a membership test",
+                  "pitfalls": "Adding a department means editing the WHERE line again; a 12-item list becomes unreadable."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "IN states the membership test in one token and reads like the requirement.",
+                  "code": {
+                    "code": "SELECT *\nFROM employees\nWHERE dept_id IN (1, 3, 5);"
+                  },
+                  "cost": "identical plan — one seq scan with the same filter",
+                  "pitfalls": "IN over a *subquery* has the NULL poison trap (see the misconception above); over a literal list it is perfectly safe."
+                }
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees in departments 1, 3 or 5.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE dept_id IN (1, 3, 5);",
+                "orderMatters": false
+              },
+              "followups": [
+                {
+                  "q": "When is OR-of-equalities actually better than IN?",
+                  "a": "When the list is built dynamically or each member needs a different operator — e.g. dept_id = 1 OR salary > 200000. For a flat membership test, IN is clearer."
+                },
+                {
+                  "q": "Does IN use an index when one exists on dept_id?",
+                  "a": "Yes — the planner can turn IN (1, 3, 5) into a Bitmap Index Scan, one probe per list item."
+                }
               ]
             },
             {
@@ -285,23 +382,41 @@
               "patterns": [
                 "where-like"
               ],
-              "statement": "Find employees whose name starts with A or B.",
+              "statement": "Find employees whose first name starts with A or B. Expected: all employee columns for the 3 matching rows in hr (1 in the edge twin), any order.",
               "hints": [
                 "Use LIKE 'A%' OR LIKE 'B%' or SIMILAR TO"
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees whose first_name starts with A or B.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE first_name LIKE 'A%' OR first_name LIKE 'B%';",
+                "orderMatters": false
+              }
             },
             {
               "id": "B203",
               "tier": 2,
-              "title": "Salary 60k-80k in Dept 2",
+              "title": "Salary 60k-90k in Dept 2",
               "platform": "drill",
               "patterns": [
                 "where-compound"
               ],
-              "statement": "Employees in department 2 with salary between 60000 and 80000.",
+              "statement": "Employees in department 2 (Engineering) with salary between 60000 and 90000, inclusive. Expected: all employee columns, 1 row in hr and 2 in the edge twin, any order.",
               "hints": [
-                "WHERE dept_id = 2 AND salary BETWEEN 60000 AND 80000"
-              ]
+                "WHERE dept_id = 2 AND salary BETWEEN 60000 AND 90000"
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees in department 2 with salary between 60000 and 90000.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE dept_id = 2 AND salary BETWEEN 60000 AND 90000;",
+                "orderMatters": false
+              }
             },
             {
               "id": "B204",
@@ -311,10 +426,19 @@
               "patterns": [
                 "where-date"
               ],
-              "statement": "Employees hired after January 1, 2023.",
+              "statement": "Employees hired after January 1, 2023. Expected: all employee columns, 4 rows in hr (2 in the edge twin), any order.",
               "hints": [
                 "WHERE hire_date > '2023-01-01'"
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees hired after 2023-01-01.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE hire_date > '2023-01-01';",
+                "orderMatters": false
+              }
             },
             {
               "id": "B205",
@@ -325,23 +449,33 @@
                 "order-by",
                 "limit"
               ],
-              "statement": "Write the query pattern to get top 3 salaries. (Full solution at L3 with window functions)",
+              "statement": "Write the query pattern to get the top 3 salaries *per department*. (Full solution arrives with window functions at L3 — here, reason about why ORDER BY dept_id, salary DESC LIMIT 3 is wrong: it returns the global top 3 after one grouping, never the top 3 *within* each department.)",
               "hints": [
-                "ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept"
+                "ORDER BY dept_id, salary DESC LIMIT 3 — but this gives global top 3, not per dept",
+                "You need a ranking that restarts per department — that is exactly what ROW_NUMBER() OVER (PARTITION BY dept_id …) does at L3"
               ]
             },
             {
               "id": "B206",
               "tier": 2,
-              "title": "Pagination: Page 2 (20 per page)",
+              "title": "Pagination: Page 2 (10 per page)",
               "platform": "drill",
               "patterns": [
                 "limit-offset"
               ],
-              "statement": "Get the second page of employees ordered by hire_date, 20 per page.",
+              "statement": "Get the second page of employees ordered by emp_id, 10 per page. Expected: all employee columns, rows 11–20 (10 rows in hr, 2 in the edge twin). Ordering by the unique key emp_id makes the page deterministic — hire_date would leave ties at the boundary.",
               "hints": [
-                "OFFSET 20 LIMIT 20"
-              ]
+                "OFFSET 10 LIMIT 10"
+              ],
+              "exercise": {
+                "prompt": "Return all columns for the second page of employees ordered by emp_id, 10 rows per page.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees ORDER BY emp_id LIMIT 10 OFFSET 10;",
+                "orderMatters": false
+              }
             },
             {
               "id": "B207",
@@ -351,10 +485,19 @@
               "patterns": [
                 "where-not-in"
               ],
-              "statement": "All employees NOT in departments 4 or 6.",
+              "statement": "All employees NOT in departments 4 (Marketing) or 6 (HR). Expected: all employee columns, 16 rows in hr (10 in the edge twin), any order. Literal lists are safe from the NULL trap — only subqueries can carry a NULL into NOT IN.",
               "hints": [
                 "NOT IN (4, 6)"
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees not in departments 4 or 6.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE dept_id NOT IN (4, 6);",
+                "orderMatters": false
+              }
             },
             {
               "id": "B208",
@@ -364,10 +507,19 @@
               "patterns": [
                 "where-like"
               ],
-              "statement": "Employees with company email (@company.com).",
+              "statement": "Employees with a company email — every address in the data ends in @acme.io. Expected: all employee columns, 18 rows in hr (10 in the edge twin), any order. NULL emails (three in hr) never match LIKE — they simply drop out.",
               "hints": [
-                "LIKE '%@company.com'"
-              ]
+                "LIKE '%@acme.io'"
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees whose email ends with @acme.io.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE email LIKE '%@acme.io';",
+                "orderMatters": false
+              }
             }
           ]
         }
@@ -379,7 +531,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

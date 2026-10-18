@@ -66,6 +66,8 @@ for (const mod of mods.modules) {
   if (!dir) { console.log(`  ! ${mod.id}: no content directory`); continue; }
 
   const pool = bank.modules[mod.id] || [];
+  const answersPath = path.join(CONTENT, 'answers', `${mod.id}.json`);
+  const answers = fs.existsSync(answersPath) ? read(answersPath) : {};
   console.log(`\n◆ ${mod.id}`);
 
   for (const L of [1, 2, 3, 4]) {
@@ -73,7 +75,16 @@ for (const mod of mods.modules) {
     if (!fs.existsSync(file)) continue;
 
     const lesson = read(file);
-    const items = pool.filter(p => p.tier === L).map(toLessonItem);
+    const items = pool.filter(p => p.tier === L).map(p => {
+      const item = toLessonItem(p);
+      const a = answers[p.id];
+      if (a && typeof a === 'object') {
+        for (const k of ['statement', 'hints', 'approaches', 'exercise', 'followups', 'complexity']) {
+          if (a[k] !== undefined) item[k] = a[k];
+        }
+      }
+      return item;
+    });
 
     const before = (lesson.sections || []).length;
     lesson.sections = (lesson.sections || []).filter(s => s.title !== SECTION_TITLE);

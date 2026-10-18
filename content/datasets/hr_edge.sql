@@ -52,3 +52,26 @@ INSERT INTO employees (emp_id, first_name, last_name, email, dept_id, manager_id
   (10, 'Leela',  'Das',     'leela.das@acme.io',     3,    3,    '2021-03-01',  70000.00, 'Account Executive',   -2500.00),
   (11, 'Joy',    'Sen',     'PRIYA.SHARMA@acme.io',  3,    3,    '2021-03-01',  70000.00, 'Account Executive',       0.00),
   (12, 'Zoe',    'Thomas',  'zoe.thomas@acme.io',    2,    4,    '2024-12-31',      NULL, 'Contract Engineer',       NULL);
+
+-- Appended for L3 basics drills (B301, B302). Same schema as hr.sql; edge rows.
+CREATE TABLE audit_log (
+  entry_id  integer PRIMARY KEY,
+  action    text NOT NULL,
+  created   text NOT NULL
+);
+
+INSERT INTO audit_log (entry_id, action, created) VALUES
+  (1, 'login',  '2024-01-15 00:00:00'),
+  (2, 'login',  '2024-01-15 23:59:59'),
+  (3, 'logout', '2024-01-16 00:00:01');
+
+CREATE TABLE users (
+  user_id         integer PRIMARY KEY,
+  username        text NOT NULL,
+  deactivated_at  timestamptz
+);
+
+INSERT INTO users (user_id, username, deactivated_at) VALUES
+  (1, 'arjun', NULL),
+  (2, 'diya',  NULL),
+  (3, 'kabir', '2024-02-01 10:00:00+00');

@@ -56,6 +56,7 @@ function walkBlock(w, b, level, counts) {
   if (b.type === 'query-plan') counts.plan++;
   if (b.type === 'dialect-diff' || (b.type === 'code' && (b.pg || b.mysql))) counts.dialect++;
   if (b.type === 'code' && b.code && !b.code.trim()) err(w, 'empty code block');
+  counts.types[b.type] = (counts.types[b.type] || 0) + 1;
   const items = b.type === 'problems' ? b.items || [] : PROBLEM_TYPES.includes(b.type) ? [b] : [];
   for (const p of items) {
     counts.prob++;
@@ -69,9 +70,32 @@ function walkBlock(w, b, level, counts) {
       for (const d of ex.datasets || []) if (!datasets.has(d)) err(w, `${p.id} unknown dataset "${d}"`);
       if (!(ex.datasets || []).length) err(w, `${p.id} exercise lists no datasets`);
     }
+    const aps = b.type === 'sql-exercise' ? b.approaches : p.approaches;
+    if (aps !== undefined) {
+      if (!Array.isArray(aps)) err(w, `${p.id} approaches must be an array`);
+      else for (const ap of aps) {
+        if (!ap || typeof ap !== 'object') { err(w, `${p.id} approach must be an object`); continue; }
+        if (typeof ap.name !== 'string' || !ap.name.trim()) err(w, `${p.id} approach missing name`);
+        if (typeof ap.idea !== 'string' || !ap.idea.trim()) err(w, `${p.id} approach missing idea`);
+        if (ap.code !== undefined) {
+          const c = ap.code;
+          if (typeof c === 'string') { /* ok */ }
+          else if (c && typeof c === 'object') {
+            const sql = c.pg || c.code;
+            if (typeof sql !== 'string' || !sql.trim()) err(w, `${p.id} approach code must carry a code string`);
+          } else err(w, `${p.id} approach code must be a string or object`);
+        }
+        if (ap.cost !== undefined && typeof ap.cost !== 'string') err(w, `${p.id} approach cost must be a string`);
+        if (ap.pitfalls !== undefined && typeof ap.pitfalls !== 'string') err(w, `${p.id} approach pitfalls must be a string`);
+      }
+    }
   }
   if (b.type === 'query-trace' && !datasets.has(b.dataset)) err(w, `query-trace unknown dataset "${b.dataset}"`);
   if (b.type === 'predict' && Array.isArray(b.reveal)) for (const r of b.reveal) walkBlock(w, r, level, counts);
+  if (b.type === 'misconception' && b.evidence) {
+    if (Array.isArray(b.evidence)) for (const r of b.evidence) walkBlock(w, r, level, counts);
+    else walkBlock(w, b.evidence, level, counts);
+  }
 }
 
 for (const mod of mods.modules) {
@@ -85,7 +109,7 @@ for (const mod of mods.modules) {
     try { L = read(file); } catch (e) { err(w, `invalid JSON: ${e.message}`); continue; }
     if (L.level !== level) err(w, `level field ${L.level} ≠ file level ${level}`);
     if (!L.title) err(w, 'missing title');
-    const counts = { mcq: 0, trace: 0, prob: 0, plan: 0, dialect: 0, ids: new Set() };
+    const counts = { mcq: 0, trace: 0, prob: 0, plan: 0, dialect: 0, ids: new Set(), types: {} };
     for (const it of L.placementQuiz || []) checkMcq(w, it);
     if ((L.placementQuiz || []).length < (Q.minPlacementQuiz ?? 0)) err(w, `placementQuiz ${(L.placementQuiz || []).length} < ${Q.minPlacementQuiz}`);
     for (const s of L.sections || []) {
@@ -99,6 +123,14 @@ for (const mod of mods.modules) {
     const needPlan = (Q.requireQueryPlan || {})[level] ?? 0;
     if (counts.plan < needPlan) err(w, `query-plan blocks ${counts.plan} < ${needPlan}`);
     if ((Q.requireDialectNote || {})[level] && !counts.dialect) err(w, 'needs a dialect-diff or a code block with pg/mysql variants');
+    const minBlocks = Q.minBlocks || {};
+    for (const [key, byLevel] of Object.entries(minBlocks)) {
+      const types = key.split('|').map(s => s.trim()).filter(Boolean);
+      const need = byLevel && (byLevel[String(level)] ?? byLevel[level]);
+      if (need === undefined) continue;
+      const total = types.reduce((s, t) => s + (counts.types[t] || 0), 0);
+      if (total < need) err(w, `${types.join('/')} blocks ${total} < ${need}`);
+    }
     if ((L.revisionCard || []).length < (Q.minRevisionBullets ?? 0)) err(w, `revisionCard < ${Q.minRevisionBullets}`);
     if ((L.glossary || []).length < (Q.minGlossaryTerms ?? 0)) err(w, `glossary < ${Q.minGlossaryTerms}`);
   }

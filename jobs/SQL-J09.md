@@ -3,14 +3,15 @@ type: job
 code: SQL
 id: J09
 title: "Port content · basics"
-status: open
+status: doing
 est: 60
 workdir: 'C:\MEGA NZ\SKILLS MATERIAL\sql-lms'
 seq: 10
 depends: [SQL-J08, SQL-J21]
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J09 · Port content · basics.md"
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
+lane: 1
 ---
 # SQL J09 · Port content · basics
 
@@ -48,3 +49,5 @@ Bring module `basics` (L1–L4) to the new standard: correct, runnable, graded.
 
 ## Report
 %% The agent writes here: what changed, files touched, checks run, what is still open. %%
+- 2026-10-18 · lane 2 gave up after 3 mechanic attempts; needs Claude or Dhruv (see jobs/logs/SQL-J09-*.log)
+- 2026-10-18 · reopened by Claude: previous attempts died on the free-tier rate limit (no model output), not on the work. Keep any partial edits that pass the gates.

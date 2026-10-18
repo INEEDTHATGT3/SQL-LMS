@@ -1,0 +1,192 @@
+.er-diagram {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.er-svg {
+  display: block;
+  max-width: 100%;   /* shrink on phones, never upscale past the drawing size */
+  height: auto;
+  margin: 0 auto;
+}
+
+/* Chen notation */
+.entity-rect {
+  fill: var(--surface2);
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.entity-rect.weak {
+  stroke-width: 4;
+}
+
+.entity-rect.weak-inner {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.attr-oval {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 1.5;
+}
+
+.attr-oval.multi {
+  stroke-width: 3;
+}
+
+.attr-oval.derived {
+  stroke-dasharray: 3,3;
+  stroke-width: 1.5;
+}
+
+.relation-diamond {
+  fill: var(--surface2);
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.relation-diamond.identifying {
+  stroke-width: 4;
+}
+
+.relation-diamond.identifying-inner {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.line {
+  stroke: var(--text);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.line.total {
+  stroke-width: 3;
+}
+
+.card-label {
+  font-size: 12px;
+  fill: var(--text);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.label {
+  font-size: 14px;
+  fill: var(--text);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-weight: 600;
+}
+
+.attr-label {
+  font-size: 11px;
+  fill: var(--text);
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.key-underline {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.key-underline.partial-key {
+  stroke-dasharray: 2,2;
+}
+
+.isa-triangle {
+  fill: var(--surface2);
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+/* Crow's foot notation */
+.cf-entity-rect {
+  fill: var(--surface2);
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.cf-entity-label {
+  font-size: 14px;
+  fill: var(--text);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-weight: 600;
+}
+
+.cf-attr-text {
+  font-size: 11px;
+  fill: var(--text);
+  dominant-baseline: middle;
+}
+
+.cf-attr-multi {
+  font-size: 10px;
+  fill: var(--warn);
+  dominant-baseline: middle;
+  text-anchor: end;
+}
+
+.cf-attr-derived {
+  font-size: 10px;
+  fill: var(--text-dim);
+  dominant-baseline: middle;
+  text-anchor: end;
+}
+
+.cf-line {
+  stroke: var(--text);
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.cf-line.total {
+  stroke-width: 3;
+}
+
+.cf-crowfoot {
+  stroke: var(--text);
+  stroke-width: 2;
+  fill: none;
+}
+
+.cf-card {
+  font-size: 12px;
+  fill: var(--text);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-weight: 600;
+}
+
+.cf-rel-label {
+  font-size: 13px;
+  fill: var(--text);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  font-weight: 500;
+}
+
+/* Mapping table */
+.mapping-table {
+  margin-top: 1rem;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.mapping-table th,
+.mapping-table td {
+  border: 1px solid var(--border);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.mapping-table th {
+  background: var(--surface2);
+  font-weight: 600;
+}

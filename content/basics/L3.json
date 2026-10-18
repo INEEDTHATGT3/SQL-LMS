@@ -6,7 +6,7 @@
     {
       "q": "A column holds whole numbers only and must never overflow on aggregates. Which type is the safe choice?",
       "options": [
-        "int4",
+        "int4, the 32-bit integer",
         "int8",
         "numeric",
         "float8"
@@ -42,7 +42,7 @@
         "A view",
         "A transaction with SAVEPOINT",
         "An index",
-        "A CHECK constraint"
+        "A CHECK constraint on the table"
       ],
       "answer": 1,
       "explain": "Wrap statements in BEGIN…COMMIT with SAVEPOINTs to roll back to a known point."
@@ -50,8 +50,8 @@
     {
       "q": "You wrote SELECT amount * 1.1 AS gross … WHERE gross > 100. What's wrong?",
       "options": [
-        "Aliases in WHERE are illegal because filtering happens before SELECT",
-        "* has low precedence",
+        "WHERE filters before SELECT computes the alias",
+        "Aliases in WHERE work only after a GROUP BY clause",
         "1.1 must be cast",
         "gross is reserved"
       ],
@@ -63,6 +63,11 @@
     {
       "title": "The Contract — Types, NULL, Evaluation Order",
       "blocks": [
+        {
+          "type": "callout",
+          "tone": "info",
+          "md": "**The question behind every 'why did the report change' ticket:** a stored value's type, a NULL that behaves like a logic value, and the order clauses run in. This lesson is the contract that explains all three."
+        },
         {
           "type": "mantra",
           "md": "**SQL's job is to transform data with clear contracts — types, NULL semantics, and the order of evaluation are that contract. Learn the domain, not the tuning.**"
@@ -112,7 +117,7 @@
               "q": "Why does 0.1 + 0.2 evaluate to 0.30000000000000004?",
               "options": [
                 "Numeric types round to 15 significant digits",
-                "Binary floats represent 0.1 and 0.2 only approximately",
+                "0.1 and 0.2 have no exact binary float form",
                 "An implicit CAST to integer happened",
                 "Floating point division is exact by definition"
               ],
@@ -149,6 +154,31 @@
           "mysql": "-- Same semantics in MySQL 8.0; '' is a value there, NULL is separate"
         },
         {
+          "type": "table-diff",
+          "title": "IS NULL picks exactly the unknown rows",
+          "before": [
+            { "emp_id": 1, "first_name": "Anita", "manager_id": null },
+            { "emp_id": 2, "first_name": "Vikram", "manager_id": 1 },
+            { "emp_id": 5, "first_name": "Priya", "manager_id": 2 }
+          ],
+          "after": [
+            { "emp_id": 1, "first_name": "Anita", "manager_id": null }
+          ],
+          "key": "emp_id",
+          "highlight": [
+            "manager_id"
+          ]
+        },
+        {
+          "type": "misconception",
+          "claim": "count(email) is the safer row count — it skips the rows with missing emails so it can't be fooled by NULLs.",
+          "verdict": false,
+          "askFirst": true,
+          "refutation": "This is false, and it inverts the safety argument. count(email) does not count rows — it counts *non-NULL emails*, so it silently undercounts every row where email is NULL (3 of 21 in hr). count(*) is the row count; it ignores NULLs in every column because it counts rows, not values.",
+          "correctModel": "count(*) = number of rows. count(col) = number of rows where col IS NOT NULL. Their difference is exactly the NULL count of that column.",
+          "cue": "If the number matters, count the rows — count(*)."
+        },
+        {
           "type": "code",
           "label": "three-valued logic truth tables",
           "code": "-- AND truth table (x AND y)\n--   x\\y   T      F      N\n--   T     T      F      N\n--   F     F      F      F\n--   N     N      F      N\n\n-- OR truth table (x OR y)\n--   x\\y   T      F      N\n--   T     T      T      T\n--   F     T      F      N\n--   N     T      N      N\n\n-- T or F is enough to decide; N only flips results it cannot resolve.",
@@ -180,6 +210,16 @@
               "answer": 3,
               "explain": "Only IS NULL (or IS NOT DISTINCT FROM NULL) can match NULL; all comparisons against NULL yield UNKNOWN."
             }
+          ]
+        },
+        {
+          "type": "explain-back",
+          "prompt": "Explain to an interviewer why `WHERE deactivated_at = NULL` always returns zero rows, and what to write instead.",
+          "modelAnswer": "NULL means unknown, and unknown = unknown is not true — it is UNKNOWN, a third truth value. WHERE keeps only TRUE rows, so = NULL discards everything. The correct predicates are IS NULL and IS NOT NULL (or IS NOT DISTINCT FROM for null-safe equality). The same logic is why count(col) skips NULLs: the aggregate only sees values it knows.",
+          "minWords": 40,
+          "mustMention": [
+            "UNKNOWN",
+            "IS NULL"
           ]
         }
       ]
@@ -224,8 +264,8 @@
               "q": "After ROLLBACK TO p1;, what state is the transaction in?",
               "options": [
                 "Aborted and closed — nothing can commit",
-                "Statements after p1 are undone; the transaction stays open and COMMIT still works",
-                "The entire transaction is rolled back to BEGIN",
+                "Work after p1 is undone; the transaction stays open",
+                "The entire transaction is rolled back to the BEGIN statement",
                 "A brand-new transaction starts immediately"
               ],
               "answer": 1,
@@ -252,9 +292,7 @@
         {
           "type": "code",
           "label": "where vs having",
-          "code": "SELECT dept, count(*) AS n\nFROM   emp\nWHERE  salary > 3000       -- filters rows BEFORE grouping\nGROUP  BY dept\nHAVING count(*) > 5       -- filters groups AFTER aggregation\nORDER  BY n DESC;",
-          "pg": "-- WHERE cannot reference count(*); HAVING can",
-          "mysql": "-- Same behavior in MySQL 8.0"
+          "code": "SELECT dept, count(*) AS n\nFROM   emp\nWHERE  salary > 3000       -- filters rows BEFORE grouping\nGROUP  BY dept\nHAVING count(*) > 5       -- filters groups AFTER aggregation\nORDER  BY n DESC;"
         },
         {
           "type": "prose",
@@ -338,6 +376,28 @@
       "title": "Problem Set — L3 Drills",
       "blocks": [
         {
+          "type": "query-trace",
+          "dataset": "hr",
+          "title": "B306 dry run — WHERE re-evaluates the expression, SELECT names it",
+          "stages": [
+            {
+              "label": "FROM",
+              "sql": "SELECT first_name, salary FROM employees ORDER BY emp_id;",
+              "note": "Logical step 1 — **FROM** produces all 21 rows in hr (12 in the edge twin); every later clause starts from this grid."
+            },
+            {
+              "label": "WHERE",
+              "sql": "SELECT first_name, salary * 1.1 AS gross FROM employees WHERE salary * 1.1 > 120000 ORDER BY emp_id;",
+              "note": "**WHERE** cannot see the alias gross — it re-evaluates salary * 1.1 per row and keeps the 8 survivors in hr (3 in the edge twin)."
+            },
+            {
+              "label": "SELECT",
+              "sql": "SELECT first_name, gross FROM (SELECT first_name, salary * 1.1 AS gross FROM employees) t WHERE gross > 120000 ORDER BY gross DESC;",
+              "note": "**SELECT** is where the alias comes into existence — inside a derived table, so the outer WHERE can legally filter on gross. Same rows as stage 2, now ranked by gross."
+            }
+          ]
+        },
+        {
           "type": "problems",
           "subtitle": "Synthetic drills to lock in types, NULL logic, transactions and evaluation order.",
           "items": [
@@ -350,11 +410,20 @@
                 "implicit-cast",
                 "text-to-date"
               ],
-              "statement": "A table stores timestamps as text. `WHERE created = '2024-01-15'` silently misses rows whose stored value is '2024-01-15 10:30:00'. Explain why, then fix it with an explicit cast.",
+              "statement": "audit_log.created is TEXT holding values like '2024-01-15 10:30:00'. `WHERE created = '2024-01-15'` is text = text, so it misses every row that carries a time suffix. Fix it with an explicit cast and return the entries created on 2024-01-15 (2 rows in both twins).",
               "hints": [
                 "The comparison is text = text: '2024-01-15' does not equal '2024-01-15 10:30:00' as a string",
-                "Use CAST(created AS timestamp) with a typed boundary, or store a real timestamptz column"
-              ]
+                "Cast to date and compare against a typed literal: WHERE CAST(created AS date) = DATE '2024-01-15'"
+              ],
+              "exercise": {
+                "prompt": "audit_log.created is TEXT. Return all entries created on 2024-01-15, regardless of the stored time suffix.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM audit_log WHERE CAST(created AS date) = DATE '2024-01-15';",
+                "orderMatters": false
+              }
             },
             {
               "id": "B302",
@@ -365,11 +434,20 @@
                 "is-null",
                 "three-valued-logic"
               ],
-              "statement": "`SELECT * FROM users WHERE deactivated_at = NULL;` returns zero rows even though deactivated users exist. Fix the predicate and explain why the original matches nothing.",
+              "statement": "`SELECT * FROM users WHERE deactivated_at = NULL;` returns zero rows even though deactivated users exist, because NULL = NULL is UNKNOWN and WHERE keeps only TRUE. Fix the predicate: return the active users — the rows whose deactivated_at IS NULL (2 rows in both twins).",
               "hints": [
                 "NULL = NULL evaluates to UNKNOWN, which WHERE rejects",
                 "Use IS NULL or IS NOT NULL"
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return all users whose deactivated_at IS NULL.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM users WHERE deactivated_at IS NULL;",
+                "orderMatters": false
+              }
             },
             {
               "id": "B303",
@@ -380,10 +458,10 @@
                 "three-valued-logic",
                 "boolean"
               ],
-              "statement": "Classify each expression as TRUE, FALSE, or UNKNOWN: NULL AND TRUE, NULL OR TRUE, NULL AND FALSE, NOT NULL. Which single one is TRUE, and why?",
+              "statement": "Classify each expression as TRUE, FALSE, or UNKNOWN: NULL AND TRUE, NULL OR TRUE, NULL AND FALSE, NOT NULL. Exactly one of the four is TRUE — which, and which single truth-table rule makes it so?",
               "hints": [
-                "OR TRUE short-circuits to TRUE",
-                "AND FALSE short-circuits to FALSE",
+                "OR TRUE short-circuits the unknown to TRUE",
+                "AND FALSE short-circuits the unknown to FALSE",
                 "NOT NULL stays NULL (UNKNOWN)"
               ]
             },
@@ -396,7 +474,7 @@
                 "savepoint",
                 "transaction"
               ],
-              "statement": "In one transaction: insert an order, mark a savepoint, update stock for sku 'TS1', then decide the stock update was wrong and roll back only that statement while still committing the insert. Write the statements in order.",
+              "statement": "In one transaction: insert an order, mark a savepoint, update stock for sku 'TS1', then decide the stock update was wrong and roll back only that statement while still committing the insert. Write the statements in order and say what the database state is at COMMIT.",
               "hints": [
                 "BEGIN; ... INSERT ...; SAVEPOINT p1; UPDATE ...; ROLLBACK TO p1; COMMIT;",
                 "ROLLBACK TO keeps the transaction alive; only the post-savepoint work is undone"
@@ -411,11 +489,20 @@
                 "null",
                 "aggregate"
               ],
-              "statement": "On one table, count(*) returns 1,000 but count(phone) returns 940. Explain the discrepancy and write the query that reports both numbers side by side.",
+              "statement": "On employees, count(*) is 21 but count(email) is 18 — exactly the 3 NULL emails. Write one query that reports both numbers side by side, so the gap is visible instead of argued about.",
               "hints": [
-                "count(phone) skips NULLs; count(*) counts every row",
-                "SELECT count(*) AS total, count(phone) AS with_phone FROM t;"
-              ]
+                "count(email) skips NULLs; count(*) counts every row",
+                "SELECT count(*) AS total, count(email) AS with_email FROM employees;"
+              ],
+              "exercise": {
+                "prompt": "Report the total employee count and the count of non-NULL emails side by side.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT count(*) AS total_rows, count(email) AS with_email FROM employees;",
+                "orderMatters": false
+              }
             },
             {
               "id": "B306",
@@ -426,10 +513,53 @@
                 "evaluation-order",
                 "having"
               ],
-              "statement": "SELECT amount * 1.1 AS gross FROM invoice WHERE gross > 100; refuses or misbehaves. Diagnose it against the logical evaluation order and produce a working query with the same intent.",
+              "statement": "SELECT salary * 1.1 AS gross FROM employees WHERE gross > 120000; refuses or misbehaves — the logical order computes aliases in SELECT, after WHERE has already filtered. Produce a working query that returns each survivor's first_name and gross (8 rows in hr, 3 in the edge twin).",
               "hints": [
                 "SELECT aliases are computed after WHERE, so WHERE gross cannot see the alias",
-                "Recompute the predicate: WHERE amount * 1.1 > 100 — or wrap it: SELECT * FROM (SELECT amount * 1.1 AS gross FROM invoice) t WHERE gross > 100;"
+                "Recompute the predicate: WHERE salary * 1.1 > 120000 — or wrap it: SELECT first_name, gross FROM (SELECT first_name, salary * 1.1 AS gross FROM employees) t WHERE gross > 120000;"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Repeat the full expression in WHERE — no alias needed, the predicate is self-contained.",
+                  "code": {
+                    "code": "SELECT first_name, salary * 1.1 AS gross\nFROM employees\nWHERE salary * 1.1 > 120000;"
+                  },
+                  "cost": "the expression is evaluated twice per surviving row — trivial at 21 rows, and the planner often CSEs it anyway",
+                  "pitfalls": "The two copies can drift: fix the 1.1 factor in SELECT and forget WHERE, and the report changes silently."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Compute the alias once in a derived table, then filter the outer query on it.",
+                  "code": {
+                    "code": "SELECT first_name, gross\nFROM (SELECT first_name, salary * 1.1 AS gross FROM employees) t\nWHERE gross > 120000;"
+                  },
+                  "cost": "the planner inlines the derived table — same scan and filter, but the expression is written exactly once",
+                  "pitfalls": "Deep nesting of derived tables hurts readability; a CTE (WITH gross_calc AS …) says the same thing more clearly at L4."
+                }
+              ],
+              "exercise": {
+                "prompt": "Return first_name and the 10%-raised salary as gross for employees whose raised salary exceeds 120000.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT first_name, salary * 1.1 AS gross FROM employees WHERE salary * 1.1 > 120000;",
+                "orderMatters": false
+              },
+              "followups": [
+                {
+                  "q": "Which clauses CAN see a SELECT alias?",
+                  "a": "ORDER BY runs after SELECT, so it can reference aliases (ORDER BY gross). GROUP BY can in PostgreSQL too; WHERE never can."
+                },
+                {
+                  "q": "Does the derived table hurt performance?",
+                  "a": "No — the planner inlines simple subqueries, so the plan is identical to the brute form. You pay nothing for writing the alias once."
+                },
+                {
+                  "q": "What if the filter needs an aggregate of the alias?",
+                  "a": "Then neither form works directly — HAVING filters after GROUP BY, or you push the aggregate into a CTE and filter outside it."
+                }
               ]
             }
           ]
@@ -442,7 +572,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "1 sourced problem from LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

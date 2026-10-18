@@ -146,10 +146,27 @@ export default function Interview() {
 
       {phase === 'solution' && <>
         <p className="card-title">REFERENCE SOLUTION</p>
-        {cur.solutionCode ? <CodeBlock b={cur.solutionCode} />
-          : cur.exercise?.solution ? <CodeBlock b={{ code: cur.exercise.solution }} />
-          : <div className="callout warn">No reference solution authored yet{cur.url ? ' — check the platform’s discussion tab.' : '.'}</div>}
-        {cur.complexity && <p className="prob-meta">{cur.complexity}</p>}
+        {cur.approaches?.length ? (
+          <div className="approach-ladder">
+            {cur.approaches.map((ap, i) => (
+              <div key={i} className="approach-step">
+                <div className="approach-name">{ap.name}</div>
+                {ap.idea && <p><MD text={ap.idea} /></p>}
+                {ap.code && <CodeBlock b={ap.code} />}
+                {ap.cost && <p className="prob-meta">Cost: {ap.cost}</p>}
+                {ap.pitfalls && <div className="callout warn">Pitfalls: <MD text={ap.pitfalls} /></div>}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            {cur.solutionCode ? <CodeBlock b={cur.solutionCode} />
+              : cur.exercise?.solution ? <CodeBlock b={{ code: cur.exercise.solution }} />
+              : <div className="callout warn">No reference solution authored yet{cur.url ? ' — check the platform’s discussion tab.' : '.'}</div>}
+            {cur.complexity && <p className="prob-meta">{cur.complexity}</p>}
+          </>
+        )}
+        {cur.approaches?.length && cur.complexity && <p className="prob-meta">{cur.complexity}</p>}
 
         {followups.length > 0 && <>
           <p className="card-title">FOLLOW-UP CHAIN</p>

@@ -19,8 +19,8 @@
       "options": [
         "NOT A OR NOT B",
         "NOT A AND NOT B",
-        "A AND B",
-        "A OR B"
+        "A AND B is the result",
+        "A OR B is the result"
       ],
       "answer": 1,
       "explain": "De Morgan's law: NOT (A OR B) = NOT A AND NOT B."
@@ -30,7 +30,7 @@
       "options": [
         "Matches 'active' rows",
         "Matches no rows (UNKNOWN)",
-        "Errors",
+        "Throws an error",
         "Matches all rows"
       ],
       "answer": 1,
@@ -51,9 +51,9 @@
       "q": "COALESCE(NULL, NULLIF('', ''), 'fallback') returns:",
       "options": [
         "NULL",
-        "''",
+        "empty string",
         "'fallback'",
-        "Error"
+        "Error thrown"
       ],
       "answer": 2,
       "explain": "NULLIF('', '') = NULL; COALESCE skips NULLs, returns 'fallback'."
@@ -243,26 +243,26 @@
           "type": "quiz",
           "items": [
             {
-              "q": "CASE WHEN a THEN 1 WHEN b THEN 2 ELSE 3 END with a=TRUE,b=TRUE returns:",
-              "options": [
-                "1",
-                "2",
-                "3",
-                "Error"
-              ],
-              "answer": 0,
-              "explain": "First matching WHEN wins. a is TRUE, so returns 1."
-            },
-            {
               "q": "COUNT(*) FILTER (WHERE status='active') vs SUM(CASE WHEN status='active' THEN 1 ELSE 0 END):",
               "options": [
-                "Different results",
-                "Same result, FILTER is PostgreSQL-only",
-                "FILTER slower",
-                "CASE is not portable"
+                "Different results when status is NULL",
+                "Same result; MySQL lacks FILTER",
+                "FILTER always runs slower",
+                "CASE is not portable SQL"
               ],
               "answer": 1,
-              "explain": "FILTER is PostgreSQL syntactic sugar; both produce same count."
+              "explain": "Same count: rows where status is NULL fail both the FILTER predicate and the WHEN test. FILTER is standard SQL (SQL:2003) in PostgreSQL 9.4+ and SQLite 3.30+; MySQL has no FILTER, so SUM(CASE ...) is the portable spelling."
+            },
+            {
+              "q": "CASE WHEN x > 10 THEN 'big' WHEN x > 5 THEN 'mid' END with x = 3 returns:",
+              "options": [
+                "'mid'",
+                "'big'",
+                "NULL",
+                "Error: no ELSE branch"
+              ],
+              "answer": 2,
+              "explain": "No WHEN matched and there is no ELSE, so CASE returns NULL. Write an ELSE whenever a NULL label would surprise the reader: it groups as its own NULL bucket and fails every = comparison."
             }
           ]
         }
@@ -409,7 +409,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "6 sourced problems from HackerRank SQL · LeetCode SQL 50 · PGExercises. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "6 sourced problems from HackerRank SQL · LeetCode SQL 50 · PGExercises. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

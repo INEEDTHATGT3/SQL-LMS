@@ -1,0 +1,69 @@
+{
+  "title": "Query trace: clause-by-clause dry run (hr / shop)",
+  "blocks": [
+    { "type": "heading", "text": "query-trace" },
+    {
+      "type": "prose",
+      "md": "SQL gives you no step button — you write the whole query or nothing. A **query-trace** runs it clause by clause and shows the intermediate table after each step: hit **Run trace** to boot PostgreSQL, then step with **Prev / Next** (or toggle **Show all**). Every row a clause eliminated stays in the table struck through, so a filter's victims — and a join trap's silent losses — are impossible to miss."
+    },
+    {
+      "type": "query-trace",
+      "dataset": "hr",
+      "title": "WHERE → GROUP BY → HAVING: who earns what per department",
+      "stages": [
+        {
+          "label": "FROM",
+          "sql": "SELECT e.emp_id, e.first_name, e.dept_id, e.salary\nFROM employees e\nORDER BY e.emp_id;",
+          "note": "Logical step 1 — **FROM** decides which rows every later clause gets to see: 21 employees, nothing filtered or grouped yet."
+        },
+        {
+          "label": "WHERE",
+          "sql": "SELECT e.emp_id, e.first_name, e.dept_id, e.salary\nFROM employees e\nWHERE e.salary >= 80000\nORDER BY e.emp_id;",
+          "note": "**WHERE** runs before any grouping: rows failing the predicate never reach the aggregator — 7 employees (salary below 80000) drop right here."
+        },
+        {
+          "label": "GROUP BY",
+          "sql": "SELECT e.dept_id, COUNT(*) AS headcount, MAX(e.salary) AS top_salary\nFROM employees e\nWHERE e.salary >= 80000\nGROUP BY e.dept_id\nORDER BY e.dept_id;",
+          "note": "**GROUP BY** collapses the 14 survivors into one row per department. Individual names are gone — COUNT/MAX are computed inside each group. The columns changed, so there is nothing row-for-row to diff against the last stage."
+        },
+        {
+          "label": "HAVING",
+          "sql": "SELECT e.dept_id, COUNT(*) AS headcount, MAX(e.salary) AS top_salary\nFROM employees e\nWHERE e.salary >= 80000\nGROUP BY e.dept_id\nHAVING COUNT(*) >= 2\nORDER BY e.dept_id;",
+          "note": "**HAVING** filters the *groups* after they already exist: Executive and HR each kept only one ≥80k earner, so both groups are removed. WHERE filters rows; HAVING filters groups."
+        },
+        {
+          "label": "SELECT",
+          "sql": "SELECT d.dept_name, COUNT(*) AS headcount, MAX(e.salary) AS top_salary\nFROM employees e\nJOIN departments d ON d.dept_id = e.dept_id\nWHERE e.salary >= 80000\nGROUP BY d.dept_name\nHAVING COUNT(*) >= 2;",
+          "note": "The SELECT list swaps `dept_id` for the department's name, so the join to `departments` happens before grouping. No ORDER BY here — 4 rows, but their order is the engine's choice, not a promise."
+        },
+        {
+          "label": "ORDER BY",
+          "sql": "SELECT d.dept_name, COUNT(*) AS headcount, MAX(e.salary) AS top_salary\nFROM employees e\nJOIN departments d ON d.dept_id = e.dept_id\nWHERE e.salary >= 80000\nGROUP BY d.dept_name\nHAVING COUNT(*) >= 2\nORDER BY d.dept_name;",
+          "note": "**ORDER BY** is the only clause that changes *no rows* — same 4 rows, sorted by name. Here stage 5 returned them in that order anyway (the engine used the unique index on `dept_name`): luck, not a guarantee. Never rely on a stage's order unless ORDER BY says so."
+        }
+      ]
+    },
+    {
+      "type": "query-trace",
+      "dataset": "shop",
+      "title": "LEFT JOIN trap: WHERE on the right table kills the NULL rows",
+      "stages": [
+        {
+          "label": "FROM · LEFT JOIN",
+          "sql": "SELECT c.customer_id, c.name, o.order_id, o.status\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.customer_id\nORDER BY c.customer_id, o.order_id;",
+          "note": "30 orders + 1 filler row = **31 rows**: every customer survives the LEFT JOIN, and Arnav Bose (customer 11, never ordered) keeps his row with `order_id` NULL."
+        },
+        {
+          "label": "WHERE on the right table (the trap)",
+          "sql": "SELECT c.customer_id, c.name, o.order_id, o.status\nFROM customers c\nLEFT JOIN orders o ON o.customer_id = c.customer_id\nWHERE o.status = 'cancelled'\nORDER BY c.customer_id, o.order_id;",
+          "note": "The classic trap: `WHERE o.status = ...` is evaluated *after* the join, and NULL fails every comparison — so the LEFT JOIN quietly behaves like an INNER JOIN. **29 rows vanish**, including Arnav's NULL filler row; only the 2 cancelled orders survive. Filtering the left table would have been harmless; filtering the right one re-decides the join."
+        },
+        {
+          "label": "Fix: filter before joining",
+          "sql": "SELECT c.customer_id, c.name, o.order_id, o.status\nFROM customers c\nLEFT JOIN (\n  SELECT * FROM orders WHERE status = 'cancelled'\n) o ON o.customer_id = c.customer_id\nORDER BY c.customer_id, o.order_id;",
+          "note": "Push the predicate **into a derived table** so only cancelled orders ever meet the join. Now 12 rows come back: 2 cancelled orders + 10 NULL-filled customers — unmatched customers no longer depend on what the WHERE clause thinks of NULL."
+        }
+      ]
+    }
+  ]
+}

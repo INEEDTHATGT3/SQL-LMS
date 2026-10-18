@@ -1,0 +1,15 @@
+/* co-located styles for query-trace; the cell colours restate theme.css's
+   .cell-add/.cell-del at a specificity that survives table.trace's zebra
+   striping (same trick as TableDiff.css). */
+.qt-stage{margin-top:16px}
+.qt-stage-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.qt-label{font-family:'DM Mono',monospace;font-size:12px;color:var(--accent2)}
+.qt-count{font-family:'Space Mono',monospace;font-size:11px;color:var(--text-dim)}
+.qt-step{font-family:'DM Mono',monospace}
+.qt-note{margin:6px 0 0}
+.qt-table th{white-space:nowrap}
+.qt-table td{vertical-align:top}
+.qt-table td.cell-add{background:rgba(0,255,157,.08)}
+.qt-table td.cell-del{background:rgba(255,77,109,.08);text-decoration:line-through}
+.qt-legend{font-size:11px;font-family:'DM Mono',monospace;margin-top:6px}
+.qt-leg{padding:2px 8px;border-radius:3px}

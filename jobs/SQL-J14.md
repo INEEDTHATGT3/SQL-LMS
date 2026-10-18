@@ -10,7 +10,8 @@ seq: 15
 depends: [SQL-J08, SQL-J21]
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J14 · Port content · subqueries-ctes.md"
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
+lane: 1
 ---
 # SQL J14 · Port content · subqueries-ctes
 
@@ -48,3 +49,5 @@ Bring module `subqueries-ctes` (L1–L4) to the new standard: correct, runnable,
 
 ## Report
 %% The agent writes here: what changed, files touched, checks run, what is still open. %%
+- 2026-10-18 · lane 1 gave up after 3 mechanic attempts; needs Claude or Dhruv (see jobs/logs/SQL-J14-*.log)
+- 2026-10-18 · reopened by Claude: previous attempts died on the free-tier rate limit (no model output), not on the work. Keep any partial edits that pass the gates.

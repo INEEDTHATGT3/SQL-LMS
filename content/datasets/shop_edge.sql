@@ -114,3 +114,25 @@ INSERT INTO payments (payment_id, order_id, paid_at, amount, method) VALUES
   (6, 7, '2024-03-02 10:00:00',  1998.00, 'card'),
   (7, 7, '2024-03-10 10:00:00', -1998.00, 'card'),
   (8, 3, '2024-01-01 09:00:00',   499.00, 'card');
+
+-- Appended for L4 basics drills (B401, B403). Same schema as shop.sql; edge rows.
+CREATE TABLE bookings (
+  booking_id   integer PRIMARY KEY,
+  equipment_id integer NOT NULL,
+  start_ts     timestamp NOT NULL,
+  end_ts       timestamp NOT NULL
+);
+
+INSERT INTO bookings (booking_id, equipment_id, start_ts, end_ts) VALUES
+  (1, 101, '2024-05-01 08:00', '2024-05-01 09:00'),
+  (2, 102, '2024-05-01 09:00', '2024-05-01 10:00');
+
+CREATE TABLE team_docs (
+  doc_id    integer PRIMARY KEY,
+  tenant_id integer NOT NULL,
+  body      text NOT NULL
+);
+
+INSERT INTO team_docs (doc_id, tenant_id, body) VALUES
+  (1, 7, 'onboarding guide'),
+  (2, 9, 'roadmap 2024');

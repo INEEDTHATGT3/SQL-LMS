@@ -1,0 +1,19 @@
+/* co-located styles for sql-exercise */
+.sql-exercise .sql-editor{
+  width:100%;min-height:130px;box-sizing:border-box;
+  background:var(--code-bg);border:1px solid var(--border);border-left:3px solid var(--lvl);
+  border-radius:6px;color:var(--text);
+  font-family:'DM Mono','Space Mono',monospace;font-size:13px;line-height:1.75;
+  padding:14px 16px;resize:vertical;tab-size:2;
+}
+.sql-exercise .sql-editor:focus{outline:none;border-color:var(--lvl)}
+.sql-exercise.embedded .sql-editor{min-height:96px}
+.sql-err{white-space:pre-wrap;font-family:'DM Mono',monospace;font-size:12px;margin:8px 0}
+.sql-schema{border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin:10px 0;background:var(--surface2)}
+.sql-schema table{width:100%;border-collapse:collapse;font-size:12px}
+.sql-schema td{padding:3px 8px;vertical-align:top;border:none}
+.sql-schema .t{font-family:'DM Mono',monospace;color:var(--lvl);white-space:nowrap;width:1%}
+.sql-schema .cols{color:var(--text-dim);font-family:'DM Mono',monospace}
+.sql-res th{white-space:nowrap}
+.sql-plan pre{font-size:11px;max-height:340px;overflow:auto;margin:8px 0}
+.sql-plan summary{cursor:pointer}

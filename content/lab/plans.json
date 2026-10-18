@@ -1,0 +1,222 @@
+{
+  "title": "Query plans, dialect diffs & schema diagrams",
+  "blocks": [
+    {
+      "type": "query-plan",
+      "title": "EXPLAIN — Seq Scan vs Index Scan",
+      "plan": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "employees",
+          "Startup Cost": 0,
+          "Total Cost": 185,
+          "Plan Rows": 8500,
+          "Plan Width": 72,
+          "Filter": "(salary > 50000)"
+        }
+      },
+      "dialect": "pg"
+    },
+    {
+      "type": "query-plan",
+      "title": "EXPLAIN — Index Scan vs Seq Scan",
+      "plan": {
+        "Plan": {
+          "Node Type": "Index Scan",
+          "Relation Name": "employees",
+          "Index Name": "idx_emp_dept",
+          "Startup Cost": 0.29,
+          "Total Cost": 8.3,
+          "Plan Rows": 1,
+          "Plan Width": 72,
+          "Index Cond": "(dept_id = 3)",
+          "Actual Startup Time": 0.015,
+          "Actual Total Time": 0.045,
+          "Actual Rows": 1,
+          "Actual Loops": 1
+        }
+      },
+      "dialect": "pg"
+    },
+    {
+      "type": "query-plan",
+      "title": "Partition Pruning in Action",
+      "plan": {
+        "Plan": {
+          "Node Type": "Append",
+          "Startup Cost": 0,
+          "Total Cost": 42.15,
+          "Plan Rows": 3200,
+          "Plan Width": 72,
+          "Plans": [
+            {
+              "Node Type": "Index Scan",
+              "Relation Name": "measurements_2024_01",
+              "Index Name": "idx_meas_sensor_time",
+              "Startup Cost": 0.29,
+              "Total Cost": 21.07,
+              "Plan Rows": 1600
+            },
+            {
+              "Node Type": "Index Scan",
+              "Relation Name": "measurements_2024_02",
+              "Index Name": "idx_meas_sensor_time",
+              "Startup Cost": 0.29,
+              "Total Cost": 21.08,
+              "Plan Rows": 1600
+            }
+          ]
+        }
+      },
+      "dialect": "pg"
+    },
+    {
+      "type": "query-plan",
+      "title": "EXPLAIN ANALYZE — estimate 62500× off (ratio warns)",
+      "plan": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "orders",
+          "Alias": "o",
+          "Startup Cost": 0,
+          "Total Cost": 48210,
+          "Plan Rows": 2500000,
+          "Plan Width": 48,
+          "Filter": "(status = 'shipped')",
+          "Actual Startup Time": 12.4,
+          "Actual Total Time": 61.8,
+          "Actual Rows": 40,
+          "Actual Loops": 1
+        }
+      },
+      "dialect": "pg"
+    },
+    {
+      "type": "query-plan",
+      "title": "Before: sequential scan",
+      "plan": {
+        "Plan": {
+          "Node Type": "Seq Scan",
+          "Relation Name": "employees",
+          "Startup Cost": 0,
+          "Total Cost": 185,
+          "Plan Rows": 8500,
+          "Plan Width": 72,
+          "Filter": "(dept_id = 3)"
+        }
+      },
+      "dialect": "pg",
+      "compareWith": {
+        "title": "After: index scan",
+        "plan": {
+          "Plan": {
+            "Node Type": "Index Scan",
+            "Relation Name": "employees",
+            "Index Name": "idx_emp_dept",
+            "Startup Cost": 0.29,
+            "Total Cost": 8.3,
+            "Plan Rows": 1,
+            "Plan Width": 72,
+            "Index Cond": "(dept_id = 3)",
+            "Actual Startup Time": 0.02,
+            "Actual Total Time": 0.05,
+            "Actual Rows": 1,
+            "Actual Loops": 1
+          }
+        }
+      }
+    },
+    {
+      "type": "dialect-diff",
+      "sql": "SELECT first_name || ' ' || last_name AS full_name FROM employees;",
+      "pg": "SELECT first_name || ' ' || last_name AS full_name FROM employees;",
+      "mysql": "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employees;",
+      "py-pandas": "employees['full_name'] = employees['first_name'] + ' ' + employees['last_name']",
+      "py-sqlalchemy": "session.query((Employee.first_name + ' ' + Employee.last_name).label('full_name')).all()"
+    },
+    {
+      "type": "dialect-diff",
+      "title": "Join + filter — comment-only fields show the same-as-SQL chip",
+      "sql": "SELECT * FROM a JOIN b ON a.id = b.id WHERE a.val > 100;",
+      "pg": "-- Predicate pushdown automatic",
+      "mysql": "-- Derived table pushdown (8.0+)",
+      "py-pandas": "df1.merge(df2).query('val > 100')",
+      "py-sqlalchemy": "session.query(A).join(B).filter(A.val > 100)"
+    },
+    {
+      "type": "dialect-diff",
+      "title": "Empty pg field — chip, not an empty panel",
+      "sql": "SELECT first_name || ' ' || last_name AS full_name FROM employees;",
+      "pg": "",
+      "mysql": "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM employees;"
+    },
+    {
+      "type": "schema-diagram",
+      "tables": [
+        {
+          "name": "employees",
+          "columns": [
+            { "name": "id", "type": "INTEGER", "pk": true },
+            { "name": "name", "type": "VARCHAR(100)" },
+            { "name": "dept_id", "type": "INTEGER" },
+            { "name": "salary", "type": "DECIMAL(10,2)" },
+            { "name": "hire_date", "type": "DATE" }
+          ]
+        },
+        {
+          "name": "departments",
+          "columns": [
+            { "name": "id", "type": "INTEGER", "pk": true },
+            { "name": "name", "type": "VARCHAR(100)" },
+            { "name": "location", "type": "VARCHAR(100)" }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "from": "employees",
+          "to": "departments",
+          "label": "dept_id",
+          "cardinality": "}o--||"
+        }
+      ]
+    },
+    {
+      "type": "visual",
+      "kind": "schema-diagram",
+      "spec": {
+        "tables": [
+          {
+            "name": "departments",
+            "columns": [
+              { "name": "id", "type": "INTEGER", "pk": true },
+              { "name": "name", "type": "VARCHAR(100)" }
+            ]
+          },
+          {
+            "name": "jobs",
+            "columns": [
+              { "name": "id", "type": "INTEGER", "pk": true },
+              { "name": "title", "type": "VARCHAR(100)" }
+            ]
+          },
+          {
+            "name": "employees",
+            "columns": [
+              { "name": "id", "type": "INTEGER", "pk": true },
+              { "name": "dept_id", "type": "INTEGER", "fk": "departments.id" },
+              { "name": "job_id", "type": "INTEGER", "fk": "jobs.id" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "schema-diagram",
+      "tables": ["departments", "employees", "jobs"],
+      "relationships": [
+        { "from": "employees", "to": "departments", "label": "dept_id" }
+      ]
+    }
+  ]
+}

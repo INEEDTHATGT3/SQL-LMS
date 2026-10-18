@@ -3,14 +3,15 @@ type: job
 code: SQL
 id: J07
 title: "ER diagram block and ER to tables mapping"
-status: open
+status: done
 est: 60
 workdir: 'C:\MEGA NZ\SKILLS MATERIAL\sql-lms'
 seq: 7
 depends: []
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J07 · ER diagram block and ER to tables mapping.md"
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
+lane: 1
 ---
 # SQL J07 · ER diagram block and ER to tables mapping
 
@@ -38,3 +39,7 @@ Build the ER diagram block (Chen and crow's foot) and the ER→relational mappin
 
 ## Report
 %% The agent writes here: what changed, files touched, checks run, what is still open. %%
+- 2026-10-18 · lane 1 gave up after 3 mechanic attempts; needs Claude or Dhruv (see jobs/logs/SQL-J07-*.log)
+- 2026-10-18 · Reset by Claude: blocked by a free-model outage (Internal Server Error), not by the work; resume from the existing partial work
+- 2026-10-18 · ER diagram block (Chen + crow's foot) and ER→tables mapping complete: engine 10 tests pass, lab has 3 diagrams, build clean
+- 2026-10-18 · Inspected: pass. All 4 Done when items verified: (1) er.js + 10 tests pass incl. recursive & GATE min-tables; (2) ErDiagram.jsx Chen + crow's foot with all required notations, auto-layout, mapping, ask graded; (3) lab/er.json has 3 diagrams (company, university+weak, ISA); (4) eslint clean, vite build passes, dist deleted.

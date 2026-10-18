@@ -3,11 +3,12 @@
    uses them (PGlite, mermaid, diagram engines stay out of the main chunk). */
 import { Component, lazy, Suspense, useState } from 'react';
 import { qkey } from '../lib/qkey.js';
-import { shuffledOrder } from '../lib/grade.js';
+import { optionOrder } from '../lib/grade.js';
 import { logMistake } from '../lib/progress.js';
 import { LANGS } from '../lib/subject.js';
 import { useLang, setLang } from '../lib/lang.js';
 import { MD, Code } from './md.jsx';
+import './blocks/Problem.css';
 
 export function Prose({ b }) { return <p><MD text={b.md} /></p>; }
 export function Heading({ b }) { return <h3><MD text={b.text} /></h3>; }
@@ -88,7 +89,7 @@ export function Mcq({ lessonId, item, store, logWrong = true }) {
   const qKey = qkey(item.q);
   const saved = store.mcq?.[qKey];
   const locked = saved !== undefined;
-  const order = shuffledOrder(item.options.length, qKey);
+  const order = optionOrder(item.options, qKey);
   const stemId = `qstem-${lessonId}-${qKey}`;
   const pick = i => {
     if (locked) return;
@@ -130,6 +131,7 @@ function Problem({ p, lessonId, store }) {
   const solved = !!store.solved?.[p.id];
   const [hintIdx, setHintIdx] = useState(-1);
   const [solOpen, setSolOpen] = useState(false);
+  const [approachShown, setApproachShown] = useState(0);
   const meta = [
     p.platform === 'drill' ? 'drill' : p.platform,
     p.ref && `#${p.ref}`, p.lc && `LC ${p.lc}`, p.difficulty, p.company,
@@ -163,11 +165,31 @@ function Problem({ p, lessonId, store }) {
           <Block b={{ ...p.exercise, type: 'sql-exercise', id: p.id, embedded: true }}
             ctx={{ lessonId, store }} />
         )}
-        {p.solutionCode && !solOpen && (
+        {p.approaches?.length > 0 && (
+          <div className="approach-ladder">
+            <div className="card-title">APPROACH LADDER</div>
+            {p.approaches.slice(0, approachShown).map((ap, i) => (
+              <div key={i} className="approach-step">
+                <div className="approach-name">{ap.name}</div>
+                {ap.idea && <p><MD text={ap.idea} /></p>}
+                {ap.code && <CodeBlock b={ap.code} />}
+                {ap.cost && <p className="prob-meta">Cost: {ap.cost}</p>}
+                {ap.pitfalls && <div className="callout warn">Pitfalls: <MD text={ap.pitfalls} /></div>}
+              </div>
+            ))}
+            {approachShown < p.approaches.length && (
+              <button className="reveal-btn" onClick={() => setApproachShown(n => n + 1)}>
+                Reveal {p.approaches[approachShown].name} approach
+              </button>
+            )}
+            {approachShown === p.approaches.length && p.complexity && <p className="prob-meta">{p.complexity}</p>}
+          </div>
+        )}
+        {(!p.approaches || p.approaches.length === 0) && p.solutionCode && !solOpen && (
           <div><button className="reveal-btn" onClick={() => setSolOpen(true)}>Reveal solution</button></div>
         )}
-        {p.solutionCode && solOpen && <CodeBlock b={p.solutionCode} />}
-        {p.complexity && solOpen && <p className="prob-meta">{p.complexity}</p>}
+        {(!p.approaches || p.approaches.length === 0) && p.solutionCode && solOpen && <CodeBlock b={p.solutionCode} />}
+        {(!p.approaches || p.approaches.length === 0) && p.complexity && solOpen && <p className="prob-meta">{p.complexity}</p>}
         {p.followups?.length > 0 && <Followup chain={p.followups} />}
       </div>
     </li>

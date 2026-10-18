@@ -111,9 +111,21 @@ function Answer({ c, data, mistake }) {
   if (c.type === 'fc') return data.fc ? <div className="rev-card"><MD text={data.fc.back} /></div> : null;
   const pr = data.problem;
   if (!pr) return null;
+  const optimal = pr.approaches?.length
+    ? (pr.approaches.find(a => /optimal/i.test(a.name || '')) || pr.approaches[pr.approaches.length - 1])
+    : null;
   return (<>
     {(pr.hints || []).map((h, i) => <div key={i} className="callout blue">Hint {i + 1}: <MD text={h} /></div>)}
-    {pr.solutionCode && <CodeBlock b={pr.solutionCode} />}
+    {optimal && (
+      <div className="approach-step">
+        <div className="approach-name">{optimal.name}</div>
+        {optimal.idea && <p><MD text={optimal.idea} /></p>}
+        {optimal.code && <CodeBlock b={optimal.code} />}
+        {optimal.cost && <p className="prob-meta">Cost: {optimal.cost}</p>}
+        {optimal.pitfalls && <div className="callout warn">Pitfalls: <MD text={optimal.pitfalls} /></div>}
+      </div>
+    )}
+    {!optimal && pr.solutionCode && <CodeBlock b={pr.solutionCode} />}
     {pr.exercise?.solution && <CodeBlock b={{ label: 'reference solution', code: pr.exercise.solution }} />}
     {pr.url && <p><a href={pr.url} target="_blank" rel="noopener noreferrer">Open on {pr.platform} ↗</a></p>}
   </>);

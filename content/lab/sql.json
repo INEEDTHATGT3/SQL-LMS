@@ -1,0 +1,82 @@
+{
+  "title": "SQL runtime: graded exercises (hr / shop / events)",
+  "blocks": [
+    { "type": "heading", "text": "sql-exercise" },
+    {
+      "type": "prose",
+      "md": "Each exercise runs your SQL and the authored solution on **every** listed dataset (the second is a hidden `_edge` twin that breaks plausible wrong answers). Submit grades them all; the draft is saved as you type."
+    },
+    {
+      "type": "sql-exercise",
+      "id": "lab-hr-empty-dept",
+      "title": "Departments with no employees",
+      "prompt": "List the **name of every department that has no employees**. Return one column `dept_name`.",
+      "datasets": ["hr", "hr_edge"],
+      "solution": "SELECT d.dept_name\nFROM departments d\nWHERE NOT EXISTS (\n  SELECT 1 FROM employees e WHERE e.dept_id = d.dept_id\n)\nORDER BY d.dept_name;",
+      "starter": "-- one row per empty department\nSELECT d.dept_name\nFROM departments d\nWHERE \nORDER BY d.dept_name;",
+      "hints": [
+        "A LEFT JOIN from departments to employees puts NULLs on the employee side for empty departments.",
+        "`WHERE e.emp_id IS NULL` after a LEFT JOIN is the classic test. If you use NOT IN, remember what one NULL in the subquery does to the whole result.",
+        "NOT EXISTS is NULL-safe here: `WHERE NOT EXISTS (SELECT 1 FROM employees e WHERE e.dept_id = d.dept_id)`."
+      ]
+    },
+    {
+      "type": "sql-exercise",
+      "id": "lab-hr-dept-top-salary",
+      "title": "Top salary per department",
+      "prompt": "For every `dept_id` that appears in `employees` (NULL included), return `dept_id` and the highest `salary` in it as `top_salary`, **ordered by `dept_id` ascending**. NULL salaries must not poison MAX.",
+      "datasets": ["hr", "hr_edge"],
+      "solution": "SELECT e.dept_id,\n       MAX(e.salary) AS top_salary\nFROM employees e\nGROUP BY e.dept_id\nORDER BY e.dept_id;",
+      "starter": "SELECT ,\n       MAX(e.salary) AS top_salary\nFROM employees e\nGROUP BY \nORDER BY ;",
+      "orderMatters": true,
+      "hints": [
+        "GROUP BY the grouping column itself — NULL is its own group.",
+        "MAX ignores NULLs, so a NULL salary never wins the max.",
+        "ORDER BY dept_id ASC puts the NULL group last in PostgreSQL (NULLS LAST is the default for ASC)."
+      ]
+    },
+    {
+      "type": "sql-exercise",
+      "id": "lab-shop-net-paid",
+      "title": "Net paid per customer",
+      "prompt": "Return `customer_id` and `total_paid` — the **net amount each customer paid** (SUM of `payments.amount`, refunds included, customers with no payment show 0), ordered by `customer_id`. Payments of cancelled orders still count: money moved.",
+      "datasets": ["shop", "shop_edge"],
+      "solution": "SELECT c.customer_id,\n       COALESCE(SUM(p.amount), 0) AS total_paid\nFROM customers c\nLEFT JOIN orders   o ON o.customer_id = c.customer_id\nLEFT JOIN payments p ON p.order_id   = o.order_id\nGROUP BY c.customer_id\nORDER BY c.customer_id;",
+      "starter": "SELECT c.customer_id,\n       COALESCE(SUM(p.amount), 0) AS total_paid\nFROM customers c\nLEFT JOIN \nLEFT JOIN \nGROUP BY \nORDER BY ;",
+      "hints": [
+        "Two LEFT JOINs: customers → orders → payments; INNER JOIN would drop customers with no orders.",
+        "COALESCE(SUM(...), 0) turns the no-payment NULL into 0.",
+        "Do NOT filter on order status — a cancelled order can still have been paid, and a returned order's refund is a negative payment you must keep."
+      ]
+    },
+    {
+      "type": "sql-exercise",
+      "id": "lab-shop-never-ordered",
+      "title": "Products never ordered",
+      "prompt": "Return `name` and `price` of every product that appears in **no** `order_items` row, ordered by `price` ascending, then `name`.",
+      "datasets": ["shop", "shop_edge"],
+      "solution": "SELECT p.name, p.price\nFROM products p\nWHERE NOT EXISTS (\n  SELECT 1 FROM order_items oi WHERE oi.product_id = p.product_id\n)\nORDER BY p.price, p.name;",
+      "starter": "SELECT p.name, p.price\nFROM products p\nWHERE \nORDER BY p.price, p.name;",
+      "showPlan": true,
+      "hints": [
+        "Anti-join: every product with zero matching item rows.",
+        "LEFT JOIN order_items and test the NULL side, or use NOT EXISTS.",
+        "Test `oi.product_id IS NULL` (the order_items column), not a nullable column from products."
+      ]
+    },
+    {
+      "type": "sql-exercise",
+      "id": "lab-events-login-days",
+      "title": "Distinct login days per user",
+      "prompt": "Return `user_id` and `login_days` — the number of **distinct days** each user appears in `logins` — for every user, users with zero logins show 0, ordered by `user_id`.",
+      "datasets": ["events", "events_edge"],
+      "solution": "SELECT u.user_id,\n       COUNT(DISTINCT l.login_date) AS login_days\nFROM users u\nLEFT JOIN logins l ON l.user_id = u.user_id\nGROUP BY u.user_id\nORDER BY u.user_id;",
+      "starter": "SELECT u.user_id,\n       COUNT(DISTINCT ) AS login_days\nFROM users u\nLEFT JOIN logins l ON l.user_id = u.user_id\nGROUP BY \nORDER BY ;",
+      "hints": [
+        "LEFT JOIN keeps users who never log in; their count must be 0, not 1 or NULL.",
+        "COUNT(column) ignores NULLs, so COUNT(l.login_date) gives 0 for absent logins — but it still counts duplicate ROWS.",
+        "Duplicate rows exist (same user, same day, twice). COUNT(DISTINCT l.login_date) is the only correct count."
+      ]
+    }
+  ]
+}

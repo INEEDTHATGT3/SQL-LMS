@@ -1,159 +1,79 @@
 {
   "level": 2,
   "title": "Joins & Set Operations",
-  "tagline": "join algorithms, lateral, semi/anti joins, join order",
+  "tagline": "self/cross joins, conditional aggregation, semi/anti joins, join order",
   "placementQuiz": [
     {
-      "q": "Nested Loop Join is best when:",
+      "q": "A self join requires:",
       "options": [
-        "Both tables are large",
-        "One table is small, other has index on join key",
-        "No indexes exist",
-        "Joining on non-equality condition"
+        "Two physical copies of the table",
+        "Table aliases",
+        "A foreign key to itself",
+        "A UNION of the table with itself"
       ],
       "answer": 1,
-      "explain": "NLJ: for each outer row, probe inner index. Best when outer is small and inner has index."
+      "explain": "The table appears twice in FROM, so aliases (e1, e2) are what tell the two copies apart. A self-referencing FK such as manager_id -> emp_id is the classic join condition, but it is not required: you can self-join on any condition, e.g. two employees in the same city."
     },
     {
-      "q": "Hash Join builds hash table on:",
+      "q": "CROSS JOIN produces:",
       "options": [
-        "Smaller table (build side)",
-        "Larger table",
-        "Both tables",
-        "Primary key only"
+        "Cartesian product (every row × every row)",
+        "Only matching rows from both tables",
+        "Left rows with NULL on right side",
+        "Error if no ON clause is provided"
       ],
       "answer": 0,
-      "explain": "Hash Join: build hash on smaller (build) table, probe with larger. Memory-intensive."
+      "explain": "CROSS JOIN = Cartesian product. No ON clause. Use with WHERE for filtering or generate combinations."
     },
     {
-      "q": "Merge Join requires:",
+      "q": "Conditional aggregation uses:",
       "options": [
-        "Both tables sorted on join key",
-        "Hash indexes",
-        "No indexes",
-        "Foreign keys"
+        "CASE inside SUM/COUNT",
+        "WHERE clause inside aggregate",
+        "HAVING without GROUP BY",
+        "FILTER clause only"
       ],
       "answer": 0,
-      "explain": "Merge Join: both inputs sorted on join key, then merged like merge sort. O(N+M)."
+      "explain": "SUM(CASE WHEN condition THEN 1 ELSE 0 END) or COUNT(CASE WHEN condition THEN 1 END) — pivot rows to columns."
     },
     {
-      "q": "LATERAL JOIN allows:",
+      "q": "Semi-join (EXISTS) vs INNER JOIN:",
       "options": [
-        "Right side references left side columns",
-        "Left side references right side",
-        "Joining without ON condition",
-        "Cross join optimization"
-      ],
-      "answer": 0,
-      "explain": "LATERAL: right subquery can reference columns from left. Like correlated subquery but in FROM."
-    },
-    {
-      "q": "Semi-join vs Inner Join:",
-      "options": [
-        "Same result",
-        "Semi-join returns only left columns, stops at first match",
-        "Semi-join returns duplicate left rows",
-        "Semi-join requires unique right key"
+        "Same result, same performance",
+        "Semi-join returns left cols only, stops at first match — no duplication",
+        "Semi-join is always slower",
+        "Semi-join requires a unique right key"
       ],
       "answer": 1,
-      "explain": "Semi-join (EXISTS/IN): returns left rows only, stops at first match per left row. No duplication."
+      "explain": "EXISTS returns left rows only, stops at first match per left row. No duplication unlike INNER JOIN."
+    },
+    {
+      "q": "NOT IN + subquery with NULL returns:",
+      "options": [
+        "All rows",
+        "Zero rows (the NULL trap)",
+        "Only NULL rows",
+        "Error"
+      ],
+      "answer": 1,
+      "explain": "NOT IN (subquery with NULL) = UNKNOWN for every row → zero rows. Always use NOT EXISTS."
     }
   ],
   "sections": [
     {
-      "title": "Join Algorithms — How the Planner Executes",
+      "title": "Self Joins — Hierarchy & Peer Comparison",
       "blocks": [
         {
           "type": "mantra",
-          "md": "Planner picks algorithm: Nested Loop (small + index), Hash Join (large, no index), Merge Join (pre-sorted). EXPLAIN shows which. You can influence with indexes, stats, enable_* settings."
+          "md": "Self join = table joins to itself. Two aliases (e, m) + FK to same table PK (manager_id → emp_id). Classic for org charts, peer comparisons, graph traversals."
         },
         {
           "type": "code",
-          "label": "join algorithms in EXPLAIN",
-          "code": "-- Nested Loop: outer rows × index probe\nEXPLAIN SELECT * FROM small s JOIN big b ON s.id = b.sid;\n-- Nested Loop (big has index on sid)\n\n-- Hash Join: build hash on smaller, probe larger\nEXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;\n-- Hash Join (no useful indexes, both large)\n\n-- Merge Join: both sorted\nEXPLAIN SELECT * FROM a JOIN b ON a.id = b.id;\n-- Merge Join (both have indexes on id, or pre-sorted)",
-          "pg": "-- Disable to test others\nSET enable_nestloop = off;\nSET enable_hashjoin = off;\nSET enable_mergejoin = off;",
-          "mysql": "-- MySQL: primarily Nested Loop\n-- Hash Join: 8.0.18+ (hash_join optimizer hint)\n-- Merge Join: not directly controllable",
-          "py-pandas": "# No planner, but merge = merge sort join:\npd.merge(a, b, on='key', how='inner', sort=True)  # uses sort-merge"
-        },
-        {
-          "type": "query-plan",
-          "title": "Hash Join vs Nested Loop",
-          "plan": {
-            "Plan": {
-              "Node Type": "Hash Join",
-              "Startup Cost": 100,
-              "Total Cost": 5000,
-              "Plan Rows": 10000,
-              "Plan Width": 120,
-              "Hash Cond": "(a.id = b.id)",
-              "Plans": [
-                {
-                  "Node Type": "Seq Scan",
-                  "Relation Name": "a",
-                  "Startup Cost": 0,
-                  "Total Cost": 100,
-                  "Plan Rows": 10000
-                },
-                {
-                  "Node Type": "Hash",
-                  "Startup Cost": 50,
-                  "Total Cost": 50,
-                  "Plan Rows": 5000
-                }
-              ]
-            }
-          },
-          "dialect": "pg"
-        },
-        {
-          "type": "callout",
-          "tone": "blue",
-          "md": "Hash Join: Build side (5000 rows) → hash table in memory. Probe side (10000 rows) → hash probe. If hash table > work_mem → spills to disk (slow). Increase work_mem for big joins."
-        },
-        {
-          "type": "quiz",
-          "items": [
-            {
-              "q": "Hash Join spills to disk when:",
-              "options": [
-                "Hash table > work_mem",
-                "Table > 1GB",
-                "No index on join key",
-                "Join is FULL OUTER"
-              ],
-              "answer": 0,
-              "explain": "work_mem controls hash table memory. Spill = massive slowdown. Increase work_mem or use indexes."
-            },
-            {
-              "q": "Merge Join is chosen when:",
-              "options": [
-                "Tables already sorted on join key",
-                "Indexes exist on join key",
-                "Both tables have ORDER BY on join key",
-                "All of the above"
-              ],
-              "answer": 0,
-              "explain": "Merge Join requires sorted input. Index scan or explicit sort provides ordering."
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "title": "LATERAL JOIN — Correlated Subquery in FROM",
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "LATERAL — The Game Changer"
-        },
-        {
-          "type": "code",
-          "label": "lateral basics",
-          "code": "-- For each employee, get their latest order\nSELECT e.name, o.order_date, o.total\nFROM employees e\nLEFT JOIN LATERAL (\n  SELECT * FROM orders o\n  WHERE o.emp_id = e.id\n  ORDER BY o.order_date DESC\n  LIMIT 1\n) o ON true;\n\n-- Equivalent correlated subquery (harder to read)\nSELECT e.name,\n  (SELECT order_date FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_date,\n  (SELECT total FROM orders o WHERE o.emp_id = e.id ORDER BY order_date DESC LIMIT 1) AS latest_total\nFROM employees e;",
-          "pg": "-- LATERAL is PostgreSQL standard",
-          "mysql": "-- MySQL 8.0.14+: LATERAL supported\n-- Same syntax",
-          "py-pandas": "# GroupBy + head(1)\nlatest = orders.sort_values('order_date').groupby('emp_id').head(1)\nmerged = employees.merge(latest, left_on='id', right_on='emp_id', how='left')",
-          "py-sqlalchemy": "# Lateral via subquery\nfrom sqlalchemy import lateral\nsubq = session.query(Order).filter(Order.emp_id == Employee.id)\n    .order_by(Order.order_date.desc()).limit(1).lateral()\nsession.query(Employee.name, subq.c.order_date, subq.c.total).outerjoin(subq).all()"
+          "label": "self join patterns",
+          "code": "-- Employee + manager name (hierarchy)\nSELECT e.first_name || ' ' || e.last_name AS employee,\n       m.first_name || ' ' || m.last_name AS manager\nFROM employees e\nLEFT JOIN employees m ON e.manager_id = m.emp_id;\n\n-- Peer comparison: employees in same dept, different salary\nSELECT e1.first_name, e1.salary, e2.first_name, e2.salary\nFROM employees e1\nJOIN employees e2 ON e1.dept_id = e2.dept_id AND e1.emp_id < e2.emp_id\nWHERE e1.salary <> e2.salary;\n\n-- Find employees who earn more than their manager\nSELECT e.first_name, e.salary, m.first_name AS mgr, m.salary AS mgr_sal\nFROM employees e\nJOIN employees m ON e.manager_id = m.emp_id\nWHERE e.salary > m.salary;",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Self merge with suffixes\nmgr = employees.merge(employees, left_on='manager_id', right_on='emp_id', \n                      how='left', suffixes=('_emp', '_mgr'))\n\n# Peer comparison\npeer = employees.merge(employees, on='dept_id', suffixes=('_1', '_2'))\npeer = peer[peer['emp_id_1'] < peer['emp_id_2']]"
         },
         {
           "type": "visual",
@@ -161,27 +81,152 @@
           "spec": {
             "before": [
               {
-                "pattern": "LATERAL",
-                "readability": "High — looks like regular join",
-                "performance": "Same as correlated subquery",
-                "use_case": "Top-N per group, complex per-row logic"
+                "pattern": "Hierarchy (manager)",
+                "join_type": "LEFT JOIN",
+                "condition": "e.manager_id = m.emp_id",
+                "use_case": "Org chart, reporting lines"
               },
               {
-                "pattern": "Correlated Subquery",
-                "readability": "Low — nested in SELECT",
-                "performance": "Same",
-                "use_case": "Single column, simple"
+                "pattern": "Peer comparison",
+                "join_type": "INNER JOIN",
+                "condition": "e1.dept_id = e2.dept_id AND e1.emp_id < e2.emp_id",
+                "use_case": "Find pairs, deduplicate symmetric pairs"
               },
               {
-                "pattern": "Window Function",
-                "readability": "Medium",
-                "performance": "Better for full scan",
-                "use_case": "All rows need rank/row_number"
+                "pattern": "Graph traversal",
+                "join_type": "Recursive CTE",
+                "condition": "Repeated self joins",
+                "use_case": "Full org tree, bill of materials"
               }
             ],
             "after": [],
             "highlight": [
-              "readability",
+              "join_type",
+              "condition"
+            ]
+          }
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "In a self join for hierarchy, why use LEFT JOIN not INNER JOIN?",
+              "options": [
+                "INNER JOIN is slower than LEFT",
+                "CEO has no manager (NULL) — LEFT preserves them",
+                "LEFT JOIN uses less memory than INNER",
+                "No difference at all between them"
+              ],
+              "answer": 1,
+              "explain": "The root node (CEO) has manager_id = NULL. INNER JOIN would drop them. LEFT JOIN keeps all employees."
+            },
+            {
+              "q": "Peer comparison self join uses e1.emp_id < e2.emp_id to:",
+              "options": [
+                "Make the query faster",
+                "Avoid duplicate pairs (A,B) and (B,A)",
+                "Filter out all managers",
+                "Required for LEFT JOIN syntax"
+              ],
+              "answer": 1,
+              "explain": "Without the inequality, every pair appears twice. e1.emp_id < e2.emp_id keeps one ordering."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Cross Joins — Cartesian Products",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CROSS JOIN — Every Row × Every Row"
+        },
+        {
+          "type": "code",
+          "label": "cross join patterns",
+          "code": "-- Explicit CROSS JOIN\nSELECT e.first_name, d.dept_name\nFROM employees e\nCROSS JOIN departments d;\n-- 21 employees × 7 departments = 147 rows\n\n-- Implicit (old style, avoid)\nSELECT e.first_name, d.dept_name\nFROM employees e, departments d;\n\n-- With WHERE filter (effectively INNER JOIN)\nSELECT e.first_name, d.dept_name\nFROM employees e\nCROSS JOIN departments d\nWHERE e.dept_id = d.dept_id;",
+          "pg": "-- Same syntax",
+          "mysql": "-- Same syntax",
+          "py-pandas": "# Cartesian product\nimport itertools\npd.DataFrame(list(itertools.product(employees['first_name'], departments['dept_name'])), \n             columns=['emp_name', 'dept_name'])"
+        },
+        {
+          "type": "callout",
+          "tone": "warn",
+          "md": "CROSS JOIN without WHERE = Cartesian product. 10k × 10k = 100M rows — kills the database. Always add a filter or use intentionally for combinations (e.g., date spine × categories)."
+        },
+        {
+          "type": "code",
+          "label": "practical cross join: date spine × categories",
+          "code": "-- Generate all category/date combinations for reporting\nWITH dates AS (\n  SELECT generate_series('2024-01-01'::date, '2024-12-31'::date, '1 day')::date AS dt\n)\nSELECT d.dt, c.category_id, c.name\nFROM dates d\nCROSS JOIN categories c\nORDER BY c.category_id, d.dt;",
+          "pg": "-- generate_series is PostgreSQL-specific",
+          "mysql": "-- MySQL: recursive CTE or numbers table for date spine",
+          "py-pandas": "dates = pd.date_range('2024-01-01', '2024-12-31', freq='D')\nspine = pd.MultiIndex.from_product([dates, categories['category_id']], names=['dt', 'category_id']).to_frame(index=False)"
+        },
+        {
+          "type": "quiz",
+          "items": [
+            {
+              "q": "CROSS JOIN 100 rows × 100 rows produces:",
+              "options": [
+                "100 rows total",
+                "200 rows total",
+                "10,000 rows",
+                "An error"
+              ],
+              "answer": 2,
+              "explain": "Cartesian product = N × M rows. 100 × 100 = 10,000."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Conditional Aggregation — Pivot Rows to Columns",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "CASE Inside Aggregates — The Interview Staple"
+        },
+        {
+          "type": "prose",
+          "md": "Conditional aggregation turns rows into columns. Instead of filtering with WHERE, you aggregate everything and use CASE to pick which rows count toward each column. One scan, multiple metrics."
+        },
+        {
+          "type": "code",
+          "label": "conditional aggregation patterns",
+          "code": "-- Count orders by status in one query\nSELECT customer_id,\n       COUNT(*) AS total_orders,\n       COUNT(CASE WHEN status = 'delivered' THEN 1 END) AS delivered,\n       COUNT(CASE WHEN status = 'cancelled' THEN 1 END) AS cancelled,\n       COUNT(CASE WHEN status = 'returned' THEN 1 END) AS returned\nFROM orders\nGROUP BY customer_id;\n\n-- Sum sales by category (pivot)\nSELECT c.name AS category,\n       SUM(CASE WHEN p.category_id = c.category_id THEN oi.quantity * oi.unit_price ELSE 0 END) AS revenue\nFROM categories c\nLEFT JOIN products p ON p.category_id = c.category_id\nLEFT JOIN order_items oi ON oi.product_id = p.product_id\nLEFT JOIN orders o ON o.order_id = oi.order_id AND o.status = 'delivered'\nGROUP BY c.category_id, c.name;\n\n-- PostgreSQL FILTER syntax (cleaner)\nSELECT customer_id,\n       COUNT(*) FILTER (WHERE status = 'delivered') AS delivered,\n       COUNT(*) FILTER (WHERE status = 'cancelled') AS cancelled\nFROM orders\nGROUP BY customer_id;",
+          "pg": "-- FILTER clause: COUNT(*) FILTER (WHERE condition) — standard SQL, cleaner",
+          "mysql": "-- MySQL 8.0: no FILTER clause. Use SUM(CASE WHEN ... THEN 1 ELSE 0 END)",
+          "py-pandas": "# Pivot table\npivot = orders.pivot_table(index='customer_id', columns='status', values='order_id', aggfunc='count', fill_value=0)"
+        },
+        {
+          "type": "visual",
+          "kind": "table-diff",
+          "spec": {
+            "before": [
+              {
+                "pattern": "Multiple queries",
+                "scans": "N scans (one per metric)",
+                "code": "Verbose, repetitive",
+                "performance": "Slow — N full table scans"
+              },
+              {
+                "pattern": "Conditional aggregation",
+                "scans": "1 scan",
+                "code": "Compact, single GROUP BY",
+                "performance": "Fast — one pass"
+              },
+              {
+                "pattern": "FILTER clause (PG)",
+                "scans": "1 scan",
+                "code": "Cleanest syntax",
+                "performance": "Same as CASE, standard SQL"
+              }
+            ],
+            "after": [],
+            "highlight": [
+              "scans",
               "performance"
             ]
           }
@@ -190,33 +235,33 @@
           "type": "quiz",
           "items": [
             {
-              "q": "Inside FROM, a LATERAL subquery can reference:",
+              "q": "COUNT(CASE WHEN status = 'delivered' THEN 1 END) counts:",
               "options": [
-                "Only tables in same FROM",
-                "Columns from LEFT side of join",
-                "Only columns from same subquery",
-                "Global variables only"
+                "All rows",
+                "Only delivered rows (NULL ignored by COUNT)",
+                "Only non-delivered rows",
+                "An error occurs"
               ],
               "answer": 1,
-              "explain": "In the join pipeline, the lateral side reads columns already produced by the LEFT side of the join — like a correlated subquery in FROM."
+              "explain": "CASE returns 1 for delivered, NULL otherwise. COUNT ignores NULLs → counts only delivered."
             },
             {
-              "q": "Compared with CROSS JOIN LATERAL, LEFT JOIN LATERAL:",
+              "q": "SUM(CASE WHEN condition THEN amount ELSE 0 END) vs SUM(amount) FILTER (WHERE condition):",
               "options": [
-                "Same",
-                "CROSS = inner (drops left rows with no match), LEFT = preserves left",
-                "LEFT not allowed with LATERAL",
-                "CROSS not allowed"
+                "Different results",
+                "Same result, FILTER is standard SQL",
+                "FILTER is MySQL only",
+                "CASE is faster"
               ],
               "answer": 1,
-              "explain": "In the pipeline, CROSS JOIN LATERAL = INNER JOIN LATERAL and drops left rows with no match; LEFT JOIN LATERAL preserves them (NULL if no match)."
+              "explain": "FILTER is standard SQL (PostgreSQL). MySQL uses CASE. Same result, one scan."
             }
           ]
         }
       ]
     },
     {
-      "title": "Semi/Anti Joins & Join Order",
+      "title": "Semi/Anti Joins — EXISTS, IN, NOT EXISTS, NOT IN",
       "blocks": [
         {
           "type": "heading",
@@ -225,16 +270,15 @@
         {
           "type": "code",
           "label": "semi/anti join patterns",
-          "code": "-- Semi-join: EXISTS (stops at first match)\nSELECT * FROM employees e\nWHERE EXISTS (SELECT 1 FROM orders o WHERE o.emp_id = e.id);\n-- Returns employees WITH orders (no duplication)\n\n-- Anti-join: NOT EXISTS\nSELECT * FROM employees e\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.emp_id = e.id);\n-- Employees with NO orders\n\n-- IN semi-join (same logic)\nSELECT * FROM employees WHERE id IN (SELECT emp_id FROM orders);\n\n-- NOT IN anti-join (NULL trap!)\nSELECT * FROM employees WHERE id NOT IN (SELECT emp_id FROM orders);\n-- Watch for NULLs in subquery!",
-          "pg": "-- PostgreSQL: Semi-join optimization automatic\n-- Hash Semi Join / Hash Anti Join in EXPLAIN",
-          "mysql": "-- MySQL: Semi-join optimization (8.0+)\n-- EXPLAIN shows 'Semi Join' or 'Anti Join'",
-          "py-pandas": "# Exists: merge + drop_duplicates on left key\nmerged = employees.merge(orders[['emp_id']].drop_duplicates(), \n                         left_on='id', right_on='emp_id', how='inner')\n\n# Anti-join (left only)\nmerged = employees.merge(orders[['emp_id']].drop_duplicates(), \n                         left_on='id', right_on='emp_id', how='left', indicator=True)\nresult = merged[merged['_merge'] == 'left_only']",
-          "py-sqlalchemy": "# EXISTS\nsession.query(Employee).filter(\n    Employee.id.in_(session.query(Order.emp_id))\n).all()\n\n# NOT EXISTS\nsession.query(Employee).filter(\n    ~Employee.id.in_(session.query(Order.emp_id))\n).all()"
+          "code": "-- Semi-join: EXISTS (stops at first match)\nSELECT * FROM employees e\nWHERE EXISTS (SELECT 1 FROM orders o WHERE o.emp_id = e.id);\n-- Returns employees WITH orders (no duplication)\n\n-- Anti-join: NOT EXISTS\nSELECT * FROM employees e\nWHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.emp_id = e.id);\n-- Employees with NO orders\n\n-- IN semi-join (optimized to semi-join in modern PG/MySQL)\nSELECT * FROM employees WHERE emp_id IN (SELECT emp_id FROM orders);\n\n-- NOT IN anti-join (NULL trap!)\nSELECT * FROM employees WHERE emp_id NOT IN (SELECT emp_id FROM orders);\n-- Watch for NULLs in subquery!",
+          "pg": "-- PostgreSQL: Semi-join optimization automatic\n-- Hash Semi Join / Hash Anti Join in EXPLAIN\n-- IN subquery optimized to semi-join since PG 9.6+",
+          "mysql": "-- MySQL 8.0+: Semi-join optimization (EXPLAIN FORMAT=TREE shows 'Semi Join')\n-- Earlier versions: IN may materialize subquery",
+          "py-pandas": "# Exists: merge + drop_duplicates on left key\nmerged = employees.merge(orders[['emp_id']].drop_duplicates(), \n                         left_on='emp_id', right_on='emp_id', how='inner')\n\n# Anti-join (left only)\nmerged = employees.merge(orders[['emp_id']].drop_duplicates(), \n                         left_on='emp_id', right_on='emp_id', how='left', indicator=True)\nresult = merged[merged['_merge'] == 'left_only']"
         },
         {
           "type": "callout",
           "tone": "warn",
-          "md": "**\"Not In\" + subquery with NULL = zero rows.** Always use NOT EXISTS for anti-join. Or: `WHERE id NOT IN (SELECT emp_id FROM orders WHERE emp_id IS NOT NULL)`."
+          "md": "**\"Not In\" + subquery with NULL = zero rows.** Always use NOT EXISTS for anti-join. Or: `WHERE emp_id NOT IN (SELECT emp_id FROM orders WHERE emp_id IS NOT NULL)`."
         },
         {
           "type": "heading",
@@ -252,15 +296,15 @@
           "type": "quiz",
           "items": [
             {
-              "q": "EXISTS vs IN semi-join: which stops at first match?",
+              "q": "EXISTS vs IN semi-join in PostgreSQL 16:",
               "options": [
-                "EXISTS only",
-                "IN only",
-                "Both stop at first match",
-                "Neither"
+                "EXISTS stops at first match; IN always scans all rows",
+                "Both stop at first match (IN optimized to semi-join)",
+                "IN stops at first match; EXISTS scans all",
+                "Neither stops early"
               ],
-              "answer": 2,
-              "explain": "Both are semi-joins — stop at first match per left row. EXISTS often clearer for complex conditions."
+              "answer": 1,
+              "explain": "Since PG 9.6, IN subqueries are optimized to semi-joins — both stop at first match. EXISTS is still preferred for complex conditions."
             },
             {
               "q": "Join order hint in PostgreSQL:",
@@ -272,6 +316,17 @@
               ],
               "answer": 0,
               "explain": "pg_hint_plan extension: /*+ Leading(a b c) */ forces join order."
+            },
+            {
+              "q": "MySQL shows semi-join nodes in EXPLAIN only with:",
+              "options": [
+                "EXPLAIN FORMAT=JSON",
+                "EXPLAIN FORMAT=TREE",
+                "EXPLAIN ANALYZE",
+                "EXPLAIN EXTENDED"
+              ],
+              "answer": 1,
+              "explain": "MySQL 8.0+ shows 'Semi Join' / 'Anti Join' nodes only in EXPLAIN FORMAT=TREE output."
             }
           ]
         }
@@ -284,17 +339,99 @@
           "type": "dialect-diff",
           "sql": "SELECT * FROM a FULL JOIN b ON a.id = b.id;",
           "pg": "SELECT * FROM a FULL JOIN b ON a.id = b.id;",
-          "mysql": "-- MySQL: no FULL JOIN\nSELECT * FROM a LEFT JOIN b ON ...\nUNION\nSELECT * FROM a RIGHT JOIN b ON ...;",
+          "mysql": "-- MySQL: no FULL JOIN\n-- Correct workaround: LEFT JOIN + anti-join on right\nSELECT * FROM a LEFT JOIN b ON a.id = b.id\nUNION ALL\nSELECT * FROM a RIGHT JOIN b ON a.id = b.id WHERE a.id IS NULL;",
           "py-pandas": "pd.merge(a, b, on='id', how='outer')",
           "py-sqlalchemy": "session.query(A).outerjoin(B, A.id == B.id, full=True).all()"
         },
         {
           "type": "dialect-diff",
-          "sql": "SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true;",
-          "pg": "SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true;",
-          "mysql": "SELECT * FROM a LEFT JOIN LATERAL (SELECT * FROM b WHERE b.a_id = a.id LIMIT 1) b ON true; -- 8.0.14+",
-          "py-pandas": "df.groupby('a_id').head(1)",
-          "py-sqlalchemy": "lateral()"
+          "sql": "SELECT customer_id, COUNT(*) FILTER (WHERE status='delivered') FROM orders GROUP BY customer_id;",
+          "pg": "SELECT customer_id, COUNT(*) FILTER (WHERE status='delivered') FROM orders GROUP BY customer_id;",
+          "mysql": "SELECT customer_id, SUM(CASE WHEN status='delivered' THEN 1 ELSE 0 END) FROM orders GROUP BY customer_id;",
+          "py-pandas": "orders.pivot_table(index='customer_id', columns='status', values='order_id', aggfunc='count', fill_value=0)",
+          "py-sqlalchemy": "func.count().filter(Order.status == 'delivered')"
+        }
+      ]
+    },
+    {
+      "title": "Worked Problem — Delivery Rate per Customer (Conditional Aggregation + LEFT JOIN)",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Problem: Delivery Rate per Customer (LeetCode 1934 style)"
+        },
+        {
+          "type": "prose",
+          "md": "Tables: customers(customer_id, name), orders(order_id, customer_id, order_date, status). Find each customer's delivery rate = delivered orders / total orders. Customers with no orders → rate 0."
+        },
+        {
+          "type": "code",
+          "label": "sample data (shop dataset)",
+          "code": "-- customers\n customer_id | name\n------------+---------------\n          1 | Aarav Shah\n          2 | Diya Patel\n          3 | Ishaan Roy\n          11 | Arnav Bose  -- no orders\n\n-- orders (subset)\n order_id | customer_id | order_date  | status\n----------+-------------+-------------+----------\n        1 |           1 | 2023-01-12  | delivered\n        2 |           2 | 2023-01-28  | delivered\n        4 |           1 | 2023-03-03  | delivered\n        5 |           4 | 2023-03-22  | cancelled\n        7 |           2 | 2023-05-05  | returned\n-- Customer 1: 2 delivered, 0 other = 1.0 rate\n-- Customer 2: 1 delivered, 1 returned = 0.5 rate\n-- Customer 3: 1 delivered = 1.0 rate\n-- Customer 11: 0 orders = 0 rate"
+        },
+        {
+          "type": "heading",
+          "text": "Approaches"
+        },
+        {
+          "type": "code",
+          "label": "Brute: Two subqueries",
+          "code": "SELECT c.customer_id, c.name,\n       COALESCE((SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.customer_id AND o.status = 'delivered'), 0) /\n       NULLIF((SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.customer_id), 0) AS delivery_rate\nFROM customers c;",
+          "cost": "Two correlated subqueries per customer — re-scans orders for each customer. O(N×M).",
+          "pitfalls": "Division by zero for customers with no orders; NULL handling messy"
+        },
+        {
+          "type": "code",
+          "label": "Optimal: LEFT JOIN + conditional aggregation",
+          "code": "SELECT c.customer_id, c.name,\n       COALESCE(COUNT(o.order_id) FILTER (WHERE o.status = 'delivered'), 0) ::numeric /\n       NULLIF(COUNT(o.order_id), 0) AS delivery_rate\nFROM customers c\nLEFT JOIN orders o ON c.customer_id = o.customer_id\nGROUP BY c.customer_id, c.name;",
+          "cost": "Single scan of orders via Hash Left Join + HashAggregate. One pass.",
+          "pitfalls": "Must use LEFT JOIN to keep customers with zero orders. COUNT(o.order_id) counts non-NULL; FILTER picks delivered."
+        },
+        {
+          "type": "query-trace",
+          "title": "Delivery Rate Dry Run",
+          "dataset": "shop",
+          "stages": [
+            {
+              "label": "FROM customers c LEFT JOIN orders o",
+              "sql": "SELECT c.customer_id, c.name, o.order_id, o.status FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id",
+              "note": "All 12 customers preserved. Customer 11 (Arnav Bose) gets NULL order_id/status. Others get 1-3 rows each."
+            },
+            {
+              "label": "GROUP BY c.customer_id, c.name",
+              "sql": "SELECT c.customer_id, c.name, COUNT(o.order_id) AS total, COUNT(o.order_id) FILTER (WHERE o.status = 'delivered') AS delivered FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name",
+              "note": "Customer 1: total=2, delivered=2. Customer 2: total=2, delivered=1. Customer 11: total=0, delivered=0."
+            },
+            {
+              "label": "Final rate calculation",
+              "sql": "SELECT c.customer_id, c.name, COALESCE(COUNT(o.order_id) FILTER (WHERE o.status = 'delivered'), 0)::numeric / NULLIF(COUNT(o.order_id), 0) AS rate FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name",
+              "note": "Customer 1: 2/2=1.0. Customer 2: 1/2=0.5. Customer 11: 0/0 → NULLIF → NULL → COALESCE → 0."
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "Optimal: one LEFT JOIN + conditional aggregation. Single pass, handles zero-order customers via LEFT JOIN + NULLIF/COALESCE. Brute re-scans orders per customer — catastrophic at scale."
+        }
+      ]
+    },
+    {
+      "title": "Trap — NOT IN with NULL Subquery Returns Zero Rows",
+      "blocks": [
+        {
+          "type": "misconception",
+          "claim": "NOT IN is just the opposite of IN — safe to use for anti-joins.",
+          "refutation": "FALSE. If the subquery returns even one NULL, NOT IN evaluates to UNKNOWN for every row → zero rows returned. This is a silent data-loss bug.",
+          "askFirst": true,
+          "verdict": false,
+          "correctModel": "Always use NOT EXISTS for anti-joins. NOT EXISTS handles NULLs correctly (NULL = no match). If you must use NOT IN, add `WHERE column IS NOT NULL` in the subquery.",
+          "evidence": {
+            "type": "code",
+            "label": "The NULL trap",
+            "code": "-- Table with NULL in join column\nCREATE TABLE test (id int, val int);\nINSERT INTO test VALUES (1, 10), (2, NULL);\n\n-- NOT IN with NULL subquery → ZERO rows\nSELECT * FROM test WHERE id NOT IN (SELECT val FROM test);\n-- Returns nothing! Because '1 NOT IN (10, NULL)' = UNKNOWN\n\n-- NOT EXISTS works correctly\nSELECT * FROM test t1 WHERE NOT EXISTS (SELECT 1 FROM test t2 WHERE t2.val = t1.id);\n-- Returns id=1 (no match), id=2 (NULL ≠ 2)",
+            "pg": "-- EXPLAIN shows Hash Anti Join for NOT EXISTS\n-- NOT IN with NULL: planner may still run but returns empty"
+          }
         }
       ]
     },
@@ -307,14 +444,39 @@
             {
               "id": "J201",
               "tier": 2,
-              "title": "Latest Order per Employee (LATERAL)",
+              "title": "Employee + Manager Name (Self Join)",
               "platform": "drill",
               "patterns": [
-                "lateral-join"
+                "self-join"
               ],
-              "statement": "For each employee, show their most recent order date and total.",
+              "statement": "List each employee's first_name, last_name with their manager's first_name, last_name. Include employees without a manager (show NULL). Order by employee emp_id.",
               "hints": [
-                "LEFT JOIN LATERAL (SELECT ... ORDER BY order_date DESC LIMIT 1)"
+                "Self JOIN: LEFT JOIN employees m ON e.manager_id = m.emp_id",
+                "Select e.first_name, e.last_name, m.first_name AS mgr_first, m.last_name AS mgr_last",
+                "ORDER BY e.emp_id"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT e.first_name, e.last_name, m.first_name AS mgr_first, m.last_name AS mgr_last FROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id ORDER BY e.emp_id",
+                "orderMatters": true
+              },
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Correlated subquery per employee",
+                  "code": "SELECT e.first_name, e.last_name, (SELECT m.first_name FROM employees m WHERE m.emp_id = e.manager_id) AS mgr_first, (SELECT m.last_name FROM employees m WHERE m.emp_id = e.manager_id) AS mgr_last FROM employees e ORDER BY e.emp_id",
+                  "cost": "Two correlated subqueries per row — re-scans employees for each employee",
+                  "pitfalls": "Verbose; two separate subqueries for first/last name"
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Self LEFT JOIN on manager_id = emp_id",
+                  "code": "SELECT e.first_name, e.last_name, m.first_name AS mgr_first, m.last_name AS mgr_last FROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id ORDER BY e.emp_id",
+                  "cost": "Single Hash Left Join — one pass",
+                  "pitfalls": "None — standard pattern"
+                }
               ]
             },
             {
@@ -325,36 +487,95 @@
               "patterns": [
                 "anti-join"
               ],
-              "statement": "Find customers who have never placed an order.",
+              "statement": "Find customers who have never placed an order. Return customer_id, name. Use NOT EXISTS.",
               "hints": [
-                "NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.id)"
+                "NOT EXISTS (SELECT 1 FROM orders WHERE customer_id = c.customer_id)",
+                "Select c.customer_id, c.name FROM customers c"
+              ],
+              "exercise": {
+                "datasets": [
+                  "shop"
+                ],
+                "solution": "SELECT c.customer_id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id)",
+                "orderMatters": false
+              },
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "LEFT JOIN + WHERE IS NULL",
+                  "code": "SELECT c.customer_id, c.name FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id WHERE o.order_id IS NULL",
+                  "cost": "Hash Left Join + filter — works but carries all order columns through join",
+                  "pitfalls": "Slightly more I/O than semi-join"
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "NOT EXISTS semi-join",
+                  "code": "SELECT c.customer_id, c.name FROM customers c WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id)",
+                  "cost": "Hash Anti Join — stops at first match per customer, no column projection from orders",
+                  "pitfalls": "None — cleanest for existence checks"
+                }
               ]
             },
             {
               "id": "J203",
               "tier": 2,
-              "title": "Top 3 Products per Category (LATERAL)",
+              "title": "Confirmation Rate per Customer (Conditional Aggregation)",
               "platform": "drill",
               "patterns": [
-                "lateral-top-n"
+                "conditional-agg",
+                "left-join"
               ],
-              "statement": "For each category, list top 3 products by sales.",
+              "statement": "For each customer, calculate confirmation rate = delivered orders / total orders. Customers with no orders → rate 0. Return customer_id, name, confirmation_rate. Use shop dataset.",
               "hints": [
-                "LATERAL (SELECT * FROM products WHERE category_id = c.id ORDER BY sales DESC LIMIT 3)"
+                "LEFT JOIN orders ON customers.customer_id = orders.customer_id",
+                "COUNT(*) FILTER (WHERE status = 'delivered') for numerator",
+                "COUNT(*) for denominator, NULLIF to avoid div by zero",
+                "COALESCE to default to 0"
+              ],
+              "exercise": {
+                "datasets": [
+                  "shop"
+                ],
+                "solution": "SELECT c.customer_id, c.name, COALESCE(COUNT(o.order_id) FILTER (WHERE o.status = 'delivered'), 0)::numeric / NULLIF(COUNT(o.order_id), 0) AS confirmation_rate FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name",
+                "orderMatters": false
+              },
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Two subqueries per customer",
+                  "code": "SELECT c.customer_id, c.name, COALESCE((SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.customer_id AND o.status = 'delivered'), 0)::numeric / NULLIF((SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.customer_id), 0) AS confirmation_rate FROM customers c",
+                  "cost": "Two correlated subqueries per customer — re-scans orders N times",
+                  "pitfalls": "Division by zero; NULL handling; slow at scale"
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "LEFT JOIN + conditional aggregation in one pass",
+                  "code": "SELECT c.customer_id, c.name, COALESCE(COUNT(o.order_id) FILTER (WHERE o.status = 'delivered'), 0)::numeric / NULLIF(COUNT(o.order_id), 0) AS confirmation_rate FROM customers c LEFT JOIN orders o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name",
+                  "cost": "Single Hash Left Join + HashAggregate — one scan of orders",
+                  "pitfalls": "Must use LEFT JOIN; FILTER is PG-specific (use CASE in MySQL)"
+                }
               ]
             },
             {
               "id": "J204",
               "tier": 2,
-              "title": "Employees With Orders in 2024 (EXISTS)",
+              "title": "Customers With Orders in 2024 (EXISTS)",
               "platform": "drill",
               "patterns": [
                 "semi-join"
               ],
-              "statement": "Employees who placed at least one order in 2024.",
+              "statement": "Customers who placed at least one order in 2024. Return customer_id, name. Use EXISTS.",
               "hints": [
-                "EXISTS (SELECT 1 FROM orders WHERE emp_id = e.id AND order_date >= '2024-01-01')"
-              ]
+                "EXISTS (SELECT 1 FROM orders WHERE customer_id = c.customer_id AND order_date >= '2024-01-01')",
+                "Select from customers c"
+              ],
+              "exercise": {
+                "datasets": [
+                  "shop"
+                ],
+                "solution": "SELECT c.customer_id, c.name FROM customers c WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id AND o.order_date >= '2024-01-01')",
+                "orderMatters": false
+              }
             },
             {
               "id": "J205",
@@ -364,10 +585,18 @@
               "patterns": [
                 "anti-join"
               ],
-              "statement": "Products that have never been ordered.",
+              "statement": "Products that have never been ordered. Return product_id, name. Use NOT EXISTS.",
               "hints": [
-                "NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.id)"
-              ]
+                "NOT EXISTS (SELECT 1 FROM order_items WHERE product_id = p.product_id)",
+                "Select from products p"
+              ],
+              "exercise": {
+                "datasets": [
+                  "shop"
+                ],
+                "solution": "SELECT p.product_id, p.name FROM products p WHERE NOT EXISTS (SELECT 1 FROM order_items oi WHERE oi.product_id = p.product_id)",
+                "orderMatters": false
+              }
             },
             {
               "id": "J206",
@@ -377,7 +606,7 @@
               "patterns": [
                 "join-order"
               ],
-              "statement": "Join small_table (100 rows) → medium (10k) → large (1M). Force order.",
+              "statement": "Join small_table (100 rows) → medium (10k) → large (1M). Force order using join_collapse_limit.",
               "hints": [
                 "SET join_collapse_limit = 1; write joins in order small→medium→large"
               ]
@@ -403,10 +632,17 @@
               "patterns": [
                 "full-join-workaround"
               ],
-              "statement": "MySQL 5.7: write FULL JOIN using LEFT UNION RIGHT.",
+              "statement": "MySQL 5.7: write FULL JOIN using LEFT JOIN UNION ALL RIGHT JOIN with anti-join filter.",
               "hints": [
-                "LEFT JOIN ... UNION RIGHT JOIN ..."
-              ]
+                "LEFT JOIN ... UNION ALL RIGHT JOIN ... WHERE left.key IS NULL"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT * FROM employees e LEFT JOIN departments d ON e.dept_id = d.dept_id UNION ALL SELECT * FROM employees e RIGHT JOIN departments d ON e.dept_id = d.dept_id WHERE e.emp_id IS NULL",
+                "orderMatters": false
+              }
             }
           ]
         }
@@ -418,7 +654,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "17 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "17 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -687,37 +923,33 @@
     }
   ],
   "revisionCard": [
-    "Nested Loop: small outer + indexed inner; Hash: large both, build hash on smaller; Merge: pre-sorted",
-    "LATERAL: right side sees left columns; CROSS JOIN LATERAL = inner, LEFT JOIN LATERAL = outer",
-    "Semi-join (EXISTS/IN): left columns only, stops at first match; Anti-join (NOT EXISTS): no match",
-    "NOT IN + subquery with NULL = disaster; always NOT EXISTS for anti-join",
-    "Join order: planner decides; join_collapse_limit=1 forces written order; pg_hint_plan for hints",
-    "FULL JOIN = LEFT UNION RIGHT; MySQL 5.7 workaround: LEFT UNION RIGHT"
+    "Self join: aliases + FK to same PK (manager_id → emp_id); LEFT for hierarchy root",
+    "Cross join = Cartesian product (N×M); use for date spines × categories, not by accident",
+    "Conditional aggregation: CASE inside SUM/COUNT or FILTER (PG) — one scan, multiple metrics",
+    "Semi-join (EXISTS/IN): left cols only, stops at first match; Anti-join (NOT EXISTS): no match",
+    "NOT IN + NULL = zero rows (silent bug); always NOT EXISTS for anti-join",
+    "Join order: planner decides; join_collapse_limit=1 forces written order; pg_hint_plan for hints"
   ],
   "glossary": [
     {
-      "term": "nested loop join",
-      "def": "For each outer row, probe inner index. Best: small outer + indexed inner."
+      "term": "self join",
+      "def": "Table joined to itself using aliases; FK references same table PK (e.g., manager_id → emp_id)."
     },
     {
-      "term": "hash join",
-      "def": "Build hash table on smaller input, probe with larger. Memory-heavy; spills to disk if > work_mem."
+      "term": "cross join",
+      "def": "Cartesian product — every row from left × every row from right. No ON clause."
     },
     {
-      "term": "merge join",
-      "def": "Both inputs sorted on join key; linear merge. O(N+M). Requires sorted input."
-    },
-    {
-      "term": "lateral join",
-      "def": "Right subquery references left columns. Like correlated subquery in FROM clause."
+      "term": "conditional aggregation",
+      "def": "CASE expression inside aggregate (SUM/COUNT) or FILTER clause — pivots rows to columns in one scan."
     },
     {
       "term": "semi-join",
-      "def": "EXISTS/IN pattern — returns left rows only, stops at first match per left row."
+      "def": "EXISTS/IN pattern — returns left rows only, stops at first match per left row. No duplication."
     },
     {
       "term": "anti-join",
-      "def": "NOT EXISTS pattern — returns left rows with NO match in right."
+      "def": "NOT EXISTS pattern — returns left rows with NO match in right. NOT IN has NULL trap."
     }
   ]
 }

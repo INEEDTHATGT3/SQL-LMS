@@ -1,0 +1,14 @@
+/* schema-diagram SVG — colours only via CSS vars */
+.blk .schema-diagram svg{width:100%;max-width:420px;height:auto;display:block;margin:8px auto 0}
+.blk svg .sd-rect{fill:var(--surface);stroke:var(--border)}
+.blk svg .sd-hdr{fill:var(--surface2)}
+.blk svg .sd-name{fill:var(--text-bright);font-weight:700;font-size:13.5px}
+.blk svg .sd-col{fill:var(--text);font-size:12px}
+.blk svg .sd-type{fill:var(--text-dim);font-size:10.5px}
+.blk svg .sd-pk{fill:var(--lvl)}
+.blk svg .sd-fk{fill:var(--accent3)}
+.blk svg .sd-chip-t{fill:var(--bg);font-size:8.5px;font-weight:700}
+.blk svg .sd-line{fill:none;stroke:var(--accent3);stroke-width:1.5;opacity:.85}
+.blk svg .sd-arrow{fill:var(--accent3);opacity:.85}
+.blk svg .sd-label-bg{fill:var(--code-bg);stroke:var(--border);stroke-width:.5}
+.blk svg .sd-label{fill:var(--text);font-size:11px}

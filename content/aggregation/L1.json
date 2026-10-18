@@ -18,7 +18,7 @@
       "q": "SUM(salary) with NULL values:",
       "options": [
         "Returns NULL",
-        "Ignores NULLs, sums non-NULL",
+        "Skips NULLs, sums rest",
         "Errors",
         "Treats NULL as 0"
       ],
@@ -102,24 +102,6 @@
             "Aggregate functions: COUNT, SUM, AVG, MIN, MAX, STRING_AGG",
             "ORDER BY runs after GROUP BY — can use aliases"
           ]
-        }
-      ]
-    },
-    {
-      "title": "Core Aggregates — COUNT, SUM, AVG, MIN, MAX",
-      "blocks": [
-        {
-          "type": "heading",
-          "text": "The Big Five"
-        },
-        {
-          "type": "code",
-          "label": "basic aggregates",
-          "code": "-- COUNT: row count (includes NULL rows)\nSELECT COUNT(*) FROM employees;\n-- COUNT(col): non-NULL count\nSELECT COUNT(manager_id) FROM employees;\n\n-- SUM, AVG: numeric only\nSELECT SUM(salary), AVG(salary) FROM employees;\n\n-- MIN, MAX: any comparable type\nSELECT MIN(hire_date), MAX(hire_date) FROM employees;\n\n-- Multiple aggregates at once\nSELECT dept_id,\n  COUNT(*) AS emp_count,\n  SUM(salary) AS total_pay,\n  AVG(salary) AS avg_pay,\n  MIN(salary) AS min_pay,\n  MAX(salary) AS max_pay\nFROM employees\nGROUP BY dept_id;",
-          "pg": "-- Same syntax\n-- STRING_AGG for concatenation\nSELECT dept_id, STRING_AGG(name, ', ') FROM employees GROUP BY dept_id;",
-          "mysql": "-- GROUP_CONCAT for concatenation\nSELECT dept_id, GROUP_CONCAT(name SEPARATOR ', ') FROM employees GROUP BY dept_id;",
-          "py-pandas": "# Aggregation\ngrouped = employees.groupby('dept_id').agg(\n    emp_count=('id', 'count'),\n    total_pay=('salary', 'sum'),\n    avg_pay=('salary', 'mean'),\n    min_pay=('salary', 'min'),\n    max_pay=('salary', 'max')\n).reset_index()",
-          "py-sqlalchemy": "# Multiple aggregates\nfrom sqlalchemy import func\nsession.query(\n    Employee.dept_id,\n    func.count(Employee.id),\n    func.sum(Employee.salary),\n    func.avg(Employee.salary),\n    func.min(Employee.salary),\n    func.max(Employee.salary)\n).group_by(Employee.dept_id).all()"
         },
         {
           "type": "quiz",
@@ -143,9 +125,32 @@
                 "50k (NULL ignored)",
                 "NULL"
               ],
-              "answer": 2,
+              "answer": 1,
               "explain": "AVG ignores NULL. (50000 + 100000) / 2 = 75000."
-            },
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Core Aggregates — COUNT, SUM, AVG, MIN, MAX",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "The Big Five"
+        },
+        {
+          "type": "code",
+          "label": "basic aggregates",
+          "code": "-- COUNT: row count (includes NULL rows)\nSELECT COUNT(*) FROM employees;\n-- COUNT(col): non-NULL count\nSELECT COUNT(manager_id) FROM employees;\n\n-- SUM, AVG: numeric only\nSELECT SUM(salary), AVG(salary) FROM employees;\n\n-- MIN, MAX: any comparable type\nSELECT MIN(hire_date), MAX(hire_date) FROM employees;\n\n-- Multiple aggregates at once\nSELECT dept_id,\n  COUNT(*) AS emp_count,\n  SUM(salary) AS total_pay,\n  AVG(salary) AS avg_pay,\n  MIN(salary) AS min_pay,\n  MAX(salary) AS max_pay\nFROM employees\nGROUP BY dept_id;",
+          "pg": "-- STRING_AGG for concatenation\nSELECT dept_id, STRING_AGG(name, ', ') FROM employees GROUP BY dept_id;",
+          "mysql": "-- GROUP_CONCAT for concatenation\nSELECT dept_id, GROUP_CONCAT(name SEPARATOR ', ') FROM employees GROUP BY dept_id;",
+          "py-pandas": "# Aggregation\ngrouped = employees.groupby('dept_id').agg(\n    emp_count=('id', 'count'),\n    total_pay=('salary', 'sum'),\n    avg_pay=('salary', 'mean'),\n    min_pay=('salary', 'min'),\n    max_pay=('salary', 'max')\n).reset_index()",
+          "py-sqlalchemy": "# Multiple aggregates\nfrom sqlalchemy import func\nsession.query(\n    Employee.dept_id,\n    func.count(Employee.id),\n    func.sum(Employee.salary),\n    func.avg(Employee.salary),\n    func.min(Employee.salary),\n    func.max(Employee.salary)\n).group_by(Employee.dept_id).all()"
+        },
+        {
+          "type": "quiz",
+          "items": [
             {
               "q": "GROUP BY dept_id, status with 5 depts and 3 statuses — max groups:",
               "options": [
@@ -161,7 +166,7 @@
               "q": "GROUP BY EXTRACT(MONTH FROM hire_date) — groups by:",
               "options": [
                 "Year",
-                "Month (1-12)",
+                "Month",
                 "Day",
                 "Full date"
               ],
@@ -184,7 +189,7 @@
           "label": "group by multiple",
           "code": "-- Group by dept AND status\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY dept_id, status;\n-- One row per (dept_id, status) combination\n\n-- Group by expression\nSELECT EXTRACT(YEAR FROM hire_date) AS yr, COUNT(*)\nFROM employees\nGROUP BY EXTRACT(YEAR FROM hire_date);",
           "pg": "-- GROUP BY can use expressions\nSELECT date_trunc('month', created_at) AS month, COUNT(*)\nFROM events\nGROUP BY date_trunc('month', created_at);",
-          "mysql": "-- Same syntax\nSELECT YEAR(hire_date) AS yr, COUNT(*) FROM employees GROUP BY YEAR(hire_date);",
+          "mysql": "SELECT YEAR(hire_date) AS yr, COUNT(*) FROM employees GROUP BY YEAR(hire_date);",
           "py-pandas": "# Multi-column groupby\ngrouped = employees.groupby(['dept_id', 'status']).size().reset_index(name='count')\n\n# Expression groupby\ngrouped = employees.groupby(employees['hire_date'].dt.year).size()"
         },
         {
@@ -206,7 +211,7 @@
               "q": "WHERE salary > 50000 vs HAVING AVG(salary) > 50000:",
               "options": [
                 "Same",
-                "WHERE filters rows before grouping; HAVING filters groups after",
+                "WHERE rows, HAVING groups",
                 "HAVING runs first",
                 "WHERE only for aggregates"
               ],
@@ -216,8 +221,8 @@
             {
               "q": "SELECT dept_id, COUNT(*) FROM employees HAVING COUNT(*) > 5; without GROUP BY:",
               "options": [
-                "Total count if > 5, else empty",
-                "Error",
+                "One group, count or none",
+                "Error: invalid SQL syntax",
                 "One row per dept",
                 "Syntax error"
               ],
@@ -266,8 +271,12 @@
       ]
     },
     {
-      "title": "Problem Set — L1 Drills",
+      "title": "Worked Problem — Department Payroll Summary",
       "blocks": [
+        {
+          "type": "heading",
+          "text": "Problem: Total payroll, average salary, and headcount per department"
+        },
         {
           "type": "problems",
           "items": [
@@ -279,10 +288,41 @@
               "patterns": [
                 "group-by"
               ],
-              "statement": "Count employees in each department.",
+              "statement": "Count employees in each department. Return dept_id and emp_count.",
               "hints": [
-                "GROUP BY dept_id"
-              ]
+                "GROUP BY dept_id",
+                "Use COUNT(*) for row count"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Correlated subquery per department: run a separate COUNT for each dept_id.",
+                  "code": {
+                    "code": "SELECT d.dept_id,\n  (SELECT COUNT(*) FROM employees e WHERE e.dept_id = d.dept_id) AS emp_count\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "mysql": "SELECT d.dept_id,\n  (SELECT COUNT(*) FROM employees e WHERE e.dept_id = d.dept_id) AS emp_count\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "py-pandas": "result = []\nfor dept in employees['dept_id'].drop_duplicates():\n    cnt = len(employees[employees['dept_id'] == dept])\n    result.append({'dept_id': dept, 'emp_count': cnt})\npd.DataFrame(result)"
+                  },
+                  "cost": "O(departments × employees) — re-scans employees for each department. Fine for 7 depts, not for 10k.",
+                  "pitfalls": "Drive the loop from the dept_ids that appear in employees. Driving it from departments adds the empty Research dept (7 rows, not 6): that answers a different question, the LEFT JOIN variant."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Single scan with GROUP BY — hash or sort aggregation in one pass.",
+                  "code": {
+                    "code": "SELECT dept_id, COUNT(*) AS emp_count\nFROM employees\nGROUP BY dept_id\nORDER BY dept_id;",
+                    "mysql": "SELECT dept_id, COUNT(*) AS emp_count FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                    "py-pandas": "employees.groupby('dept_id').size().reset_index(name='emp_count').sort_values('dept_id')"
+                  },
+                  "cost": "One full scan of employees (21 rows) + hash aggregate. O(n) time, O(groups) memory."
+                }
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT dept_id, COUNT(*) AS emp_count FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A102",
@@ -293,10 +333,41 @@
                 "group-by",
                 "avg"
               ],
-              "statement": "Average salary for each department.",
+              "statement": "Average salary for each department. Return dept_id and avg_salary rounded to 2 decimals.",
               "hints": [
-                "AVG(salary) with GROUP BY dept_id"
-              ]
+                "AVG(salary) with GROUP BY dept_id",
+                "ROUND(avg, 2) for display"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Correlated subquery computing AVG per department — re-scans employees for each dept.",
+                  "code": {
+                    "code": "SELECT d.dept_id,\n  ROUND((SELECT AVG(salary)::numeric FROM employees e WHERE e.dept_id = d.dept_id AND e.salary IS NOT NULL), 2) AS avg_salary\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "mysql": "SELECT d.dept_id,\n  ROUND((SELECT AVG(salary) FROM employees e WHERE e.dept_id = d.dept_id AND e.salary IS NOT NULL), 2) AS avg_salary\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "py-pandas": "result = []\nfor dept in employees['dept_id'].drop_duplicates():\n    subset = employees[(employees['dept_id'] == dept) & (employees['salary'].notna())]\n    avg_sal = round(subset['salary'].mean(), 2) if len(subset) > 0 else None\n    result.append({'dept_id': dept, 'avg_salary': avg_sal})\npd.DataFrame(result)"
+                  },
+                  "cost": "O(departments × employees) — re-scans for each department. AVG ignores NULLs automatically.",
+                  "pitfalls": "Drive the loop from the dept_ids that appear in employees. Driving it from departments adds the empty Research dept (7 rows, not 6): that answers a different question, the LEFT JOIN variant."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Single GROUP BY pass with AVG — one scan, hash aggregate, NULLs ignored automatically.",
+                  "code": {
+                    "code": "SELECT dept_id, ROUND(AVG(salary)::numeric, 2) AS avg_salary\nFROM employees\nWHERE salary IS NOT NULL\nGROUP BY dept_id\nORDER BY dept_id;",
+                    "mysql": "SELECT dept_id, ROUND(AVG(salary), 2) AS avg_salary FROM employees WHERE salary IS NOT NULL GROUP BY dept_id ORDER BY dept_id;",
+                    "py-pandas": "employees.dropna(subset=['salary']).groupby('dept_id')['salary'].mean().round(2).reset_index(name='avg_salary').sort_values('dept_id')"
+                  },
+                  "cost": "One scan of employees (21 rows) + hash aggregate. O(n) time. WHERE filters NULLs before grouping."
+                }
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT dept_id, ROUND(AVG(salary)::numeric, 2) AS avg_salary FROM employees WHERE salary IS NOT NULL GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A103",
@@ -307,10 +378,41 @@
                 "group-by",
                 "sum"
               ],
-              "statement": "Sum of salaries per department.",
+              "statement": "Sum of salaries per department. Return dept_id and total_payroll.",
               "hints": [
-                "SUM(salary) with GROUP BY dept_id"
-              ]
+                "SUM(salary) with GROUP BY dept_id",
+                "NULL salaries are ignored by SUM"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Correlated subquery per department — sums salaries for each dept separately.",
+                  "code": {
+                    "code": "SELECT d.dept_id,\n  (SELECT SUM(salary) FROM employees e WHERE e.dept_id = d.dept_id) AS total_payroll\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "mysql": "SELECT d.dept_id,\n  (SELECT SUM(salary) FROM employees e WHERE e.dept_id = d.dept_id) AS total_payroll\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "py-pandas": "result = []\nfor dept in employees['dept_id'].drop_duplicates():\n    total = employees[employees['dept_id'] == dept]['salary'].sum()\n    result.append({'dept_id': dept, 'total_payroll': float(total) if not pd.isna(total) else 0})\npd.DataFrame(result)"
+                  },
+                  "cost": "O(departments × employees) — re-scans employees for each department. SUM ignores NULLs; COALESCE handles empty groups.",
+                  "pitfalls": "Drive the loop from the dept_ids that appear in employees. Driving it from departments adds the empty Research dept (7 rows, not 6): that answers a different question, the LEFT JOIN variant."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Single GROUP BY with SUM — one pass, hash aggregate. SUM ignores NULLs automatically.",
+                  "code": {
+                    "code": "SELECT dept_id, SUM(salary) AS total_payroll\nFROM employees\nGROUP BY dept_id\nORDER BY dept_id;",
+                    "mysql": "SELECT dept_id, SUM(salary) AS total_payroll FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                    "py-pandas": "employees.groupby('dept_id')['salary'].sum().reset_index(name='total_payroll').sort_values('dept_id')"
+                  },
+                  "cost": "One scan of employees + hash aggregate. O(n) time. Departments with no employees don't appear (use LEFT JOIN from departments if needed)."
+                }
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT dept_id, SUM(salary) AS total_payroll FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A104",
@@ -321,10 +423,40 @@
                 "group-by",
                 "min-max"
               ],
-              "statement": "Minimum and maximum salary in each department.",
+              "statement": "Minimum and maximum salary in each department. Return dept_id, min_salary, max_salary.",
               "hints": [
                 "MIN(salary), MAX(salary) with GROUP BY"
-              ]
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Two correlated subqueries per department — one for MIN, one for MAX.",
+                  "code": {
+                    "code": "SELECT d.dept_id,\n  (SELECT MIN(salary) FROM employees e WHERE e.dept_id = d.dept_id) AS min_salary,\n  (SELECT MAX(salary) FROM employees e WHERE e.dept_id = d.dept_id) AS max_salary\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "mysql": "SELECT d.dept_id,\n  (SELECT MIN(salary) FROM employees e WHERE e.dept_id = d.dept_id) AS min_salary,\n  (SELECT MAX(salary) FROM employees e WHERE e.dept_id = d.dept_id) AS max_salary\nFROM (SELECT DISTINCT dept_id FROM employees) d\nORDER BY d.dept_id;",
+                    "py-pandas": "result = []\nfor dept in employees['dept_id'].drop_duplicates():\n    subset = employees[employees['dept_id'] == dept]['salary'].dropna()\n    mn = subset.min() if len(subset) > 0 else None\n    mx = subset.max() if len(subset) > 0 else None\n    result.append({'dept_id': dept, 'min_salary': mn, 'max_salary': mx})\npd.DataFrame(result)"
+                  },
+                  "cost": "O(departments × employees) — two full scans per department. MIN/MAX ignore NULLs.",
+                  "pitfalls": "Drive the loop from the dept_ids that appear in employees. Driving it from departments adds the empty Research dept (7 rows, not 6): that answers a different question, the LEFT JOIN variant."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Single GROUP BY with MIN and MAX — one scan computes both aggregates simultaneously.",
+                  "code": {
+                    "code": "SELECT dept_id, MIN(salary) AS min_salary, MAX(salary) AS max_salary\nFROM employees\nGROUP BY dept_id\nORDER BY dept_id;",
+                    "mysql": "SELECT dept_id, MIN(salary) AS min_salary, MAX(salary) AS max_salary FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                    "py-pandas": "employees.groupby('dept_id')['salary'].agg(['min', 'max']).reset_index().rename(columns={'min': 'min_salary', 'max': 'max_salary'}).sort_values('dept_id')"
+                  },
+                  "cost": "One scan + hash aggregate. MIN/MAX computed together. O(n) time, O(groups) memory."
+                }
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT dept_id, MIN(salary) AS min_salary, MAX(salary) AS max_salary FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A105",
@@ -335,25 +467,143 @@
                 "group-by",
                 "having"
               ],
-              "statement": "Departments having more than 5 employees.",
+              "statement": "Departments having more than 5 employees. Return dept_id and emp_count.",
               "hints": [
                 "GROUP BY dept_id HAVING COUNT(*) > 5"
-              ]
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Correlated subquery with HAVING simulated in WHERE — count per dept, then filter.",
+                  "code": {
+                    "code": "SELECT d.dept_id, cnt AS emp_count\nFROM departments d\nJOIN (\n  SELECT dept_id, COUNT(*) AS cnt\n  FROM employees\n  GROUP BY dept_id\n) e ON e.dept_id = d.dept_id\nWHERE e.cnt > 5\nORDER BY d.dept_id;",
+                    "mysql": "SELECT d.dept_id, e.cnt AS emp_count\nFROM departments d\nJOIN (\n  SELECT dept_id, COUNT(*) AS cnt FROM employees GROUP BY dept_id\n) e ON e.dept_id = d.dept_id\nWHERE e.cnt > 5\nORDER BY d.dept_id;",
+                    "py-pandas": "counts = employees.groupby('dept_id').size().reset_index(name='emp_count')\nresult = counts[counts['emp_count'] > 5].merge(departments[['dept_id']], on='dept_id').sort_values('dept_id')"
+                  },
+                  "cost": "Two steps: GROUP BY (hash aggregate) then filter. Still scans employees once. Subquery materialization overhead.",
+                  "pitfalls": "Derived table forces materialization. HAVING pushes filter into aggregate — more efficient."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "HAVING clause — filter groups during aggregation, no derived table needed.",
+                  "code": {
+                    "code": "SELECT dept_id, COUNT(*) AS emp_count\nFROM employees\nGROUP BY dept_id\nHAVING COUNT(*) > 5\nORDER BY dept_id;",
+                    "mysql": "SELECT dept_id, COUNT(*) AS emp_count FROM employees GROUP BY dept_id HAVING COUNT(*) > 5 ORDER BY dept_id;",
+                    "py-pandas": "employees.groupby('dept_id').size().reset_index(name='emp_count').query('emp_count > 5').sort_values('dept_id')"
+                  },
+                  "cost": "Single scan + hash aggregate with early filter. HAVING evaluated during grouping — optimal."
+                }
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT dept_id, COUNT(*) AS emp_count FROM employees GROUP BY dept_id HAVING COUNT(*) > 5 ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A106",
               "tier": 1,
-              "title": "Employee Count by Dept and Status",
+              "title": "Employee Count by Dept and Job Title",
               "platform": "drill",
               "patterns": [
                 "multi-column-group-by"
               ],
-              "statement": "Count employees grouped by department AND status.",
+              "statement": "Count employees grouped by department AND job title. Return dept_id, job_title, emp_count.",
               "hints": [
-                "GROUP BY dept_id, status"
-              ]
+                "GROUP BY dept_id, job_title"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Nested loops: for each dept, for each job_title, count matching rows.",
+                  "code": {
+                    "code": "SELECT d.dept_id, j.job_title,\n  (SELECT COUNT(*) FROM employees e WHERE e.dept_id = d.dept_id AND e.job_title = j.job_title) AS emp_count\nFROM departments d\nCROSS JOIN (SELECT DISTINCT job_title FROM employees) j\nWHERE EXISTS (SELECT 1 FROM employees e WHERE e.dept_id = d.dept_id AND e.job_title = j.job_title)\nORDER BY d.dept_id, j.job_title;",
+                    "mysql": "SELECT d.dept_id, j.job_title,\n  (SELECT COUNT(*) FROM employees e WHERE e.dept_id = d.dept_id AND e.job_title = j.job_title) AS emp_count\nFROM departments d\nCROSS JOIN (SELECT DISTINCT job_title FROM employees) j\nWHERE EXISTS (SELECT 1 FROM employees e WHERE e.dept_id = d.dept_id AND e.job_title = j.job_title)\nORDER BY d.dept_id, j.job_title;",
+                    "py-pandas": "result = []\nfor dept in departments['dept_id']:\n    for job in employees['job_title'].unique():\n        cnt = len(employees[(employees['dept_id'] == dept) & (employees['job_title'] == job)])\n        if cnt > 0:\n            result.append({'dept_id': dept, 'job_title': job, 'emp_count': cnt})\npd.DataFrame(result).sort_values(['dept_id', 'job_title'])"
+                  },
+                  "cost": "O(depts × jobs × employees) — catastrophic for real data. Only works because dataset is tiny.",
+                  "pitfalls": "CROSS JOIN explodes combinations. Correlated subquery re-scans for each pair."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Multi-column GROUP BY — single pass, hash on (dept_id, job_title) composite key.",
+                  "code": {
+                    "code": "SELECT dept_id, job_title, COUNT(*) AS emp_count\nFROM employees\nGROUP BY dept_id, job_title\nORDER BY dept_id, job_title;",
+                    "mysql": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY dept_id, job_title ORDER BY dept_id, job_title;",
+                    "py-pandas": "employees.groupby(['dept_id', 'job_title']).size().reset_index(name='emp_count').sort_values(['dept_id', 'job_title'])"
+                  },
+                  "cost": "One scan + hash aggregate on composite key. O(n) time. Optimal for any data size."
+                }
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY dept_id, job_title ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             }
           ]
+        }
+      ]
+    },
+    {
+      "title": "Query Trace — Step-by-Step Execution",
+      "blocks": [
+        {
+          "type": "query-trace",
+          "title": "GROUP BY dept_id with COUNT, SUM, AVG",
+          "dataset": "hr",
+          "stages": [
+            {
+              "label": "FROM employees",
+              "sql": "SELECT emp_id, dept_id, salary FROM employees;",
+              "note": "21 rows scanned from employees table"
+            },
+            {
+              "label": "WHERE (none — all rows)",
+              "sql": "SELECT emp_id, dept_id, salary FROM employees;",
+              "note": "No WHERE clause, all 21 rows pass through"
+            },
+            {
+              "label": "GROUP BY dept_id",
+              "sql": "SELECT dept_id, COUNT(*) AS cnt, SUM(salary) AS total, AVG(salary) AS avg FROM employees GROUP BY dept_id;",
+              "note": "Rows collapse into 6 groups (dept_id 1–6). Research (dept_id=7) has no employees → no group"
+            },
+            {
+              "label": "HAVING (none)",
+              "sql": "SELECT dept_id, COUNT(*) AS cnt, SUM(salary) AS total, AVG(salary) AS avg FROM employees GROUP BY dept_id;",
+              "note": "No HAVING filter, all 6 groups retained"
+            },
+            {
+              "label": "SELECT + ORDER BY",
+              "sql": "SELECT dept_id, COUNT(*) AS cnt, SUM(salary) AS total, ROUND(AVG(salary)::numeric,2) AS avg FROM employees GROUP BY dept_id ORDER BY dept_id;",
+              "note": "Final projection with rounding; 6 rows returned ordered by dept_id"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Trap — COUNT(*) vs COUNT(col) with NULLs",
+      "blocks": [
+        {
+          "type": "misconception",
+          "claim": "COUNT(*) and COUNT(column) always return the same number.",
+          "refutation": "COUNT(*) counts all rows. COUNT(column) counts only non-NULL values in that column. When the column has NULLs, the results differ.",
+          "askFirst": true,
+          "verdict": false,
+          "correctModel": "Use COUNT(*) for row counts. Use COUNT(col) when you specifically need non-NULL count of that column.",
+          "evidence": {
+            "type": "code",
+            "label": "proof on hr data",
+            "code": "SELECT COUNT(*) AS all_rows, COUNT(manager_id) AS non_null_mgrs FROM employees;\n-- Returns: all_rows=21, non_null_mgrs=20 (Anita Rao CEO has NULL manager_id)",
+            "pg": "",
+            "mysql": ""
+          },
+          "source": "Classic SQL interview trap — appears in Amazon, Google screens"
         }
       ]
     },
@@ -363,7 +613,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "25 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "25 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

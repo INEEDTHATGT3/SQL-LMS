@@ -20,6 +20,7 @@
     "check:provenance": "node scripts/check-provenance.mjs",
     "check:exercises": "node scripts/check-exercises.mjs",
     "check:links": "node scripts/check-links.mjs",
+    "coverage": "node scripts/solution-coverage.mjs",
     "maintain:sourcing": "node scripts/maintain-sourcing.mjs",
     "test:engines": "node scripts/test-engines.mjs",
     "verify": "npm run check:provenance && npm run lint:content",

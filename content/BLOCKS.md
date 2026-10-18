@@ -13,12 +13,12 @@ Single reference for content authors (SQL LMS now, DBMS LMS later). Live example
 | trace | `{ title, columns: [..], steps: [[..]] }` — row length = column count |
 | compare | `{ leftTitle, rightTitle, rows: [{ label, left, right }] }` |
 | quiz | `{ items: [{ q, options: [..], answer: index, explain }] }` — options are shuffled at render; correct option must not be the uniquely longest |
-| problems | `{ items: [problem] }` · problem = `{ id, tier, title, platform, statement?, hints?: [..], patterns?: [..], ref?, url?, sheet?, difficulty?, company?, solutionCode?: <code block>, followups?: [{ q, a }], exercise?: <sql-exercise fields> }` — drills: `platform: "drill"`, no url |
+| problems | `{ items: [problem] }` · problem = `{ id, tier, title, platform, statement?, hints?: [..], patterns?: [..], ref?, url?, sheet?, difficulty?, company?, solutionCode?: <code block>, followups?: [{ q, a }], exercise?: <sql-exercise fields>, approaches?: [{ name, idea, code?: <code block>, cost?, pitfalls? }] }` — drills: `platform: "drill"`, no url |
 | followup | `{ chain: [{ q, a }] }` |
 | visual | `{ kind: boxes-array\|mem-map\|flow\|table-diff\|schema-diagram\|er-diagram, spec }` — the last three are the block types below |
 
 ## SQL runtime (PGlite = PostgreSQL in the browser)
-- **sql-exercise** `{ id, prompt, datasets: [visible, ...hidden], solution, title?, tier?, setup?, starter?, orderMatters?, floatTol?, checkColumnNames?, hints?: [..], showPlan? }` — graded by running learner SQL and `solution` on every dataset (multiset compare, NULL-aware). Inside a problem item use `exercise: { datasets, solution, ... }` (id comes from the problem). Datasets: `hr`, `shop`, `events` (+ `_edge` twins with the same schema) in `content/datasets/`.
+- **sql-exercise** `{ id, prompt, datasets: [visible, ...hidden], solution, title?, tier?, setup?, starter?, orderMatters?, floatTol?, checkColumnNames?, hints?: [..], showPlan?, approaches?: [{ name, idea, code?: <code block>, cost?, pitfalls? }] }` — graded by running learner SQL and `solution` on every dataset (multiset compare, NULL-aware). Inside a problem item use `exercise: { datasets, solution, ... }` (id comes from the problem). Datasets: `hr`, `shop`, `events` (+ `_edge` twins with the same schema) in `content/datasets/`.
 - **query-trace** `{ dataset, stages: [{ label, sql, note? }], title? }` — clause-by-clause dry run (FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY); each stage is a full query showing the intermediate table.
 - **table-diff** `{ before: [rows], after?: [rows], key?, highlight?: [cols], title? }` — no `after` = single reference table.
 - **query-plan** `{ plan: { Plan: {…EXPLAIN FORMAT JSON…} }, title?, dialect?, compareWith? }`.

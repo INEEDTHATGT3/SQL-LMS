@@ -10,7 +10,8 @@ seq: 17
 depends: [SQL-J08, SQL-J21]
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J16 · Port content · advanced-analytics.md"
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
+lane: 2
 ---
 # SQL J16 · Port content · advanced-analytics
 
@@ -48,3 +49,5 @@ Bring module `advanced-analytics` (L1–L4) to the new standard: correct, runnab
 
 ## Report
 %% The agent writes here: what changed, files touched, checks run, what is still open. %%
+- 2026-10-18 · lane 2 gave up after 3 mechanic attempts; needs Claude or Dhruv (see jobs/logs/SQL-J16-*.log)
+- 2026-10-18 · reopened by Claude: previous attempts died on the free-tier rate limit (no model output), not on the work. Keep any partial edits that pass the gates.

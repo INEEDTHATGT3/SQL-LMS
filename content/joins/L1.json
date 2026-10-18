@@ -6,10 +6,10 @@
     {
       "q": "INNER JOIN returns rows where:",
       "options": [
-        "Only left table has match",
-        "Only right table has match",
+        "Only left table has a match",
+        "Only right table has a match",
         "Both tables have matching rows",
-        "No matches at all"
+        "Neither table has a match"
       ],
       "answer": 2,
       "explain": "INNER JOIN = intersection. Only rows with matches in both tables."
@@ -17,10 +17,10 @@
     {
       "q": "LEFT JOIN returns:",
       "options": [
-        "All left rows, matching right rows (NULL if no match)",
+        "All left rows, matched right or NULL",
         "Only left rows with no match",
-        "Only matching rows",
-        "All right rows"
+        "Only matching rows from both",
+        "All right rows, matched left or NULL"
       ],
       "answer": 0,
       "explain": "LEFT JOIN preserves all left table rows. Unmatched right columns become NULL."
@@ -39,7 +39,7 @@
     {
       "q": "UNION vs UNION ALL:",
       "options": [
-        "Same thing",
+        "Identical behavior",
         "UNION removes duplicates; UNION ALL keeps all",
         "UNION ALL removes duplicates",
         "UNION is faster"
@@ -52,8 +52,8 @@
       "options": [
         "Same result",
         "WHERE filters after join (can turn LEFT into INNER)",
-        "ON filters after join",
-        "No difference"
+        "ON filters after the join",
+        "No difference at all"
       ],
       "answer": 1,
       "explain": "ON filters before preserving left rows. WHERE filters after — can eliminate NULL-extended rows."
@@ -284,7 +284,7 @@
           "label": "full join",
           "code": "-- All employees AND all departments\nSELECT e.name, d.name\nFROM employees e\nFULL JOIN departments d ON e.dept_id = d.id;\n-- Matched rows + NULL-extended left + NULL-extended right",
           "pg": "-- Same syntax",
-          "mysql": "-- MySQL: no FULL JOIN\n-- Workaround: LEFT UNION RIGHT\nSELECT * FROM employees e LEFT JOIN departments d ON ...\nUNION\nSELECT * FROM employees e RIGHT JOIN departments d ON ...;",
+          "mysql": "-- MySQL: no FULL JOIN\n-- Correct workaround: LEFT JOIN + anti-join on right\nSELECT * FROM employees e LEFT JOIN departments d ON e.dept_id = d.id\nUNION ALL\nSELECT * FROM employees e RIGHT JOIN departments d ON e.dept_id = d.id\nWHERE e.dept_id IS NULL;",
           "py-pandas": "# Full outer join\nmerged = employees.merge(departments, left_on='dept_id', right_on='id', how='outer')",
           "py-sqlalchemy": "# Full outer join\nsession.query(Employee.name, Department.name)\n    .outerjoin(Department, Employee.dept_id == Department.id, full=True).all()"
         },
@@ -305,28 +305,107 @@
           "type": "quiz",
           "items": [
             {
-              "q": "FULL JOIN = LEFT JOIN UNION RIGHT JOIN? (ignoring duplicates)",
+              "q": "FULL JOIN vs LEFT JOIN UNION ALL RIGHT JOIN (anti-join):",
               "options": [
-                "Yes, exactly",
-                "No, different",
-                "Only if no NULLs",
-                "Only in PostgreSQL"
+                "FULL JOIN equals LEFT UNION RIGHT (UNION removes dups)",
+                "FULL JOIN = LEFT UNION ALL RIGHT WHERE right.key IS NULL",
+                "They are never equivalent in any database system",
+                "Only equivalent in PostgreSQL"
               ],
-              "answer": 0,
-              "explain": "FULL JOIN = all left + all right. LEFT UNION RIGHT = same (UNION removes dups)."
+              "answer": 1,
+              "explain": "FULL JOIN preserves all rows from both sides. LEFT UNION RIGHT with UNION removes duplicates (wrong). Correct workaround: LEFT JOIN UNION ALL RIGHT JOIN with anti-join filter (WHERE left.key IS NULL) to avoid duplicating matched rows."
             },
             {
               "q": "Self join requires:",
               "options": [
-                "Two identical tables",
+                "Two physical copies of the table",
                 "Table aliases",
-                "Foreign key to itself",
-                "Both B and C"
+                "A foreign key to itself",
+                "A UNION of the table with itself"
               ],
-              "answer": 3,
-              "explain": "Aliases distinguish the two instances; FK to itself (manager_id → id) is the join condition."
+              "answer": 1,
+              "explain": "The table appears twice in FROM, so aliases (e1, e2) are what tell the two copies apart. A self-referencing FK such as manager_id -> emp_id is the classic join condition, but it is not required: you can self-join on any condition, e.g. two employees in the same city."
             }
           ]
+        }
+      ]
+    },
+    {
+      "title": "Worked Problem — Employees With Departments (Anti-Join Pattern)",
+      "blocks": [
+        {
+          "type": "heading",
+          "text": "Problem: Find departments with no employees"
+        },
+        {
+          "type": "prose",
+          "md": "We need departments that have zero employees. This is the classic anti-join pattern — find rows in the parent table with no matching child rows."
+        },
+        {
+          "type": "code",
+          "label": "sample data",
+          "code": "-- departments\n dept_id | dept_name  | location\n--------+------------+----------\n      1 | Executive  | Mumbai\n      2 | Engineering| Bengaluru\n      7 | Research   | Hyderabad  -- no employees\n\n-- employees (only 3 shown)\n emp_id | name   | dept_id\n--------+--------+--------\n      1 | Anita  | 1\n      2 | Vikram | 2\n      5 | Priya  | 2"
+        },
+        {
+          "type": "heading",
+          "text": "Approaches"
+        },
+        {
+          "type": "code",
+          "label": "Brute: NOT IN subquery",
+          "code": "SELECT dept_name FROM departments\nWHERE dept_id NOT IN (SELECT dept_id FROM employees);",
+          "pg": "-- Fails if subquery returns NULL!",
+          "mysql": "-- Same NULL trap",
+          "py-pandas": "depts = departments[~departments['dept_id'].isin(employees['dept_id'])]"
+        },
+        {
+          "type": "code",
+          "label": "Optimal: LEFT JOIN + WHERE IS NULL",
+          "code": "SELECT d.dept_name\nFROM departments d\nLEFT JOIN employees e ON d.dept_id = e.dept_id\nWHERE e.emp_id IS NULL;",
+          "pg": "-- Hash Anti Join in EXPLAIN",
+          "mysql": "-- Anti Join optimization in 8.0+",
+          "py-pandas": "merged = departments.merge(employees, left_on='dept_id', right_on='dept_id', how='left', indicator=True)\nresult = merged[merged['_merge'] == 'left_only'][['dept_name']]"
+        },
+        {
+          "type": "query-trace",
+          "title": "Anti-Join Dry Run (LEFT JOIN + WHERE IS NULL)",
+          "dataset": "hr",
+          "stages": [
+            {
+              "label": "FROM departments d LEFT JOIN employees e",
+              "sql": "SELECT d.dept_id, d.dept_name, e.emp_id FROM departments d LEFT JOIN employees e ON d.dept_id = e.dept_id",
+              "note": "All 7 departments preserved. Research (dept_id=7) gets NULL for emp_id."
+            },
+            {
+              "label": "WHERE e.emp_id IS NULL",
+              "sql": "SELECT d.dept_name FROM departments d LEFT JOIN employees e ON d.dept_id = e.dept_id WHERE e.emp_id IS NULL",
+              "note": "Filters to only Research (dept_id=7) — the department with no employees."
+            }
+          ]
+        },
+        {
+          "type": "callout",
+          "tone": "green",
+          "md": "Optimal approach uses LEFT JOIN + IS NULL. The planner turns this into a Hash Anti Join — single pass, no NULL trap. Brute NOT IN fails silently if employees.dept_id has NULLs."
+        }
+      ]
+    },
+    {
+      "title": "Trap — LEFT JOIN + WHERE on Right Side Turns It Into INNER JOIN",
+      "blocks": [
+        {
+          "type": "misconception",
+          "claim": "Adding a WHERE condition on the right table after a LEFT JOIN is safe — it just filters the result.",
+          "refutation": "FALSE. A WHERE clause on the right table's columns (e.g., `WHERE d.location = 'Mumbai'`) filters AFTER the join, eliminating NULL-extended rows. This converts your LEFT JOIN into an INNER JOIN.",
+          "askFirst": true,
+          "verdict": false,
+          "correctModel": "Keep right-table filters in the ON clause for LEFT JOIN. Only use WHERE for left-table filters or for the anti-join pattern (WHERE right.pk IS NULL).",
+          "evidence": {
+            "type": "code",
+            "label": "The trap in action",
+            "code": "-- WRONG: WHERE on right table kills LEFT JOIN\nSELECT e.name, d.name\nFROM employees e\nLEFT JOIN departments d ON e.dept_id = d.id\nWHERE d.location = 'Mumbai';  -- Loses employees with NULL dept!\n\n-- CORRECT: filter in ON clause\nSELECT e.name, d.name\nFROM employees e\nLEFT JOIN departments d ON e.dept_id = d.id AND d.location = 'Mumbai';",
+            "pg": "-- EXPLAIN shows Hash Right Join + Filter for wrong version\n-- Correct version: Hash Right Join with join filter"
+          }
         }
       ]
     },
@@ -352,10 +431,10 @@
             {
               "q": "UNION vs UNION ALL performance:",
               "options": [
-                "UNION faster",
-                "UNION ALL faster (no dedup)",
-                "Same",
-                "Depends on data"
+                "UNION is faster",
+                "UNION ALL is faster (no dedup step)",
+                "Same speed in all cases",
+                "Depends on the data"
               ],
               "answer": 1,
               "explain": "UNION ALL skips sort/unique. Use when duplicates OK or impossible."
@@ -389,9 +468,34 @@
               "patterns": [
                 "inner-join"
               ],
-              "statement": "List employee name and their department name.",
+              "statement": "List each employee's first_name, last_name, and their department's dept_name. Only include employees who have a department (INNER JOIN). Order by employee emp_id.",
               "hints": [
-                "INNER JOIN employees e ON e.dept_id = d.id"
+                "INNER JOIN departments d ON e.dept_id = d.dept_id",
+                "Select e.first_name, e.last_name, d.dept_name",
+                "ORDER BY e.emp_id"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT e.first_name, e.last_name, d.dept_name FROM employees e INNER JOIN departments d ON e.dept_id = d.dept_id ORDER BY e.emp_id",
+                "orderMatters": true
+              },
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Comma join with WHERE clause (old syntax)",
+                  "code": "SELECT e.first_name, e.last_name, d.dept_name FROM employees e, departments d WHERE e.dept_id = d.dept_id ORDER BY e.emp_id",
+                  "cost": "Same as INNER JOIN but harder to read; no explicit join type",
+                  "pitfalls": "Accidental cross join if WHERE clause missing"
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Explicit INNER JOIN with ON clause",
+                  "code": "SELECT e.first_name, e.last_name, d.dept_name FROM employees e INNER JOIN departments d ON e.dept_id = d.dept_id ORDER BY e.emp_id",
+                  "cost": "Hash Join or Merge Join depending on indexes; clear intent",
+                  "pitfalls": "None — standard syntax"
+                }
               ]
             },
             {
@@ -402,9 +506,27 @@
               "patterns": [
                 "left-join"
               ],
-              "statement": "List all employees with department name. Show NULL for employees without department.",
+              "statement": "List all employees (first_name, last_name) with their department dept_name. Include employees without a department (show NULL for dept_name). Order by employee emp_id.",
               "hints": [
-                "LEFT JOIN departments"
+                "LEFT JOIN departments d ON e.dept_id = d.dept_id",
+                "Select e.first_name, e.last_name, d.dept_name",
+                "ORDER BY e.emp_id"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT e.first_name, e.last_name, d.dept_name FROM employees e LEFT JOIN departments d ON e.dept_id = d.dept_id ORDER BY e.emp_id",
+                "orderMatters": true
+              },
+              "approaches": [
+                {
+                  "name": "Optimal",
+                  "idea": "LEFT JOIN preserves all left rows",
+                  "code": "SELECT e.first_name, e.last_name, d.dept_name FROM employees e LEFT JOIN departments d ON e.dept_id = d.dept_id ORDER BY e.emp_id",
+                  "cost": "Single scan + hash join; NULLs handled automatically",
+                  "pitfalls": "None — this is what LEFT JOIN is for"
+                }
               ]
             },
             {
@@ -415,9 +537,41 @@
               "patterns": [
                 "left-join-anti"
               ],
-              "statement": "Find departments that have no employees.",
+              "statement": "Find departments that have no employees. Return dept_name only. Use the anti-join pattern (LEFT JOIN + WHERE right.pk IS NULL).",
               "hints": [
-                "LEFT JOIN employees ... WHERE e.id IS NULL"
+                "LEFT JOIN employees e ON d.dept_id = e.dept_id",
+                "WHERE e.emp_id IS NULL",
+                "Select d.dept_name"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT d.dept_name FROM departments d LEFT JOIN employees e ON d.dept_id = e.dept_id WHERE e.emp_id IS NULL",
+                "orderMatters": false
+              },
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "NOT IN subquery",
+                  "code": "SELECT dept_name FROM departments WHERE dept_id NOT IN (SELECT dept_id FROM employees)",
+                  "cost": "Subquery scan + filter; fails silently if subquery has NULLs",
+                  "pitfalls": "NULL in subquery returns zero rows — silent bug"
+                },
+                {
+                  "name": "Better",
+                  "idea": "NOT EXISTS correlated subquery",
+                  "code": "SELECT d.dept_name FROM departments d WHERE NOT EXISTS (SELECT 1 FROM employees e WHERE e.dept_id = d.dept_id)",
+                  "cost": "Semi-join optimization; stops at first match per department",
+                  "pitfalls": "Slightly more verbose than LEFT JOIN"
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "LEFT JOIN + WHERE IS NULL (anti-join)",
+                  "code": "SELECT d.dept_name FROM departments d LEFT JOIN employees e ON d.dept_id = e.dept_id WHERE e.emp_id IS NULL",
+                  "cost": "Hash Anti Join — single pass, no NULL trap, planner optimizes well",
+                  "pitfalls": "Must use PK column in IS NULL check (emp_id not dept_id)"
+                }
               ]
             },
             {
@@ -428,23 +582,42 @@
               "patterns": [
                 "self-join"
               ],
-              "statement": "List each employee with their manager's name.",
+              "statement": "List each employee's first_name, last_name with their manager's first_name, last_name. Include employees without a manager (show NULL). Order by employee emp_id.",
               "hints": [
-                "Self JOIN: LEFT JOIN employees m ON e.manager_id = m.id"
-              ]
+                "Self JOIN: LEFT JOIN employees m ON e.manager_id = m.emp_id",
+                "Select e.first_name, e.last_name, m.first_name AS mgr_first, m.last_name AS mgr_last",
+                "ORDER BY e.emp_id"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT e.first_name, e.last_name, m.first_name AS mgr_first, m.last_name AS mgr_last FROM employees e LEFT JOIN employees m ON e.manager_id = m.emp_id ORDER BY e.emp_id",
+                "orderMatters": true
+              }
             },
             {
               "id": "J105",
               "tier": 1,
-              "title": "All Names: Employees + Contractors",
+              "title": "All Department Names + Job Titles",
               "platform": "drill",
               "patterns": [
                 "union"
               ],
-              "statement": "Combine employee and contractor names, remove duplicates.",
+              "statement": "Combine all department names (dept_name) and distinct job titles (job_title) into a single column 'name'. Remove duplicates. Order by name.",
               "hints": [
-                "UNION (not UNION ALL)"
-              ]
+                "Use UNION (not UNION ALL) to remove duplicates",
+                "Select dept_name from departments",
+                "Select DISTINCT job_title from employees",
+                "ORDER BY name"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT dept_name AS name FROM departments UNION SELECT DISTINCT job_title FROM employees ORDER BY name",
+                "orderMatters": true
+              }
             },
             {
               "id": "J106",
@@ -454,10 +627,19 @@
               "patterns": [
                 "right-join"
               ],
-              "statement": "Same as J103 but using RIGHT JOIN.",
+              "statement": "Same as J103 but using RIGHT JOIN. Find departments with no employees. Return dept_name only.",
               "hints": [
-                "RIGHT JOIN employees ON ... WHERE e.id IS NULL"
-              ]
+                "RIGHT JOIN employees e ON d.dept_id = e.dept_id",
+                "WHERE e.emp_id IS NULL",
+                "Select d.dept_name"
+              ],
+              "exercise": {
+                "datasets": [
+                  "hr"
+                ],
+                "solution": "SELECT d.dept_name FROM employees e RIGHT JOIN departments d ON e.dept_id = d.dept_id WHERE e.emp_id IS NULL",
+                "orderMatters": false
+              }
             }
           ]
         }
@@ -469,7 +651,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "14 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "14 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

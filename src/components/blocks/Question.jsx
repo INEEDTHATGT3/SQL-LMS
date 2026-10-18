@@ -3,7 +3,7 @@
    isCorrect expects, so scripts/gen.mjs answer keys grade it identically. */
 import { useId, useState } from 'react';
 import { qkey } from '../../lib/qkey.js';
-import { shuffledOrder } from '../../lib/grade.js';
+import { optionOrder, shuffledOrder } from '../../lib/grade.js';
 import { logMistake } from '../../lib/progress.js';
 import { checkAnswer, correctText, parseNum, sourceText } from '../../engines/recall.js';
 import { MD } from '../md.jsx';
@@ -71,7 +71,7 @@ export function AnswerInput({ item, seed, saved, onSubmit, labelId }) {
 }
 
 function Mcq({ item, seed, saved, locked, onSubmit, labelId }) {
-  const order = shuffledOrder(item.options.length, seed);
+  const order = optionOrder(item.options, seed);
   return (
     <div role="group" aria-labelledby={labelId}>
       {order.map((oi, pos) => {
@@ -93,7 +93,7 @@ function Msq({ item, seed, saved, locked, onSubmit, labelId }) {
   const toggle = oi => setPick(p => (p.includes(oi) ? p.filter(x => x !== oi) : [...p, oi]));
   return (<>
     <div role="group" aria-labelledby={labelId}>
-      {shuffledOrder(item.options.length, seed).map(oi => {
+      {optionOrder(item.options, seed).map(oi => {
         const on = chosen.includes(oi), right = item.answer.includes(oi);
         const cls = locked ? (right ? ' correct' : on ? ' wrong' : '') : on ? ' on' : '';
         return (

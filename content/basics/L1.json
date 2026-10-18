@@ -7,7 +7,7 @@
       "q": "A table in a relational database is best described as:",
       "options": [
         "A flat file with no structure",
-        "A grid of named columns and numbered rows",
+        "A grid of named columns and rows",
         "A hierarchical tree of nested objects",
         "A key-value store with no schema"
       ],
@@ -19,7 +19,7 @@
       "options": [
         "Only the first row",
         "Only column names",
-        "All columns and all rows",
+        "All columns, all rows",
         "An error — * is invalid"
       ],
       "answer": 2,
@@ -48,21 +48,26 @@
       "explain": "LIMIT caps the result set size. Use with ORDER BY for predictable results."
     },
     {
-      "q": "Which clause filters rows before grouping?",
+      "q": "Which clause sorts the result rows?",
       "options": [
-        "HAVING",
-        "WHERE",
-        "GROUP BY",
-        "ORDER BY"
+        "The WHERE clause",
+        "ORDER BY",
+        "The SELECT clause",
+        "LIMIT"
       ],
       "answer": 1,
-      "explain": "WHERE filters individual rows; HAVING filters groups after aggregation."
+      "explain": "ORDER BY sorts output rows ascending or descending."
     }
   ],
   "sections": [
     {
       "title": "Mental Model — Tables as Grids",
       "blocks": [
+        {
+          "type": "callout",
+          "tone": "info",
+          "md": "**The first sentence you will be asked to write in any SQL screen:** \"Show me every employee in the Finance department, highest paid first.\" Everything after this lesson — joins, aggregates, window functions — is that one sentence with more clauses."
+        },
         {
           "type": "mantra",
           "md": "**A table is a grid of named columns and numbered rows. Columns have types; rows are records. No hidden magic.**"
@@ -87,6 +92,11 @@
                   {
                     "name": "dept_id",
                     "type": "INTEGER"
+                  },
+                  {
+                    "name": "manager_id",
+                    "type": "INTEGER",
+                    "nullable": true
                   },
                   {
                     "name": "salary",
@@ -182,10 +192,10 @@
             {
               "q": "SELECT name, salary FROM employees; returns:",
               "options": [
-                "All columns for all employees",
-                "Only name and salary columns for all employees",
-                "Only name and salary for the first employee",
-                "An error — must use *"
+                "All columns for every employee",
+                "Name and salary for every employee",
+                "Only name and salary for the first row",
+                "An error — * is required"
               ],
               "answer": 1,
               "explain": "Column list restricts output columns; no WHERE means all rows."
@@ -199,7 +209,7 @@
                 "The first row of the first table"
               ],
               "answer": 1,
-              "explain": "SELECT without FROM is valid — returns computed values. Useful for testing functions."
+              "explain": "SELECT without FROM is valid in PostgreSQL, MySQL and SQL Server — it returns computed values, handy for testing functions. Oracle is the exception: it requires SELECT … FROM DUAL."
             }
           ]
         },
@@ -263,6 +273,36 @@
           "py-sqlalchemy": "# Find NULL\nsession.query(Employee).filter(Employee.manager_id.is_(None)).all()\n\n# Find NOT NULL\nsession.query(Employee).filter(Employee.manager_id.isnot(None)).all()"
         },
         {
+          "type": "predict",
+          "prompt": "Three employees — emp 1 and emp 3 have manager_id NULL, emp 2 reports to 1. What does `SELECT * FROM employees WHERE manager_id = NULL` return?",
+          "answer": {
+            "kind": "mcq",
+            "value": 2,
+            "options": [
+              "All three rows",
+              "The two rows with NULL manager_id",
+              "No rows at all",
+              "An error — NULL is not a value"
+            ]
+          },
+          "given": {
+            "tables": {
+              "employees": [
+                { "emp_id": 1, "manager_id": null },
+                { "emp_id": 2, "manager_id": 1 },
+                { "emp_id": 3, "manager_id": null }
+              ]
+            }
+          },
+          "reveal": [
+            {
+              "type": "callout",
+              "tone": "warn",
+              "md": "**No rows at all.** `manager_id = NULL` is never true — NULL means unknown, and \"unknown = unknown\" is unknown, not true. WHERE keeps only TRUE rows, so every row is discarded. The working filter is `IS NULL`."
+            }
+          ]
+        },
+        {
           "type": "quiz",
           "items": [
             {
@@ -298,8 +338,6 @@
           "type": "code",
           "label": "order by & limit",
           "code": "-- Sort ascending (default)\nSELECT * FROM employees ORDER BY salary;\n\n-- Sort descending\nSELECT * FROM employees ORDER BY salary DESC;\n\n-- Multi-column sort\nSELECT * FROM employees ORDER BY dept_id, salary DESC;\n\n-- Top 5 highest paid\nSELECT * FROM employees ORDER BY salary DESC LIMIT 5;\n\n-- Pagination: page 2, 10 per page\nSELECT * FROM employees ORDER BY id LIMIT 10 OFFSET 10;",
-          "pg": "-- Same syntax\nSELECT * FROM employees ORDER BY salary DESC LIMIT 5 OFFSET 10;",
-          "mysql": "-- Same syntax\nSELECT * FROM employees ORDER BY salary DESC LIMIT 10 OFFSET 10;",
           "py-pandas": "# Sort ascending\nemployees.sort_values('salary')\n\n# Sort descending\nemployees.sort_values('salary', ascending=False)\n\n# Multi-column\nemployees.sort_values(['dept_id', 'salary'], ascending=[True, False])\n\n# Top 5\nemployees.nlargest(5, 'salary')\n\n# Pagination\nemployees.iloc[10:20]",
           "py-sqlalchemy": "# Sort ascending\nsession.query(Employee).order_by(Employee.salary).all()\n\n# Sort descending\nsession.query(Employee).order_by(Employee.salary.desc()).all()\n\n# Multi-column\nsession.query(Employee).order_by(Employee.dept_id, Employee.salary.desc()).all()\n\n# Top 5\nsession.query(Employee).order_by(Employee.salary.desc()).limit(5).all()\n\n# Pagination\nsession.query(Employee).order_by(Employee.id).offset(10).limit(10).all()"
         },
@@ -325,8 +363,8 @@
                 "LIMIT 20 OFFSET 60",
                 "LIMIT 3 OFFSET 20"
               ],
-              "answer": 1,
-              "explain": "Page 3 (0-indexed) = skip 2 pages × 20 = 40 rows. OFFSET 40 LIMIT 20."
+              "answer": 2,
+              "explain": "Page 3 (0-indexed) means 3 pages come before it: skip 3 × 20 = 60 rows. OFFSET 60 LIMIT 20."
             }
           ]
         }
@@ -335,6 +373,28 @@
     {
       "title": "Problem Set — L1 Drills",
       "blocks": [
+        {
+          "type": "query-trace",
+          "dataset": "hr",
+          "title": "B105 dry run — FROM → WHERE (BETWEEN) → ORDER BY",
+          "stages": [
+            {
+              "label": "FROM",
+              "sql": "SELECT first_name, salary FROM employees ORDER BY emp_id;",
+              "note": "Logical step 1 — **FROM** hands every later clause the full grid: all 21 employees, nothing filtered or sorted yet."
+            },
+            {
+              "label": "WHERE",
+              "sql": "SELECT first_name, salary FROM employees WHERE salary BETWEEN 50000 AND 75000 ORDER BY emp_id;",
+              "note": "**WHERE** keeps only rows inside the inclusive range — 6 of 21 employees survive (on hr_edge, 5)."
+            },
+            {
+              "label": "ORDER BY",
+              "sql": "SELECT first_name, salary FROM employees WHERE salary BETWEEN 50000 AND 75000 ORDER BY salary;",
+              "note": "**ORDER BY** sorts the survivors cheapest first — the final shape B105 asks for. Each stage is a complete query showing the intermediate table."
+            }
+          ]
+        },
         {
           "type": "problems",
           "items": [
@@ -346,10 +406,19 @@
               "patterns": [
                 "basic-select"
               ],
-              "statement": "Write a query to return all columns for all employees.",
+              "statement": "Return all columns for all employees. Input: employees(emp_id, first_name, last_name, email, dept_id, manager_id, hire_date, salary, job_title, commission). Expected: every column, every row — row order does not matter.",
               "hints": [
                 "Use SELECT * FROM table_name;"
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return all columns for all employees.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees;",
+                "orderMatters": false
+              }
             },
             {
               "id": "B102",
@@ -359,10 +428,19 @@
               "patterns": [
                 "column-projection"
               ],
-              "statement": "Return only the name and salary columns from employees.",
+              "statement": "Return only the three name/salary columns — first_name, last_name, salary — for every employee. Expected: 3 columns, all 21 rows (hr), any order.",
               "hints": [
                 "List columns after SELECT separated by commas."
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return first_name, last_name and salary for all employees.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT first_name, last_name, salary FROM employees;",
+                "orderMatters": false
+              }
             },
             {
               "id": "B103",
@@ -373,9 +451,44 @@
                 "order-by",
                 "limit"
               ],
-              "statement": "Find the 10 employees with the highest salary.",
+              "statement": "Find the 10 employees with the highest salary. Input: employees(...). Expected: all employee columns, highest salary first, at most 10 rows. Trap: two employees tie at 95000 exactly at the cut — a bare ORDER BY salary DESC LIMIT 10 can drop either one arbitrarily, so pin the order with a unique tie-breaker.",
               "hints": [
-                "ORDER BY salary DESC LIMIT 10"
+                "ORDER BY salary DESC LIMIT 10",
+                "Tie at the cut? Add a unique second key: ORDER BY salary DESC, emp_id LIMIT 10"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Sort by salary descending and cut after 10 rows — fine until employees tie at the boundary.",
+                  "code": {
+                    "code": "SELECT *\nFROM employees\nORDER BY salary DESC\nLIMIT 10;"
+                  },
+                  "cost": "one sort of 21 rows, trivial at this size — but the 10th slot is arbitrary when two salaries tie",
+                  "pitfalls": "With the 95000 tie in hr, either employee can be dropped, so the answer changes between runs and reports disagree."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Add emp_id as a deterministic tie-breaker so the same 10 rows always come back.",
+                  "code": {
+                    "code": "SELECT *\nFROM employees\nORDER BY salary DESC, emp_id\nLIMIT 10;"
+                  },
+                  "cost": "the same single sort — the extra key costs nothing and makes the result reproducible",
+                  "pitfalls": "The tie-breaker must be unique: emp_id works, name does not (two Priya Sharmas exist in hr)."
+                }
+              ],
+              "followups": [
+                {
+                  "q": "Where do NULL salaries land in ORDER BY salary DESC?",
+                  "a": "PostgreSQL sorts NULLs first on DESC by default — the NULL-salary row would top a 'highest paid' list, which usually needs an explicit NULLS LAST."
+                },
+                {
+                  "q": "How do you page beyond the top 10?",
+                  "a": "Add OFFSET: LIMIT 10 OFFSET 10 for page 2 — with the identical ORDER BY so pages never overlap or skip rows."
+                },
+                {
+                  "q": "Why not just sort in the application?",
+                  "a": "The database sorts once and ships 10 rows; the app would download all 21 and re-sort — fine at 21 rows, wasteful at 21 million."
+                }
               ]
             },
             {
@@ -386,10 +499,19 @@
               "patterns": [
                 "where-equality"
               ],
-              "statement": "List all employees who work in department 5.",
+              "statement": "List all employees who work in department 5 (Finance). Expected: all employee columns, exactly the 3 Finance rows in hr, any order.",
               "hints": [
                 "WHERE dept_id = 5"
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees in department 5.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE dept_id = 5;",
+                "orderMatters": false
+              }
             },
             {
               "id": "B105",
@@ -399,9 +521,48 @@
               "patterns": [
                 "where-range"
               ],
-              "statement": "Find employees with salary between 50000 and 75000 inclusive.",
+              "statement": "Find employees whose salary is between 50000 and 75000, inclusive on both ends. Expected: all employee columns for the 6 survivors in hr, any order. The trace above is the dry run of the optimal approach.",
               "hints": [
                 "Use BETWEEN or >= AND <="
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Spell the range as two comparisons joined by AND — explicit and portable.",
+                  "code": {
+                    "code": "SELECT *\nFROM employees\nWHERE salary >= 50000 AND salary <= 75000;"
+                  },
+                  "cost": "one scan with a two-sided predicate — identical plan to the optimal form",
+                  "pitfalls": "Easy to type < instead of <= on the upper bound and silently drop the 75000 boundary row."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "BETWEEN states the inclusive range in a single token — the contract is visible at a glance.",
+                  "code": {
+                    "code": "SELECT *\nFROM employees\nWHERE salary BETWEEN 50000 AND 75000;"
+                  },
+                  "cost": "the parser rewrites BETWEEN to the same >= AND <= pair — same cost, clearer intent",
+                  "pitfalls": "BETWEEN is inclusive at both ends; a half-open range still needs the two-comparison form."
+                }
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees with salary between 50000 and 75000, inclusive.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE salary BETWEEN 50000 AND 75000;",
+                "orderMatters": false
+              },
+              "followups": [
+                {
+                  "q": "Is BETWEEN safe for timestamps?",
+                  "a": "Yes, but remember it is inclusive at both ends — for a day boundary use ts >= '2024-01-01' AND ts < '2024-01-02' instead of BETWEEN, or you double-count midnight rows."
+                },
+                {
+                  "q": "Can BETWEEN work on text?",
+                  "a": "Yes — it compares with the column's collation, so BETWEEN 'A' AND 'C' matches names from A to C in dictionary order."
+                }
               ]
             },
             {
@@ -412,10 +573,19 @@
               "patterns": [
                 "where-null"
               ],
-              "statement": "Find all employees who don't have a manager (manager_id is NULL).",
+              "statement": "Find all employees who don't have a manager (manager_id is NULL) — the CEO and any other root of the reporting tree. Expected: all employee columns, exactly the rows with NULL manager_id, any order.",
               "hints": [
                 "Use IS NULL, not = NULL"
-              ]
+              ],
+              "exercise": {
+                "prompt": "Return all columns for employees whose manager_id IS NULL.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT * FROM employees WHERE manager_id IS NULL;",
+                "orderMatters": false
+              }
             }
           ]
         }
@@ -427,7 +597,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "13 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "13 sourced problems from HackerRank SQL · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",
@@ -472,7 +642,53 @@
               "patterns": [
                 "select-where",
                 "order-by"
-              ]
+              ],
+              "statement": "Query the employees table and return every column for every row.",
+              "hints": [
+                "Pattern: basic SELECT — list the columns (or *) and the table.",
+                "Clause: SELECT ... FROM employees.",
+                "Skeleton: SELECT * FROM employees;"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "SELECT * expands to all columns at plan time; fine for ad-hoc exploration, but it couples the query to the table shape.",
+                  "code": {
+                    "code": "SELECT *\nFROM employees;"
+                  },
+                  "cost": "scans every row and returns every column; network and memory scale with table width",
+                  "pitfalls": "Breaks downstream code if a column is added or reordered; avoid in production views."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Name the columns explicitly so the contract is stable and only needed data is shipped.",
+                  "code": {
+                    "code": "SELECT emp_id, first_name, last_name, email, dept_id, manager_id, hire_date, salary, job_title, commission\nFROM employees;"
+                  },
+                  "cost": "same scan, but a narrower projection; lets the planner use a covering index later",
+                  "pitfalls": "Must be updated when a new column is genuinely needed."
+                }
+              ],
+              "exercise": {
+                "prompt": "Return all columns for all employees.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT emp_id, first_name, last_name, email, dept_id, manager_id, hire_date, salary, job_title, commission FROM employees;",
+                "orderMatters": false
+              },
+              "followups": [
+                {
+                  "q": "Why is SELECT * discouraged in production?",
+                  "a": "It hides the column contract: a later ALTER TABLE ADD COLUMN silently changes result shape and can break parsers, ORMs and cached plans."
+                },
+                {
+                  "q": "Does SELECT * always read every column from disk?",
+                  "a": "On a heap table yes; a covering index can satisfy a narrower projection without touching the heap, which is why explicit columns matter for performance."
+                }
+              ],
+              "complexity": "Time O(n) rows scanned. Space O(n) for the result set."
             },
             {
               "id": "B1-HR004",
@@ -528,7 +744,53 @@
               "patterns": [
                 "select-where",
                 "order-by"
-              ]
+              ],
+              "statement": "List the first names of employees whose salary is above 100000, ordered by the last three characters of their last name, then by emp_id.",
+              "hints": [
+                "Pattern: filter with WHERE, then sort with ORDER BY.",
+                "Clause: WHERE salary > 100000; ORDER BY RIGHT(last_name, 3), emp_id.",
+                "Skeleton: SELECT first_name FROM employees WHERE salary > 100000 ORDER BY RIGHT(last_name, 3), emp_id;"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "Sort by a substring extracted with SUBSTRING; portable across dialects that lack RIGHT().",
+                  "code": {
+                    "code": "SELECT first_name\nFROM employees\nWHERE salary > 100000\nORDER BY SUBSTRING(last_name FROM LENGTH(last_name) - 2), emp_id;"
+                  },
+                  "cost": "one substring per row during the sort; O(n log n) comparisons",
+                  "pitfalls": "Off-by-one in the start position returns the wrong suffix; verify on short names."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "Use RIGHT() which states intent directly and lets the planner recognise the suffix.",
+                  "code": {
+                    "code": "SELECT first_name\nFROM employees\nWHERE salary > 100000\nORDER BY RIGHT(last_name, 3), emp_id;"
+                  },
+                  "cost": "same O(n log n) sort, clearer intent, fewer characters",
+                  "pitfalls": "RIGHT() is PostgreSQL/MySQL/SQL Server; Oracle uses SUBSTR(last_name, -3)."
+                }
+              ],
+              "exercise": {
+                "prompt": "Return first_name for employees with salary > 100000, ordered by the last 3 letters of last_name then emp_id.",
+                "datasets": [
+                  "hr",
+                  "hr_edge"
+                ],
+                "solution": "SELECT first_name FROM employees WHERE salary > 100000 ORDER BY RIGHT(last_name, 3), emp_id;",
+                "orderMatters": true
+              },
+              "followups": [
+                {
+                  "q": "Why add emp_id as a tie-breaker?",
+                  "a": "Two employees can share the same 3-letter suffix; without a tie-breaker the order is unspecified and results become non-deterministic across runs."
+                },
+                {
+                  "q": "Can an index speed up ORDER BY RIGHT(last_name, 3)?",
+                  "a": "A plain index on last_name cannot, because the sort key is a function of the column; you would need a functional index on RIGHT(last_name, 3)."
+                }
+              ],
+              "complexity": "Time O(n log n) for the sort after an O(n) filter. Space O(n) for the sort."
             },
             {
               "id": "B1-HR008",

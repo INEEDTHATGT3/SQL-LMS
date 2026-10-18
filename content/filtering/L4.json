@@ -7,7 +7,7 @@
       "q": "Extended statistics (CREATE STATISTICS) helps with:",
       "options": [
         "Single column selectivity",
-        "Correlated columns (e.g., city + zip_code)",
+        "Correlated columns (city + zip)",
         "Index creation speed",
         "VACUUM performance"
       ],
@@ -39,7 +39,7 @@
     {
       "q": "Partial index predicate must be:",
       "options": [
-        "Immutable (no volatile functions)",
+        "Immutable (no volatile fns)",
         "Any valid WHERE clause",
         "Only equality checks",
         "Referencing indexed columns only"

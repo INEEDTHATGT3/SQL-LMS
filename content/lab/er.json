@@ -1,0 +1,117 @@
+{
+  "title": "ER diagrams: Chen and crow's foot, mapping to tables",
+  "blocks": [
+    { "type": "heading", "text": "ER diagram basics" },
+    {
+      "type": "prose",
+      "md": "ER diagrams model entities, relationships, attributes with keys, weak entities, multivalued/derived attributes, total participation, and ISA hierarchies. The block supports Chen notation and crow's foot; it can also render the relational mapping."
+    },
+    {
+      "type": "er-diagram",
+      "title": "Company ER (Chen)",
+      "notation": "chen",
+      "entities": [
+        {
+          "id": "emp",
+          "label": "Employee",
+          "attrs": [
+            { "name": "emp_id", "key": true },
+            { "name": "name" },
+            { "name": "salary" },
+            { "composite": [{ "name": "street" }, { "name": "city" }], "name": "address" }
+          ]
+        },
+        {
+          "id": "dept",
+          "label": "Department",
+          "attrs": [
+            { "name": "dept_id", "key": true },
+            { "name": "dname" }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "id": "works_in",
+          "label": "works_in",
+          "ends": [
+            { "entity": "emp", "card": "N" },
+            { "entity": "dept", "card": "1" }
+          ]
+        }
+      ],
+      "mapping": true
+    },
+    {
+      "type": "er-diagram",
+      "title": "University with weak entity (Chen)",
+      "notation": "chen",
+      "entities": [
+        {
+          "id": "course",
+          "label": "Course",
+          "attrs": [
+            { "name": "course_id", "key": true },
+            { "name": "title" }
+          ]
+        },
+        {
+          "id": "section",
+          "label": "Section",
+          "weak": true,
+          "attrs": [
+            { "name": "sec_id", "partialKey": true },
+            { "name": "semester" }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "id": "has",
+          "label": "has",
+          "identifying": true,
+          "ends": [
+            { "entity": "course", "card": "1" },
+            { "entity": "section", "card": "N" }
+          ]
+        }
+      ],
+      "mapping": true
+    },
+    {
+      "type": "er-diagram",
+      "title": "ISA hierarchy (Chen)",
+      "notation": "chen",
+      "entities": [
+        {
+          "id": "person",
+          "label": "Person",
+          "attrs": [
+            { "name": "ssn", "key": true },
+            { "name": "name" },
+            { "name": "phone", "multi": true }
+          ]
+        },
+        {
+          "id": "student",
+          "label": "Student",
+          "attrs": [
+            { "name": "major" }
+          ]
+        },
+        {
+          "id": "faculty",
+          "label": "Faculty",
+          "attrs": [
+            { "name": "rank" },
+            { "name": "salary" }
+          ]
+        }
+      ],
+      "isa": [
+        { "parent": "person", "children": ["student", "faculty"] }
+      ],
+      "mapping": true
+    }
+  ]
+}

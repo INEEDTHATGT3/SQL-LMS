@@ -70,10 +70,9 @@
         {
           "type": "code",
           "label": "filter clause",
-          "code": "-- Count active employees per dept\nSELECT dept_id,\n  COUNT(*) FILTER (WHERE status = 'active') AS active_cnt,\n  COUNT(*) FILTER (WHERE status = 'pending') AS pending_cnt,\n  COUNT(*) FILTER (WHERE status = 'inactive') AS inactive_cnt\nFROM employees\nGROUP BY dept_id;\n\n-- Equivalent CASE (verbose, less readable)\nSELECT dept_id,\n  SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active_cnt,\n  SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_cnt\nFROM employees GROUP BY dept_id;\n\n-- Multiple aggregates, different filters\nSELECT dept_id,\n  AVG(salary) FILTER (WHERE status = 'active') AS avg_active,\n  AVG(salary) FILTER (WHERE status = 'pending') AS avg_pending\nFROM employees GROUP BY dept_id;",
-          "pg": "-- FILTER is PostgreSQL standard",
+          "code": "-- Count active employees per dept\nSELECT dept_id,\n  COUNT(*) FILTER (WHERE job_title LIKE '%Engineer%') AS eng_cnt,\n  COUNT(*) FILTER (WHERE job_title LIKE '%Manager%') AS mgr_cnt,\n  COUNT(*) FILTER (WHERE job_title LIKE '%Analyst%') AS anal_cnt\nFROM employees\nGROUP BY dept_id;\n\n-- Equivalent CASE (verbose, less readable)\nSELECT dept_id,\n  SUM(CASE WHEN job_title LIKE '%Engineer%' THEN 1 ELSE 0 END) AS eng_cnt,\n  SUM(CASE WHEN job_title LIKE '%Manager%' THEN 1 ELSE 0 END) AS mgr_cnt\nFROM employees GROUP BY dept_id;\n\n-- Multiple aggregates, different filters\nSELECT dept_id,\n  AVG(salary) FILTER (WHERE job_title LIKE '%Engineer%') AS avg_eng,\n  AVG(salary) FILTER (WHERE job_title LIKE '%Manager%') AS avg_mgr\nFROM employees GROUP BY dept_id;",
           "mysql": "-- MySQL: no FILTER clause\n-- Use SUM(CASE WHEN ... THEN 1 ELSE 0 END)",
-          "py-pandas": "# Boolean indexing\nactive_avg = df[df['status']=='active'].groupby('dept_id')['salary'].mean()\npending_avg = df[df['status']=='pending'].groupby('dept_id')['salary'].mean()"
+          "py-pandas": "# Boolean indexing\neng_avg = df[df['job_title'].str.contains('Engineer')].groupby('dept_id')['salary'].mean()\nmgr_avg = df[df['job_title'].str.contains('Manager')].groupby('dept_id')['salary'].mean()"
         },
         {
           "type": "visual",
@@ -113,9 +112,9 @@
               "q": "FILTER can be used with:",
               "options": [
                 "Only COUNT",
-                "All aggregate functions (SUM, AVG, MIN, MAX, etc.)",
+                "All aggregates (SUM, AVG, MIN, MAX, etc.)",
                 "Only COUNT and SUM",
-                "Only window functions"
+                "Only window functions, not regular aggregates"
               ],
               "answer": 1,
               "explain": "FILTER works with any aggregate: COUNT, SUM, AVG, MIN, MAX, STRING_AGG, percentile, etc."
@@ -124,9 +123,9 @@
               "q": "FILTER vs WHERE before GROUP BY:",
               "options": [
                 "Same",
-                "FILTER keeps row for other aggregates; WHERE removes row entirely",
+                "FILTER keeps row for other aggs; WHERE drops row",
                 "WHERE is faster",
-                "FILTER only works with COUNT"
+                "FILTER only works with COUNT aggregate function call"
               ],
               "answer": 1,
               "explain": "WHERE removes row from all aggregates. FILTER only affects that specific aggregate — row still contributes to others."
@@ -145,7 +144,7 @@
         {
           "type": "code",
           "label": "approx_count_distinct",
-          "code": "-- Exact (slow on large tables)\nSELECT COUNT(DISTINCT user_id) FROM events;\n\n-- Approximate (fast, ~1-2% error)\nSELECT approx_count_distinct(user_id) FROM events;\n\n-- With GROUP BY\nSELECT dept_id, approx_count_distinct(user_id)\nFROM events\nGROUP BY dept_id;\n\n-- Precision control (PostgreSQL: hyperloglog extension)\nSELECT approx_count_distinct(user_id, 12) FROM events;\n-- 12 = log2m parameter, higher = more accurate, more memory",
+          "code": "-- Exact (slow on large tables)\nSELECT COUNT(DISTINCT user_id) FROM events;\n\n-- Approximate (fast, ~1-2% error)\nSELECT approx_count_distinct(user_id) FROM events;\n\n-- With GROUP BY\nSELECT date_trunc('day', ts) AS day, approx_count_distinct(user_id)\nFROM events\nGROUP BY day;\n\n-- Precision control (PostgreSQL: hyperloglog extension)\nSELECT approx_count_distinct(user_id, 12) FROM events;\n-- 12 = log2m parameter, higher = more accurate, more memory",
           "pg": "-- HyperLogLog via approx_count_distinct (requires extension)\n-- Or use hyperloglog extension directly",
           "mysql": "-- MySQL: APPROX_COUNT_DISTINCT() (8.0.13+)\nSELECT APPROX_COUNT_DISTINCT(user_id) FROM events;",
           "py-pandas": "# Exact\ndf['user_id'].nunique()\n\n# Approximate (datasketches, hyperstream)"
@@ -174,7 +173,7 @@
               "q": "approx_count_distinct uses:",
               "options": [
                 "B-tree index",
-                "HyperLogLog sketch",
+                "HyperLogLog",
                 "Hash table",
                 "Bitmap index"
               ],
@@ -206,10 +205,10 @@
         {
           "type": "code",
           "label": "string_agg / json_agg",
-          "code": "-- Concatenate with delimiter\nSELECT dept_id, STRING_AGG(name, ', ') AS employees\nFROM employees\nGROUP BY dept_id;\n\n-- With ORDER BY inside aggregate\nSELECT dept_id, STRING_AGG(name, ', ' ORDER BY salary DESC) AS top_paid_first\nFROM employees\nGROUP BY dept_id;\n\n-- JSON aggregation (PostgreSQL)\nSELECT dept_id, JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))\nFROM employees\nGROUP BY dept_id;\n\n-- JSON object aggregation\nSELECT JSON_OBJECT_AGG(dept_id, cnt) FROM (\n  SELECT dept_id, COUNT(*) AS cnt FROM employees GROUP BY dept_id\n) t;",
+          "code": "-- Concatenate with delimiter\nSELECT dept_id, STRING_AGG(first_name || ' ' || last_name, ', ') AS employees\nFROM employees\nGROUP BY dept_id;\n\n-- With ORDER BY inside aggregate\nSELECT dept_id, STRING_AGG(first_name || ' ' || last_name, ', ' ORDER BY salary DESC) AS top_paid_first\nFROM employees\nGROUP BY dept_id;\n\n-- JSON aggregation (PostgreSQL)\nSELECT dept_id, JSON_AGG(JSON_BUILD_OBJECT('name', first_name || ' ' || last_name, 'salary', salary))\nFROM employees\nGROUP BY dept_id;\n\n-- JSON object aggregation\nSELECT JSON_OBJECT_AGG(dept_id, cnt) FROM (\n  SELECT dept_id, COUNT(*) AS cnt FROM employees GROUP BY dept_id\n) t;",
           "pg": "-- STRING_AGG, JSON_AGG, JSON_OBJECT_AGG, JSONB_AGG",
-          "mysql": "-- GROUP_CONCAT (no ORDER BY in 5.7, 8.0 supports)\nSELECT dept_id, GROUP_CONCAT(name ORDER BY salary DESC SEPARATOR ', ') FROM employees GROUP BY dept_id;\n\n-- JSON_ARRAYAGG, JSON_OBJECTAGG (8.0+)",
-          "py-pandas": "# String aggregation\ndf.groupby('dept_id')['name'].apply(', '.join)\n\n# With sort\ndf.sort_values('salary', ascending=False).groupby('dept_id')['name'].apply(', '.join)\n\n# JSON\ndf.groupby('dept_id').apply(lambda x: x[['name','salary']].to_dict('records')).reset_index()"
+          "mysql": "-- GROUP_CONCAT (no ORDER BY in 5.7, 8.0 supports)\nSELECT dept_id, GROUP_CONCAT(CONCAT(first_name, ' ', last_name) ORDER BY salary DESC SEPARATOR ', ') FROM employees GROUP BY dept_id;\n\n-- JSON_ARRAYAGG, JSON_OBJECTAGG (8.0+)",
+          "py-pandas": "# String aggregation\ndf.groupby('dept_id').apply(lambda x: ', '.join(x['first_name'] + ' ' + x['last_name']))\n\n# With sort\ndf.sort_values('salary', ascending=False).groupby('dept_id').apply(lambda x: ', '.join(x['first_name'] + ' ' + x['last_name']))\n\n# JSON\ndf.groupby('dept_id').apply(lambda x: x[['first_name','last_name','salary']].to_dict('records')).reset_index()"
         },
         {
           "type": "heading",
@@ -218,10 +217,10 @@
         {
           "type": "code",
           "label": "mode / stats",
-          "code": "-- Mode (most frequent value) — PostgreSQL 15+\nSELECT mode() WITHIN GROUP (ORDER BY status) FROM employees;\n-- Per group\nSELECT dept_id, mode() WITHIN GROUP (ORDER BY status)\nFROM employees\nGROUP BY dept_id;\n\n-- Standard deviation, variance\nSELECT dept_id,\n  STDDEV(salary) AS stddev,\n  VARIANCE(salary) AS var\nFROM employees\nGROUP BY dept_id;\n\n-- Correlation\nSELECT CORR(salary, years_exp) FROM employees;",
+          "code": "-- Mode (most frequent value) — PostgreSQL 15+\nSELECT mode() WITHIN GROUP (ORDER BY job_title) FROM employees;\n-- Per group\nSELECT dept_id, mode() WITHIN GROUP (ORDER BY job_title)\nFROM employees\nGROUP BY dept_id;\n\n-- Standard deviation, variance\nSELECT dept_id,\n  STDDEV(salary) AS stddev,\n  VARIANCE(salary) AS var\nFROM employees\nGROUP BY dept_id;\n\n-- Correlation\nSELECT CORR(salary, emp_id) FROM employees;",
           "pg": "-- mode(), stddev, variance, corr, covar_pop, regr_*",
           "mysql": "-- STDDEV, VARIANCE, CORR (8.0+)\n-- No MODE() function",
-          "py-pandas": "# Mode\ndf.groupby('dept_id')['status'].agg(lambda x: x.mode().iloc[0] if not x.mode().empty else None)\n\n# Stats\ndf.groupby('dept_id')['salary'].agg(['std', 'var'])"
+          "py-pandas": "# Mode\ndf.groupby('dept_id')['job_title'].agg(lambda x: x.mode().iloc[0] if not x.mode().empty else None)\n\n# Stats\ndf.groupby('dept_id')['salary'].agg(['std', 'var'])"
         },
         {
           "type": "quiz",
@@ -230,9 +229,9 @@
               "q": "STRING_AGG with ORDER BY inside aggregate:",
               "options": [
                 "Syntax error",
-                "Orders concatenated values by that column",
+                "Sorts values by that column",
                 "Orders groups",
-                "Only works with FILTER"
+                "Only works with FILTER clause"
               ],
               "answer": 1,
               "explain": "STRING_AGG(x, ',' ORDER BY y) sorts the x values by y before concatenation."
@@ -241,9 +240,9 @@
               "q": "JSON_AGG vs JSONB_AGG:",
               "options": [
                 "Same",
-                "JSON_AGG = text, JSONB_AGG = binary (faster to process)",
+                "JSON_AGG = text, JSONB_AGG = binary",
                 "JSONB_AGG deprecated",
-                "Only JSON_AGG exists"
+                "Only JSON_AGG exists (no binary variant)"
               ],
               "answer": 1,
               "explain": "JSONB_AGG returns binary JSONB — faster to query, smaller storage."
@@ -279,7 +278,7 @@
                       "Total Cost": 185,
                       "Plan Rows": 8500,
                       "Plan Width": 40,
-                      "Filter": "(status = 'active')"
+                      "Filter": "(job_title LIKE '%Engineer%')"
                     }
                   ]
                 }
@@ -304,8 +303,12 @@
       ]
     },
     {
-      "title": "Problem Set — L3 Drills",
+      "title": "Worked Problem — Department Salary Percentiles with FILTER",
       "blocks": [
+        {
+          "type": "heading",
+          "text": "Problem: Median salary and conditional counts per department"
+        },
         {
           "type": "problems",
           "items": [
@@ -317,10 +320,15 @@
               "patterns": [
                 "filter-clause"
               ],
-              "statement": "Per department: count of active, pending, inactive employees using FILTER.",
+              "statement": "Per department: count of engineers, managers, analysts using FILTER on job_title.",
               "hints": [
-                "COUNT(*) FILTER (WHERE status = 'active')"
-              ]
+                "COUNT(*) FILTER (WHERE job_title LIKE '%Engineer%')"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, COUNT(*) FILTER (WHERE job_title LIKE '%Engineer%') AS eng_cnt, COUNT(*) FILTER (WHERE job_title LIKE '%Manager%') AS mgr_cnt, COUNT(*) FILTER (WHERE job_title LIKE '%Analyst%') AS anal_cnt FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A302",
@@ -333,20 +341,32 @@
               "statement": "Median salary per department using percentile_cont.",
               "hints": [
                 "percentile_cont(0.5) WITHIN GROUP (ORDER BY salary)"
-              ]
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY salary) AS median_sal FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A303",
               "tier": 3,
-              "title": "Approximate Unique Users",
+              "title": "Events Per User Per Day",
               "platform": "drill",
               "patterns": [
-                "approx-aggregate"
+                "date-bucket",
+                "group-by"
               ],
-              "statement": "Approximate distinct user count per day from events table.",
+              "statement": "Count events per user per day from events table.",
               "hints": [
-                "approx_count_distinct(user_id)"
-              ]
+                "date_trunc('day', ts) for day bucket",
+                "GROUP BY user_id, day"
+              ],
+              "exercise": {
+                "datasets": ["events"],
+                "solution": "SELECT user_id, date_trunc('day', ts) AS day, COUNT(*) AS event_count FROM events GROUP BY user_id, day ORDER BY user_id, day;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A304",
@@ -359,7 +379,12 @@
               "statement": "Concatenate top 3 employee names by salary per department.",
               "hints": [
                 "STRING_AGG(name, ', ' ORDER BY salary DESC) with subquery LIMIT 3"
-              ]
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, STRING_AGG(first_name || ' ' || last_name, ', ' ORDER BY salary DESC) AS top_earners FROM (SELECT dept_id, first_name, last_name, salary, ROW_NUMBER() OVER (PARTITION BY dept_id ORDER BY salary DESC) AS rn FROM employees) t WHERE rn <= 3 GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A305",
@@ -371,23 +396,54 @@
               ],
               "statement": "Return JSON array of {name, salary} objects per department.",
               "hints": [
-                "JSON_AGG(JSON_BUILD_OBJECT('name', name, 'salary', salary))"
-              ]
+                "JSON_AGG(JSON_BUILD_OBJECT('name', first_name || ' ' || last_name, 'salary', salary))"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, JSON_AGG(JSON_BUILD_OBJECT('name', first_name || ' ' || last_name, 'salary', salary) ORDER BY salary DESC) AS employees FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A306",
               "tier": 3,
-              "title": "Mode Status per Department",
+              "title": "Mode Job Title per Department",
               "platform": "drill",
               "patterns": [
                 "mode"
               ],
-              "statement": "Most common employee status per department (PostgreSQL 15+).",
+              "statement": "Most common job title per department (PostgreSQL 15+).",
               "hints": [
-                "mode() WITHIN GROUP (ORDER BY status)"
-              ]
+                "mode() WITHIN GROUP (ORDER BY job_title)"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, mode() WITHIN GROUP (ORDER BY job_title) AS mode_job FROM employees GROUP BY dept_id ORDER BY dept_id;",
+                "orderMatters": true
+              }
             }
           ]
+        }
+      ]
+    },
+    {
+      "title": "Trap — FILTER vs WHERE with NULLs",
+      "blocks": [
+        {
+          "type": "misconception",
+          "claim": "FILTER (WHERE col = 'value') and WHERE col = 'value' before GROUP BY produce the same result for COUNT.",
+          "refutation": "WHERE removes rows before grouping — they don't contribute to ANY aggregate. FILTER only excludes rows from that specific aggregate — the row still contributes to other aggregates in the same query. With NULL salaries, WHERE salary > 50000 removes the row entirely; FILTER keeps it for other aggregates.",
+          "askFirst": true,
+          "verdict": false,
+          "correctModel": "Use WHERE to filter rows globally. Use FILTER when you need multiple conditional aggregates on the same row set.",
+          "evidence": {
+            "type": "code",
+            "label": "proof on hr data",
+            "code": "SELECT dept_id,\n  COUNT(*) FILTER (WHERE salary > 50000) AS high_paid,\n  COUNT(*) AS total\nFROM employees\nGROUP BY dept_id;\n-- vs\nSELECT dept_id, COUNT(*) AS high_paid\nFROM employees\nWHERE salary > 50000\nGROUP BY dept_id;\n-- First query: total includes all rows, high_paid only >50k\n-- Second query: only >50k rows exist",
+            "pg": "",
+            "mysql": ""
+          },
+          "source": "Classic SQL interview trap — appears in Meta, Uber screens"
         }
       ]
     },
@@ -397,7 +453,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "5 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50 · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "5 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50 · LeetCode SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

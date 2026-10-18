@@ -60,4 +60,30 @@ INSERT INTO employees (emp_id, first_name, last_name, email, dept_id, manager_id
   (18, 'Lakshmi', 'Reddy',     'lakshmi.reddy@acme.io',    6, 1,    '2017-12-04', 110000.00, 'HR Manager',              NULL),
   (19, 'Aditya',  'Kulkarni',  NULL,                       6, 18,   '2023-03-15',  58000.00, 'HR Associate',            NULL),
   (20, 'Rahul',   'Verma',     'rahul.verma2@acme.io',     3, 13,   '2024-07-01',  52000.00, 'Sales Associate',         0.00),
-  (21, 'Nikhil',  'Bansal',    'nikhil.bansal@acme.io',    4, 7,    '2022-05-30',  81000.00, 'Content Strategist',      NULL);
+  (21, 'Nikhil',   'Bansal',    'nikhil.bansal@acme.io',    4, 7,    '2022-05-30',  81000.00, 'Content Strategist',      NULL);
+
+-- Appended for L3 basics drills (B301, B302). Keep identical schema in hr_edge.
+-- audit_log: timestamps stored as TEXT — the implicit-cast trap of drill B301.
+CREATE TABLE audit_log (
+  entry_id  integer PRIMARY KEY,
+  action    text NOT NULL,
+  created   text NOT NULL            -- 'YYYY-MM-DD HH24:MI:SS' stored as text
+);
+
+INSERT INTO audit_log (entry_id, action, created) VALUES
+  (1, 'login',  '2024-01-15 09:12:00'),
+  (2, 'logout', '2024-01-15 18:40:00'),
+  (3, 'login',  '2024-01-16 08:02:00');
+
+-- users: nullable deactivated_at — the IS NULL trap of drill B302.
+CREATE TABLE users (
+  user_id         integer PRIMARY KEY,
+  username        text NOT NULL,
+  deactivated_at  timestamptz
+);
+
+INSERT INTO users (user_id, username, deactivated_at) VALUES
+  (1, 'arjun',   NULL),
+  (2, 'diya',    '2024-02-01 10:00:00+00'),
+  (3, 'kabir',   NULL),
+  (4, 'meera',   '2024-03-15 17:30:00+00');

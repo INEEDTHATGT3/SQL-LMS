@@ -6,10 +6,10 @@
     {
       "q": "Dynamic Programming join ordering (DP) evaluates:",
       "options": [
-        "All possible join orders (N!)",
+        "All possible join orders (N factorial)",
         "Subsets of joins via DP (O(3^N))",
-        "Only left-deep trees",
-        "Only right-deep trees"
+        "Only left-deep tree shapes allowed",
+        "Only right-deep tree shapes allowed"
       ],
       "answer": 1,
       "explain": "DP join ordering: considers all subsets (O(2^N)) and partitions. Default for < 12 joins (join_collapse_limit)."
@@ -18,9 +18,9 @@
       "q": "GEQO (Genetic Query Optimizer) activates when:",
       "options": [
         "Joins > 12 (geqo_threshold)",
-        "Tables > 1GB",
-        "No statistics",
-        "Parallel query enabled"
+        "Tables exceed 1GB in size",
+        "No statistics are available",
+        "Parallel query is enabled"
       ],
       "answer": 0,
       "explain": "GEQO kicks in for > geqo_threshold joins (default 12). Uses genetic algorithm instead of DP."
@@ -30,8 +30,8 @@
       "options": [
         "In leader process only",
         "In each worker independently",
-        "Shared across workers",
-        "In temporary table"
+        "Shared across all workers",
+        "In a temporary table on disk"
       ],
       "answer": 1,
       "explain": "Each worker builds own hash table on its partition of build side. No shared memory."
@@ -39,10 +39,10 @@
     {
       "q": "Join path cost = startup_cost + run_cost. run_cost includes:",
       "options": [
-        "CPU only",
-        "I/O only",
+        "CPU cost only for the query",
+        "I/O cost only for the query",
         "CPU + I/O (seq_page_cost, random_page_cost, cpu_tuple_cost)",
-        "Network only"
+        "Network cost only for the query"
       ],
       "answer": 2,
       "explain": "Cost model: seq_page_cost (1.0), random_page_cost (4.0), cpu_tuple_cost (0.01), cpu_operator_cost (0.0025)."
@@ -51,9 +51,9 @@
       "q": "Unique inner join optimization:",
       "options": [
         "When inner side has unique join key, planner can stop after first match",
-        "Always uses Nested Loop",
-        "Disables Hash Join",
-        "Requires PRIMARY KEY on inner"
+        "Always uses Nested Loop Join for this",
+        "Disables Hash Join entirely for this",
+        "Requires PRIMARY KEY on inner side only"
       ],
       "answer": 0,
       "explain": "Unique inner: planner knows at most 1 match per outer row → stops after first. Semi-join like."
@@ -119,9 +119,9 @@
               "q": "random_page_cost = 4.0 means:",
               "options": [
                 "Random I/O is 4x more expensive than sequential",
-                "4 random pages per second",
-                "4x CPU cost",
-                "4 pages cached"
+                "4 random pages per second are read",
+                "4x CPU cost per operation executed",
+                "4 pages are cached in memory"
               ],
               "answer": 0,
               "explain": "Planner assumes random I/O 4x slower than sequential. On SSD, lower to 1.1-2.0."
@@ -129,10 +129,10 @@
             {
               "q": "Hash Join startup cost includes:",
               "options": [
-                "Sort cost",
+                "Sort cost for ordering",
                 "Hash table build cost",
-                "Index scan cost",
-                "Network cost"
+                "Index scan cost for access",
+                "Network cost overhead"
               ],
               "answer": 1,
               "explain": "Startup = build hash table on build side. Run = probe cost per outer row."
@@ -282,10 +282,10 @@
             {
               "q": "During a parallel hash join, each worker builds:",
               "options": [
-                "Full hash table on entire build side",
+                "Full hash table on the entire build side",
                 "Hash table on their partition of build side",
-                "Shared hash table in shared memory",
-                "No hash table — use NLJ"
+                "Shared hash table in shared memory space",
+                "No hash table — use NLJ instead of hash"
               ],
               "answer": 1,
               "explain": "Each worker builds its own hash on its partition of the build side; workers share no hash memory."
@@ -295,8 +295,8 @@
               "options": [
                 "Same thing",
                 "Gather = unordered collect; Gather Merge = ordered merge",
-                "Gather Merge faster",
-                "Gather for Hash Join only"
+                "Gather Merge is faster than Gather",
+                "Gather only for Hash Join queries"
               ],
               "answer": 1,
               "explain": "Gather Merge: workers return sorted data, leader merges. Gather: unordered collect."

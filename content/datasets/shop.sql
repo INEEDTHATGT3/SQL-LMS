@@ -197,3 +197,31 @@ INSERT INTO payments (payment_id, order_id, paid_at, amount, method) VALUES
   (27, 26, '2024-10-01 12:00:00',   6998.00, 'upi'),
   (28, 27, '2024-11-15 16:35:00',    599.00, 'upi'),
   (29, 28, '2024-11-29 23:59:00',  70998.00, 'card');
+
+-- Appended for L4 basics drills (B401, B403). Keep identical schema in shop_edge.
+-- bookings: gym equipment bookings for the CHECK-constraint drill (B401).
+--   Every existing row has end_ts > start_ts on purpose: drill B401's graded
+--   exercise adds CHECK (end_ts > start_ts), which must not reject seed rows.
+CREATE TABLE bookings (
+  booking_id   integer PRIMARY KEY,
+  equipment_id integer NOT NULL,
+  start_ts     timestamp NOT NULL,
+  end_ts       timestamp NOT NULL
+);
+
+INSERT INTO bookings (booking_id, equipment_id, start_ts, end_ts) VALUES
+  (1, 101, '2024-05-01 08:00', '2024-05-01 09:00'),
+  (2, 101, '2024-05-01 10:00', '2024-05-01 11:00'),
+  (3, 102, '2024-05-01 08:30', '2024-05-01 09:30');
+
+-- team_docs: per-tenant documents for the row-level-security drill (B403).
+CREATE TABLE team_docs (
+  doc_id    integer PRIMARY KEY,
+  tenant_id integer NOT NULL,
+  body      text NOT NULL
+);
+
+INSERT INTO team_docs (doc_id, tenant_id, body) VALUES
+  (1, 7, 'onboarding guide'),
+  (2, 7, 'roadmap 2024'),
+  (3, 9, 'private roadmap');

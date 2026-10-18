@@ -1,0 +1,11 @@
+/* co-located styles for table-diff; restate the diff cell colours at a
+   specificity that survives table.trace's zebra striping (theme.css). */
+.td-table th{white-space:nowrap}
+.td-table td{vertical-align:top}
+.td-table td.cell-add{background:rgba(0,255,157,.08)}
+.td-table td.cell-del{background:rgba(255,77,109,.08);text-decoration:line-through}
+.td-table td.cell-chg{background:rgba(251,191,36,.10)}
+.td-table td.td-hi{box-shadow:inset 0 0 0 1px var(--lvl-border)}
+.td-chg-old{color:var(--text-dim);text-decoration:line-through;margin-right:8px}
+.td-legend{font-size:11px;font-family:'DM Mono',monospace;margin-top:6px}
+.td-leg{padding:2px 8px;border-radius:3px}

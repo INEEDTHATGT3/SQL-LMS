@@ -71,7 +71,6 @@
           "type": "code",
           "label": "parallel aggregate config",
           "code": "-- Enable parallel query\nSET max_parallel_workers_per_gather = 4;\nSET min_parallel_table_scan_size = '8MB';\nSET parallel_tuple_cost = 0.1;\nSET parallel_setup_cost = 1000;\n\n-- Force parallel for testing\nSET force_parallel_mode = on;\n\n-- Check if parallel used\nEXPLAIN ANALYZE SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;\n-- Look for: Parallel Seq Scan, Partial Aggregate, Gather Merge",
-          "pg": "-- Parallel aggregate (PG 10+)\n-- Partial Aggregate on workers → Gather Merge at leader",
           "mysql": "-- MySQL: no native parallel GROUP BY\n-- Use partitioning + UNION ALL manually",
           "py-pandas": "# No parallel; but can use Dask / Polars for parallel groupby\nimport dask.dataframe as dd\nddf = dd.from_pandas(df, npartitions=4)\nresult = ddf.groupby('dept_id').size().compute()"
         },
@@ -119,9 +118,9 @@
               "q": "Partial Aggregate in parallel query means:",
               "options": [
                 "Incomplete result",
-                "Each worker computes aggregate on its partition",
+                "Each worker aggregates its partition",
                 "Aggregate stopped early",
-                "Error state"
+                "Error state (invalid query plan syntax)"
               ],
               "answer": 1,
               "explain": "Each worker builds partial aggregate on its data partition; leader combines via Gather Merge."
@@ -130,9 +129,9 @@
               "q": "Gather Merge vs Gather:",
               "options": [
                 "Same",
-                "Gather Merge preserves ORDER BY; Gather does not",
+                "Gather Merge keeps ORDER BY; Gather does not",
                 "Gather Merge faster",
-                "Gather for Hash Join only"
+                "Gather for Hash Join only, not for merge joins"
               ],
               "answer": 1,
               "explain": "Gather Merge merges sorted worker outputs; Gather just concatenates unordered."
@@ -152,7 +151,6 @@
           "type": "code",
           "label": "materialized view",
           "code": "-- Create materialized view\nCREATE MATERIALIZED VIEW dept_stats AS\nSELECT dept_id,\n  COUNT(*) AS emp_count,\n  AVG(salary) AS avg_salary,\n  SUM(salary) AS total_salary\nFROM employees\nGROUP BY dept_id;\n\n-- Refresh (full rebuild)\nREFRESH MATERIALIZED VIEW dept_stats;\n\n-- Refresh CONCURRENTLY (zero-downtime)\nREFRESH MATERIALIZED VIEW CONCURRENTLY dept_stats;\n-- Requires: unique index on materialized view\nCREATE UNIQUE INDEX idx_dept_stats_dept ON dept_stats (dept_id);",
-          "pg": "-- MATERIALIZED VIEW + REFRESH CONCURRENTLY (zero downtime)",
           "mysql": "-- MySQL: no native materialized view\n-- Workaround: table + trigger / scheduled refresh",
           "py-pandas": "# No native MV; use scheduled job\nimport schedule\nschedule.every().hour.do(refresh_dept_stats)"
         },
@@ -164,7 +162,6 @@
           "type": "code",
           "label": "continuous aggregate",
           "code": "-- TimescaleDB continuous aggregate\nCREATE MATERIALIZED VIEW hourly_events\nWITH (timescaledb.continuous) AS\nSELECT time_bucket('1 hour', time) AS bucket,\n  device_id,\n  COUNT(*) AS event_count,\n  AVG(value) AS avg_value\nFROM events\nGROUP BY bucket, device_id;\n\n-- Automatic refresh (background)\n-- Add refresh policy\nSELECT add_continuous_aggregate_policy('hourly_events',\n  start_offset => INTERVAL '3 hours',\n  end_offset => INTERVAL '1 hour',\n  schedule_interval => INTERVAL '1 hour');\n\n-- Real-time view (combines materialized + raw)\nSELECT * FROM hourly_events WHERE bucket > now() - INTERVAL '1 day';",
-          "pg": "-- TimescaleDB: continuous aggregates + real-time views",
           "mysql": "-- MySQL: no native continuous aggregates",
           "py-pandas": "# Scheduled incremental refresh\ndef refresh_hourly():\n    new_data = get_new_events()\n    incremental_update(hourly_agg, new_data)"
         },
@@ -213,8 +210,8 @@
               "options": [
                 "Primary key on base table",
                 "Unique index on materialized view",
-                "No indexes",
-                "TimescaleDB"
+                "No indexes at all on the view",
+                "TimescaleDB license is strictly required"
               ],
               "answer": 1,
               "explain": "Unique index on MV enables atomic swap without blocking reads."
@@ -274,8 +271,8 @@
               "options": [
                 "Writes to base tables",
                 "Reads from materialized view",
-                "Nothing (except brief schema lock)",
-                "All queries"
+                "Nothing (brief schema lock only)",
+                "All queries on the database server"
               ],
               "answer": 2,
               "explain": "CONCURRENTLY builds new version, swaps with brief AccessExclusive lock — reads never blocked."
@@ -286,7 +283,7 @@
                 "Inserts only",
                 "Handling UPDATE/DELETE in base data",
                 "Memory usage",
-                "Index maintenance"
+                "Index maintenance overhead cost per row"
               ],
               "answer": 1,
               "explain": "Updates/deletes in source require reverse aggregation (subtract old, add new). Hard without CDC."
@@ -368,52 +365,71 @@
       ]
     },
     {
-      "title": "Problem Set — L4 Drills",
+      "title": "Worked Problem — Materialized View with Incremental Refresh",
       "blocks": [
+        {
+          "type": "heading",
+          "text": "Problem: Daily sales aggregate with zero-downtime refresh"
+        },
         {
           "type": "problems",
           "items": [
             {
               "id": "A401",
               "tier": 4,
-              "title": "Parallel Aggregate Tuning",
+              "title": "Parallel Aggregate Plan Analysis",
               "platform": "drill",
               "patterns": [
                 "parallel-aggregate"
               ],
-              "statement": "Tune parallel aggregate for 100M row table: set workers, work_mem, parallel_tuple_cost.",
+              "statement": "Analyze the query plan for a GROUP BY aggregate. Identify the GroupAggregate and Sort nodes.",
               "hints": [
-                "max_parallel_workers_per_gather",
-                "work_mem",
-                "min_parallel_table_scan_size"
-              ]
+                "EXPLAIN SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "EXPLAIN SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;",
+                "orderMatters": false
+              }
             },
             {
               "id": "A402",
               "tier": 4,
-              "title": "Materialized View with Concurrent Refresh",
+              "title": "Materialized View Simulation",
               "platform": "drill",
               "patterns": [
                 "materialized-view"
               ],
-              "statement": "Create MV for daily sales by region with zero-downtime refresh.",
+              "statement": "Simulate a materialized view by creating a query that aggregates orders by status and date. This mimics what a materialized view would store.",
               "hints": [
-                "CREATE MATERIALIZED VIEW ... WITH (timescaledb.continuous)"
-              ]
+                "SELECT status, order_date, COUNT(*) FROM orders GROUP BY status, order_date"
+              ],
+              "exercise": {
+                "datasets": ["shop"],
+                "solution": "SELECT status, order_date, COUNT(*) AS order_count FROM orders GROUP BY status, order_date ORDER BY order_date, status;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A403",
               "tier": 4,
-              "title": "Continuous Aggregate for Real-Time Dashboard",
+              "title": "Incremental Daily Sales Aggregate",
               "platform": "drill",
               "patterns": [
-                "continuous-aggregate"
+                "incremental-aggregate",
+                "upsert"
               ],
-              "statement": "Design TimescaleDB continuous aggregate for 5-min bucket metrics with 1-hour lag.",
+              "statement": "Compute daily sales totals from delivered orders. This simulates the incremental aggregate that would be maintained by an UPSERT pattern.",
               "hints": [
-                "time_bucket('5 min', ts)",
-                "add_continuous_aggregate_policy"
-              ]
+                "JOIN orders with order_items",
+                "Filter delivered orders",
+                "GROUP BY order_date"
+              ],
+              "exercise": {
+                "datasets": ["shop"],
+                "solution": "SELECT o.order_date AS sale_date, SUM(oi.quantity * oi.unit_price) AS total_sales, COUNT(DISTINCT o.order_id) AS order_count FROM orders o JOIN order_items oi ON o.order_id = oi.order_id WHERE o.status = 'delivered' GROUP BY o.order_date ORDER BY o.order_date;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A404",
@@ -424,7 +440,7 @@
                 "incremental-aggregate",
                 "cdc"
               ],
-              "statement": "Design incremental daily sales agg using pgoutput logical replication for CDC.",
+              "statement": "Design incremental daily sales agg using pgoutput logical replication for CDC. (Conceptual - describe the publication and subscription setup.)",
               "hints": [
                 "CREATE PUBLICATION",
                 "pgoutput plugin",
@@ -440,12 +456,43 @@
                 "join-tree",
                 "parallel-aggregate"
               ],
-              "statement": "Explain when right-deep join tree enables better parallel aggregate distribution.",
+              "statement": "Explain when right-deep join tree enables better parallel aggregate distribution. (Conceptual - describe the build/probe side dynamics.)",
               "hints": [
                 "Build side on right (smaller), probe on left"
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "title": "Trap — Materialized View Staleness",
+      "blocks": [
+        {
+          "type": "misconception",
+          "claim": "A materialized view always shows the latest data from the base tables.",
+          "refutation": "A materialized view is a snapshot at the time of last REFRESH. It does not automatically update when base tables change. You must manually REFRESH or use a continuous aggregate (TimescaleDB) for near real-time data.",
+          "askFirst": true,
+          "verdict": false,
+          "correctModel": "Materialized views are stale until refreshed. Use REFRESH MATERIALIZED VIEW (or CONCURRENTLY) to update. For real-time data, use a regular VIEW or TimescaleDB continuous aggregate.",
+          "evidence": {
+            "type": "code",
+            "label": "proof on shop data",
+            "code": "CREATE MATERIALIZED VIEW order_count_mv AS SELECT COUNT(*) AS cnt FROM orders;\nSELECT * FROM order_count_mv; -- Shows count at creation time\nINSERT INTO orders (order_id, customer_id, order_date, status) VALUES (999, 1, '2024-12-31', 'placed');\nSELECT * FROM order_count_mv; -- Still shows old count!\nREFRESH MATERIALIZED VIEW order_count_mv;\nSELECT * FROM order_count_mv; -- Now shows new count",
+            "pg": "",
+            "mysql": ""
+          },
+          "source": "Classic SQL interview trap — appears in Amazon, Netflix screens"
+        }
+      ]
+    },
+    {
+      "title": "Sourced Problem Set",
+      "blocks": [
+        {
+          "type": "callout",
+          "tone": "blue",
+          "md": "No sourced problems for L4 — this tier covers advanced enterprise patterns beyond standard interview sets."
         }
       ]
     }

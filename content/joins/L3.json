@@ -7,9 +7,9 @@
       "q": "Join elimination removes a join when:",
       "options": [
         "Tables are small",
-        "Foreign key guarantees match + only PK/FK columns selected",
-        "No index on join key",
-        "Using LEFT JOIN"
+        "FK guarantees match + only PK/FK columns selected",
+        "No index on join key exists",
+        "Using LEFT JOIN instead"
       ],
       "answer": 1,
       "explain": "If FK→PK, only PK/FK columns needed, planner can skip join entirely (child already has FK)."
@@ -18,9 +18,9 @@
       "q": "Predicate pushdown into subquery means:",
       "options": [
         "Moving WHERE filter into subquery to reduce rows early",
-        "Pushing predicates to application",
-        "Converting JOIN to WHERE",
-        "Moving ORDER BY inside"
+        "Pushing predicates to the application layer",
+        "Converting JOIN to WHERE clause",
+        "Moving ORDER BY inside subquery"
       ],
       "answer": 0,
       "explain": "Push filter into subquery/CTE — reduces rows before join. Planner does automatically but sometimes blocked."
@@ -29,9 +29,9 @@
       "q": "Partition-wise join works when:",
       "options": [
         "Both tables partitioned on same key",
-        "One table partitioned",
-        "Tables have same number of rows",
-        "Using Hash Join"
+        "Only one table is partitioned on the key",
+        "Tables have the same number of rows",
+        "Using Hash Join only for the join"
       ],
       "answer": 0,
       "explain": "Both tables must be partitioned on the join key. Each partition joins independently (parallel)."
@@ -50,7 +50,7 @@
     {
       "q": "Adaptive Join (PostgreSQL 17+) switches between:",
       "options": [
-        "Hash and Merge",
+        "Hash Join and Merge Join",
         "Nested Loop and Hash",
         "Inner and Outer",
         "Semi and Anti"
@@ -112,7 +112,7 @@
             {
               "q": "SELECT d.name FROM employees e JOIN departments d ON ... — eliminated?",
               "options": [
-                "Yes",
+                "Yes, the join is eliminated",
                 "No — need parent non-PK column",
                 "Only if index exists",
                 "Depends on stats"
@@ -150,10 +150,10 @@
             {
               "q": "Predicate pushdown shrinks the rows entering a join by moving the filter:",
               "options": [
-                "From outer query INTO inner subquery/CTE",
-                "From inner TO outer",
-                "To application layer",
-                "To storage engine only"
+                "From outer query into inner subquery",
+                "From inner query to outer query",
+                "To the application layer only",
+                "To the storage engine level only"
               ],
               "answer": 0,
               "explain": "Pushing the predicate into the inner subquery/CTE filters rows at the source, so fewer rows enter the join — cheaper probe/build."
@@ -368,7 +368,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "6 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "6 sourced problems from HackerRank SQL · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

@@ -1,0 +1,103 @@
+{
+  "title": "Transaction schedules",
+  "blocks": [
+    {
+      "type": "schedule",
+      "title": "Serial schedule (all true)",
+      "ops": "R1(A) W1(A) R2(A) W2(A) C1 C2",
+      "show": [
+        "timeline",
+        "precedence",
+        "verdicts"
+      ],
+      "verdicts": [
+        "conflictSerializable",
+        "viewSerializable",
+        "recoverable",
+        "cascadeless",
+        "strict"
+      ]
+    },
+    {
+      "type": "schedule",
+      "title": "2PL deadlock (classic)",
+      "ops": "R1(A) R2(B) W1(B) W2(A) C1 C2",
+      "protocol": "2PL",
+      "show": [
+        "timeline",
+        "precedence",
+        "lockCurve",
+        "waitsFor",
+        "verdicts"
+      ]
+    },
+    {
+      "type": "schedule",
+      "title": "Strict 2PL prevents cascading",
+      "ops": "W1(A) R1(B) R2(A) A1 C2",
+      "protocol": "strict2PL",
+      "show": [
+        "timeline",
+        "lockCurve",
+        "verdicts"
+      ]
+    },
+    {
+      "type": "schedule",
+      "title": "Timestamp ordering (TO)",
+      "ops": "R2(A) W1(A) C1 C2",
+      "protocol": "TO",
+      "show": [
+        "timeline",
+        "verdicts"
+      ]
+    },
+    {
+      "type": "schedule",
+      "title": "Thomas write rule",
+      "ops": "R1(Q) W2(Q) W1(Q) C1 C2",
+      "protocol": "thomas",
+      "show": [
+        "timeline",
+        "verdicts"
+      ]
+    },
+    {
+      "type": "schedule",
+      "title": "Wait-die (younger dies)",
+      "ops": "W1(A) W2(A) C1 C2",
+      "protocol": "waitDie",
+      "show": [
+        "timeline",
+        "waitsFor",
+        "verdicts"
+      ]
+    },
+    {
+      "type": "schedule",
+      "title": "Wound-wait (older wounds younger)",
+      "ops": "W2(A) W1(A) C1 C2",
+      "protocol": "woundWait",
+      "show": [
+        "timeline",
+        "waitsFor",
+        "verdicts"
+      ]
+    },
+    {
+      "type": "schedule",
+      "title": "Predict: which verdicts hold?",
+      "ops": "R1(A) W1(A) R2(A) C2 R1(B) C1",
+      "mode": "predict",
+      "show": [
+        "timeline",
+        "precedence",
+        "verdicts"
+      ],
+      "ask": {
+        "kind": "msq",
+        "q": "Select every property that holds for `R1(A) W1(A) R2(A) C2 R1(B) C1` (Korth Fig. 14.12-style nonrecoverable schedule)."
+      }
+    }
+  ]
+}

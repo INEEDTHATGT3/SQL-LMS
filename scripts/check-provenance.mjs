@@ -32,6 +32,18 @@ for (const mod of mods.modules) {
     .find(c => fs.existsSync(c));
   if (!dir) continue;
 
+  const answersFile = path.join(CONTENT, 'answers', `${mod.id}.json`);
+  if (fs.existsSync(answersFile)) {
+    const ans = read(answersFile);
+    const poolIds = new Set((bank.modules[mod.id] || []).map(p => p.id));
+    for (const id of Object.keys(ans)) {
+      if (!poolIds.has(id)) {
+        console.log(`  ? ${mod.id}/answers [${id}]: answer id not in problems.json bank`);
+        errs++;
+      }
+    }
+  }
+
   for (const f of fs.readdirSync(dir).filter(x => /^L\d+\.json$/.test(x))) {
     const lesson = read(path.join(dir, f));
     const where = `${mod.id}/${f}`;

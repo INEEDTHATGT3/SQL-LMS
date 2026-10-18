@@ -1,0 +1,9 @@
+/* Approach ladder (Brute → Better → Optimal) — Problem block, Interview, Review.
+   Colours only via theme.css vars. */
+.approach-ladder{margin-top:14px}
+.approach-step{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 16px;margin:10px 0}
+.approach-name{font-family:'Space Mono';font-size:11px;letter-spacing:2px;color:var(--lvl);text-transform:uppercase;margin:0 0 8px}
+.approach-step p{margin:6px 0}
+.approach-step .reveal-btn{margin-top:8px}
+.approach-step .callout{margin:8px 0 0}
+.approach-step .prob-meta{margin:8px 0 0}

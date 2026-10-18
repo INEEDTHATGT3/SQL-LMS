@@ -3,14 +3,15 @@ type: job
 code: SQL
 id: J10
 title: "Port content · filtering"
-status: open
+status: doing
 est: 60
 workdir: 'C:\MEGA NZ\SKILLS MATERIAL\sql-lms'
 seq: 11
 depends: [SQL-J08, SQL-J21]
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J10 · Port content · filtering.md"
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
+lane: 2
 ---
 # SQL J10 · Port content · filtering
 
@@ -48,3 +49,5 @@ Bring module `filtering` (L1–L4) to the new standard: correct, runnable, grade
 
 ## Report
 %% The agent writes here: what changed, files touched, checks run, what is still open. %%
+- 2026-10-18 · lane 3 gave up after 3 mechanic attempts; needs Claude or Dhruv (see jobs/logs/SQL-J10-*.log)
+- 2026-10-18 · reopened by Claude: previous attempts died on the free-tier rate limit (no model output), not on the work. Keep any partial edits that pass the gates. Gate failing now: lint-content says filtering/L2 has 5 questions, needs 6.

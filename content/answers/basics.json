@@ -1,0 +1,98 @@
+{
+  "B1-HR003": {
+    "statement": "Query the employees table and return every column for every row.",
+    "hints": [
+      "Pattern: basic SELECT — list the columns (or *) and the table.",
+      "Clause: SELECT ... FROM employees.",
+      "Skeleton: SELECT * FROM employees;"
+    ],
+    "approaches": [
+      {
+        "name": "Brute",
+        "idea": "SELECT * expands to all columns at plan time; fine for ad-hoc exploration, but it couples the query to the table shape.",
+        "code": {
+          "code": "SELECT *\nFROM employees;"
+        },
+        "cost": "scans every row and returns every column; network and memory scale with table width",
+        "pitfalls": "Breaks downstream code if a column is added or reordered; avoid in production views."
+      },
+      {
+        "name": "Optimal",
+        "idea": "Name the columns explicitly so the contract is stable and only needed data is shipped.",
+        "code": {
+          "code": "SELECT emp_id, first_name, last_name, email, dept_id, manager_id, hire_date, salary, job_title, commission\nFROM employees;"
+        },
+        "cost": "same scan, but a narrower projection; lets the planner use a covering index later",
+        "pitfalls": "Must be updated when a new column is genuinely needed."
+      }
+    ],
+    "exercise": {
+      "prompt": "Return all columns for all employees.",
+      "datasets": [
+        "hr",
+        "hr_edge"
+      ],
+      "solution": "SELECT emp_id, first_name, last_name, email, dept_id, manager_id, hire_date, salary, job_title, commission FROM employees;",
+      "orderMatters": false
+    },
+    "followups": [
+      {
+        "q": "Why is SELECT * discouraged in production?",
+        "a": "It hides the column contract: a later ALTER TABLE ADD COLUMN silently changes result shape and can break parsers, ORMs and cached plans."
+      },
+      {
+        "q": "Does SELECT * always read every column from disk?",
+        "a": "On a heap table yes; a covering index can satisfy a narrower projection without touching the heap, which is why explicit columns matter for performance."
+      }
+    ],
+    "complexity": "Time O(n) rows scanned. Space O(n) for the result set."
+  },
+  "B1-HR007": {
+    "statement": "List the first names of employees whose salary is above 100000, ordered by the last three characters of their last name, then by emp_id.",
+    "hints": [
+      "Pattern: filter with WHERE, then sort with ORDER BY.",
+      "Clause: WHERE salary > 100000; ORDER BY RIGHT(last_name, 3), emp_id.",
+      "Skeleton: SELECT first_name FROM employees WHERE salary > 100000 ORDER BY RIGHT(last_name, 3), emp_id;"
+    ],
+    "approaches": [
+      {
+        "name": "Brute",
+        "idea": "Sort by a substring extracted with SUBSTRING; portable across dialects that lack RIGHT().",
+        "code": {
+          "code": "SELECT first_name\nFROM employees\nWHERE salary > 100000\nORDER BY SUBSTRING(last_name FROM LENGTH(last_name) - 2), emp_id;"
+        },
+        "cost": "one substring per row during the sort; O(n log n) comparisons",
+        "pitfalls": "Off-by-one in the start position returns the wrong suffix; verify on short names."
+      },
+      {
+        "name": "Optimal",
+        "idea": "Use RIGHT() which states intent directly and lets the planner recognise the suffix.",
+        "code": {
+          "code": "SELECT first_name\nFROM employees\nWHERE salary > 100000\nORDER BY RIGHT(last_name, 3), emp_id;"
+        },
+        "cost": "same O(n log n) sort, clearer intent, fewer characters",
+        "pitfalls": "RIGHT() is PostgreSQL/MySQL/SQL Server; Oracle uses SUBSTR(last_name, -3)."
+      }
+    ],
+    "exercise": {
+      "prompt": "Return first_name for employees with salary > 100000, ordered by the last 3 letters of last_name then emp_id.",
+      "datasets": [
+        "hr",
+        "hr_edge"
+      ],
+      "solution": "SELECT first_name FROM employees WHERE salary > 100000 ORDER BY RIGHT(last_name, 3), emp_id;",
+      "orderMatters": true
+    },
+    "followups": [
+      {
+        "q": "Why add emp_id as a tie-breaker?",
+        "a": "Two employees can share the same 3-letter suffix; without a tie-breaker the order is unspecified and results become non-deterministic across runs."
+      },
+      {
+        "q": "Can an index speed up ORDER BY RIGHT(last_name, 3)?",
+        "a": "A plain index on last_name cannot, because the sort key is a function of the column; you would need a functional index on RIGHT(last_name, 3)."
+      }
+    ],
+    "complexity": "Time O(n log n) for the sort after an O(n) filter. Space O(n) for the sort."
+  }
+}

@@ -121,7 +121,6 @@
           "type": "code",
           "label": "rollup examples",
           "code": "-- Single column: detail + grand total\nSELECT dept_id, COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id);\n-- Result: 5 dept rows + 1 grand total (dept_id=NULL)\n\n-- Two columns: detail + subtotals + grand\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id, status);\n-- Hierarchy: (dept,status) → (dept) → ()\n\n-- Partial rollup\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY dept_id, ROLLUP(status);\n-- Detail (dept,status) + (dept) subtotals + grand total",
-          "pg": "-- Same syntax",
           "mysql": "-- MySQL 8.0+: ROLLUP supported\nSELECT dept_id, status, COUNT(*) FROM employees GROUP BY dept_id, status WITH ROLLUP;",
           "py-pandas": "# ROLLUP via pivot_table margins\ndf.pivot_table(index=['dept_id', 'status'], values='id', aggfunc='count', margins=True)"
         },
@@ -185,7 +184,6 @@
           "type": "code",
           "label": "cube examples",
           "code": "-- Full cross-tab\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY CUBE(dept_id, status);\n-- Groups: (dept,status), (dept), (status), ()\n\n-- CUBE with 3 columns = 8 combinations\nSELECT a, b, c, COUNT(*)\nFROM t\nGROUP BY CUBE(a, b, c);\n-- (a,b,c), (a,b), (a,c), (b,c), (a), (b), (c), ()",
-          "pg": "-- Same syntax",
           "mysql": "-- MySQL 8.0+: CUBE supported\nSELECT dept_id, status, COUNT(*) FROM employees GROUP BY dept_id, status WITH CUBE;",
           "py-pandas": "# CUBE via multiple pivot_tables\nimport itertools\nresults = []\nfor r in range(3):\n    for cols in itertools.combinations(['dept_id', 'status'], r+1):\n        results.append(df.groupby(list(cols)).size().reset_index(name='count'))\npd.concat(results)"
         },
@@ -197,7 +195,6 @@
           "type": "code",
           "label": "grouping sets",
           "code": "-- Only dept subtotals + grand total (no status subtotals)\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY GROUPING SETS ((dept_id, status), (dept_id), ());\n\n-- Only status subtotals\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY GROUPING SETS ((status), ());\n\n-- Equivalent to CUBE but explicit\nSELECT dept_id, status, COUNT(*)\nFROM employees\nGROUP BY GROUPING SETS ((dept_id, status), (dept_id), (status), ());",
-          "pg": "-- GROUPING SETS is standard SQL",
           "mysql": "-- MySQL 8.0+: GROUPING SETS supported",
           "py-pandas": "# Manual GROUPING SETS\nsets = [['dept_id', 'status'], ['dept_id'], ['status'], []]\nresults = [df.groupby(cols).size().reset_index(name='count') for cols in sets]\npd.concat(results, ignore_index=True)"
         },
@@ -218,10 +215,10 @@
             {
               "q": "CUBE(a,b) equivalent GROUPING SETS:",
               "options": [
-                "((a,b), (a), ())",
-                "((a,b), (a), (b), ())",
-                "((a,b), (a), (b))",
-                "((a), (b), ())"
+                "((a,b),(a),())",
+                "((a,b),(a),(b),())",
+                "((a,b),(a),(b))",
+                "((a),(b),()),((a,b))"
               ],
               "answer": 1,
               "explain": "CUBE = all 2^N combinations. For 2 cols: (a,b), (a), (b), ()."
@@ -241,7 +238,6 @@
           "type": "code",
           "label": "grouping functions",
           "code": "-- GROUPING(col): 1 if col is NULL due to rollup, 0 if detail\nSELECT dept_id, status,\n  GROUPING(dept_id) AS g_dept,\n  GROUPING(status) AS g_status,\n  COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id, status);\n\n-- GROUPING_ID: bitmask of GROUPING() values\nSELECT dept_id, status,\n  GROUPING_ID(dept_id, status) AS gid,\n  COUNT(*)\nFROM employees\nGROUP BY CUBE(dept_id, status);\n-- gid: 0=detail, 1=status rolled, 2=dept rolled, 3=grand total\n\n-- Pretty labels\nSELECT \n  CASE WHEN GROUPING(dept_id)=1 THEN 'ALL DEPTS' ELSE dept_id END AS dept,\n  CASE WHEN GROUPING(status)=1 THEN 'ALL STATUS' ELSE status END AS status,\n  COUNT(*)\nFROM employees\nGROUP BY ROLLUP(dept_id, status);",
-          "pg": "-- GROUPING, GROUPING_ID standard",
           "mysql": "-- MySQL 8.0+: GROUPING(), GROUPING_ID() supported",
           "py-pandas": "# No direct equivalent; use margins + detect NaN in index"
         },
@@ -288,7 +284,7 @@
               "q": "GROUPING(dept_id) = 1 means:",
               "options": [
                 "dept_id is NULL in source data",
-                "Row is subtotal where dept_id was rolled up",
+                "Row is a rolled-up subtotal",
                 "dept_id = 1",
                 "Error"
               ],
@@ -301,7 +297,7 @@
                 "Detail row",
                 "dept subtotal",
                 "status subtotal",
-                "Grand total (both rolled)"
+                "Grand total"
               ],
               "answer": 3,
               "explain": "Bit 0 = status rolled, Bit 1 = dept rolled. 11 = both = grand total."
@@ -311,8 +307,12 @@
       ]
     },
     {
-      "title": "Problem Set — L2 Drills",
+      "title": "Worked Problem — Department × Status Report with Labels",
       "blocks": [
+        {
+          "type": "heading",
+          "text": "Problem: Cross-tab with labeled subtotals and grand total"
+        },
         {
           "type": "problems",
           "items": [
@@ -324,36 +324,98 @@
               "patterns": [
                 "rollup"
               ],
-              "statement": "Employee count per department with subtotals and grand total.",
+              "statement": "Employee count per department with subtotals and grand total. Return dept_id, job_title, emp_count, level.",
               "hints": [
-                "GROUP BY ROLLUP(dept_id)"
-              ]
+                "GROUP BY ROLLUP(dept_id, job_title)",
+                "Use GROUPING() to label rows"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "UNION ALL of three separate queries: detail, dept subtotals, grand total.",
+                  "code": {
+                    "code": "-- Detail rows\nSELECT dept_id, job_title, COUNT(*) AS emp_count, 'detail' AS level\nFROM employees\nGROUP BY dept_id, job_title\n\nUNION ALL\n\n-- Dept subtotals\nSELECT dept_id, NULL AS job_title, COUNT(*) AS emp_count, 'dept_subtotal' AS level\nFROM employees\nGROUP BY dept_id\n\nUNION ALL\n\n-- Grand total\nSELECT NULL AS dept_id, NULL AS job_title, COUNT(*) AS emp_count, 'grand_total' AS level\nFROM employees\n\nORDER BY dept_id, job_title;",
+                    "mysql": "-- MySQL 8.0+: same syntax with WITH ROLLUP\nSELECT dept_id, job_title, COUNT(*) AS emp_count,\n  CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' WHEN GROUPING(job_title)=1 THEN 'dept_subtotal' ELSE 'detail' END AS level\nFROM employees\nGROUP BY dept_id, job_title WITH ROLLUP\nORDER BY dept_id, job_title;",
+                    "py-pandas": "detail = employees.groupby(['dept_id', 'job_title']).size().reset_index(name='emp_count')\ndetail['level'] = 'detail'\nsubtotal = employees.groupby('dept_id').size().reset_index(name='emp_count')\nsubtotal['job_title'] = None\nsubtotal['level'] = 'dept_subtotal'\ngrand = pd.DataFrame({'dept_id': [None], 'job_title': [None], 'emp_count': [len(employees)], 'level': ['grand_total']})\npd.concat([detail, subtotal, grand]).sort_values(['dept_id', 'job_title'])"
+                  },
+                  "cost": "Three full scans of employees + UNION ALL merge. O(3n) time. Manual labeling error-prone.",
+                  "pitfalls": "Must manually maintain ORDER BY across UNION. NULL handling in ORDER BY varies by DB. Easy to miss a grouping level."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "ROLLUP — single scan, engine builds all grouping levels internally, GROUPING() for labels.",
+                  "code": {
+                    "code": "SELECT dept_id, job_title, COUNT(*) AS emp_count,\n  CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total'\n       WHEN GROUPING(job_title)=1 THEN 'dept_subtotal'\n       ELSE 'detail' END AS level\nFROM employees\nGROUP BY ROLLUP(dept_id, job_title)\nORDER BY dept_id, job_title;",
+                    "mysql": "SELECT dept_id, job_title, COUNT(*) AS emp_count,\n  CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total'\n       WHEN GROUPING(job_title)=1 THEN 'dept_subtotal'\n       ELSE 'detail' END AS level\nFROM employees\nGROUP BY dept_id, job_title WITH ROLLUP\nORDER BY dept_id, job_title;",
+                    "py-pandas": "detail = employees.groupby(['dept_id', 'job_title']).size().reset_index(name='emp_count')\ndetail['level'] = 'detail'\nsubtotal = employees.groupby('dept_id').size().reset_index(name='emp_count')\nsubtotal['job_title'] = None\nsubtotal['level'] = 'dept_subtotal'\ngrand = pd.DataFrame({'dept_id': [None], 'job_title': [None], 'emp_count': [len(employees)], 'level': ['grand_total']})\npd.concat([detail, subtotal, grand]).sort_values(['dept_id', 'job_title'])"
+                  },
+                  "cost": "Single scan + internal grouping sets computation. Engine optimizes shared work across levels. O(n) time."
+                }
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count, CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' WHEN GROUPING(job_title)=1 THEN 'dept_subtotal' ELSE 'detail' END AS level FROM employees GROUP BY ROLLUP(dept_id, job_title) ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A202",
               "tier": 2,
-              "title": "Dept × Status Cross-Tab",
+              "title": "Dept × Job Title Cross-Tab",
               "platform": "drill",
               "patterns": [
                 "cube"
               ],
-              "statement": "Full cross-tabulation: dept × status with all subtotals.",
+              "statement": "Full cross-tabulation: dept × job_title with all subtotals. Return dept_id, job_title, emp_count.",
               "hints": [
-                "GROUP BY CUBE(dept_id, status)"
-              ]
+                "GROUP BY CUBE(dept_id, job_title)"
+              ],
+              "approaches": [
+                {
+                  "name": "Brute",
+                  "idea": "UNION ALL of four queries: detail, dept subtotals, job_title subtotals, grand total.",
+                  "code": {
+                    "code": "-- Detail\nSELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY dept_id, job_title\nUNION ALL\n-- Dept subtotals\nSELECT dept_id, NULL, COUNT(*) FROM employees GROUP BY dept_id\nUNION ALL\n-- Job title subtotals\nSELECT NULL, job_title, COUNT(*) FROM employees GROUP BY job_title\nUNION ALL\n-- Grand total\nSELECT NULL, NULL, COUNT(*) FROM employees\nORDER BY dept_id, job_title;",
+                    "mysql": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY dept_id, job_title WITH CUBE ORDER BY dept_id, job_title;",
+                    "py-pandas": "detail = employees.groupby(['dept_id', 'job_title']).size().reset_index(name='emp_count')\ndsub = employees.groupby('dept_id').size().reset_index(name='emp_count'); dsub['job_title'] = None\njsub = employees.groupby('job_title').size().reset_index(name='emp_count'); jsub['dept_id'] = None\ngrand = pd.DataFrame({'dept_id': [None], 'job_title': [None], 'emp_count': [len(employees)]})\npd.concat([detail, dsub, jsub, grand]).sort_values(['dept_id', 'job_title'])"
+                  },
+                  "cost": "Four full scans + UNION ALL. O(4n) time. Manual NULL placement for subtotals.",
+                  "pitfalls": "Easy to forget a combination (e.g., job_title subtotals). ORDER BY across UNION is fragile."
+                },
+                {
+                  "name": "Optimal",
+                  "idea": "CUBE — single scan computes all 2^N combinations. Engine shares work across grouping sets.",
+                  "code": {
+                    "code": "SELECT dept_id, job_title, COUNT(*) AS emp_count\nFROM employees\nGROUP BY CUBE(dept_id, job_title)\nORDER BY dept_id, job_title;",
+                    "mysql": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY dept_id, job_title WITH CUBE ORDER BY dept_id, job_title;",
+                    "py-pandas": "detail = employees.groupby(['dept_id', 'job_title']).size().reset_index(name='emp_count')\ndsub = employees.groupby('dept_id').size().reset_index(name='emp_count'); dsub['job_title'] = None\njsub = employees.groupby('job_title').size().reset_index(name='emp_count'); jsub['dept_id'] = None\ngrand = pd.DataFrame({'dept_id': [None], 'job_title': [None], 'emp_count': [len(employees)]})\npd.concat([detail, dsub, jsub, grand]).sort_values(['dept_id', 'job_title'])"
+                  },
+                  "cost": "One scan + optimized grouping sets. Engine computes all combinations in one pass. O(n) time."
+                }
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY CUBE(dept_id, job_title) ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A203",
               "tier": 2,
-              "title": "Custom Grouping: Dept Detail + Status Subtotal",
+              "title": "Custom Grouping: Dept Detail + Job Title Subtotal",
               "platform": "drill",
               "patterns": [
                 "grouping-sets"
               ],
-              "statement": "Show (dept,status) detail + status subtotals + grand total.",
+              "statement": "Show (dept,job_title) detail + job_title subtotals + grand total. Return dept_id, job_title, emp_count.",
               "hints": [
-                "GROUPING SETS ((dept_id, status), (status), ())"
-              ]
+                "GROUPING SETS ((dept_id, job_title), (job_title), ())"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY GROUPING SETS ((dept_id, job_title), (job_title), ()) ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A204",
@@ -366,46 +428,66 @@
               "statement": "Add column 'level' showing 'detail', 'dept_subtotal', 'grand_total' using GROUPING().",
               "hints": [
                 "CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' ..."
-              ]
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count, CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' WHEN GROUPING(job_title)=1 THEN 'dept_subtotal' ELSE 'detail' END AS level FROM employees GROUP BY ROLLUP(dept_id, job_title) ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A205",
               "tier": 2,
-              "title": "Partial Rollup: Dept + Status Subtotals Only",
+              "title": "Partial Rollup: Dept + Job Title Subtotals Only",
               "platform": "drill",
               "patterns": [
                 "partial-rollup"
               ],
-              "statement": "Detail (dept,status) + dept subtotals. No grand total.",
+              "statement": "Detail (dept,job_title) + dept subtotals. No grand total. Return dept_id, job_title, emp_count.",
               "hints": [
-                "GROUP BY dept_id, ROLLUP(status)"
-              ]
+                "GROUP BY dept_id, ROLLUP(job_title)"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY dept_id, ROLLUP(job_title) ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A206",
               "tier": 2,
-              "title": "GROUPING_ID for Bitmask Logic",
+              "title": "GROUPING Bitmask Logic",
               "platform": "drill",
               "patterns": [
                 "grouping-id"
               ],
-              "statement": "Decode GROUPING_ID bitmask: 0=detail, 1=status rolled, 2=dept rolled, 3=grand.",
+              "statement": "Compute bitmask: 0=detail, 1=job_title rolled, 2=dept rolled, 3=grand. Return dept_id, job_title, emp_count, gid.",
               "hints": [
-                "CASE grouping_id WHEN 0 THEN 'detail' WHEN 1 THEN 'status_sub' ..."
-              ]
+                "GROUPING(dept_id)*2 + GROUPING(job_title) as gid"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count, (GROUPING(dept_id) * 2 + GROUPING(job_title)) AS gid FROM employees GROUP BY CUBE(dept_id, job_title) ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A207",
               "tier": 2,
-              "title": "Custom Grouping Sets: Dept Only + Status Only",
+              "title": "Custom Grouping Sets: Dept Only + Job Title Only",
               "platform": "drill",
               "patterns": [
                 "grouping-sets"
               ],
-              "statement": "Show dept subtotals and status subtotals, but no detail rows.",
+              "statement": "Show dept subtotals and job_title subtotals, but no detail rows. Return dept_id, job_title, emp_count.",
               "hints": [
-                "GROUPING SETS ((dept_id), (status), ())"
-              ]
+                "GROUPING SETS ((dept_id), (job_title), ())"
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT dept_id, job_title, COUNT(*) AS emp_count FROM employees GROUP BY GROUPING SETS ((dept_id), (job_title), ()) ORDER BY dept_id, job_title;",
+                "orderMatters": true
+              }
             },
             {
               "id": "A208",
@@ -415,12 +497,65 @@
               "patterns": [
                 "grouping-labels"
               ],
-              "statement": "Replace NULL in subtotal rows with 'TOTAL' or 'ALL'.",
+              "statement": "Replace NULL in subtotal rows with 'TOTAL' or 'ALL'. Return dept_id, job_title, emp_count.",
               "hints": [
                 "COALESCE(dept_id, 'ALL DEPTS')"
-              ]
+              ],
+              "exercise": {
+                "datasets": ["hr"],
+                "solution": "SELECT COALESCE(dept_id::text, 'ALL DEPTS') AS dept, COALESCE(job_title, 'ALL JOBS') AS job_title, COUNT(*) AS emp_count FROM employees GROUP BY ROLLUP(dept_id, job_title) ORDER BY dept, job_title;",
+                "orderMatters": true
+              }
             }
           ]
+        }
+      ]
+    },
+    {
+      "title": "Query Trace — ROLLUP Step-by-Step",
+      "blocks": [
+        {
+          "type": "query-trace",
+          "title": "ROLLUP(dept_id, job_title) with GROUPING labels",
+          "dataset": "hr",
+          "stages": [
+            {
+              "label": "FROM employees",
+              "sql": "SELECT emp_id, dept_id, job_title FROM employees;",
+              "note": "21 rows scanned from employees table"
+            },
+            {
+              "label": "GROUP BY ROLLUP(dept_id, job_title)",
+              "sql": "SELECT dept_id, job_title, COUNT(*) AS cnt, GROUPING(dept_id) AS g_dept, GROUPING(job_title) AS g_job FROM employees GROUP BY ROLLUP(dept_id, job_title);",
+              "note": "Rows collapse into groups: dept×job_title combos + dept subtotals + 1 grand total"
+            },
+            {
+              "label": "SELECT with CASE labels",
+              "sql": "SELECT dept_id, job_title, COUNT(*) AS cnt, CASE WHEN GROUPING(dept_id)=1 THEN 'grand_total' WHEN GROUPING(job_title)=1 THEN 'dept_subtotal' ELSE 'detail' END AS level FROM employees GROUP BY ROLLUP(dept_id, job_title) ORDER BY dept_id, job_title;",
+              "note": "Final projection with human-readable level labels"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Trap — GROUPING() vs IS NULL",
+      "blocks": [
+        {
+          "type": "misconception",
+          "claim": "GROUPING(col) = 1 means the same as col IS NULL in the result.",
+          "refutation": "GROUPING(col) = 1 only when col is NULL because it was rolled up (subtotal/grand total). If col is NULL in the source data, GROUPING(col) = 0 for detail rows. They are not equivalent.",
+          "askFirst": true,
+          "verdict": false,
+          "correctModel": "Use GROUPING() to detect subtotal rows. Use col IS NULL to detect source NULLs. They serve different purposes.",
+          "evidence": {
+            "type": "code",
+            "label": "proof on hr data",
+            "code": "SELECT dept_id, status, GROUPING(dept_id) AS g_dept, GROUPING(status) AS g_status\nFROM employees\nGROUP BY ROLLUP(dept_id, status);\n-- Subtotal rows have g_dept=1 or g_status=1\n-- Source NULLs in status would show g_status=0 for detail rows",
+            "pg": "",
+            "mysql": ""
+          },
+          "source": "Classic SQL interview trap — appears in Microsoft, Oracle screens"
         }
       ]
     },
@@ -430,7 +565,7 @@
         {
           "type": "callout",
           "tone": "blue",
-          "md": "17 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `renderer/sync-problems.mjs` — do not hand-edit this section."
+          "md": "17 sourced problems from HackerRank SQL · LeetCode SQL 50 · LeetCode Advanced SQL 50. Titles link to the platform. Generated from `content/problems.json` by `scripts/sync-problems.mjs` — do not hand-edit this section."
         },
         {
           "type": "problems",

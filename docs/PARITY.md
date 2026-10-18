@@ -20,10 +20,10 @@ Reference app: `C:\MEGA NZ\SKILLS MATERIAL\DSA\dsa-lms` (React SPA) + its author
 | Changelog feed | done | `content/changelog.json` |
 | Code language toggle (C++ / Python) | done as SQL / PostgreSQL / MySQL / pandas / SQLAlchemy | `content/subject.json` |
 | Problem: progressive hints, reveal solution, complexity, follow-ups | UI done; content missing for most problems | SQL-J09…J17 (drills), SQL-J22…J29 (sourced) |
-| **Answer payload files** (`renderer/answers/<mod>-L<n>.mjs`) merged into lessons by `apply-answers.mjs` | missing | SQL-J21: `content/answers/<module>.json` merged by `sync-problems.mjs` |
-| **Tested answers** (`answers/tests/*.py`, `verify-answers.mjs`) | runner ready; tests come with payloads | SQL-J01 `check-exercises.mjs` (runs every solution + approach on base and `_edge` data) |
-| **Solution coverage report** (`solution-coverage.mjs`) | missing | SQL-J21 `scripts/solution-coverage.mjs` |
-| Brute → optimal approaches (Striver format) | missing in both apps | SQL-J21 (`approaches` field), `docs/STYLE.md` §4 |
+| **Answer payload files** (`renderer/answers/<mod>-L<n>.mjs`) merged into lessons by `apply-answers.mjs` | done (J21) | `content/answers/<module>.json` merged by `sync-problems.mjs` |
+| **Tested answers** (`answers/tests/*.py`, `verify-answers.mjs`) | done (J21) | `check-exercises.mjs` runs every solution + approach on base and `_edge` data |
+| **Solution coverage report** (`solution-coverage.mjs`) | done (J21) | `scripts/solution-coverage.mjs` (npm run coverage) |
+| Brute → optimal approaches (Striver format) | done (J21) | SQL-J21 (`approaches` field), `docs/STYLE.md` §4 |
 | ≥ 2 dry-run traces per lesson | SQL had 0 | SQL-J03 `query-trace` + quota in SQL-J20 |
 | Content lint + CI validate + Pages deploy | done | `scripts/lint-content.mjs`, `.github/workflows/ci.yml` |
 | Corrupt-progress quarantine, versioned store | done | `src/lib/progress.js` |
