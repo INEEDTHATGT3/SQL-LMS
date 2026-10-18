@@ -81,7 +81,7 @@ while ($true) {
     $status = Board @('get', $id)
     if ($status -eq 'review') {
       Log "$id inspector gave no verdict; sending it back to the mechanic"
-      Board @('set', $id, 'doing', "lane $Lane: inspector session ended without a verdict") | Out-Null
+      Board @('set', $id, 'doing', "lane ${Lane}: inspector session ended without a verdict") | Out-Null
     }
   }
   Log "$id is now $(Board @('get', $id))"
