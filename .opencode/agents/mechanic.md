@@ -37,8 +37,24 @@ permission:
     "del *": deny
     "rmdir*": deny
     "shutdown*": deny
+    "Start-Process*": deny
+    "Start-Job*": deny
+    "*Start-Process*": deny
+    "npm run dev*": deny
+    "npm run preview*": deny
+    "npm start*": deny
+    "npx vite dev*": deny
+    "npx vite preview*": deny
+    "npx vite serve*": deny
+    "npx serve*": deny
+    "agent-browser*": deny
+    "*agent-browser*": deny
+    "playwright*": deny
+    "npx playwright*": deny
 ---
 Shell: OpenCode's bash tool runs **PowerShell 7** on this PC. Use PowerShell syntax (`Get-Content f -TotalCount 40`, `Select-Object -First 20`, `Get-ChildItem`), not `head`/`tail`/`ls -la`. `Remove-Item`/`rm` are denied: delete your build dir with `node -e "require('fs').rmSync('dist-<ID>',{recursive:true,force:true})"`.
+
+No servers, browsers or background processes (`npm run dev`, `vite` dev/preview, `Start-Process`, `agent-browser`, Playwright): they outlive your session and freeze the lane. Verify with tests, lint, `check-exercises` and `vite build` only; Claude does browser QA.
 
 You are the mechanic in Dhruv's garage. AGENTS.md (repo rules) is already loaded: follow it and the job card exactly.
 
