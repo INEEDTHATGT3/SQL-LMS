@@ -9,8 +9,9 @@
 #>
 param(
   [int]$Lane = 1,
-  # Free models, tried in order. A provider error (outage, rate limit) does not count as an attempt:
+  # Free models, tried in order. A provider error (outage, stall) does not count as an attempt:
   # the lane moves to the next model; when all fail in a row it backs off 5 minutes.
+  # A rate limit (free tier, shared by all models) backs off 15 -> 30 -> 60 minutes instead.
   [string[]]$Models = @('opencode/nemotron-3-ultra-free', 'opencode/beam-free', 'opencode/big-pickle',
                         'opencode/glm-5.3-flash-free', 'opencode/deepseek-v4.1-flash-free', 'opencode/mimo-v2.6-flash-free',
                         'opencode/longcat-2.5-preview-free', 'opencode/space-bunny-free', 'opencode/nemotron-3.5-super-vl-free'),
@@ -60,18 +61,26 @@ function Invoke-OpenCode([string]$agent, [string]$model, [string]$id, [int]$try,
   $err = "$out.err"
   Log "$agent $id (try $try) with $model -> $out"
   $started = Get-Date
-  $argLine = "run --auto --agent $agent -m $model --title `"$id $agent try $try`" `"$($prompt.Replace('"', "'"))`""
+  # --print-logs puts provider errors in the .err log, so a rate limit is seen in seconds:
+  # opencode itself retries it silently, which otherwise looks like a 10-minute stall
+  $argLine = "run --print-logs --log-level ERROR --auto --agent $agent -m $model --title `"$id $agent try $try`" `"$($prompt.Replace('"', "'"))`""
   $empty = Join-Path $logs 'empty-stdin.txt'
   if (-not (Test-Path $empty)) { New-Item -ItemType File $empty | Out-Null }
   # stdin must be an empty file: with redirected output, `opencode run` otherwise waits on stdin
   $p = Start-Process -FilePath 'opencode' -ArgumentList $argLine -NoNewWindow -PassThru `
         -RedirectStandardInput $empty -RedirectStandardOutput $out -RedirectStandardError $err
-  $pos = [long]0; $epos = [long]0; $stalled = $false
+  $pos = [long]0; $epos = [long]0; $stalled = $false; $script:rateLimited = $false
   $deadline = $started.AddMinutes($MaxMinutes); $lastGrowth = Get-Date; $lastSize = -1
   while (-not $p.HasExited) {
     Show-New $out ([ref]$pos); Show-New $err ([ref]$epos)
     $size = $pos + $epos
-    if ($size -ne $lastSize) { $lastSize = $size; $lastGrowth = Get-Date }
+    if ($size -ne $lastSize) {
+      $lastSize = $size; $lastGrowth = Get-Date
+      if ($epos -gt 0 -and (Select-String -Path $err -Pattern 'Rate limit exceeded|Too Many Requests' -Quiet)) {
+        Log "$id $agent is rate-limited on $model; killing the session"
+        taskkill /F /T /PID $p.Id | Out-Null; $script:rateLimited = $true; break
+      }
+    }
     if ((Get-Date) -gt $deadline) { Log "$id $agent hit $MaxMinutes min; killing the session"; taskkill /F /T /PID $p.Id | Out-Null; break }
     if (((Get-Date) - $lastGrowth).TotalMinutes -gt $StallMinutes) {
       Log "$id $agent produced no output for $StallMinutes min on $model (model stalled); killing the session"
@@ -81,7 +90,7 @@ function Invoke-OpenCode([string]$agent, [string]$model, [string]$id, [int]$try,
   }
   Show-New $out ([ref]$pos); Show-New $err ([ref]$epos)
   $text = (Get-Content $out, $err -Raw -ErrorAction SilentlyContinue) -join "`n"
-  $script:providerError = $stalled -or ($text.Length -lt 4000) -and ($text -match 'Internal Server Error|Too Many Requests|rate limit|\b429\b|\b50[234]\b|overloaded|FreeTier|free tier|ECONNRESET|fetch failed|Service Unavailable|Bad Gateway')
+  $script:providerError = $stalled -or $script:rateLimited -or (($text.Length -lt 4000) -and ($text -match 'Internal Server Error|Too Many Requests|rate limit|\b429\b|\b50[234]\b|overloaded|FreeTier|free tier|ECONNRESET|fetch failed|Service Unavailable|Bad Gateway'))
   if ($script:providerError) { Log "$id $agent hit a provider error on $model; not counted as an attempt" }
   # leftovers a session may have spawned despite the rules (dev servers, browsers)
   Get-CimInstance Win32_Process | Where-Object {
@@ -94,8 +103,12 @@ function Invoke-Robust([string]$agent, [string]$id, [int]$try, [string]$prompt) 
   $fails = 0
   while ($true) {
     Invoke-OpenCode $agent (Model) $id $try $prompt
-    if (-not $script:providerError) { return }
+    if (-not $script:providerError) { $script:rl = 0; return }
     $fails++; $script:mi++
+    if ($script:rateLimited) {
+      $script:rl++; $wait = [Math]::Min(60, 15 * [Math]::Pow(2, $script:rl - 1))
+      Log "free-tier rate limit; backing off $wait minutes, then $(Model)"; Start-Sleep -Seconds (60 * $wait); continue
+    }
     if ($fails % $Models.Count -eq 0) { Log "all $($Models.Count) models failed in a row; backing off 5 minutes"; Start-Sleep -Seconds 300 }
     else { Log "switching to $(Model)" }
   }
