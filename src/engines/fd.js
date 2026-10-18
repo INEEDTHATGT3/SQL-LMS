@@ -384,8 +384,9 @@ export function normalizeRelation(rel, target = 'BCNF') {
 }
 
 /* ---------- fd-stepper task models ---------- */
-/* row: { cells: string[], blank?: { col, set } | { col, num } } - a blank cell
-   is what a faded worked example hides from the learner. */
+/* row: { cells: string[], blank?: { col, set | num, hide? } } - a blank cell is
+   what a faded worked example asks the learner for; cells after it and the
+   `hide` columns would give it away, so the block hides those too. */
 export function stepperTask(task, attrs, fds, other) {
   const { A, F } = relation(attrs, fds);
   const t = String(task), cut = t.indexOf(':');
@@ -401,7 +402,7 @@ export function stepperTask(task, attrs, fds, other) {
         kind, input: 'set', title: `Closure ${x}⁺`, prompt: `Compute ${x}⁺.`, placeholder: setPh,
         columns: ['#', 'Using', 'Added', `${x}⁺ so far`],
         rows: [{ cells: ['0', 'start', '—', x] },
-          ...steps.map((s, i) => ({ cells: [String(i + 1), s.using, setStr(s.added), setStr(s.closure)], blank: { col: 3, set: s.closure } }))],
+          ...steps.map((s, i) => ({ cells: [String(i + 1), s.using, setStr(s.added), setStr(s.closure)], blank: { col: 3, set: s.closure, hide: [2] } }))],
         answer: c, answerText: `${x}⁺ = ${setStr(c)}`
       };
     }

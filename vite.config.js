@@ -6,5 +6,7 @@ export default defineConfig({
   plugins: [react()],
   /* PGlite ships its own wasm + data bundle; pre-bundling breaks its asset URLs */
   optimizeDeps: { exclude: ['@electric-sql/pglite'] },
+  /* sqlrunner.worker.js is code-split; Rollup refuses IIFE workers there */
+  worker: { format: 'es' },
   build: { target: 'es2022', chunkSizeWarningLimit: 900 }
 });

@@ -1,0 +1,18 @@
+.nf-keys{margin:12px 0 0}
+.nf-table td{vertical-align:top}
+.nf-why{color:var(--text-dim)}
+.nf-steps{margin:8px 0 12px 20px;color:var(--text-dim)}
+.nf-steps li{margin:3px 0;overflow-wrap:anywhere}
+.nf-verdict{margin:6px 0;font-size:14px}
+.blk svg.nf-tree{width:100%;max-width:480px;margin:12px 0}
+.nf-tree text{font-size:12px}
+.nf-tree .nf-edge{fill:none;stroke:var(--text-dim);stroke-width:1.2}
+.nf-tree .nf-edge-label{font-size:10px;fill:var(--accent2)}
+.nf-tree rect{fill:var(--surface2);stroke:var(--border);stroke-width:1.2}
+.nf-tree .root rect{stroke:var(--lvl)}
+.nf-tree .ok rect{stroke:var(--green)}
+.nf-tree .bad rect{stroke:var(--red)}
+.nf-tree .nf-meta{fill:var(--text-dim);font-size:11px}
+.nf-tree .ok .nf-meta{fill:var(--green)}
+.nf-tree .bad .nf-meta{fill:var(--red)}
+.nf-tree .warn .nf-meta{fill:var(--warn)}

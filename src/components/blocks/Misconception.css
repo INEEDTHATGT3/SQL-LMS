@@ -1,0 +1,4 @@
+/* misconception - the claim reads as a quote; struck through once refuted */
+.mis-claim{font-size:16px;font-style:italic;color:var(--text-bright);margin:4px 0 8px}
+.mis-claim.refuted{text-decoration:line-through;text-decoration-color:var(--red)}
+.mis-evidence{margin-top:14px}

@@ -1,0 +1,10 @@
+/* flashcards - card face + type-mode input; rating buttons reuse theme .rating-row/.rate-* */
+.fc-tools{margin:0}
+.fc-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:18px;margin:12px 0;min-height:110px;cursor:pointer;overflow-wrap:anywhere}
+.fc-card.static{cursor:default}
+.fc-card.flipped{border-color:var(--lvl-border)}
+.fc-front{color:var(--text-bright);font-size:17px;font-weight:600}
+.fc-back{border-top:1px dashed var(--border);margin-top:12px;padding-top:12px;font-size:15px}
+.fc-input{flex:1;min-width:0}
+.fc-keys{margin-top:10px}
+@media(hover:none){.fc-keys{display:none}}

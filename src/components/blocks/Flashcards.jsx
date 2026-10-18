@@ -43,6 +43,8 @@ export default function Flashcards({ b, ctx }) {
     setTimeout(() => (typeMode && input.current ? input.current : box.current)?.focus(), 0);
   };
   const rate = r => { srsActions.rateFlashcard(ctx.lessonId, card.id, r); reset(pos + 1); };
+  // the button/input that triggered the flip unmounts; keep focus in the deck for 1-4
+  const flip = () => { setFlipped(true); box.current?.focus(); };
   const shuffle = () => { setOrder(shuffledOrder(cards.length, Math.random().toString(16).slice(2, 10))); reset(0); };
   const onKey = e => {
     if (!card || e.target.closest('input, textarea, select')) return;
@@ -70,7 +72,7 @@ export default function Flashcards({ b, ctx }) {
           <button type="button" className="reveal-btn" onClick={() => reset(0)}>Go again</button>
         </div>
       ) : (<>
-        <div className={'fc-card' + (flipped ? ' flipped' : '')} onClick={() => !typeMode && setFlipped(f => !f)}>
+        <div className={'fc-card' + (flipped ? ' flipped' : '') + (typeMode ? ' static' : '')} onClick={() => !typeMode && setFlipped(f => !f)}>
           <div className="fc-front"><MD text={card.front} /></div>
           <div aria-live="polite">
             {flipped && <div className="fc-back"><MD text={card.back} /></div>}
@@ -85,7 +87,7 @@ export default function Flashcards({ b, ctx }) {
         </div>
 
         {!flipped && typeMode && (
-          <form className="action-row" onSubmit={e => { e.preventDefault(); setFlipped(true); }}>
+          <form className="action-row" onSubmit={e => { e.preventDefault(); flip(); }}>
             <input ref={input} type="text" className="fc-input" value={typed} autoComplete="off"
               aria-label="Your answer" placeholder="type the answer from memory"
               onChange={e => setTyped(e.target.value)} />
@@ -93,8 +95,8 @@ export default function Flashcards({ b, ctx }) {
           </form>)}
         {!flipped && !typeMode && (
           <div className="action-row">
-            <button type="button" className="reveal-btn" onClick={() => setFlipped(true)}>Show answer</button>
-            <span className="dim small">or press space</span>
+            <button type="button" className="reveal-btn" onClick={flip}>Show answer</button>
+            <span className="dim small fc-keys">or press space</span>
           </div>)}
         {flipped && (
           <div className="rating-row" role="group" aria-label="How well did you recall it?">

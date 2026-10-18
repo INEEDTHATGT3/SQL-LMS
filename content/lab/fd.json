@@ -1,0 +1,75 @@
+{
+  "title": "Functional dependencies & normalization",
+  "blocks": [
+    {
+      "type": "fd-stepper",
+      "title": "Korth 7.4.2 · closure and keys",
+      "attrs": "ABCGHI",
+      "fds": [["A", "B"], ["A", "C"], ["CG", "H"], ["CG", "I"], ["B", "H"]],
+      "tasks": ["closure:AG", "keys", "primeAttrs"],
+      "mode": "worked",
+      "fadeFrom": null
+    },
+    {
+      "type": "fd-stepper",
+      "title": "Korth 7.4.3 · canonical cover (faded)",
+      "attrs": "ABC",
+      "fds": [["A", "BC"], ["B", "C"], ["A", "B"], ["AB", "C"]],
+      "tasks": ["minimalCover", "equivalent"],
+      "other": [["A", "B"], ["B", "C"]],
+      "mode": "worked",
+      "fadeFrom": 2
+    },
+    {
+      "type": "fd-stepper",
+      "title": "GATE · R(ABCDE) with A→B, BC→E, ED→A",
+      "attrs": "ABCDE",
+      "fds": [["A", "B"], ["BC", "E"], ["ED", "A"]],
+      "tasks": ["closure:BC", "keys", "primeAttrs", "superkeyCount"],
+      "mode": "practice"
+    },
+    {
+      "type": "fd-stepper",
+      "title": "employee(emp_id, name, dept, dept_head)",
+      "attrs": ["emp_id", "name", "dept", "dept_head"],
+      "fds": [[["emp_id"], ["name", "dept"]], [["dept"], ["dept_head"]]],
+      "tasks": ["closure:emp_id", "keys", "minimalCover"],
+      "mode": "practice"
+    },
+    {
+      "type": "nf-decomposition",
+      "title": "BCNF can lose a dependency",
+      "relation": { "name": "R", "attrs": "ABC", "fds": [["AB", "C"], ["C", "B"]] },
+      "target": "BCNF",
+      "ask": { "kind": "mcq", "q": "Highest normal form of R(ABC) with F = {AB→C, C→B}?" }
+    },
+    {
+      "type": "nf-decomposition",
+      "title": "GATE · R(ABCDEFGHIJ) to BCNF",
+      "relation": {
+        "name": "R",
+        "attrs": "ABCDEFGHIJ",
+        "fds": [["AB", "C"], ["A", "DE"], ["B", "F"], ["F", "GH"], ["D", "IJ"]]
+      },
+      "target": "BCNF",
+      "ask": { "kind": "mcq", "q": "R(ABCDEFGHIJ) has AB→C, A→DE, B→F, F→GH, D→IJ. Its highest normal form is?" }
+    },
+    {
+      "type": "nf-decomposition",
+      "title": "3NF synthesis · transitive dependency",
+      "relation": {
+        "name": "emp_dept",
+        "attrs": ["emp_id", "name", "dept", "dept_head"],
+        "fds": [[["emp_id"], ["name", "dept"]], [["dept"], ["dept_head"]]]
+      },
+      "target": "3NF"
+    },
+    {
+      "type": "nf-decomposition",
+      "title": "3NF synthesis adds a key schema",
+      "relation": { "name": "R", "attrs": "ABCD", "fds": [["A", "B"], ["C", "D"]] },
+      "target": "3NF",
+      "show": ["nfTable", "tree", "lossless", "depPreserving"]
+    }
+  ]
+}

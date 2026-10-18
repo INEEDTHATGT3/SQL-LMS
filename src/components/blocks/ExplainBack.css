@@ -1,0 +1,10 @@
+/* explain-back - free-text box, key-term chips, self-rubric */
+.eb-text{display:block;width:100%;min-height:160px;resize:vertical;line-height:1.6}
+.eb-text[readonly]{opacity:.8}
+.eb-hits{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:12px 0}
+.eb-chip{font-family:'Space Mono',monospace;font-size:12px}
+.eb-rubric{border:1px solid var(--border);border-radius:6px;padding:8px 14px 10px;margin:12px 0}
+.eb-rubric legend{padding:0 6px}
+.eb-rubric label{display:flex;gap:10px;align-items:flex-start;padding:5px 0;font-size:14px;cursor:pointer}
+.eb-rubric input{accent-color:var(--lvl);margin-top:5px;flex:none}
+.eb-rubric:disabled label{cursor:default}

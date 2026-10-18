@@ -8,12 +8,12 @@ const escape = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
 export function mdToHtml(text) {
   let s = escape(text);
   const codes = [];
-  s = s.replace(/`([^`]+)`/g, (_, c) => `\u0000${codes.push(c) - 1}\u0000`);
+  s = s.replace(/`([^`]+)`/g, (_, c) => `${codes.push(c) - 1}`);
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   s = s.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>');
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
   s = s.replace(/\n/g, '<br/>');
-  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
+  return s.replace(/(\d+)/g, (_, i) => `<code>${codes[i]}</code>`);
 }
 export function MD({ text }) {
   const html = useMemo(() => mdToHtml(text), [text]);
