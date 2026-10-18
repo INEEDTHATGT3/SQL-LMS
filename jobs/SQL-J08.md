@@ -21,7 +21,7 @@ Close the small engine gaps found in review and add a generic per-level block qu
 - [ ] `src/lib/grade.js` `answerKey` turns a number answer + `tolerance` into `{ min, max }`; a test covers it
 - [ ] `scripts/lint-content.mjs` walks `misconception.evidence` like `predict.reveal`, and supports `quotas.minBlocks: { "typeA|typeB": { "1": n, … } }` counting blocks of any listed type (nested ones too)
 - [ ] AGENTS.md Block status table shows every block done; `node scripts/gen.mjs && node scripts/lint-content.mjs` 0 errors; `node scripts/test-engines.mjs` passes
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J08 --emptyOutDir` passes (then delete `dist-SQL-J08`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J08 --emptyOutDir` passes (then delete `dist-SQL-J08` with node fs.rmSync)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

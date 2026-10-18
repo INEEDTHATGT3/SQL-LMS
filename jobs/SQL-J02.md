@@ -21,7 +21,7 @@ Build the two blocks that make SQL drills runnable and graded in the browser.
 - [ ] `src/components/blocks/TableDiff.jsx` renders a single table (no `after`) and a before/after diff with `.cell-add/.cell-del/.cell-chg`; NULL shows as NULL, distinct from ''; also exports `DiffTables` for reuse
 - [ ] `SqlExercise.jsx` implements BLOCKS.md `sql-exercise`: schema peek, editor (Tab = 2 spaces, Ctrl/Cmd+Enter runs), Run (≤ 50 rows), Submit grades on every dataset incl. hidden ones and shows the diff on mismatch, `setSolved` on pass, draft via `saveBlock(lessonId, 'sql:'+id)`, progressive hints, solution after a submit, embedded mode, PGlite loaded only on the first Run
 - [ ] `content/lab/sql.json` has ≥ 4 exercises across hr/shop/events, one with `orderMatters`, one whose `_edge` dataset catches a plausible wrong answer; `node scripts/check-exercises.mjs --lab` passes
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J02 --emptyOutDir` passes (then delete `dist-SQL-J02`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J02 --emptyOutDir` passes (then delete `dist-SQL-J02` with node fs.rmSync)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)

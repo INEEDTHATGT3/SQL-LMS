@@ -45,7 +45,7 @@ function Invoke-OpenCode([string]$agent, [string]$model, [string]$id, [int]$try,
       ForEach-Object { taskkill /F /T /PID $_.ProcessId | Out-Null }
   }
   & opencode run --auto --agent $agent -m $model --title "$id $agent try $try" $prompt 2>&1 |
-    Tee-Object -FilePath $out | Out-Host
+    Tee-Object -FilePath $out -Append | Out-Host
   Stop-Job $watch -ErrorAction SilentlyContinue; Remove-Job $watch -Force -ErrorAction SilentlyContinue
 }
 

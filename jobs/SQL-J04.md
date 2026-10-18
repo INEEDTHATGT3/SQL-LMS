@@ -3,14 +3,15 @@ type: job
 code: SQL
 id: J04
 title: "Port query plan, dialect diff, schema diagram"
-status: open
+status: doing
 est: 60
 workdir: 'C:\MEGA NZ\SKILLS MATERIAL\sql-lms'
 seq: 4
 depends: []
 vault: "DJ THINKING/PROJECTS ARCHITECTURE/SQL LMS/JOBS/SQL J04 · Port query plan, dialect diff, schema diagram.md"
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
+lane: 2
 ---
 # SQL J04 · Port query plan, dialect diff, schema diagram
 
@@ -22,7 +23,7 @@ Port the three old static blocks to React; 57 lesson query plans and 42 dialect 
 - [ ] `DialectDiff.jsx`: tabs or columns via `Code`; empty or comment-only fields show a "same as SQL" chip
 - [ ] `SchemaDiagram.jsx`: pure-SVG table cards with PK/FK markers and FK lines; accepts plain table names; reads `b.spec ?? b`
 - [ ] `content/lab/plans.json` has samples incl. two plans copied from lessons; `node scripts/lint-content.mjs` 0 errors
-- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J04 --emptyOutDir` passes (then delete `dist-SQL-J04`)
+- [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J04 --emptyOutDir` passes (then delete `dist-SQL-J04` with node fs.rmSync)
 
 ## Inputs
 - `AGENTS.md` (repo rules, verify commands, block contract)
