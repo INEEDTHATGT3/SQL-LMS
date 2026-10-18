@@ -1,7 +1,7 @@
 /* Block renderers + registry. Core blocks live here; heavier or newer block
    types are lazy components under ./blocks/ so they only load when a lesson
    uses them (PGlite, mermaid, diagram engines stay out of the main chunk). */
-import { lazy, Suspense, useState } from 'react';
+import { Component, lazy, Suspense, useState } from 'react';
 import { qkey } from '../lib/qkey.js';
 import { shuffledOrder } from '../lib/grade.js';
 import { logMistake } from '../lib/progress.js';
@@ -191,6 +191,16 @@ export function Followup({ chain }) {
   );
 }
 
+/* one broken block (bad JSON spec, failed chunk load) must not take the whole lesson down */
+class BlockBoundary extends Component {
+  state = { error: null };
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return <div className="callout warn">The {this.props.type} block failed to render ({String(this.state.error.message || this.state.error).slice(0, 120)}). The rest of the lesson still works.</div>;
+  }
+}
+
 function Unknown({ what }) {
   return <div className="callout warn">Unsupported {what} — update the app or fix the lesson JSON.</div>;
 }
@@ -234,8 +244,10 @@ export function Block({ b, ctx }) {
   const C = LAZY[b.type];
   if (!C) return <Unknown what={`block type "${b.type}"`} />;
   return (
-    <Suspense fallback={<div className="block-loading">loading {b.type}…</div>}>
-      <C b={b} ctx={ctx} />
-    </Suspense>
+    <BlockBoundary type={b.type}>
+      <Suspense fallback={<div className="block-loading">loading {b.type}…</div>}>
+        <C b={b} ctx={ctx} />
+      </Suspense>
+    </BlockBoundary>
   );
 }

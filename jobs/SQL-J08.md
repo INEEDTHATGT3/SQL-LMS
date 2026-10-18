@@ -20,6 +20,7 @@ Close the small engine gaps found in review and add a generic per-level block qu
 ## Done when
 - [ ] `src/lib/grade.js` `answerKey` turns a number answer + `tolerance` into `{ min, max }`; a test covers it
 - [ ] `scripts/lint-content.mjs` walks `misconception.evidence` like `predict.reveal`, and supports `quotas.minBlocks: { "typeA|typeB": { "1": n, … } }` counting blocks of any listed type (nested ones too)
+- [ ] Claude QA fix: `SqlExercise.jsx` clears an earlier Run error/result when Submit starts (a stale "syntax error" line stayed visible under a PASS verdict)
 - [ ] AGENTS.md Block status table shows every block done; `node scripts/gen.mjs && node scripts/lint-content.mjs` 0 errors; `node scripts/test-engines.mjs` passes
 - [ ] `npx eslint <your files>` clean; `npx vite build --outDir dist-SQL-J08 --emptyOutDir` passes (then delete `dist-SQL-J08` with node fs.rmSync)
 
@@ -35,7 +36,7 @@ Close the small engine gaps found in review and add a generic per-level block qu
 3. Run the gates.
 
 ## Limits
-- May edit: `src/lib/grade.js`, a new `src/engines/grade.test.mjs`, `scripts/lint-content.mjs`, AGENTS.md status table.
+- May edit: `src/components/blocks/SqlExercise.jsx` (that one fix), `src/lib/grade.js`, a new `src/engines/grade.test.mjs`, `scripts/lint-content.mjs`, AGENTS.md status table.
 - Never DECISIONS, ACTIONS, the CARD or hub notes. No commits, no new npm dependencies unless listed.
 
 ## Report
